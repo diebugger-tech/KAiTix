@@ -316,10 +316,10 @@
             <text x="160" y="265" font-size="10" font-weight="bold" fill="#0f172a">-F1</text>
             <text x="250" y="265" font-size="9" fill="#0f172a">NH 80A</text>
 
-            <!-- Drops after fuse -->
-            <line x1="200" y1="280" x2="200" y2="350" stroke="#78350f" stroke-width="1"/>
-            <line x1="220" y1="280" x2="220" y2="350" stroke="#0f172a" stroke-width="1"/>
-            <line x1="240" y1="280" x2="240" y2="350" stroke="#475569" stroke-width="1"/>
+            <!-- Drops after fuse (bridge diagonal exit → vertical) -->
+            <path d="M 205 280 L 200 280 L 200 350" fill="none" stroke="#78350f" stroke-width="1"/>
+            <path d="M 225 280 L 220 280 L 220 350" fill="none" stroke="#0f172a" stroke-width="1"/>
+            <path d="M 245 280 L 240 280 L 240 350" fill="none" stroke="#475569" stroke-width="1"/>
 
             <!-- -Q1 Leistungsschalter 63A im UV -->
             <g stroke="#0f172a" stroke-width="1.5" fill="none">
@@ -332,10 +332,10 @@
             <text x="160" y="370" font-size="10" font-weight="bold" fill="#0f172a">-Q1</text>
             <text x="250" y="370" font-size="9" fill="#0f172a">LS 63A</text>
 
-            <!-- Drops to Terminal -X1 -->
-            <line x1="200" y1="380" x2="200" y2="450" stroke="#78350f" stroke-width="1"/>
-            <line x1="220" y1="380" x2="220" y2="450" stroke="#0f172a" stroke-width="1"/>
-            <line x1="240" y1="380" x2="240" y2="450" stroke="#475569" stroke-width="1"/>
+            <!-- Drops to Terminal -X1 (bridge diagonal exit → vertical) -->
+            <path d="M 192 380 L 200 380 L 200 450" fill="none" stroke="#78350f" stroke-width="1"/>
+            <path d="M 212 380 L 220 380 L 220 450" fill="none" stroke="#0f172a" stroke-width="1"/>
+            <path d="M 232 380 L 240 380 L 240 450" fill="none" stroke="#475569" stroke-width="1"/>
 
             <!-- -X1 Klemmenleiste Abgang USV -->
             <g fill="#ffffff" stroke="#0f172a" stroke-width="1.5">
@@ -347,24 +347,94 @@
             </g>
             <text x="160" y="455" font-size="10" font-weight="bold" fill="#0f172a">-X1</text>
 
-            <!-- Zuleitung zur USV -W1 -->
-            <line x1="200" y1="453" x2="200" y2="520" stroke="#78350f" stroke-width="1"/>
-            <line x1="220" y1="453" x2="220" y2="520" stroke="#0f172a" stroke-width="1"/>
-            <line x1="240" y1="453" x2="240" y2="520" stroke="#475569" stroke-width="1"/>
+            <!-- Zuleitung zur USV -W1 (fächert auf GR + Bypass) -->
+            <path d="M 200 453 L 200 495 L 175 516" fill="none" stroke="#78350f" stroke-width="1"/>
+            <line x1="220" y1="453" x2="220" y2="516" stroke="#0f172a" stroke-width="1"/>
+            <path d="M 240 453 L 240 495 L 285 516" fill="none" stroke="#475569" stroke-width="1"/>
             <!-- W1 designation -->
             <path d="M 180 480 C 190 470, 290 470, 300 480" fill="none" stroke="#64748b" stroke-width="1" stroke-dasharray="2,2"/>
-            <text x="310" y="483" font-size="9" fill="#0f172a">-W1 <tspan fill="#64748b">(NYY-J 5x16 mm²)</tspan></text>
+            <text x="310" y="483" font-size="9" fill="#0f172a">-W1 <tspan fill="#64748b">(NYY-J 5x25 mm²)</tspan></text>
 
-            <!-- USV-Anlage =T1 -->
-            <rect x="150" y="520" width="160" height="90" fill="#f8fafc" stroke="#0f172a" stroke-width="2"/>
-            <text x="230" y="555" font-size="14" font-weight="bold" text-anchor="middle" fill="#0f172a">=T1</text>
-            <text x="230" y="575" font-size="10" text-anchor="middle" fill="#0f172a">USV-Anlage 40kW</text>
-            <text x="230" y="590" font-size="9" text-anchor="middle" fill="#64748b">AC IN / AC OUT</text>
+            <!-- USV-Anlage =T1 mit GR/WR/Bypass/Batterie -->
+            <rect x="130" y="516" width="200" height="134" fill="#f8fafc" stroke="#0f172a" stroke-width="2"/>
+            <text x="230" y="534" font-size="12" font-weight="bold" text-anchor="middle" fill="#0f172a">=T1  USV-Anlage 40kW</text>
+            
+            <!-- GR block -->
+            <rect x="143" y="542" width="64" height="36" fill="#f8fafc" stroke="#0f172a" stroke-width="1"/>
+            <text x="175" y="557" font-size="10" font-weight="bold" text-anchor="middle" fill="#0f172a">GR</text>
+            <text x="175" y="569" font-size="8" text-anchor="middle" fill="#0f172a">[Q1]</text>
+            
+            <!-- Static Bypass block -->
+            <rect x="253" y="542" width="64" height="36" fill="#f8fafc" stroke="#0f172a" stroke-width="1"/>
+            <text x="285" y="555" font-size="10" font-weight="bold" text-anchor="middle" fill="#0f172a">Bypass</text>
+            <text x="285" y="569" font-size="8" text-anchor="middle" fill="#0f172a">[Q2]</text>
+            
+            <!-- Connection dots at box top edge (AC IN) -->
+            <circle cx="175" cy="516" r="2.5" fill="#78350f"/>
+            <circle cx="220" cy="516" r="2.5" fill="#0f172a"/>
+            <circle cx="285" cy="516" r="2.5" fill="#475569"/>
+            
+            <!-- AC IN bus (L1+L2 to GR, L3 to Bypass) -->
+            <line x1="175" y1="516" x2="175" y2="542" stroke="#78350f" stroke-width="1"/>
+            <line x1="220" y1="516" x2="220" y2="530" stroke="#0f172a" stroke-width="1"/>
+            <line x1="220" y1="530" x2="175" y2="530" stroke="#0f172a" stroke-width="0.5"/>
+            <line x1="175" y1="530" x2="175" y2="542" stroke="#0f172a" stroke-width="1"/>
+            <line x1="285" y1="516" x2="285" y2="542" stroke="#475569" stroke-width="1"/>
+            
+            <!-- AC bus cross-feed to Bypass (3 phases) -->
+            <line x1="175" y1="526" x2="285" y2="526" stroke="#78350f" stroke-width="0.5" stroke-dasharray="2,2"/>
+            <line x1="220" y1="526" x2="285" y2="526" stroke="#0f172a" stroke-width="0.5" stroke-dasharray="2,2"/>
+            
+            <!-- DC bus (horizontal) -->
+            <line x1="143" y1="584" x2="317" y2="584" stroke="#0f172a" stroke-width="1"/>
+            <!-- DC dots -->
+            <circle cx="175" cy="584" r="2" fill="#0f172a"/>
+            <circle cx="285" cy="584" r="2" fill="#0f172a"/>
+            
+            <!-- GR → DC bus -->
+            <line x1="175" y1="578" x2="175" y2="584" stroke="#0f172a" stroke-width="1"/>
+            
+            <!-- Battery block -->
+            <rect x="143" y="590" width="64" height="34" fill="#f8fafc" stroke="#0f172a" stroke-width="1"/>
+            <!-- Battery symbol inside: ─┼┼─ -->
+            <line x1="158" y1="605" x2="168" y2="605" stroke="#0f172a" stroke-width="1.5"/>
+            <line x1="168" y1="600" x2="168" y2="610" stroke="#0f172a" stroke-width="1.5"/>
+            <line x1="172" y1="600" x2="172" y2="610" stroke="#0f172a" stroke-width="1.5"/>
+            <line x1="178" y1="605" x2="190" y2="605" stroke="#0f172a" stroke-width="1"/>
+            <text x="183" y="618" font-size="7" text-anchor="middle" fill="#0f172a">BAT</text>
+            
+            <!-- DC bus → Battery -->
+            <line x1="175" y1="584" x2="175" y2="590" stroke="#0f172a" stroke-width="1"/>
+            
+            <!-- WR block -->
+            <rect x="253" y="590" width="64" height="34" fill="#f8fafc" stroke="#0f172a" stroke-width="1"/>
+            <text x="285" y="605" font-size="9" font-weight="bold" text-anchor="middle" fill="#0f172a">WR</text>
+            <text x="285" y="617" font-size="7" text-anchor="middle" fill="#0f172a">[Q3]</text>
+            
+            <!-- DC bus → WR -->
+            <line x1="285" y1="584" x2="285" y2="590" stroke="#0f172a" stroke-width="1"/>
+            
+            <!-- WR output → AC OUT (bottom) -->
+            <line x1="220" y1="624" x2="220" y2="646" stroke="#0f172a" stroke-width="1"/>
+            <line x1="285" y1="624" x2="285" y2="646" stroke="#475569" stroke-width="1"/>
+            <!-- Bypass output → AC OUT -->
+            <line x1="285" y1="578" x2="285" y2="584" stroke="#475569" stroke-width="0.5" stroke-dasharray="2,2"/>
+            
+            <!-- Connection dots at box bottom edge (AC OUT) -->
+            <circle cx="200" cy="646" r="2.5" fill="#78350f"/>
+            <circle cx="220" cy="646" r="2.5" fill="#0f172a"/>
+            <circle cx="240" cy="646" r="2.5" fill="#475569"/>
+            
+            <!-- Internal AC OUT bus -->
+            <path d="M 200 640 L 200 646" fill="none" stroke="#78350f" stroke-width="1"/>
+            <path d="M 175 640 L 175 646 L 200 646" fill="none" stroke="#78350f" stroke-width="0.5"/>
+            <path d="M 220 624 L 220 646" fill="none" stroke="#0f172a" stroke-width="1"/>
+            <path d="M 285 646 L 240 646" fill="none" stroke="#475569" stroke-width="0.5"/>
             
             <!-- Output from USV to MBS -->
-            <line x1="200" y1="610" x2="200" y2="650" stroke="#78350f" stroke-width="1"/>
-            <line x1="220" y1="610" x2="220" y2="650" stroke="#0f172a" stroke-width="1"/>
-            <line x1="240" y1="610" x2="240" y2="650" stroke="#475569" stroke-width="1"/>
+            <line x1="200" y1="646" x2="200" y2="650" stroke="#78350f" stroke-width="1"/>
+            <line x1="220" y1="646" x2="220" y2="645" stroke="#0f172a" stroke-width="1"/>
+            <line x1="240" y1="646" x2="240" y2="640" stroke="#475569" stroke-width="1"/>
             
             <path d="M 200 650 L 350 650 L 350 590" fill="none" stroke="#78350f" stroke-width="1"/>
             <path d="M 220 645 L 370 645 L 370 590" fill="none" stroke="#0f172a" stroke-width="1"/>
@@ -374,10 +444,14 @@
             <circle cx="500" cy="80" r="2.5" fill="#78350f"/>
             <circle cx="520" cy="100" r="2.5" fill="#0f172a"/>
             <circle cx="540" cy="120" r="2.5" fill="#475569"/>
+            <circle cx="560" cy="140" r="2.5" fill="#2563eb"/>
+            <circle cx="580" cy="160" r="2.5" fill="#16a34a"/>
             
             <line x1="500" y1="80" x2="500" y2="250" stroke="#78350f" stroke-width="1"/>
             <line x1="520" y1="100" x2="520" y2="250" stroke="#0f172a" stroke-width="1"/>
             <line x1="540" y1="120" x2="540" y2="250" stroke="#475569" stroke-width="1"/>
+            <line x1="560" y1="140" x2="560" y2="350" stroke="#2563eb" stroke-width="1"/>
+            <line x1="580" y1="160" x2="580" y2="350" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
 
             <text x="460" y="215" font-size="12" font-weight="bold" fill="#0f172a">=A1</text>
             <text x="460" y="235" font-size="10" fill="#0f172a">UV-RZ-01 (Bypass)</text>
@@ -393,43 +467,64 @@
             <text x="460" y="270" font-size="10" font-weight="bold" fill="#0f172a">-Q2</text>
             <text x="550" y="270" font-size="9" fill="#0f172a">LS 63A (Direktnetz)</text>
 
-            <line x1="500" y1="280" x2="500" y2="350" stroke="#78350f" stroke-width="1"/>
-            <line x1="520" y1="280" x2="520" y2="350" stroke="#0f172a" stroke-width="1"/>
-            <line x1="540" y1="280" x2="540" y2="350" stroke="#475569" stroke-width="1"/>
+            <path d="M 492 280 L 500 280 L 500 350" fill="none" stroke="#78350f" stroke-width="1"/>
+            <path d="M 512 280 L 520 280 L 520 350" fill="none" stroke="#0f172a" stroke-width="1"/>
+            <path d="M 532 280 L 540 280 L 540 350" fill="none" stroke="#475569" stroke-width="1"/>
 
             <!-- -X2 Klemmenleiste Abgang MBS -->
             <g fill="#ffffff" stroke="#0f172a" stroke-width="1.5">
               <circle cx="500" cy="350" r="3.5"/>
               <circle cx="520" cy="350" r="3.5"/>
               <circle cx="540" cy="350" r="3.5"/>
+              <circle cx="560" cy="350" r="3.5"/>
+              <circle cx="580" cy="350" r="3.5"/>
             </g>
             <text x="460" y="355" font-size="10" font-weight="bold" fill="#0f172a">-X2</text>
 
-            <path d="M 480 380 C 490 370, 550 370, 560 380" fill="none" stroke="#64748b" stroke-width="1" stroke-dasharray="2,2"/>
-            <text x="570" y="383" font-size="9" fill="#0f172a">-W2 <tspan fill="#64748b">(NYY-J 5x16 mm²)</tspan></text>
+            <path d="M 480 380 C 490 370, 560 370, 570 380" fill="none" stroke="#64748b" stroke-width="1" stroke-dasharray="2,2"/>
+            <text x="580" y="383" font-size="9" fill="#0f172a">-W2 <tspan fill="#64748b">(NYY-J 5x25 mm²)</tspan></text>
 
             <!-- To MBS Box -->
             <line x1="500" y1="353" x2="500" y2="500" stroke="#78350f" stroke-width="1"/>
             <line x1="520" y1="353" x2="520" y2="500" stroke="#0f172a" stroke-width="1"/>
             <line x1="540" y1="353" x2="540" y2="500" stroke="#475569" stroke-width="1"/>
+            <line x1="560" y1="353" x2="560" y2="500" stroke="#2563eb" stroke-width="1"/>
+            <line x1="580" y1="353" x2="580" y2="500" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
             
             <path d="M 500 500 L 450 500 L 450 520" fill="none" stroke="#78350f" stroke-width="1"/>
             <path d="M 520 500 L 470 500 L 470 520" fill="none" stroke="#0f172a" stroke-width="1"/>
             <path d="M 540 500 L 490 500 L 490 520" fill="none" stroke="#475569" stroke-width="1"/>
+            <!-- N and PE bypass the MBS (right side) -->
+            <line x1="560" y1="500" x2="560" y2="654" stroke="#2563eb" stroke-width="1"/>
+            <line x1="580" y1="500" x2="580" y2="652" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
+            <line x1="560" y1="654" x2="600" y2="654" stroke="#2563eb" stroke-width="1"/>
+            <line x1="580" y1="652" x2="600" y2="652" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
 
-            <rect x="330" y="520" width="180" height="70" fill="#f8fafc" stroke="#0f172a" stroke-width="1.5" stroke-dasharray="5,3"/>
-            <text x="420" y="545" font-size="12" font-weight="bold" text-anchor="middle" fill="#0f172a">=S1</text>
-            <text x="420" y="560" font-size="10" text-anchor="middle" fill="#0f172a">MBS Schalter (1-0-2)</text>
-            <text x="420" y="575" font-size="8" text-anchor="middle" fill="#64748b">Handumgehung</text>
+            <rect x="350" y="520" width="200" height="70" fill="#f8fafc" stroke="#0f172a" stroke-width="1.5" stroke-dasharray="5,3"/>
+            <text x="450" y="545" font-size="12" font-weight="bold" text-anchor="middle" fill="#0f172a">=S1</text>
+            <text x="450" y="560" font-size="10" text-anchor="middle" fill="#0f172a">MBS Schalter (1-0-2)</text>
+            <text x="450" y="575" font-size="8" text-anchor="middle" fill="#64748b">Handumgehung</text>
             
             <!-- Output from MBS to Load -->
-            <line x1="390" y1="590" x2="390" y2="650" stroke="#78350f" stroke-width="1"/>
-            <line x1="410" y1="590" x2="410" y2="650" stroke="#0f172a" stroke-width="1"/>
-            <line x1="430" y1="590" x2="430" y2="650" stroke="#475569" stroke-width="1"/>
+            <line x1="430" y1="590" x2="430" y2="650" stroke="#78350f" stroke-width="1"/>
+            <line x1="450" y1="590" x2="450" y2="650" stroke="#0f172a" stroke-width="1"/>
+            <line x1="470" y1="590" x2="470" y2="650" stroke="#475569" stroke-width="1"/>
             
-            <line x1="390" y1="650" x2="600" y2="650" stroke="#78350f" stroke-width="1"/>
-            <line x1="410" y1="645" x2="600" y2="645" stroke="#0f172a" stroke-width="1"/>
-            <line x1="430" y1="640" x2="600" y2="640" stroke="#475569" stroke-width="1"/>
+            <line x1="430" y1="650" x2="600" y2="650" stroke="#78350f" stroke-width="1"/>
+            <line x1="450" y1="645" x2="600" y2="645" stroke="#0f172a" stroke-width="1"/>
+            <line x1="470" y1="640" x2="600" y2="640" stroke="#475569" stroke-width="1"/>
+
+            <!-- N and PE feed-through to Blatt 2 (bridge busbar drops) -->
+            <line x1="260" y1="520" x2="260" y2="654" stroke="#2563eb" stroke-width="1"/>
+            <line x1="280" y1="520" x2="280" y2="545" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
+            <line x1="280" y1="545" x2="280" y2="652" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
+            <line x1="260" y1="654" x2="600" y2="654" stroke="#2563eb" stroke-width="1"/>
+            <line x1="280" y1="652" x2="600" y2="652" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
+            <!-- PE tap to MBS enclosure -->
+            <line x1="280" y1="545" x2="350" y2="545" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
+            <circle cx="280" cy="545" r="2" fill="#16a34a"/>
+            <circle cx="350" cy="545" r="2" fill="#16a34a"/>
+            <text x="315" y="540" font-size="7" fill="#16a34a" text-anchor="middle">PE</text>
 
             <text x="610" y="645" font-size="10" font-style="italic" fill="#64748b">Weiter zu UV-USV-01 (Blatt 2)</text>
             
@@ -498,8 +593,8 @@
             <line x1="170" y1="80" x2="170" y2="220" stroke="#78350f" stroke-width="1"/>
             <line x1="180" y1="100" x2="180" y2="220" stroke="#0f172a" stroke-width="1"/>
             <line x1="190" y1="120" x2="190" y2="220" stroke="#475569" stroke-width="1"/>
-            <line x1="200" y1="140" x2="200" y2="400" stroke="#2563eb" stroke-width="1"/>
-            <line x1="210" y1="160" x2="210" y2="400" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
+            <line x1="200" y1="140" x2="200" y2="405" stroke="#2563eb" stroke-width="1"/>
+            <line x1="210" y1="160" x2="210" y2="405" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
 
             <!-- LS -Q3.1 -->
             <g stroke="#0f172a" stroke-width="1.5" fill="none">
@@ -526,11 +621,13 @@
             <text x="150" y="303" font-size="9" font-weight="bold" fill="#0f172a">-X1</text>
 
             <!-- Cable -->
-            <line x1="170" y1="303" x2="170" y2="400" stroke="#78350f" stroke-width="1"/>
-            <line x1="180" y1="303" x2="180" y2="400" stroke="#0f172a" stroke-width="1"/>
-            <line x1="190" y1="303" x2="190" y2="400" stroke="#475569" stroke-width="1"/>
+            <line x1="170" y1="303" x2="170" y2="405" stroke="#78350f" stroke-width="1"/>
+            <line x1="180" y1="303" x2="180" y2="405" stroke="#0f172a" stroke-width="1"/>
+            <line x1="190" y1="303" x2="190" y2="405" stroke="#475569" stroke-width="1"/>
+            <line x1="200" y1="303" x2="200" y2="405" stroke="#2563eb" stroke-width="1"/>
+            <line x1="210" y1="303" x2="210" y2="405" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
             <path d="M 160 340 C 160 330, 220 330, 220 340" fill="none" stroke="#64748b" stroke-width="1" stroke-dasharray="2,2"/>
-            <text x="225" y="342" font-size="7" fill="#64748b">-W3.1 (5x6)</text>
+            <text x="225" y="342" font-size="7" fill="#64748b">-W3.1 (5x16)</text>
 
             <!-- Rack Box (Ortskasten) -->
             <rect x="150" y="380" width="80" height="150" fill="none" stroke="#0f172a" stroke-dasharray="8,4" stroke-width="1"/>
@@ -552,8 +649,8 @@
             <line x1="290" y1="80" x2="290" y2="220" stroke="#78350f" stroke-width="1"/>
             <line x1="300" y1="100" x2="300" y2="220" stroke="#0f172a" stroke-width="1"/>
             <line x1="310" y1="120" x2="310" y2="220" stroke="#475569" stroke-width="1"/>
-            <line x1="320" y1="140" x2="320" y2="400" stroke="#2563eb" stroke-width="1"/>
-            <line x1="330" y1="160" x2="330" y2="400" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
+            <line x1="320" y1="140" x2="320" y2="405" stroke="#2563eb" stroke-width="1"/>
+            <line x1="330" y1="160" x2="330" y2="405" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
 
             <!-- LS -Q3.2 -->
             <g stroke="#0f172a" stroke-width="1.5" fill="none">
@@ -580,11 +677,13 @@
             <text x="270" y="303" font-size="9" font-weight="bold" fill="#0f172a">-X2</text>
 
             <!-- Cable -->
-            <line x1="290" y1="303" x2="290" y2="400" stroke="#78350f" stroke-width="1"/>
-            <line x1="300" y1="303" x2="300" y2="400" stroke="#0f172a" stroke-width="1"/>
-            <line x1="310" y1="303" x2="310" y2="400" stroke="#475569" stroke-width="1"/>
+            <line x1="290" y1="303" x2="290" y2="405" stroke="#78350f" stroke-width="1"/>
+            <line x1="300" y1="303" x2="300" y2="405" stroke="#0f172a" stroke-width="1"/>
+            <line x1="310" y1="303" x2="310" y2="405" stroke="#475569" stroke-width="1"/>
+            <line x1="320" y1="303" x2="320" y2="405" stroke="#2563eb" stroke-width="1"/>
+            <line x1="330" y1="303" x2="330" y2="405" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
             <path d="M 280 340 C 280 330, 340 330, 340 340" fill="none" stroke="#64748b" stroke-width="1" stroke-dasharray="2,2"/>
-            <text x="345" y="342" font-size="7" fill="#64748b">-W3.2 (5x6)</text>
+            <text x="345" y="342" font-size="7" fill="#64748b">-W3.2 (5x16)</text>
 
             <!-- Rack Box (Ortskasten) -->
             <rect x="270" y="380" width="80" height="150" fill="none" stroke="#0f172a" stroke-dasharray="8,4" stroke-width="1"/>
@@ -606,8 +705,8 @@
             <line x1="410" y1="80" x2="410" y2="220" stroke="#78350f" stroke-width="1"/>
             <line x1="420" y1="100" x2="420" y2="220" stroke="#0f172a" stroke-width="1"/>
             <line x1="430" y1="120" x2="430" y2="220" stroke="#475569" stroke-width="1"/>
-            <line x1="440" y1="140" x2="440" y2="400" stroke="#2563eb" stroke-width="1"/>
-            <line x1="450" y1="160" x2="450" y2="400" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
+            <line x1="440" y1="140" x2="440" y2="405" stroke="#2563eb" stroke-width="1"/>
+            <line x1="450" y1="160" x2="450" y2="405" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
 
             <!-- LS -Q3.3 -->
             <g stroke="#0f172a" stroke-width="1.5" fill="none">
@@ -634,11 +733,13 @@
             <text x="390" y="303" font-size="9" font-weight="bold" fill="#0f172a">-X3</text>
 
             <!-- Cable -->
-            <line x1="410" y1="303" x2="410" y2="400" stroke="#78350f" stroke-width="1"/>
-            <line x1="420" y1="303" x2="420" y2="400" stroke="#0f172a" stroke-width="1"/>
-            <line x1="430" y1="303" x2="430" y2="400" stroke="#475569" stroke-width="1"/>
+            <line x1="410" y1="303" x2="410" y2="405" stroke="#78350f" stroke-width="1"/>
+            <line x1="420" y1="303" x2="420" y2="405" stroke="#0f172a" stroke-width="1"/>
+            <line x1="430" y1="303" x2="430" y2="405" stroke="#475569" stroke-width="1"/>
+            <line x1="440" y1="303" x2="440" y2="405" stroke="#2563eb" stroke-width="1"/>
+            <line x1="450" y1="303" x2="450" y2="405" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
             <path d="M 400 340 C 400 330, 460 330, 460 340" fill="none" stroke="#64748b" stroke-width="1" stroke-dasharray="2,2"/>
-            <text x="465" y="342" font-size="7" fill="#64748b">-W3.3 (5x6)</text>
+            <text x="465" y="342" font-size="7" fill="#64748b">-W3.3 (5x16)</text>
 
             <!-- Rack Box (Ortskasten) -->
             <rect x="390" y="380" width="80" height="150" fill="none" stroke="#0f172a" stroke-dasharray="8,4" stroke-width="1"/>
@@ -660,8 +761,8 @@
             <line x1="530" y1="80" x2="530" y2="220" stroke="#78350f" stroke-width="1"/>
             <line x1="540" y1="100" x2="540" y2="220" stroke="#0f172a" stroke-width="1"/>
             <line x1="550" y1="120" x2="550" y2="220" stroke="#475569" stroke-width="1"/>
-            <line x1="560" y1="140" x2="560" y2="400" stroke="#2563eb" stroke-width="1"/>
-            <line x1="570" y1="160" x2="570" y2="400" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
+            <line x1="560" y1="140" x2="560" y2="405" stroke="#2563eb" stroke-width="1"/>
+            <line x1="570" y1="160" x2="570" y2="405" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
 
             <!-- LS -Q3.4 -->
             <g stroke="#0f172a" stroke-width="1.5" fill="none">
@@ -688,11 +789,13 @@
             <text x="510" y="303" font-size="9" font-weight="bold" fill="#0f172a">-X4</text>
 
             <!-- Cable -->
-            <line x1="530" y1="303" x2="530" y2="400" stroke="#78350f" stroke-width="1"/>
-            <line x1="540" y1="303" x2="540" y2="400" stroke="#0f172a" stroke-width="1"/>
-            <line x1="550" y1="303" x2="550" y2="400" stroke="#475569" stroke-width="1"/>
+            <line x1="530" y1="303" x2="530" y2="405" stroke="#78350f" stroke-width="1"/>
+            <line x1="540" y1="303" x2="540" y2="405" stroke="#0f172a" stroke-width="1"/>
+            <line x1="550" y1="303" x2="550" y2="405" stroke="#475569" stroke-width="1"/>
+            <line x1="560" y1="303" x2="560" y2="405" stroke="#2563eb" stroke-width="1"/>
+            <line x1="570" y1="303" x2="570" y2="405" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
             <path d="M 520 340 C 520 330, 580 330, 580 340" fill="none" stroke="#64748b" stroke-width="1" stroke-dasharray="2,2"/>
-            <text x="585" y="342" font-size="7" fill="#64748b">-W3.4 (5x6)</text>
+            <text x="585" y="342" font-size="7" fill="#64748b">-W3.4 (5x16)</text>
 
             <!-- Rack Box (Ortskasten) -->
             <rect x="510" y="380" width="80" height="150" fill="none" stroke="#0f172a" stroke-dasharray="8,4" stroke-width="1"/>
@@ -714,8 +817,8 @@
             <line x1="650" y1="80" x2="650" y2="220" stroke="#78350f" stroke-width="1"/>
             <line x1="660" y1="100" x2="660" y2="220" stroke="#0f172a" stroke-width="1"/>
             <line x1="670" y1="120" x2="670" y2="220" stroke="#475569" stroke-width="1"/>
-            <line x1="680" y1="140" x2="680" y2="400" stroke="#2563eb" stroke-width="1"/>
-            <line x1="690" y1="160" x2="690" y2="400" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
+            <line x1="680" y1="140" x2="680" y2="405" stroke="#2563eb" stroke-width="1"/>
+            <line x1="690" y1="160" x2="690" y2="405" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
 
             <!-- LS -Q3.5 -->
             <g stroke="#0f172a" stroke-width="1.5" fill="none">
@@ -742,11 +845,13 @@
             <text x="630" y="303" font-size="9" font-weight="bold" fill="#0f172a">-X5</text>
 
             <!-- Cable -->
-            <line x1="650" y1="303" x2="650" y2="400" stroke="#78350f" stroke-width="1"/>
-            <line x1="660" y1="303" x2="660" y2="400" stroke="#0f172a" stroke-width="1"/>
-            <line x1="670" y1="303" x2="670" y2="400" stroke="#475569" stroke-width="1"/>
+            <line x1="650" y1="303" x2="650" y2="405" stroke="#78350f" stroke-width="1"/>
+            <line x1="660" y1="303" x2="660" y2="405" stroke="#0f172a" stroke-width="1"/>
+            <line x1="670" y1="303" x2="670" y2="405" stroke="#475569" stroke-width="1"/>
+            <line x1="680" y1="303" x2="680" y2="405" stroke="#2563eb" stroke-width="1"/>
+            <line x1="690" y1="303" x2="690" y2="405" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
             <path d="M 640 340 C 640 330, 700 330, 700 340" fill="none" stroke="#64748b" stroke-width="1" stroke-dasharray="2,2"/>
-            <text x="705" y="342" font-size="7" fill="#64748b">-W3.5 (5x6)</text>
+            <text x="705" y="342" font-size="7" fill="#64748b">-W3.5 (5x16)</text>
 
             <!-- Rack Box (Ortskasten) -->
             <rect x="630" y="380" width="80" height="150" fill="none" stroke="#0f172a" stroke-dasharray="8,4" stroke-width="1"/>
@@ -768,8 +873,8 @@
             <line x1="770" y1="80" x2="770" y2="220" stroke="#78350f" stroke-width="1"/>
             <line x1="780" y1="100" x2="780" y2="220" stroke="#0f172a" stroke-width="1"/>
             <line x1="790" y1="120" x2="790" y2="220" stroke="#475569" stroke-width="1"/>
-            <line x1="800" y1="140" x2="800" y2="400" stroke="#2563eb" stroke-width="1"/>
-            <line x1="810" y1="160" x2="810" y2="400" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
+            <line x1="800" y1="140" x2="800" y2="405" stroke="#2563eb" stroke-width="1"/>
+            <line x1="810" y1="160" x2="810" y2="405" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
 
             <!-- LS -Q3.6 -->
             <g stroke="#0f172a" stroke-width="1.5" fill="none">
@@ -796,11 +901,13 @@
             <text x="750" y="303" font-size="9" font-weight="bold" fill="#0f172a">-X6</text>
 
             <!-- Cable -->
-            <line x1="770" y1="303" x2="770" y2="400" stroke="#78350f" stroke-width="1"/>
-            <line x1="780" y1="303" x2="780" y2="400" stroke="#0f172a" stroke-width="1"/>
-            <line x1="790" y1="303" x2="790" y2="400" stroke="#475569" stroke-width="1"/>
+            <line x1="770" y1="303" x2="770" y2="405" stroke="#78350f" stroke-width="1"/>
+            <line x1="780" y1="303" x2="780" y2="405" stroke="#0f172a" stroke-width="1"/>
+            <line x1="790" y1="303" x2="790" y2="405" stroke="#475569" stroke-width="1"/>
+            <line x1="800" y1="303" x2="800" y2="405" stroke="#2563eb" stroke-width="1"/>
+            <line x1="810" y1="303" x2="810" y2="405" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
             <path d="M 760 340 C 760 330, 820 330, 820 340" fill="none" stroke="#64748b" stroke-width="1" stroke-dasharray="2,2"/>
-            <text x="825" y="342" font-size="7" fill="#64748b">-W3.6 (5x6)</text>
+            <text x="825" y="342" font-size="7" fill="#64748b">-W3.6 (5x16)</text>
 
             <!-- Rack Box (Ortskasten) -->
             <rect x="750" y="380" width="80" height="150" fill="none" stroke="#0f172a" stroke-dasharray="8,4" stroke-width="1"/>
@@ -822,8 +929,8 @@
             <line x1="890" y1="80" x2="890" y2="220" stroke="#78350f" stroke-width="1"/>
             <line x1="900" y1="100" x2="900" y2="220" stroke="#0f172a" stroke-width="1"/>
             <line x1="910" y1="120" x2="910" y2="220" stroke="#475569" stroke-width="1"/>
-            <line x1="920" y1="140" x2="920" y2="400" stroke="#2563eb" stroke-width="1"/>
-            <line x1="930" y1="160" x2="930" y2="400" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
+            <line x1="920" y1="140" x2="920" y2="405" stroke="#2563eb" stroke-width="1"/>
+            <line x1="930" y1="160" x2="930" y2="405" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
 
             <!-- LS -Q3.7 -->
             <g stroke="#0f172a" stroke-width="1.5" fill="none">
@@ -850,11 +957,13 @@
             <text x="870" y="303" font-size="9" font-weight="bold" fill="#0f172a">-X7</text>
 
             <!-- Cable -->
-            <line x1="890" y1="303" x2="890" y2="400" stroke="#78350f" stroke-width="1"/>
-            <line x1="900" y1="303" x2="900" y2="400" stroke="#0f172a" stroke-width="1"/>
-            <line x1="910" y1="303" x2="910" y2="400" stroke="#475569" stroke-width="1"/>
+            <line x1="890" y1="303" x2="890" y2="405" stroke="#78350f" stroke-width="1"/>
+            <line x1="900" y1="303" x2="900" y2="405" stroke="#0f172a" stroke-width="1"/>
+            <line x1="910" y1="303" x2="910" y2="405" stroke="#475569" stroke-width="1"/>
+            <line x1="920" y1="303" x2="920" y2="405" stroke="#2563eb" stroke-width="1"/>
+            <line x1="930" y1="303" x2="930" y2="405" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
             <path d="M 880 340 C 880 330, 940 330, 940 340" fill="none" stroke="#64748b" stroke-width="1" stroke-dasharray="2,2"/>
-            <text x="945" y="342" font-size="7" fill="#64748b">-W3.7 (5x6)</text>
+            <text x="945" y="342" font-size="7" fill="#64748b">-W3.7 (5x16)</text>
 
             <!-- Rack Box (Ortskasten) -->
             <rect x="870" y="380" width="80" height="150" fill="none" stroke="#0f172a" stroke-dasharray="8,4" stroke-width="1"/>

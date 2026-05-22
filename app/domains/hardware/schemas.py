@@ -88,6 +88,8 @@ class DeviceBase(BaseModel):
     psu_nennwatt: Optional[Decimal] = Field(None, ge=0)
     anschlussleistung_watt: Optional[Decimal] = Field(None, ge=0)
     einschaltstrom_faktor: Optional[Decimal] = Field(Decimal("2.5"), ge=0)
+    shutdown_delay_seconds: Optional[int] = Field(0, ge=0)
+    shutdown_priority: Optional[int] = Field(2, ge=1, le=4)
     bemerkung: Optional[str] = None
     strom_typ: Optional[str] = None
     spannung_v: Optional[int] = Field(None, ge=0)
@@ -117,6 +119,8 @@ class DeviceUpdate(BaseModel):
     psu_nennwatt: Optional[Decimal] = Field(None, ge=0)
     anschlussleistung_watt: Optional[Decimal] = Field(None, ge=0)
     einschaltstrom_faktor: Optional[Decimal] = Field(None, ge=0)
+    shutdown_delay_seconds: Optional[int] = Field(None, ge=0)
+    shutdown_priority: Optional[int] = Field(None, ge=1, le=4)
     bemerkung: Optional[str] = None
     strom_typ: Optional[str] = None
     spannung_v: Optional[int] = Field(None, ge=0)

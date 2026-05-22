@@ -6,9 +6,13 @@ Stored in JSON file (no DB migration required).
 
 import json
 import os
+import tempfile
+import threading
 from typing import List, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
+
+_hardware_lock = threading.Lock()
 
 router = APIRouter()
 
@@ -292,8 +296,18 @@ def _load_hardware() -> List[dict]:
 
 
 def _save_hardware(data: List[dict]) -> None:
-    with open(HARDWARE_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
+    with _hardware_lock:
+        tmp_fd, tmp_path = tempfile.mkstemp(dir=DATA_DIR, suffix=".json.tmp")
+        try:
+            with os.fdopen(tmp_fd, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+            os.replace(tmp_path, HARDWARE_FILE)
+        except Exception:
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+            raise
 
 
 @router.get("/", response_model=List[HardwareType])

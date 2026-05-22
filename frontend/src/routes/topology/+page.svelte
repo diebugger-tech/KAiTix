@@ -2,7 +2,8 @@
   import { onMount } from 'svelte';
   import { api } from '$lib/api';
   import { goto } from '$app/navigation';
-  import { FileText, Network, List, Search, X } from '@lucide/svelte';
+  import { FileText, Network, List, Search, X, Zap, Building, Wifi } from '@lucide/svelte';
+  import { locationStore } from '$lib/locations.svelte';
 
   type TopoData = Awaited<ReturnType<typeof api.getTopology>>;
   type Node = TopoData['nodes'][number];
@@ -18,7 +19,7 @@
   let showIntraRack = $state(true);
   let showPower = $state(true);
   let showCables = $state(true);
-  let viewMode = $state<'rack' | 'netzplan'>('rack');
+  let viewMode = $state<'rack' | 'netzplan' | 'stromlauf'>('rack');
   let showDeviceTypes = $state(new Set<string>(['server', 'switch', 'pdu', 'storage', 'firewall', 'kvm']));
   let searchQuery = $state('');
 
@@ -119,13 +120,30 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
     isSide?: boolean;
   }
 
+  const GROUP_GAP = 60;
+
   const baseLayout = $derived(() => {
-    if (!data) return { rackBoxes: [], nodeBoxes: new Map<number, NodeBox>(), totalW: 0, totalH: 0 };
+    if (!data) return { rackBoxes: [], nodeBoxes: new Map<number, NodeBox>(), totalW: 0, totalH: 0, groupLabels: [] as Array<{ name: string; x: number; w: number }> };
     const rackBoxes: Array<{ rack: TopoData['racks'][number]; x: number; y: number; w: number; h: number }> = [];
     const nodeBoxes = new Map<number, NodeBox>();
-    let x = 20;
+    const groupLabels: Array<{ name: string; x: number; w: number }> = [];
 
-    for (const rack of data.racks) {
+    // Sort by standort for geographic grouping
+    const sortedRacks = [...data.racks].sort((a, b) => (a.standort ?? '').localeCompare(b.standort ?? ''));
+
+    let x = 20;
+    let prevStandort: string | null = null;
+    let groupStartX = 20;
+
+    for (const rack of sortedRacks) {
+      const standort = rack.standort ?? '';
+      if (prevStandort !== null && standort !== prevStandort) {
+        groupLabels.push({ name: prevStandort || '—', x: groupStartX, w: x - RACK_GAP - groupStartX });
+        x += GROUP_GAP;
+        groupStartX = x;
+      }
+      prevStandort = standort;
+
       const rackH = rack.hoehe_u * U_HEIGHT + LABEL_H + DEV_PAD * 2;
       const rackX = x + PDU_SIDE_W + PDU_SIDE_GAP;
       rackBoxes.push({ rack, x: rackX, y: RACK_TOP, w: RACK_WIDTH, h: rackH });
@@ -169,6 +187,11 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
       x += FULL_RACK_W + RACK_GAP;
     }
 
+    // Close last group
+    if (prevStandort !== null) {
+      groupLabels.push({ name: prevStandort || '—', x: groupStartX, w: x - RACK_GAP - groupStartX });
+    }
+
     const noRack = data.nodes.filter(n => !n.rack_id);
     let ny = RACK_TOP;
     for (const dev of noRack) {
@@ -178,7 +201,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
     if (noRack.length > 0) x += FULL_RACK_W + RACK_GAP;
 
     const maxH = Math.max(...Array.from(nodeBoxes.values()).map(b => b.y + b.h), 500);
-    return { rackBoxes, nodeBoxes, totalW: x, totalH: maxH + 40 };
+    return { rackBoxes, nodeBoxes, totalW: x, totalH: maxH + 40, groupLabels };
   });
 
   function getBox(id: number): NodeBox | undefined {
@@ -217,6 +240,11 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
   }
 
   function edgeColor(edge: Edge): string {
+    // Cross-location validation overrides normal color
+    const clStatus = crossLocationStatus(edge);
+    if (clStatus === 'invalid') return '#ef4444'; // red — physically impossible
+    if (clStatus === 'warning') return '#f59e0b'; // amber — check optics
+
     if ((edge as any).edge_type === 'power') {
       const p = (edge as any).phase;
       if (p === 'L1') return '#f97316';
@@ -322,6 +350,73 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
 
   let rackFilter = $state<number | null>(null);
 
+  // ── Netzplan filters ─────────────────────────────────────────────────────────
+  let netzplanStandort = $state('');
+  let netzplanCableFilter = $state(new Set([
+    'cat', 'lwl', 'sfp', 'dac', 'breakout', 'sonstige-netz',
+    'strom-l1', 'strom-l2', 'strom-l3', 'strom-other'
+  ]));
+
+  function cableCategory(edge: Edge): string {
+    if ((edge as any).edge_type === 'power') {
+      const p = (edge as any).phase;
+      if (p === 'L1') return 'strom-l1';
+      if (p === 'L2') return 'strom-l2';
+      if (p === 'L3') return 'strom-l3';
+      return 'strom-other';
+    }
+    const t = (edge.typ ?? '').toLowerCase();
+    if (t.startsWith('cat') || t.includes('rj45') || t.includes('kupfer')) return 'cat';
+    if (t.includes('lc') || t.includes('sc') || t.includes('lwl') || t.includes('glasfaser') || t.includes(' om') || t.includes(' os') || t === 'lwl') return 'lwl';
+    if (t.includes('sfp') || t.includes('qsfp')) return 'sfp';
+    if (t === 'dac' || t.includes('direktkabel')) return 'dac';
+    if (t.includes('breakout') || t.includes('mpo') || t.includes('mtp')) return 'breakout';
+    return 'sonstige-netz';
+  }
+
+  // ── Cross-location validation ────────────────────────────────────────────────
+  function edgeStandorts(edge: Edge): [string | null, string | null] {
+    if (!data) return [null, null];
+    const vNode = data.nodes.find(n => n.id === edge.von_device_id);
+    const nNode = data.nodes.find(n => n.id === edge.nach_device_id);
+    const vRack = vNode?.rack_id ? data.racks.find(r => r.id === vNode.rack_id) : null;
+    const nRack = nNode?.rack_id ? data.racks.find(r => r.id === nNode.rack_id) : null;
+    return [vRack?.standort ?? null, nRack?.standort ?? null];
+  }
+
+  function isCrossLocation(edge: Edge): boolean {
+    const [a, b] = edgeStandorts(edge);
+    return !!(a && b && a !== b);
+  }
+
+  // 'invalid' = Cat/DAC (physisch unmöglich zwischen Standorten)
+  // 'warning' = SFP+/Breakout (unklar, abhängig von Optik)
+  // 'ok'      = LWL/Glasfaser
+  // null      = gleicher Standort, keine Prüfung
+  function crossLocationStatus(edge: Edge): 'invalid' | 'warning' | 'ok' | null {
+    if (!isCrossLocation(edge)) return null;
+    if ((edge as any).edge_type === 'power') return null;
+    const cat = cableCategory(edge);
+    if (cat === 'cat' || cat === 'dac') return 'invalid';
+    if (cat === 'sfp' || cat === 'breakout') return 'warning';
+    if (cat === 'lwl') return 'ok';
+    return 'warning';
+  }
+
+  function toggleCableFilter(key: string) {
+    const next = new Set(netzplanCableFilter);
+    if (next.has(key)) next.delete(key); else next.add(key);
+    netzplanCableFilter = next;
+  }
+
+  function setCableGroup(group: 'netz' | 'strom', on: boolean) {
+    const netzKeys = ['cat', 'lwl', 'sfp', 'dac', 'breakout', 'sonstige-netz'];
+    const stromKeys = ['strom-l1', 'strom-l2', 'strom-l3', 'strom-other'];
+    const next = new Set(netzplanCableFilter);
+    (group === 'netz' ? netzKeys : stromKeys).forEach(k => on ? next.add(k) : next.delete(k));
+    netzplanCableFilter = next;
+  }
+
   // Search: returns null when inactive, Set<id> when active
   const searchMatchIds = $derived(() => {
     if (!data || !searchQuery.trim()) return null;
@@ -374,105 +469,166 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
     }
     return result;
   });
+
+  const filteredNetzplanData = $derived(() => {
+    let items = netzplanData();
+    if (netzplanStandort) {
+      items = items.filter(item => {
+        const rack = data?.racks.find(r => r.id === item.node.rack_id);
+        return rack?.standort === netzplanStandort;
+      });
+    }
+    return items
+      .map(item => ({ ...item, connections: item.connections.filter(c => netzplanCableFilter.has(cableCategory(c.edge))) }))
+      .filter(item => item.connections.length > 0);
+  });
 </script>
 
 <svelte:head><title>KAiTix – Topologie</title></svelte:head>
 
 <div class="flex flex-col h-[calc(100vh-8rem)] gap-3">
   <!-- ── Toolbar ──────────────────────────────────────────────────────────────── -->
-  <div class="flex items-center gap-3 flex-wrap shrink-0 bg-[#101622] border border-slate-800 rounded-xl px-4 py-2.5">
+  <div class="flex flex-col gap-2 shrink-0">
+    <div class="flex items-center gap-3 flex-wrap bg-[#101622] border border-slate-800 rounded-xl px-4 py-2.5">
 
-    <!-- View mode toggle -->
-    <div class="flex items-center rounded-lg border border-slate-700 overflow-hidden shrink-0">
-      <button onclick={() => viewMode = 'rack'}
-        class="flex items-center gap-1.5 px-3 py-1.5 text-xs transition {viewMode === 'rack' ? 'bg-blue-600 text-white' : 'bg-[#182030] text-slate-400 hover:text-white'}">
-        <Network size={12} /> Topologie
-      </button>
-      <button onclick={() => viewMode = 'netzplan'}
-        class="flex items-center gap-1.5 px-3 py-1.5 text-xs transition {viewMode === 'netzplan' ? 'bg-blue-600 text-white' : 'bg-[#182030] text-slate-400 hover:text-white'}">
-        <List size={12} /> Netzplan
-      </button>
-    </div>
+      <!-- View mode toggle -->
+      <div class="flex items-center rounded-lg border border-slate-700 overflow-hidden shrink-0">
+        <button onclick={() => viewMode = 'rack'}
+          class="flex items-center gap-1.5 px-3 py-1.5 text-xs transition {viewMode === 'rack' ? 'bg-blue-600 text-white' : 'bg-[#182030] text-slate-400 hover:text-white'}">
+          <Network size={12} /> Topologie
+        </button>
+        <button onclick={() => viewMode = 'netzplan'}
+          class="flex items-center gap-1.5 px-3 py-1.5 text-xs transition {viewMode === 'netzplan' ? 'bg-blue-600 text-white' : 'bg-[#182030] text-slate-400 hover:text-white'}">
+          <List size={12} /> Netzplan
+        </button>
+      </div>
 
-    {#if viewMode === 'rack'}
-      <!-- Search -->
-      <div class="flex items-center gap-1.5 bg-[#182030] border border-slate-700 rounded-lg px-2 py-1 shrink-0">
-        <Search size={11} class="text-slate-500 shrink-0" />
-        <input bind:value={searchQuery} placeholder="Suche…"
-          class="bg-transparent text-xs text-white placeholder-slate-600 outline-none w-28" />
-        {#if searchQuery}
-          <button onclick={() => searchQuery = ''} class="text-slate-600 hover:text-slate-400"><X size={11} /></button>
+      {#if viewMode === 'rack'}
+        <!-- Search -->
+        <div class="flex items-center gap-1.5 bg-[#182030] border border-slate-700 rounded-lg px-2 py-1 shrink-0">
+          <Search size={11} class="text-slate-500 shrink-0" />
+          <input bind:value={searchQuery} placeholder="Suche…"
+            class="bg-transparent text-xs text-white placeholder-slate-600 outline-none w-28" />
+          {#if searchQuery}
+            <button onclick={() => searchQuery = ''} class="text-slate-600 hover:text-slate-400"><X size={11} /></button>
+          {/if}
+        </div>
+
+        <!-- Device type checkboxes -->
+        <div class="flex items-center gap-2 border-l border-slate-800 pl-3 flex-wrap">
+          <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500 shrink-0">Geräte</span>
+          {#each deviceTypes as dt}
+            <label class="flex items-center gap-1 cursor-pointer text-[11px] text-slate-300 whitespace-nowrap select-none">
+              <input type="checkbox" checked={showDeviceTypes.has(dt)} oninput={() => toggleDeviceType(dt)} class="w-3 h-3" />
+              <span class="w-2 h-2 rounded-sm shrink-0" style="background:{nodeStroke(dt)};opacity:.8"></span>
+              {deviceTypeLabel[dt]}
+            </label>
+          {/each}
+        </div>
+
+        <!-- Cable checkboxes (SVG-Topologie) -->
+        <div class="flex items-center gap-2 border-l border-slate-800 pl-3">
+          <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500 shrink-0">Kabel</span>
+          <label class="flex items-center gap-1 cursor-pointer text-[11px] text-slate-300 select-none">
+            <input type="checkbox" bind:checked={showCables} class="accent-blue-500 w-3 h-3" /> Netz
+          </label>
+          <label class="flex items-center gap-1 cursor-pointer text-[11px] text-slate-300 select-none">
+            <input type="checkbox" bind:checked={showPower} class="accent-orange-500 w-3 h-3" /> Strom
+          </label>
+          <label class="flex items-center gap-1 cursor-pointer text-[11px] text-slate-300 select-none">
+            <input type="checkbox" bind:checked={showCrossRack} class="accent-violet-500 w-3 h-3" /> XRack
+          </label>
+          <label class="flex items-center gap-1 cursor-pointer text-[11px] text-slate-300 select-none">
+            <input type="checkbox" bind:checked={showIntraRack} class="accent-slate-400 w-3 h-3" /> Intra
+          </label>
+        </div>
+
+        <!-- Quick presets (Strom-only, Alle) -->
+        <div class="flex items-center gap-1.5 border-l border-slate-800 pl-3">
+          <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500 shrink-0">Schnell</span>
+          <button onclick={() => applyPreset('all')} class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded text-[10px] text-slate-300 transition">Alle</button>
+          <button onclick={() => applyPreset('strom')} class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 border border-orange-900/60 rounded text-[10px] text-orange-400 transition">Stromplan</button>
+        </div>
+
+        <!-- Rack filter -->
+        {#if data}
+          <div class="flex items-center gap-2 border-l border-slate-800 pl-3">
+            <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500">Rack</span>
+            <select bind:value={rackFilter} class="bg-[#182030] border border-slate-700 hover:border-slate-600 rounded-lg px-2 py-1 text-xs text-white focus:outline-none">
+              <option value={null}>Alle</option>
+              {#each data.racks as rack}<option value={rack.id}>{rack.name}</option>{/each}
+            </select>
+          </div>
+        {/if}
+      {/if}
+
+      <div class="flex items-center gap-2 ml-auto">
+        {#if viewMode === 'netzplan'}
+          <button onclick={printNetzplan}
+            class="px-3 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs text-slate-300 transition flex items-center gap-1.5">
+            <FileText size={13} /> Drucken / PDF
+          </button>
+        {:else}
+          <button onclick={downloadTopologyPdf} disabled={pdfLoading}
+            class="px-3 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs text-slate-300 transition disabled:opacity-40 flex items-center gap-1.5">
+            <FileText size={13} />{pdfLoading ? '…' : 'PDF'}
+          </button>
+          <button onclick={resetView} class="px-3 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs text-slate-300 transition">Reset</button>
         {/if}
       </div>
-
-      <!-- Device type checkboxes -->
-      <div class="flex items-center gap-2 border-l border-slate-800 pl-3 flex-wrap">
-        <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500 shrink-0">Geräte</span>
-        {#each deviceTypes as dt}
-          <label class="flex items-center gap-1 cursor-pointer text-[11px] text-slate-300 whitespace-nowrap select-none">
-            <input type="checkbox" checked={showDeviceTypes.has(dt)} oninput={() => toggleDeviceType(dt)} class="w-3 h-3" />
-            <span class="w-2 h-2 rounded-sm shrink-0" style="background:{nodeStroke(dt)};opacity:.8"></span>
-            {deviceTypeLabel[dt]}
-          </label>
-        {/each}
-      </div>
-
-      <!-- Cable checkboxes -->
-      <div class="flex items-center gap-2 border-l border-slate-800 pl-3">
-        <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500 shrink-0">Kabel</span>
-        <label class="flex items-center gap-1 cursor-pointer text-[11px] text-slate-300 select-none">
-          <input type="checkbox" bind:checked={showCables} class="accent-blue-500 w-3 h-3" /> Netz
-        </label>
-        <label class="flex items-center gap-1 cursor-pointer text-[11px] text-slate-300 select-none">
-          <input type="checkbox" bind:checked={showPower} class="accent-orange-500 w-3 h-3" /> Strom
-        </label>
-        <label class="flex items-center gap-1 cursor-pointer text-[11px] text-slate-300 select-none">
-          <input type="checkbox" bind:checked={showCrossRack} class="accent-violet-500 w-3 h-3" /> XRack
-        </label>
-        <label class="flex items-center gap-1 cursor-pointer text-[11px] text-slate-300 select-none">
-          <input type="checkbox" bind:checked={showIntraRack} class="accent-slate-400 w-3 h-3" /> Intra
-        </label>
-      </div>
-
-      <!-- Quick presets -->
-      <div class="flex items-center gap-1.5 border-l border-slate-800 pl-3">
-        <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500 shrink-0">Schnell</span>
-        <button onclick={() => applyPreset('all')} class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded text-[10px] text-slate-300 transition">Alle</button>
-        <button onclick={() => applyPreset('netzwerk')} class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 border border-blue-900/60 rounded text-[10px] text-blue-400 transition">Netzplan</button>
-        <button onclick={() => applyPreset('strom')} class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 border border-orange-900/60 rounded text-[10px] text-orange-400 transition">Stromplan</button>
-      </div>
-
-      <!-- Rack filter -->
       {#if data}
-        <div class="flex items-center gap-2 border-l border-slate-800 pl-3">
-          <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500">Rack</span>
-          <select bind:value={rackFilter} class="bg-[#182030] border border-slate-700 hover:border-slate-600 rounded-lg px-2 py-1 text-xs text-white focus:outline-none">
-            <option value={null}>Alle</option>
-            {#each data.racks as rack}<option value={rack.id}>{rack.name}</option>{/each}
-          </select>
-        </div>
-      {/if}
-    {/if}
-
-    <div class="flex items-center gap-2 ml-auto">
-      {#if viewMode === 'netzplan'}
-        <button onclick={printNetzplan}
-          class="px-3 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs text-slate-300 transition flex items-center gap-1.5">
-          <FileText size={13} /> Drucken / PDF
-        </button>
-      {:else}
-        <button onclick={downloadTopologyPdf} disabled={pdfLoading}
-          class="px-3 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs text-slate-300 transition disabled:opacity-40 flex items-center gap-1.5">
-          <FileText size={13} />{pdfLoading ? '…' : 'PDF'}
-        </button>
-        <button onclick={resetView} class="px-3 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs text-slate-300 transition">Reset</button>
+        <span class="text-xs text-slate-600 shrink-0">
+          {#if viewMode === 'rack' && searchMatchIds()}{searchMatchIds()!.size} Treffer ·{/if}
+          {#if viewMode === 'netzplan'}{filteredNetzplanData().length} / {netzplanData().length} Geräte{:else}{data.nodes.length} Geräte · {data.edges.length} Verb.{/if}
+        </span>
       {/if}
     </div>
-    {#if data}
-      <span class="text-xs text-slate-600 shrink-0">
-        {#if searchMatchIds()}{searchMatchIds()!.size} Treffer ·{/if}
-        {data.nodes.length} Geräte · {data.edges.length} Verb.
-      </span>
+
+    <!-- Netzplan Filterleiste -->
+    {#if viewMode === 'netzplan' && data}
+      <div class="flex items-center gap-3 flex-wrap bg-[#101622] border border-slate-800 rounded-xl px-4 py-2">
+        <!-- Standort-Filter -->
+        <div class="flex items-center gap-2">
+          <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500 shrink-0">Standort</span>
+          <select bind:value={netzplanStandort}
+            class="bg-[#182030] border border-slate-700 rounded-lg px-2 py-1 text-xs text-white focus:outline-none">
+            <option value="">Alle</option>
+            {#each [...new Set(data.racks.map(r => r.standort).filter(Boolean))] as s}
+              <option value={s}>{s}</option>
+            {/each}
+          </select>
+        </div>
+
+        <!-- Netzwerkkabel-Filter -->
+        <div class="flex items-center gap-2 border-l border-slate-800 pl-3">
+          <button onclick={() => setCableGroup('netz', true)}
+            class="text-[9px] text-blue-400 hover:text-blue-300 font-semibold">Netz</button>
+          <button onclick={() => setCableGroup('netz', false)}
+            class="text-[9px] text-slate-600 hover:text-slate-400">✕</button>
+          {#each [['cat','Cat/RJ45','#3b82f6'],['lwl','LWL/Glasfaser','#d946ef'],['sfp','SFP+','#06b6d4'],['dac','DAC','#6b7280'],['breakout','Breakout','#8b5cf6'],['sonstige-netz','Sonstige','#475569']] as [key,label,col]}
+            <label class="flex items-center gap-1 cursor-pointer text-[11px] text-slate-300 whitespace-nowrap select-none">
+              <input type="checkbox" checked={netzplanCableFilter.has(key)} oninput={() => toggleCableFilter(key)} class="w-3 h-3" />
+              <span class="w-2 h-2 rounded-full shrink-0" style="background:{col}"></span>
+              {label}
+            </label>
+          {/each}
+        </div>
+
+        <!-- Strom-Filter -->
+        <div class="flex items-center gap-2 border-l border-slate-800 pl-3">
+          <button onclick={() => setCableGroup('strom', true)}
+            class="text-[9px] text-orange-400 hover:text-orange-300 font-semibold">Strom</button>
+          <button onclick={() => setCableGroup('strom', false)}
+            class="text-[9px] text-slate-600 hover:text-slate-400">✕</button>
+          {#each [['strom-l1','L1','#f97316'],['strom-l2','L2','#84cc16'],['strom-l3','L3','#a855f7'],['strom-other','allg.','#ef4444']] as [key,label,col]}
+            <label class="flex items-center gap-1 cursor-pointer text-[11px] text-slate-300 whitespace-nowrap select-none">
+              <input type="checkbox" checked={netzplanCableFilter.has(key)} oninput={() => toggleCableFilter(key)} class="w-3 h-3" />
+              <span class="w-2 h-2 rounded-full shrink-0" style="background:{col}"></span>
+              {label}
+            </label>
+          {/each}
+        </div>
+      </div>
     {/if}
   </div>
 
@@ -504,6 +660,19 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
             </defs>
             <rect x={viewBox.x} y={viewBox.y} width={viewBox.w} height={viewBox.h} fill="url(#grid)" />
 
+            <!-- Geographic group labels -->
+            {#each l.groupLabels as gl}
+              {#if gl.name && gl.name !== '—'}
+                {@const locTyp = locationStore.getTyp(gl.name)}
+                <rect x={gl.x - 6} y={RACK_TOP - 28} width={gl.w + 12} height={24} rx="4"
+                  fill={locTyp === 'dienstaußenstelle' ? '#1a1030' : '#0a1828'}
+                  stroke={locTyp === 'dienstaußenstelle' ? '#3b1f6a' : '#1e3a5a'} stroke-width="0.8" />
+                <text x={gl.x} y={RACK_TOP - 12} font-size="10" font-weight="700"
+                  fill={locTyp === 'dienstaußenstelle' ? '#a78bfa' : '#60a5fa'}
+                  class="select-none">{gl.name}</text>
+              {/if}
+            {/each}
+
             <!-- Edges -->
             <g>
               {#each filteredEdges() as edge}
@@ -512,20 +681,22 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
                 {@const isPow = (edge as any).edge_type === 'power'}
                 {@const isSel = selectedNode && (edge.von_device_id === selectedNode.id || edge.nach_device_id === selectedNode.id)}
                 {@const dim  = selectedNode && !isSel}
+                {@const clStatus = crossLocationStatus(edge)}
                 {#if path}
                   <path d={path} fill="none" stroke={edgeColor(edge)}
-                    stroke-width={isHov || isSel ? 2.5 : 1.2}
-                    stroke-dasharray={isPow ? '3 4' : edge.cross_rack ? '7 3' : 'none'}
-                    opacity={dim ? 0.06 : isHov || isSel ? 1 : 0.4}
+                    stroke-width={clStatus === 'invalid' ? (isHov || isSel ? 3.5 : 2) : (isHov || isSel ? 2.5 : 1.2)}
+                    stroke-dasharray={clStatus ? '6 3 2 3' : isPow ? '3 4' : edge.cross_rack ? '7 3' : 'none'}
+                    opacity={dim ? 0.06 : clStatus === 'invalid' ? (isHov || isSel ? 1 : 0.75) : (isHov || isSel ? 1 : 0.4)}
                     onmouseenter={() => hoveredEdge = edge.id}
                     onmouseleave={() => hoveredEdge = null} />
                   {#if isHov}
                     {@const a = getBox(edge.von_device_id)}
                     {@const b = getBox(edge.nach_device_id)}
                     {#if a && b}
+                      {@const [sA, sB] = edgeStandorts(edge)}
                       <text x={(a.cx+b.cx)/2} y={Math.min(a.cy,b.cy)-Math.abs(b.cx-a.cx)*0.25-30}
                         text-anchor="middle" font-size="9" fill="#e2e8f0" class="pointer-events-none select-none"
-                      >{edge.kabel_nr ?? '—'} · {edge.typ}{(edge as any).phase ? ' · '+(edge as any).phase : ''}{edge.von_port ? ' · '+edge.von_port : ''}{edge.nach_port ? ' → '+edge.nach_port : ''}</text>
+                      >{edge.kabel_nr ?? '—'} · {edge.typ}{(edge as any).phase ? ' · '+(edge as any).phase : ''}{edge.von_port ? ' · '+edge.von_port : ''}{edge.nach_port ? ' → '+edge.nach_port : ''}{clStatus === 'invalid' ? ' ⚠ Standortgrenze!' : clStatus === 'warning' ? ' ⚠ Optik prüfen' : sA && sB && sA !== sB ? ' · '+sA+'→'+sB : ''}</text>
                     {/if}
                   {/if}
                 {/if}
@@ -711,11 +882,29 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
       {:else if data}
         <div class="space-y-3 pb-6">
           <div class="bg-[#101622] border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-500 flex items-center justify-between">
-            <span>Port-Routing · Alle Verbindungen mit Quelle, Kabel und Ziel. Stromverbindungen über PDU-Outlets.</span>
-            <span class="text-slate-600">{netzplanData().length} Geräte</span>
+            <span>Port-Routing · Verbindungen nach Kabeltyp und Standort filterbar.</span>
+            <span class="text-slate-600">{filteredNetzplanData().length} / {netzplanData().length} Geräte</span>
           </div>
-          {#each netzplanData() as item}
+          {#each filteredNetzplanData() as item, idx}
             {@const rack = data.racks.find(r => r.id === item.node.rack_id)}
+            {@const prevItem = filteredNetzplanData()[idx - 1]}
+            {@const prevRack = prevItem ? data.racks.find(r => r.id === prevItem.node.rack_id) : null}
+            {@const standortChanged = netzplanStandort === null && rack?.standort !== prevRack?.standort}
+
+            {#if standortChanged && rack?.standort}
+              {@const locTyp = locationStore.getTyp(rack.standort)}
+              <div class="flex items-center gap-2 pt-2">
+                {#if locTyp === 'dienstaußenstelle'}
+                  <Wifi class="w-3.5 h-3.5 text-violet-400 shrink-0" />
+                {:else}
+                  <Building class="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                {/if}
+                <span class="text-xs font-bold {locTyp === 'dienstaußenstelle' ? 'text-violet-400' : 'text-blue-400'}">{rack.standort}</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded-full border {locTyp === 'dienstaußenstelle' ? 'bg-violet-900/30 text-violet-500 border-violet-700/40' : 'bg-blue-900/30 text-blue-500 border-blue-700/40'}">{locTyp === 'dienstaußenstelle' ? 'Außenstelle' : 'RZ'}</span>
+                <div class="flex-1 h-px bg-slate-800"></div>
+              </div>
+            {/if}
+
             <div class="bg-[#101622] border border-slate-800 rounded-xl overflow-hidden">
               <div class="flex items-center gap-3 px-4 py-2.5 border-b border-slate-800/60" style="border-left: 3px solid {nodeStroke(item.node.typ)}">
                 <div>
@@ -733,7 +922,10 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
               </div>
               <div class="divide-y divide-slate-800/40">
                 {#each item.connections as conn}
-                  <div class="flex items-center gap-3 px-4 py-2 text-xs hover:bg-slate-800/20 transition">
+                  {@const clStatus = crossLocationStatus(conn.edge)}
+                  {@const [clA, clB] = edgeStandorts(conn.edge)}
+                  <div class="flex items-center gap-3 px-4 py-2 text-xs hover:bg-slate-800/20 transition
+                    {clStatus === 'invalid' ? 'bg-red-950/20' : clStatus === 'warning' ? 'bg-amber-950/10' : ''}">
                     <div class="w-28 shrink-0">
                       {#if conn.localPort && conn.localPort !== '–'}
                         <span class="font-mono text-[10px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded">{conn.localPort}</span>
@@ -750,6 +942,22 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
                         {#if conn.edge.laenge_m}<span class="text-slate-700"> · {conn.edge.laenge_m}m</span>{/if}
                       </span>
                       <div class="w-4 h-px shrink-0" style="background:{edgeColor(conn.edge)}"></div>
+                      {#if clStatus === 'invalid'}
+                        <span title="Cat/DAC kann keine Standortgrenzen überqueren — öffentliche Glasfaser erforderlich"
+                          class="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded bg-red-900/60 text-red-300 border border-red-700/50">
+                          ⚠ {clA}→{clB}
+                        </span>
+                      {:else if clStatus === 'warning'}
+                        <span title="Standortgrenze — Optik/Medium prüfen"
+                          class="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-900/40 text-amber-300 border border-amber-700/40">
+                          ⚠ Optik?
+                        </span>
+                      {:else if clStatus === 'ok'}
+                        <span title="Glasfaser — Standortgrenze OK"
+                          class="shrink-0 text-[9px] px-1.5 py-0.5 rounded bg-violet-900/30 text-violet-400 border border-violet-700/30">
+                          ↔ WAN
+                        </span>
+                      {/if}
                     </div>
                     <div class="flex items-center gap-2 shrink-0 text-right">
                       <div>
@@ -771,8 +979,8 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
               </div>
             </div>
           {/each}
-          {#if netzplanData().length === 0}
-            <div class="text-center py-12 text-slate-500 text-sm">Keine Verbindungen dokumentiert.</div>
+          {#if filteredNetzplanData().length === 0}
+            <div class="text-center py-12 text-slate-500 text-sm">Keine Verbindungen für aktive Filter.</div>
           {/if}
         </div>
       {/if}

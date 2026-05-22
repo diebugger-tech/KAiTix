@@ -20,6 +20,8 @@ export interface Device {
   psu_nennwatt?: number;
   anschlussleistung_watt?: number;
   einschaltstrom_faktor?: number;
+  shutdown_delay_seconds?: number;
+  shutdown_priority?: number;
   bemerkung?: string;
   strom_typ?: string;
   spannung_v?: number;
@@ -244,6 +246,31 @@ export interface DimensioningResult {
   battery_type_name: string;
 }
 
+export interface ShutdownTimelinePoint {
+  time_seconds: number;
+  soc_pct: number;
+  load_kw: number;
+  remaining_runtime_min: number;
+  active_device_ids: number[];
+}
+
+export interface ShutdownDeviceStatus {
+  id: number;
+  hostname: string;
+  tdp_watt: number;
+  shutdown_delay_seconds: number;
+  shutdown_priority: number;
+  crashed: boolean;
+  crash_reason: string | null;
+  shutdown_at_seconds: number | null;
+}
+
+export interface ShutdownSimResult {
+  battery_summary: BatterySummary;
+  timeline: ShutdownTimelinePoint[];
+  device_statuses: ShutdownDeviceStatus[];
+}
+
 async function request(path: string, options: RequestInit = {}) {
   // Vite proxy routes /api to http://localhost:8003
   const url = path.startsWith('/') ? path : `/api/v1/${path}`;
@@ -360,6 +387,18 @@ export const api = {
     safety_margin_pct?: number;
   }): Promise<DimensioningResult> =>
     request('usv/battery/dimension', { method: 'POST', body: JSON.stringify(data) }),
+  simulateShutdown: (data: {
+    rack_id: number;
+    battery_type?: string;
+    series_blocks?: number;
+    parallel_strings?: number;
+    block_voltage_v?: number;
+    block_capacity_ah?: number;
+    age_years?: number;
+    temperature_c?: number;
+    inverter_efficiency?: number;
+  }): Promise<ShutdownSimResult> =>
+    request('usv/simulate-shutdown', { method: 'POST', body: JSON.stringify(data) }),
 
   // PDUs
   getPdus: (): Promise<Device[]> => request('pdus/'),

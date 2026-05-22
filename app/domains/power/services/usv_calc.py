@@ -33,9 +33,6 @@ class UsvCalculator:
 
         max_needed = max(modules_total, modules_phase)
 
-        # Ceil operation
-        import math
-
         ceil_needed = int(math.ceil(float(max_needed)))
 
         # N+1 requires adding 1 extra module
@@ -842,4 +839,144 @@ class BatteryCabinetEngine:
             "safety_margin_pct": float(safety_margin_pct * Decimal("100")),
             "battery_type": battery_type,
             "battery_type_name": profile["name"],
+        }
+
+
+class ShutdownSimulationEngine:
+    """
+    Simulates battery discharge and controlled server shutdown timeline.
+    Accounts for load drop as servers turn off, recalculating Peukert runtime.
+    """
+
+    @staticmethod
+    def simulate_shutdown(
+        battery_type: str,
+        series_blocks: int,
+        parallel_strings: int,
+        block_voltage_v: Decimal,
+        block_capacity_ah: Decimal,
+        age_years: Decimal,
+        temperature_c: Decimal,
+        inverter_efficiency: Decimal,
+        devices: List[Dict[str, Any]],
+    ) -> Dict[str, Any]:
+        # Calculate initial capacity
+        battery_info = BatteryCabinetEngine.calculate_effective_capacity(
+            battery_type=battery_type,
+            series_blocks=series_blocks,
+            parallel_strings=parallel_strings,
+            block_voltage_v=block_voltage_v,
+            block_capacity_ah=block_capacity_ah,
+            age_years=age_years,
+            temperature_c=temperature_c,
+        )
+
+        effective_ah = Decimal(str(battery_info["effective_capacity_ah"]))
+        total_voltage_v = Decimal(str(battery_info["total_voltage_v"]))
+        profile = BatteryCabinetEngine.get_profile(battery_type)
+        peukert_k = profile["peukert_k"]
+
+        # Rated discharge parameters
+        rated_hours = Decimal("10.0")
+        i_rated = effective_ah / rated_hours
+
+        # Setup simulation state
+        c_remaining = effective_ah
+        timeline: List[Dict[str, Any]] = []
+        device_statuses: Dict[int, Dict[str, Any]] = {}
+
+        # Initialize all devices as successful first
+        for dev in devices:
+            device_statuses[dev["id"]] = {
+                "id": dev["id"],
+                "hostname": dev["hostname"],
+                "tdp_watt": float(dev.get("tdp_watt") or 0),
+                "shutdown_delay_seconds": dev.get("shutdown_delay_seconds") or 0,
+                "shutdown_priority": dev.get("shutdown_priority") or 2,
+                "crashed": False,
+                "crash_reason": None,
+                "shutdown_at_seconds": None,
+            }
+
+        step_seconds = 10
+        t = 0
+        max_duration_seconds = 3600 * 5  # 5 hours max safety limit
+
+        while t <= max_duration_seconds:
+            # Determine which devices are still active at time t
+            active_devices = []
+            inactive_devices = []
+            for dev in devices:
+                delay = dev.get("shutdown_delay_seconds") or 0
+                if t < delay:
+                    active_devices.append(dev)
+                else:
+                    inactive_devices.append(dev)
+                    if device_statuses[dev["id"]]["shutdown_at_seconds"] is None:
+                        device_statuses[dev["id"]]["shutdown_at_seconds"] = delay
+
+            active_load_watt = sum(
+                Decimal(str(d.get("tdp_watt") or 0)) for d in active_devices
+            )
+            active_load_kw = active_load_watt / Decimal("1000")
+
+            battery_empty = c_remaining <= 1
+            if battery_empty:
+                for dev in active_devices:
+                    device_statuses[dev["id"]]["crashed"] = True
+                    device_statuses[dev["id"]]["crash_reason"] = "Akku leer"
+                active_devices = []
+
+            all_shut_down = len(active_devices) == 0 and t > 0
+
+            runtime_capacity = max(Decimal("0.001"), c_remaining)
+            remaining_runtime_min = (
+                FaultSimulationEngine.calculate_battery_runtime_peukert(
+                    total_load_kw=active_load_kw,
+                    battery_voltage=total_voltage_v,
+                    battery_capacity_ah=runtime_capacity,
+                    peukert_exponent=peukert_k,
+                    inverter_efficiency=inverter_efficiency,
+                )
+            )
+
+            soc_pct = (
+                (c_remaining / effective_ah) * Decimal("100")
+                if effective_ah > 0
+                else Decimal("0")
+            )
+            timeline.append(
+                {
+                    "time_seconds": t,
+                    "soc_pct": float(round(max(Decimal("0"), soc_pct), 2)),
+                    "load_kw": float(round(active_load_kw, 3)),
+                    "remaining_runtime_min": float(remaining_runtime_min),
+                    "active_device_ids": [d["id"] for d in active_devices],
+                }
+            )
+
+            if battery_empty or all_shut_down:
+                break
+
+            if active_load_kw > 0:
+                i_load = (active_load_kw * Decimal("1000")) / (
+                    total_voltage_v * inverter_efficiency
+                )
+                try:
+                    i_peukert = i_load * (i_load / i_rated) ** (
+                        peukert_k - Decimal("1")
+                    )
+                    ah_consumed = i_peukert * Decimal(str(step_seconds / 3600.0))
+                    c_remaining -= ah_consumed
+                except Exception:
+                    c_remaining = Decimal("0")
+            else:
+                pass
+
+            t += step_seconds
+
+        return {
+            "battery_summary": battery_info,
+            "timeline": timeline,
+            "device_statuses": list(device_statuses.values()),
         }

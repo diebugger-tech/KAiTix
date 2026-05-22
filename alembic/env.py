@@ -3,6 +3,7 @@ from logging.config import fileConfig
 from sqlalchemy import pool, create_engine
 from alembic import context
 from app.core.database import Base
+import app.models  # ensure models are imported so they register with Base.metadata
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

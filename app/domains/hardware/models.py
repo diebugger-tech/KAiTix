@@ -76,6 +76,12 @@ class Device(Base):
     einschaltstrom_faktor: Mapped[Optional[float]] = mapped_column(
         DECIMAL(3, 1), default=2.5
     )
+    shutdown_delay_seconds: Mapped[Optional[int]] = mapped_column(
+        Integer, default=0
+    )
+    shutdown_priority: Mapped[Optional[int]] = mapped_column(
+        Integer, default=2
+    )
 
     bemerkung: Mapped[Optional[str]] = mapped_column(String(255))
     inventarnummer: Mapped[Optional[str]] = mapped_column(String(100))

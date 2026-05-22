@@ -5,9 +5,10 @@
   import {
     Layers, MapPin, Plus, Trash2, Edit2, X, Server, Zap,
     ChevronRight, Activity, Network, Cable as CableIcon, Plug, FileText,
-    Building
+    Building, Wifi
   } from '@lucide/svelte';
   import RackModal from '$lib/components/RackModal.svelte';
+  import { locationStore, type LocationType } from '$lib/locations.svelte';
 
   // ── State ─────────────────────────────────────────────────
   let racks       = $state<Rack[]>([]);
@@ -20,11 +21,13 @@
   let loading     = $state(true);
   let errorMsg    = $state('');
 
-  // Server Room Management State
-  let room1Name = $state('Serverraum 1');
-  let room2Name = $state('Serverraum 2');
-  let oldRoom1Name = 'Serverraum 1';
-  let oldRoom2Name = 'Serverraum 2';
+  // Standort Management State
+  let showAddLocation = $state(false);
+  let newLocationName = $state('');
+  let newLocationType = $state<LocationType>('rechenzentrum');
+  let editingLocation = $state<string | null>(null);
+  let editLocationName = $state('');
+  let editLocationType = $state<LocationType>('rechenzentrum');
 
   // Rack modals
   let showAddRack  = $state(false);
@@ -171,45 +174,53 @@
     }
   }
 
-  async function saveRooms() {
-    localStorage.setItem('kaitix_room1_name', room1Name);
-    localStorage.setItem('kaitix_room2_name', room2Name);
-    
-    let updated = false;
+  async function applyLocationRename(oldName: string, newName: string) {
+    const trimmed = newName.trim();
+    if (!trimmed || trimmed === oldName) return;
     for (const r of racks) {
-      if (r.standort === oldRoom1Name && room1Name !== oldRoom1Name) {
-        try {
-          await api.updateRack(r.id, { ...r, standort: room1Name });
-          updated = true;
-        } catch (e) {
-          console.error('Error updating rack room name:', e);
-        }
-      } else if (r.standort === oldRoom2Name && room2Name !== oldRoom2Name) {
-        try {
-          await api.updateRack(r.id, { ...r, standort: room2Name });
-          updated = true;
-        } catch (e) {
-          console.error('Error updating rack room name:', e);
-        }
+      if (r.standort === oldName) {
+        try { await api.updateRack(r.id, { ...r, standort: trimmed }); }
+        catch (e) { console.error('Rack standort update failed:', e); }
       }
     }
-    
-    // rackLocation is now internal to RackModal — no sync needed here
-    
-    oldRoom1Name = room1Name;
-    oldRoom2Name = room2Name;
-    
-    if (updated) {
-      await loadAll();
+    locationStore.update(oldName, trimmed, locationStore.getTyp(oldName));
+    await loadAll();
+  }
+
+  function startEditLocation(name: string) {
+    editingLocation = name;
+    editLocationName = name;
+    editLocationType = locationStore.getTyp(name);
+  }
+
+  async function saveEditLocation() {
+    if (!editingLocation) return;
+    const old = editingLocation;
+    const newName = editLocationName.trim();
+    locationStore.update(old, newName, editLocationType);
+    if (newName !== old) await applyLocationRename(old, newName);
+    editingLocation = null;
+  }
+
+  async function removeLocation(name: string) {
+    const racksInLoc = racks.filter(r => r.standort === name);
+    if (racksInLoc.length > 0) {
+      alert(`Kann nicht löschen: ${racksInLoc.length} Rack(s) diesem Standort zugeordnet.`);
+      return;
     }
+    locationStore.remove(name);
+  }
+
+  async function addLocation() {
+    const name = newLocationName.trim();
+    if (!name) return;
+    locationStore.add(name, newLocationType);
+    newLocationName = '';
+    newLocationType = 'rechenzentrum';
+    showAddLocation = false;
   }
 
   onMount(() => {
-    const savedRoom1 = localStorage.getItem('kaitix_room1_name');
-    const savedRoom2 = localStorage.getItem('kaitix_room2_name');
-    if (savedRoom1) { room1Name = savedRoom1; oldRoom1Name = savedRoom1; }
-    if (savedRoom2) { room2Name = savedRoom2; oldRoom2Name = savedRoom2; }
-    // rackLocation managed inside RackModal
     loadAll();
   });
 
@@ -967,23 +978,77 @@
           {/each}
         </div>
 
-        <!-- Serverräume verwalten -->
+        <!-- Standorte verwalten -->
         <div class="bg-[#101622] border border-slate-800 rounded-xl p-3.5 space-y-2.5 mt-3">
-          <div class="flex items-center space-x-2 text-slate-400 font-bold text-[10px] uppercase tracking-wider">
-            <Building class="w-3.5 h-3.5 text-blue-400 shrink-0" />
-            <span>Serverräume verwalten</span>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2 text-slate-400 font-bold text-[10px] uppercase tracking-wider">
+              <Building class="w-3.5 h-3.5 text-blue-400 shrink-0" />
+              <span>Standorte</span>
+            </div>
+            <button onclick={() => { showAddLocation = !showAddLocation; newLocationName = ''; newLocationType = 'rechenzentrum'; }}
+              class="text-[10px] text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-1">
+              <Plus class="w-3 h-3" /> Neu
+            </button>
           </div>
-          <div class="space-y-2">
-            <div>
-              <label class="block text-[9px] font-semibold text-slate-500 mb-0.5">Name Raum 1</label>
-              <input type="text" bind:value={room1Name} onchange={saveRooms}
-                class="w-full bg-[#182030] border border-slate-700 rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500" />
+
+          {#if showAddLocation}
+            <div class="bg-slate-900/60 rounded-lg p-2 space-y-1.5 border border-slate-700/50">
+              <input type="text" bind:value={newLocationName} placeholder="Standortname"
+                class="w-full bg-[#182030] border border-slate-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500" />
+              <select bind:value={newLocationType}
+                class="w-full bg-[#182030] border border-slate-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500">
+                <option value="rechenzentrum">Rechenzentrum</option>
+                <option value="dienstaußenstelle">Dienstaußenstelle</option>
+              </select>
+              <div class="flex gap-1.5">
+                <button onclick={addLocation}
+                  class="flex-1 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-[10px] font-semibold transition">Hinzufügen</button>
+                <button onclick={() => showAddLocation = false}
+                  class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded text-[10px] transition">Abbruch</button>
+              </div>
             </div>
-            <div>
-              <label class="block text-[9px] font-semibold text-slate-500 mb-0.5">Name Raum 2</label>
-              <input type="text" bind:value={room2Name} onchange={saveRooms}
-                class="w-full bg-[#182030] border border-slate-700 rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500" />
-            </div>
+          {/if}
+
+          <div class="space-y-1">
+            {#each locationStore.locations as loc}
+              {#if editingLocation === loc.name}
+                <div class="bg-slate-900/60 rounded-lg p-2 space-y-1.5 border border-blue-700/40">
+                  <input type="text" bind:value={editLocationName}
+                    class="w-full bg-[#182030] border border-slate-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500" />
+                  <select bind:value={editLocationType}
+                    class="w-full bg-[#182030] border border-slate-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500">
+                    <option value="rechenzentrum">Rechenzentrum</option>
+                    <option value="dienstaußenstelle">Dienstaußenstelle</option>
+                  </select>
+                  <div class="flex gap-1.5">
+                    <button onclick={saveEditLocation}
+                      class="flex-1 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-[10px] font-semibold transition">Speichern</button>
+                    <button onclick={() => editingLocation = null}
+                      class="px-2 py-1 bg-slate-800 text-slate-400 rounded text-[10px] transition">Abbruch</button>
+                  </div>
+                </div>
+              {:else}
+                <div class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-800/40 group">
+                  {#if loc.typ === 'rechenzentrum'}
+                    <Building class="w-3 h-3 text-blue-400 shrink-0" />
+                  {:else}
+                    <Wifi class="w-3 h-3 text-violet-400 shrink-0" />
+                  {/if}
+                  <div class="flex-1 min-w-0">
+                    <div class="text-xs text-slate-200 truncate">{loc.name}</div>
+                    <div class="text-[9px] text-slate-600">{loc.typ === 'rechenzentrum' ? 'Rechenzentrum' : 'Dienstaußenstelle'}</div>
+                  </div>
+                  <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition">
+                    <button onclick={() => startEditLocation(loc.name)} class="text-slate-500 hover:text-blue-400">
+                      <Edit2 class="w-3 h-3" />
+                    </button>
+                    <button onclick={() => removeLocation(loc.name)} class="text-slate-500 hover:text-red-400">
+                      <Trash2 class="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+              {/if}
+            {/each}
           </div>
         </div>
       </div>
@@ -1569,8 +1634,6 @@
   bind:show={showAddRack}
   onSave={handleAddRack}
   hardwareTypes={hardware.filter(h => h.kategorie === 'rack')}
-  room1Name={room1Name}
-  room2Name={room2Name}
 />
 
 <RackModal
@@ -1579,8 +1642,6 @@
   initialData={selectedRack}
   showRemark={true}
   hardwareTypes={hardware.filter(h => h.kategorie === 'rack')}
-  room1Name={room1Name}
-  room2Name={room2Name}
 />
 
 <!-- ═══ MODAL: Gerät einbauen ════════════════════════════ -->

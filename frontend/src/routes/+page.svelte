@@ -1,19 +1,21 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { api, type Rack, type Device, type Cable, type HardwareType } from '$lib/api';
-  import { 
-    Server, 
-    Layers, 
-    Plus, 
-    HardDrive, 
+  import {
+    Server,
+    Layers,
+    Plus,
+    HardDrive,
     Zap,
     MapPin,
     Building,
     AlertTriangle,
     Info,
-    Cable as CableIcon
+    Cable as CableIcon,
+    Wifi
   } from '@lucide/svelte';
   import RackModal from '$lib/components/RackModal.svelte';
+  import { locationStore } from '$lib/locations.svelte';
 
   let racks = $state<Rack[]>([]);
   let devices = $state<Device[]>([]);
@@ -207,14 +209,24 @@
             {@const roomRacks = racks.filter(r => r.standort === room)}
             {@const ph = computeRoomPhaseLoads(roomRacks)}
             {@const roomTotalKw = ph.l1 + ph.l2 + ph.l3}
+            {@const locTyp = locationStore.getTyp(room)}
             <div class="space-y-4">
               <!-- Room Header -->
               <div class="flex items-center gap-3">
-                <div class="p-2 bg-slate-800 rounded-lg">
-                  <Building class="w-4 h-4 text-slate-400" />
+                <div class="p-2 {locTyp === 'dienstaußenstelle' ? 'bg-violet-900/30' : 'bg-slate-800'} rounded-lg">
+                  {#if locTyp === 'dienstaußenstelle'}
+                    <Wifi class="w-4 h-4 text-violet-400" />
+                  {:else}
+                    <Building class="w-4 h-4 text-slate-400" />
+                  {/if}
                 </div>
                 <div>
-                  <h4 class="font-bold text-white font-outfit text-sm">{room}</h4>
+                  <div class="flex items-center gap-2">
+                    <h4 class="font-bold text-white font-outfit text-sm">{room}</h4>
+                    <span class="text-[9px] px-1.5 py-0.5 rounded-full font-semibold {locTyp === 'dienstaußenstelle' ? 'bg-violet-900/40 text-violet-400 border border-violet-700/40' : 'bg-blue-900/40 text-blue-400 border border-blue-700/40'}">
+                      {locTyp === 'dienstaußenstelle' ? 'Außenstelle' : 'RZ'}
+                    </span>
+                  </div>
                   <span class="text-[10px] text-slate-500">{roomRacks.length} Rack{roomRacks.length !== 1 ? 's' : ''} · {roomTotalKw.toFixed(2)} kW gesamt</span>
                 </div>
               </div>

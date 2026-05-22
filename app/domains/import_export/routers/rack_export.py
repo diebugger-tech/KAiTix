@@ -7,8 +7,10 @@ Einbinden in app/api/__init__.py oder main.py:
     app.include_router(pdf_router, prefix="/api/v1", tags=["export"])
 """
 
+import logging
 import os
 import tempfile
+
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -23,6 +25,7 @@ from app.models import (
 )
 from app.domains.import_export.services.rack_pdf import generate_rack_pdf
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -132,14 +135,13 @@ async def export_rack_pdf(
 
     try:
         generate_rack_pdf(data, tmp_path, rack_id=rack_id)
-    except Exception as e:
+    except Exception:
         try:
             os.unlink(tmp_path)
-        except Exception:
+        except OSError:
             pass
-        raise HTTPException(
-            status_code=500, detail=f"PDF-Generierung fehlgeschlagen: {e}"
-        )
+        logger.exception("PDF-Generierung fehlgeschlagen")
+        raise HTTPException(status_code=500, detail="PDF-Generierung fehlgeschlagen")
 
     filename = f"rack_{rack_name.replace(' ', '_')}.pdf"
     background_tasks.add_task(remove_file, tmp_path)
@@ -164,14 +166,13 @@ async def export_all_racks_pdf(
 
     try:
         generate_rack_pdf(data, tmp_path)
-    except Exception as e:
+    except Exception:
         try:
             os.unlink(tmp_path)
-        except Exception:
+        except OSError:
             pass
-        raise HTTPException(
-            status_code=500, detail=f"PDF-Generierung fehlgeschlagen: {e}"
-        )
+        logger.exception("PDF-Generierung fehlgeschlagen")
+        raise HTTPException(status_code=500, detail="PDF-Generierung fehlgeschlagen")
 
     background_tasks.add_task(remove_file, tmp_path)
     return FileResponse(

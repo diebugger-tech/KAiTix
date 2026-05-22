@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from datetime import datetime, timezone
+from app.domains.hardware.models import Device as DeviceModel
 import json
 from app.core.database import get_db
 from app.models import (
@@ -25,6 +26,7 @@ from app.domains.power.services.usv_calc import (
     UsvCalculator,
     FaultSimulationEngine,
     BatteryCabinetEngine,
+    ShutdownSimulationEngine,
 )
 
 router = APIRouter()
@@ -290,3 +292,91 @@ def get_battery_dimensioning(req: DimensioningRequest):
         system_voltage_v=req.system_voltage_v,
         safety_margin_pct=req.safety_margin_pct,
     )
+
+
+# === SHUTDOWN SIMULATION ===
+
+
+class ShutdownTimelinePoint(BaseModel):
+    time_seconds: int
+    soc_pct: float
+    load_kw: float
+    remaining_runtime_min: float
+    active_device_ids: List[int]
+
+
+class ShutdownDeviceStatus(BaseModel):
+    id: int
+    hostname: str
+    tdp_watt: float
+    shutdown_delay_seconds: int
+    shutdown_priority: int
+    crashed: bool
+    crash_reason: Optional[str] = None
+    shutdown_at_seconds: Optional[int] = None
+
+
+class ShutdownSimulationResponse(BaseModel):
+    battery_summary: Dict[str, Any]
+    timeline: List[ShutdownTimelinePoint]
+    device_statuses: List[ShutdownDeviceStatus]
+
+
+class ShutdownSimulationRequest(BaseModel):
+    rack_id: int = Field(..., description="Rack ID to simulate shutdown for")
+    battery_type: str = "vrla"
+    series_blocks: int = Field(4, gt=0)
+    parallel_strings: int = Field(1, gt=0)
+    block_voltage_v: Decimal = Field(Decimal("12"), gt=0)
+    block_capacity_ah: Decimal = Field(Decimal("100"), gt=0)
+    age_years: Decimal = Field(Decimal("0"), ge=0)
+    temperature_c: Decimal = Field(Decimal("20"), ge=-273.15)
+    inverter_efficiency: Decimal = Field(Decimal("0.90"), gt=0, le=1)
+
+
+@router.post("/simulate-shutdown", response_model=ShutdownSimulationResponse)
+async def simulate_shutdown(
+    req: ShutdownSimulationRequest, db: AsyncSession = Depends(get_db)
+):
+    """Simulates controlled shutdown cascade with Peukert battery discharge."""
+    result = await db.execute(
+        select(DeviceModel).where(DeviceModel.rack_id == req.rack_id)
+    )
+    devices = result.scalars().all()
+
+    if not devices:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Keine Geräte im Rack {req.rack_id} gefunden",
+        )
+
+    device_dicts = [
+        {
+            "id": d.id,
+            "hostname": d.hostname,
+            "typ": d.typ,
+            "tdp_watt": float(d.tdp_watt) if d.tdp_watt else 0,
+            "shutdown_delay_seconds": d.shutdown_delay_seconds or 0,
+            "shutdown_priority": d.shutdown_priority or 2,
+        }
+        for d in devices
+    ]
+
+    # Sort by shutdown_priority (1=critical last), then by delay
+    device_dicts.sort(
+        key=lambda x: (x["shutdown_priority"], x["shutdown_delay_seconds"])
+    )
+
+    sim_result = ShutdownSimulationEngine.simulate_shutdown(
+        battery_type=req.battery_type,
+        series_blocks=req.series_blocks,
+        parallel_strings=req.parallel_strings,
+        block_voltage_v=req.block_voltage_v,
+        block_capacity_ah=req.block_capacity_ah,
+        age_years=req.age_years,
+        temperature_c=req.temperature_c,
+        inverter_efficiency=req.inverter_efficiency,
+        devices=device_dicts,
+    )
+
+    return sim_result

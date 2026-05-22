@@ -261,8 +261,6 @@ async def add_interface(
         port_name=data.port_name,
         typ=data.typ,
         mac_adresse=data.mac_adresse,
-        switch_hostname=data.switch_hostname,
-        switch_port=data.switch_port,
     )
     db.add(iface)
     await db.commit()

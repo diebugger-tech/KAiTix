@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { api, type HardwareType, type SystemState, type USVSimulationEvent, type RuntimeCurveData, type DimensioningResult } from '$lib/api';
+  import ShutdownSimulator from '$lib/components/ShutdownSimulator.svelte';
   import {
     Zap, Battery, AlertTriangle, RefreshCw, Activity, Gauge,
     CircleCheck, CircleAlert, CircleX, Power, ChevronDown, ChevronUp,
@@ -8,7 +9,7 @@
   } from '@lucide/svelte';
 
   // --- Tab state ---
-  let activeTab = $state<'simulation' | 'battery' | 'schaltbild'>('simulation');
+  let activeTab = $state<'simulation' | 'battery' | 'schaltbild' | 'shutdown_sequence'>('simulation');
 
   // --- Simulation state ---
   let l1_kw = $state(4);
@@ -303,6 +304,13 @@
         {activeTab === 'schaltbild' ? 'bg-purple-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}"
     >
       <Layers class="w-3.5 h-3.5" /><span>Stromlaufplan</span>
+    </button>
+    <button
+      onclick={() => activeTab = 'shutdown_sequence'}
+      class="px-4 py-2 rounded-md text-sm font-medium transition flex items-center space-x-2
+        {activeTab === 'shutdown_sequence' ? 'bg-rose-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}"
+    >
+      <Clock class="w-3.5 h-3.5" /><span>Shutdown-Ablauf</span>
     </button>
   </div>
 
@@ -781,6 +789,9 @@
         </div>
       </div>
     </div>
+  {:else if activeTab === 'shutdown_sequence'}
+    <!-- === SHUTDOWN SEQUENCE TAB === -->
+    <ShutdownSimulator />
   {:else}
     <!-- === STROMLAUFPLAN TAB === -->
     <div class="bg-[#101622] border border-slate-800 rounded-xl p-6">

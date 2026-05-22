@@ -1,20 +1,20 @@
 <script>
   import { X } from '@lucide/svelte';
+  import { locationStore } from '$lib/locations.svelte';
 
   let {
     show = $bindable(false),
     onSave,
-    onClose,
+    onClose = undefined,
     initialData = null,
     hardwareTypes = [],
-    room1Name = 'Serverraum 1',
-    room2Name = 'Serverraum 2'
+    showRemark = false,
   } = $props();
 
   // Internal form state
   let selectedRackHWId = $state(null);
   let name = $state('');
-  let standort = $state('Serverraum 1');
+  let standort = $state(locationStore.locations[0]?.name ?? 'Serverraum 1');
   let hoehe_u = $state(42); // will be overridden by defaultHeight in $effect
   let breite_mm = $state(600);
   let bemerkung = $state('');
@@ -25,7 +25,7 @@
     if (show) {
       if (initialData) {
         name = initialData.name || '';
-        standort = initialData.standort || 'Serverraum 1';
+        standort = initialData.standort || locationStore.locations[0]?.name || 'Serverraum 1';
         hoehe_u = initialData.hoehe_u || defaultHeight;
         breite_mm = initialData.breite_mm || 600;
         bemerkung = initialData.bemerkung || '';
@@ -33,7 +33,7 @@
       } else {
         // Reset for addition
         name = '';
-        standort = room1Name;
+        standort = locationStore.locations[0]?.name ?? 'Serverraum 1';
         hoehe_u = defaultHeight;
         breite_mm = 600;
         bemerkung = '';
@@ -123,14 +123,15 @@
           class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
       </div>
       <div>
-        <label class="block text-xs font-semibold text-slate-400 mb-1">Standort (Serverraum)</label>
+        <label class="block text-xs font-semibold text-slate-400 mb-1">Standort</label>
         <select bind:value={standort}
           class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
-          {#if standort && standort !== room1Name && standort !== room2Name}
+          {#if standort && !locationStore.locations.some(l => l.name === standort)}
             <option value={standort}>{standort}</option>
           {/if}
-          <option value={room1Name}>{room1Name}</option>
-          <option value={room2Name}>{room2Name}</option>
+          {#each locationStore.locations as loc}
+            <option value={loc.name}>{loc.name}</option>
+          {/each}
         </select>
       </div>
       {#if selectedRackHWId !== null}
