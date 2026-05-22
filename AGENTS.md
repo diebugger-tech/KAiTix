@@ -5,12 +5,19 @@
 
 ## Grundprinzip
 
-- **KAiTix ist ein reines Hardwaredokumentationstool** für Rechenzentrumsinfrastruktur
+- **KAiTix ist ein Hardwaredokumentations- und Showroom-Tool** für Rechenzentrumsinfrastruktur
+- **Produktziel**: MSP-Techniker pflegen Kundendaten ein — KAiTix zeigt die Infrastruktur visuell beim Kunden-Meeting oder als PDF-Export
+- **Kein Multi-Tenant, kein Kunden-Login** — eine Instanz, ein Team, maximale Einfachheit
 - **Kein Monitoring, keine Live-Daten** — keine SNMP-, API- oder Netzwerkanbindung an PDUs, Server oder Switches
 - **Keine Echtzeitwerte** — keine Polling-Loops, keine WebSocket-Streams, keine Sensor-Daten
-- **Zweck**: Dokumentation von Racks, Geräten, Kabeln, PDU-Steckdosen, USV-Dimensionierung
+- **Zweck**: Dokumentation + visuelle Präsentation von Racks, Geräten, Kabeln, PDU-Steckdosen, USV-Dimensionierung
 - **Kentix/Geräte**: Nur physische Installation dokumentieren (Modell, Seriennummer, Position, Anschlusswerte)
 - **USV-Simulation**: Reine Berechnung auf Basis dokumentierter Nennleistungen, keine Live-Lastdaten
+
+**Showroom-Workflow:**
+1. Techniker pflegt Kundendaten in KAiTix
+2. Rack-Diagramm + Topologie-Graph beim Kunden-Meeting öffnen
+3. PDF-Export mit Logo per E-Mail an Kunden
 
 **Kerndatenmodell:**
 - Racks enthalten Geräte an definierten U-Positionen

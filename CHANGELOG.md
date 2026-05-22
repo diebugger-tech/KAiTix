@@ -4,6 +4,8 @@ Alle wesentlichen Änderungen am Projekt werden in dieser Datei dokumentiert.
 
 ## [Unreleased]
 
+## [1.0.0] — 2026-05-22
+
 ### Hinzugefügt
 - Rittal VX IT / TS IT Racks im Hardware-Katalog (8 Varianten, 42/47 HE, 600/800mm)
 - Kentix SmartPDU Modelle (Zero-U vertikal, min_rack_hoehe Validierung)
