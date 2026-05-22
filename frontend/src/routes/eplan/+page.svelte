@@ -1,7 +1,59 @@
 <script lang="ts">
-  import { FileText, Grid } from '@lucide/svelte';
-  
+  import { FileText, Grid, Download } from '@lucide/svelte';
+
   let activeTab = $state<'block' | 'cad'>('cad');
+  let pdfLoading = $state(false);
+
+  function printEplan() {
+    pdfLoading = true;
+    try {
+      const blockSvg = document.querySelector('#eplan-block svg')?.outerHTML ?? '';
+      const blatt1Svg = document.querySelector('#eplan-blatt1')?.outerHTML ?? '';
+      const blatt2Svg = document.querySelector('#eplan-blatt2')?.outerHTML ?? '';
+
+      const html = `<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>KAiTix Stromlaufplan &amp; Topologie</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: white; font-family: sans-serif; }
+    .page { width: 297mm; min-height: 210mm; padding: 10mm; page-break-after: always; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .page:last-child { page-break-after: auto; }
+    .page-title { font-size: 12pt; font-weight: bold; color: #0f172a; margin-bottom: 6mm; align-self: flex-start; }
+    svg { width: 100%; height: auto; }
+    @media print {
+      @page { size: A3 landscape; margin: 8mm; }
+      .page { width: 100%; padding: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <p class="page-title">Blockschaltbild — Einspeisungs- und Verteilerstruktur</p>
+    ${blockSvg}
+  </div>
+  <div class="page">
+    <p class="page-title">CAD E-Plan — Blatt 1: USV-Einspeisung RZ</p>
+    ${blatt1Svg}
+  </div>
+  <div class="page">
+    <p class="page-title">CAD E-Plan — Blatt 2: UV-USV-01 Verteilung</p>
+    ${blatt2Svg}
+  </div>
+</body>
+</html>`;
+
+      const win = window.open('', '_blank', 'width=1200,height=900');
+      if (!win) { alert('Popup blockiert — bitte Popups für diese Seite erlauben.'); return; }
+      win.document.write(html);
+      win.document.close();
+      win.onload = () => { win.focus(); win.print(); };
+    } finally {
+      pdfLoading = false;
+    }
+  }
 </script>
 
 <div class="bg-[#101622] border border-slate-800 rounded-xl p-6 min-h-[85vh] flex flex-col">
@@ -13,7 +65,16 @@
       </p>
     </div>
     
-    <!-- Tab Toggle -->
+    <!-- PDF Button + Tab Toggle -->
+    <div class="flex items-center gap-3">
+      <button
+        onclick={printEplan}
+        disabled={pdfLoading}
+        class="flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white transition-colors"
+      >
+        <Download class="w-4 h-4" />
+        <span>{pdfLoading ? 'Wird geladen…' : 'PDF Export'}</span>
+      </button>
     <div class="flex items-center bg-[#080c14] border border-slate-800 rounded-lg p-1">
       <button 
         class="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-all {activeTab === 'block' ? 'bg-slate-800 text-white shadow' : 'text-slate-400 hover:text-slate-200'}"
@@ -22,7 +83,7 @@
         <Grid class="w-4 h-4" />
         <span>Blockschaltbild</span>
       </button>
-      <button 
+      <button
         class="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-all {activeTab === 'cad' ? 'bg-slate-800 text-white shadow' : 'text-slate-400 hover:text-slate-200'}"
         onclick={() => activeTab = 'cad'}
       >
@@ -30,13 +91,14 @@
         <span>CAD E-Plan</span>
       </button>
     </div>
+    </div>
   </div>
 
   <div class="flex-1 flex flex-col">
-    {#if activeTab === 'block'}
+    <div class:hidden={activeTab !== 'block'}>
       <!-- EXISTING BLOCK DIAGRAM -->
       <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 h-full">
-        <div class="lg:col-span-3 bg-[#0d1220] border border-slate-800 rounded-xl p-4 flex justify-center">
+        <div id="eplan-block" class="lg:col-span-3 bg-[#0d1220] border border-slate-800 rounded-xl p-4 flex justify-center">
           <svg viewBox="0 0 700 850" class="w-full max-w-[650px] h-auto">
             <defs>
               <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
@@ -152,10 +214,11 @@
         </div>
       </div>
     
-    {:else}
+    </div>
+    <div class:hidden={activeTab !== 'cad'}>
       <!-- NEW CAD E-PLAN SVG -->
       <div class="bg-white border-2 border-slate-300 rounded shadow-inner p-4 w-full h-full flex justify-center overflow-auto" style="min-height: 800px;">
-        <svg viewBox="0 0 1000 700" class="w-full max-w-[1200px] h-auto drop-shadow-sm font-sans" shape-rendering="crispEdges">
+        <svg id="eplan-blatt1" viewBox="0 0 1000 700" class="w-full max-w-[1200px] h-auto drop-shadow-sm font-sans" shape-rendering="crispEdges">
           
           <!-- Outer Frame (DIN format logic) -->
           <rect x="20" y="20" width="960" height="660" fill="none" stroke="#334155" stroke-width="2" />
@@ -376,7 +439,7 @@
 
       <!-- BLATT 2: Verteilung -->
       <div class="bg-white border-2 border-slate-300 rounded shadow-inner p-4 w-full flex justify-center mt-8" style="min-height: 800px;">
-        <svg viewBox="0 0 1000 700" class="w-full max-w-[1200px] h-auto drop-shadow-sm font-sans" shape-rendering="crispEdges">
+        <svg id="eplan-blatt2" viewBox="0 0 1000 700" class="w-full max-w-[1200px] h-auto drop-shadow-sm font-sans" shape-rendering="crispEdges">
           
           <!-- Outer Frame -->
           <rect x="20" y="20" width="960" height="660" fill="none" stroke="#334155" stroke-width="2" />
@@ -806,6 +869,6 @@
           </g>
         </svg>
       </div>
-    {/if}
+    </div>
   </div>
 </div>
