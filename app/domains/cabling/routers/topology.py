@@ -48,7 +48,7 @@ async def get_topology(db: AsyncSession = Depends(get_db)):
                 "rack_id": dev.rack_id,
                 "rack_name": rack.name if rack else None,
                 "u_position": dev.u_position,
-                "u_hoehe": dev.u_hoehe or 1,
+                "u_hoehe": dev.u_hoehe if dev.u_hoehe is not None else 1,
                 "hersteller": dev.hersteller,
                 "modell": dev.modell,
                 "ip_adresse": dev.ip_adresse,

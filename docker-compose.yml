@@ -3,14 +3,14 @@ services:
     image: mysql:8
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: kaitix
-      MYSQL_DATABASE: kaitix
-      MYSQL_USER: kaitix
-      MYSQL_PASSWORD: kaitix
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-kaitix}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-kaitix}
+      MYSQL_USER: ${MYSQL_USER:-kaitix}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-kaitix}
     volumes:
       - db_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-pkaitix"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_PASSWORD:-kaitix}"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -21,8 +21,8 @@ services:
       dockerfile: Dockerfile.backend
     restart: unless-stopped
     environment:
-      DATABASE_URL: mysql+aiomysql://kaitix:kaitix@db:3306/kaitix
-      ALLOWED_ORIGINS: http://localhost
+      DATABASE_URL: ${DATABASE_URL:-mysql+aiomysql://kaitix:kaitix@db:3306/kaitix}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost}
     depends_on:
       db:
         condition: service_healthy

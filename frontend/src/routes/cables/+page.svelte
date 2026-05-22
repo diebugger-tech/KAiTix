@@ -57,7 +57,7 @@
     all: [],
     lwl: ['LC-LC', 'SC-SC', 'SFP+'],
     copper: ['Cat6', 'Cat6A', 'Cat7'],
-    power: ['Strom-C13', 'Strom-C19', 'Strom-Schuko', 'Strom-CEE-16A-3P', 'Strom-CEE-32A-3P', 'Strom-CEE-63A-3P'],
+    power: ['Strom-C13', 'Strom-C13-Lock', 'Strom-C19', 'Strom-C19-Lock', 'Strom-Schuko', 'Strom-CEE-16A-3P', 'Strom-CEE-32A-3P', 'Strom-CEE-63A-3P'],
     dac: ['DAC'],
     sonstige: ['sonstige'],
   };
@@ -77,8 +77,8 @@
   let nach_port = $state('');
   let bemerkung = $state('');
 
-  const cableTypes = ['Cat6', 'Cat6A', 'Cat7', 'DAC', 'LC-LC', 'SC-SC', 'SFP+', 'Strom-C13', 'Strom-C19', 'Strom-Schuko', 'Strom-CEE-16A-3P', 'Strom-CEE-32A-3P', 'Strom-CEE-63A-3P', 'sonstige'];
-  const farben = ['Blau', 'Rot', 'Gelb', 'Erika-Violett', 'Schwarz', 'Grau', 'Grün-Gelb'];
+  const cableTypes = ['Cat6', 'Cat6A', 'Cat7', 'DAC', 'LC-LC', 'SC-SC', 'SFP+', 'Strom-C13', 'Strom-C13-Lock', 'Strom-C19', 'Strom-C19-Lock', 'Strom-Schuko', 'Strom-CEE-16A-3P', 'Strom-CEE-32A-3P', 'Strom-CEE-63A-3P', 'sonstige'];
+  const farben = ['Blau', 'Rot', 'Orange', 'Gelb', 'Erika-Violett', 'Schwarz', 'Grau', 'Grün-Gelb'];
 
   // Type badge colors
   const typeBadges: Record<string, { bg: string; text: string; border: string }> = {
@@ -89,9 +89,11 @@
     'LC-LC':       { bg: 'bg-fuchsia-500/10',  text: 'text-fuchsia-400',  border: 'border-fuchsia-500/30' },
     'SC-SC':       { bg: 'bg-fuchsia-500/10',  text: 'text-fuchsia-400',  border: 'border-fuchsia-500/30' },
     'SFP+':        { bg: 'bg-cyan-500/10',     text: 'text-cyan-400',     border: 'border-cyan-500/30' },
-    'Strom-C13':   { bg: 'bg-red-500/10',      text: 'text-red-400',      border: 'border-red-500/30' },
-    'Strom-C19':   { bg: 'bg-red-500/10',      text: 'text-red-400',      border: 'border-red-500/30' },
-    'Strom-Schuko':{ bg: 'bg-red-500/10',      text: 'text-red-400',      border: 'border-red-500/30' },
+    'Strom-C13':      { bg: 'bg-red-500/10',    text: 'text-red-400',    border: 'border-red-500/30' },
+    'Strom-C13-Lock': { bg: 'bg-orange-500/10', text: 'text-orange-400', border: 'border-orange-500/30' },
+    'Strom-C19':      { bg: 'bg-red-500/10',    text: 'text-red-400',    border: 'border-red-500/30' },
+    'Strom-C19-Lock': { bg: 'bg-orange-500/10', text: 'text-orange-400', border: 'border-orange-500/30' },
+    'Strom-Schuko':   { bg: 'bg-red-500/10',    text: 'text-red-400',    border: 'border-red-500/30' },
     'Strom-CEE-16A-3P':{ bg: 'bg-red-600/10', text: 'text-red-500',   border: 'border-red-600/30' },
     'Strom-CEE-32A-3P':{ bg: 'bg-red-600/10', text: 'text-red-500',   border: 'border-red-600/30' },
     'Strom-CEE-63A-3P':{ bg: 'bg-red-600/10', text: 'text-red-500',   border: 'border-red-600/30' },

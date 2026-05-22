@@ -64,10 +64,6 @@
   const totalDevices = $derived(devices.length);
   const totalPowerWatt = $derived(devices.reduce((sum, d) => sum + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0));
   const totalCables = $derived(cables.length);
-  const cableTypes = $derived(
-    [...new Set(cables.map(c => c.typ))].sort()
-  );
-
   const totalL1Kw = $derived(devices.filter(d => d.phase === 'L1').reduce((s, d) => s + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0) / 1000);
   const totalL2Kw = $derived(devices.filter(d => d.phase === 'L2').reduce((s, d) => s + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0) / 1000);
   const totalL3Kw = $derived(devices.filter(d => d.phase === 'L3').reduce((s, d) => s + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0) / 1000);
@@ -187,8 +183,11 @@
       <!-- Racks Visualization Area -->
       <div class="space-y-6">
         <div class="flex items-center justify-between">
-          <h3 class="text-lg font-bold text-white font-outfit">Rechenzentrum Racks</h3>
-          <button 
+          <div>
+            <h3 class="text-lg font-bold text-white font-outfit">Rechenzentrum Racks</h3>
+            <p class="text-xs text-slate-500 mt-0.5">Racks, Hardware und Verkabelung verwalten</p>
+          </div>
+          <button
             onclick={() => showAddRack = true}
             class="flex items-center space-x-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold transition"
           >
@@ -258,12 +257,20 @@
                   {@const occupiedU = rackDevices.reduce((sum, d) => sum + d.u_hoehe, 0)}
                   {@const percent = Math.round((occupiedU / rack.hoehe_u) * 100)}
                   {@const rackKw = rackDevices.reduce((s, d) => s + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0) / 1000}
+                  {@const rL1kw = rackDevices.filter(d => d.phase === 'L1').reduce((s, d) => s + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0) / 1000}
+                  {@const rL2kw = rackDevices.filter(d => d.phase === 'L2').reduce((s, d) => s + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0) / 1000}
+                  {@const rL3kw = rackDevices.filter(d => d.phase === 'L3').reduce((s, d) => s + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0) / 1000}
+                  {@const rPhTotal = rL1kw + rL2kw + rL3kw}
+                  {@const rPhIdeal = rPhTotal / 3}
+                  {@const rPhImb = rPhTotal > 0 ? (Math.max(Math.abs(rL1kw - rPhIdeal), Math.abs(rL2kw - rPhIdeal), Math.abs(rL3kw - rPhIdeal)) / rPhIdeal) * 100 : 0}
+                  {@const hasPhased = rackDevices.some(d => d.phase)}
+                  {@const rackPdus = rackDevices.filter(d => d.typ === 'pdu')}
 
                   <a href="/racks?rack={rack.id}" class="block bg-[#101622] border border-slate-800 hover:border-blue-500/40 rounded-xl p-5 space-y-4 transition-colors">
                     <div class="flex items-start justify-between">
                       <div>
                         <h4 class="font-bold text-white font-outfit">{rack.name}</h4>
-                        <p class="text-[10px] text-slate-500 mt-0.5">{rackKw.toFixed(2)} kW · {rackDevices.length} Geräte</p>
+                        <p class="text-[10px] text-slate-500 mt-0.5">{rack.breite_mm ? rack.breite_mm + 'mm · ' : ''}{rackKw.toFixed(2)} kW · {rackDevices.length} Geräte</p>
                       </div>
                       <span class="text-xs font-semibold px-2 py-1 rounded bg-slate-800 border border-slate-700 text-slate-300">
                         {occupiedU} / {rack.hoehe_u} HE
@@ -283,6 +290,44 @@
                         ></div>
                       </div>
                     </div>
+
+                    <!-- Per-rack phase loads -->
+                    {#if hasPhased}
+                      <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-mono">
+                        <span class="text-blue-400">L1 {rL1kw.toFixed(2)} kW</span>
+                        <span class="text-cyan-400">L2 {rL2kw.toFixed(2)} kW</span>
+                        <span class="text-orange-400">L3 {rL3kw.toFixed(2)} kW</span>
+                        {#if rPhImb > 10}
+                          <span class="ml-auto flex items-center gap-1 {rPhImb > 25 ? 'text-red-400' : 'text-amber-400'}">
+                            ⚠ Phasen unausgeglichen — {rPhImb.toFixed(1)}%
+                          </span>
+                        {/if}
+                      </div>
+                    {/if}
+
+                    <!-- PDU indicators -->
+                    {#if rackPdus.length > 0}
+                      <div class="flex flex-wrap gap-1.5">
+                        {#each rackPdus as pdu}
+                          {@const outlets = pdu.pdu_outlets ?? []}
+                          {@const oL1 = outlets.filter(o => o.phase === 'L1').length}
+                          {@const oL2 = outlets.filter(o => o.phase === 'L2').length}
+                          {@const oL3 = outlets.filter(o => o.phase === 'L3').length}
+                          <div class="flex items-center gap-1.5 bg-slate-900/80 border border-slate-700/50 rounded-md px-2 py-1">
+                            <Zap class="w-2.5 h-2.5 text-yellow-500 shrink-0" />
+                            <span class="text-[9px] text-slate-300 font-medium truncate max-w-[80px]">{pdu.hostname}</span>
+                            <div class="flex gap-1">
+                              {#if oL1 > 0}<span class="text-[8px] bg-blue-500/15 text-blue-400 px-1 rounded">{oL1}×L1</span>{/if}
+                              {#if oL2 > 0}<span class="text-[8px] bg-cyan-500/15 text-cyan-400 px-1 rounded">{oL2}×L2</span>{/if}
+                              {#if oL3 > 0}<span class="text-[8px] bg-orange-500/15 text-orange-400 px-1 rounded">{oL3}×L3</span>{/if}
+                              {#if oL1 === 0 && oL2 === 0 && oL3 === 0}
+                                <span class="text-[8px] text-slate-600">{outlets.length ? outlets.length + ' Steckdosen' : 'keine Outlets'}</span>
+                              {/if}
+                            </div>
+                          </div>
+                        {/each}
+                      </div>
+                    {/if}
 
                     <!-- Vertical Rack View representation -->
                     <div class="border border-slate-950 bg-slate-950/60 rounded p-1 font-mono text-[9px] select-none">
@@ -338,12 +383,20 @@
                   {@const occupiedU = rackDevices.reduce((sum, d) => sum + d.u_hoehe, 0)}
                   {@const percent = Math.round((occupiedU / rack.hoehe_u) * 100)}
                   {@const rackKw = rackDevices.reduce((s, d) => s + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0) / 1000}
+                  {@const rL1kw = rackDevices.filter(d => d.phase === 'L1').reduce((s, d) => s + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0) / 1000}
+                  {@const rL2kw = rackDevices.filter(d => d.phase === 'L2').reduce((s, d) => s + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0) / 1000}
+                  {@const rL3kw = rackDevices.filter(d => d.phase === 'L3').reduce((s, d) => s + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0) / 1000}
+                  {@const rPhTotal = rL1kw + rL2kw + rL3kw}
+                  {@const rPhIdeal = rPhTotal / 3}
+                  {@const rPhImb = rPhTotal > 0 ? (Math.max(Math.abs(rL1kw - rPhIdeal), Math.abs(rL2kw - rPhIdeal), Math.abs(rL3kw - rPhIdeal)) / rPhIdeal) * 100 : 0}
+                  {@const hasPhased = rackDevices.some(d => d.phase)}
+                  {@const rackPdus = rackDevices.filter(d => d.typ === 'pdu')}
 
                   <a href="/racks?rack={rack.id}" class="block bg-[#101622] border border-amber-500/20 hover:border-amber-500/40 rounded-xl p-5 space-y-4 transition-colors">
                     <div class="flex items-start justify-between">
                       <div>
                         <h4 class="font-bold text-white font-outfit">{rack.name}</h4>
-                        <p class="text-[10px] text-amber-400/60 mt-0.5">{rackKw.toFixed(2)} kW · {rackDevices.length} Geräte</p>
+                        <p class="text-[10px] text-amber-400/60 mt-0.5">{rack.breite_mm ? rack.breite_mm + 'mm · ' : ''}{rackKw.toFixed(2)} kW · {rackDevices.length} Geräte</p>
                       </div>
                       <span class="text-xs font-semibold px-2 py-1 rounded bg-slate-800 border border-slate-700 text-slate-300">
                         {occupiedU} / {rack.hoehe_u} HE
@@ -358,6 +411,44 @@
                         <div class="h-full bg-gradient-to-r from-amber-500 to-orange-400 rounded-full" style="width: {percent}%"></div>
                       </div>
                     </div>
+
+                    <!-- Per-rack phase loads -->
+                    {#if hasPhased}
+                      <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-mono">
+                        <span class="text-blue-400">L1 {rL1kw.toFixed(2)} kW</span>
+                        <span class="text-cyan-400">L2 {rL2kw.toFixed(2)} kW</span>
+                        <span class="text-orange-400">L3 {rL3kw.toFixed(2)} kW</span>
+                        {#if rPhImb > 10}
+                          <span class="ml-auto flex items-center gap-1 {rPhImb > 25 ? 'text-red-400' : 'text-amber-400'}">
+                            ⚠ Phasen unausgeglichen — {rPhImb.toFixed(1)}%
+                          </span>
+                        {/if}
+                      </div>
+                    {/if}
+
+                    <!-- PDU indicators -->
+                    {#if rackPdus.length > 0}
+                      <div class="flex flex-wrap gap-1.5">
+                        {#each rackPdus as pdu}
+                          {@const outlets = pdu.pdu_outlets ?? []}
+                          {@const oL1 = outlets.filter(o => o.phase === 'L1').length}
+                          {@const oL2 = outlets.filter(o => o.phase === 'L2').length}
+                          {@const oL3 = outlets.filter(o => o.phase === 'L3').length}
+                          <div class="flex items-center gap-1.5 bg-slate-900/80 border border-slate-700/50 rounded-md px-2 py-1">
+                            <Zap class="w-2.5 h-2.5 text-yellow-500 shrink-0" />
+                            <span class="text-[9px] text-slate-300 font-medium truncate max-w-[80px]">{pdu.hostname}</span>
+                            <div class="flex gap-1">
+                              {#if oL1 > 0}<span class="text-[8px] bg-blue-500/15 text-blue-400 px-1 rounded">{oL1}×L1</span>{/if}
+                              {#if oL2 > 0}<span class="text-[8px] bg-cyan-500/15 text-cyan-400 px-1 rounded">{oL2}×L2</span>{/if}
+                              {#if oL3 > 0}<span class="text-[8px] bg-orange-500/15 text-orange-400 px-1 rounded">{oL3}×L3</span>{/if}
+                              {#if oL1 === 0 && oL2 === 0 && oL3 === 0}
+                                <span class="text-[8px] text-slate-600">{outlets.length ? outlets.length + ' Steckdosen' : 'keine Outlets'}</span>
+                              {/if}
+                            </div>
+                          </div>
+                        {/each}
+                      </div>
+                    {/if}
                   </a>
                 {/each}
               </div>
@@ -366,44 +457,6 @@
         {/if}
       </div>
 
-      <!-- Cable Overview Right Area -->
-      <div class="space-y-6">
-        <h3 class="text-lg font-bold text-white font-outfit">Kabelübersicht</h3>
-
-        <div class="bg-[#101622] border border-slate-800 rounded-xl p-5 space-y-4">
-          {#if cables.length === 0}
-            <div class="text-center py-8 text-slate-500 text-sm">
-              <Info class="w-8 h-8 text-slate-600 mx-auto mb-2" />
-              Keine Kabel dokumentiert.
-            </div>
-          {:else}
-            <div class="space-y-2">
-              {#each cableTypes as ct}
-                {@const count = cables.filter(c => c.typ === ct).length}
-                {@const totalLen = cables.filter(c => c.typ === ct).reduce((s, c) => s + (Number(c.laenge_m) || 0), 0)}
-                <div class="flex items-center justify-between py-2 border-b border-slate-800/60 last:border-0">
-                  <div class="flex items-center gap-2">
-                    <span class="text-[10px] px-1.5 py-0.5 rounded border {
-                      ct.startsWith('Strom') ? 'bg-red-500/10 text-red-400 border-red-500/30' :
-                      ct === 'DAC' ? 'bg-slate-500/10 text-slate-400 border-slate-500/30' :
-                      ct.startsWith('Cat') ? 'bg-blue-500/10 text-blue-400 border-blue-500/30' :
-                      ct === 'LC-LC' || ct === 'SC-SC' ? 'bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/30' :
-                      'bg-amber-500/10 text-amber-400 border-amber-500/30'
-                    }">{ct}</span>
-                  </div>
-                  <div class="text-right">
-                    <div class="text-sm font-bold text-white">{count}</div>
-                    <div class="text-[10px] text-slate-500">{totalLen.toFixed(1)} m</div>
-                  </div>
-                </div>
-              {/each}
-            </div>
-            <a href="/cables" class="block w-full text-center py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium transition">
-              Zur Kabelliste →
-            </a>
-          {/if}
-        </div>
-      </div>
     </div>
   {/if}
 </div>

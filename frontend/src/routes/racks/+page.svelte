@@ -635,7 +635,7 @@
   async function downloadRackPdf(rackId: number, rackName: string) {
     pdfLoading = true;
     try {
-      const res = await fetch(`http://localhost:8003/api/v1/racks/${rackId}/pdf`);
+      const res = await fetch(`/api/v1/racks/${rackId}/pdf`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const blob = await res.blob();
       const url  = URL.createObjectURL(blob);
@@ -651,7 +651,7 @@
   async function downloadAllRacksPdf() {
     pdfLoading = true;
     try {
-      const res = await fetch('http://localhost:8003/api/v1/export/racks-pdf');
+      const res = await fetch('/api/v1/export/racks-pdf');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const blob = await res.blob();
       const url  = URL.createObjectURL(blob);
@@ -840,7 +840,7 @@
     return devices.filter(d => d.id !== cableFromDevice?.id);
   });
 
-  const CABLE_TYPES = ['Cat6','Cat6A','Cat7','DAC','LC-LC','SC-SC','SFP+','Strom-C13','Strom-C19','Strom-Schuko','Strom-CEE-16A-3P','Strom-CEE-32A-3P','sonstige'];
+  const CABLE_TYPES = ['Cat6','Cat6A','Cat7','DAC','LC-LC','SC-SC','SFP+','Strom-C13','Strom-C13-Lock','Strom-C19','Strom-C19-Lock','Strom-Schuko','Strom-CEE-16A-3P','Strom-CEE-32A-3P','sonstige'];
   const IF_TYPES = ['1GbE','10GbE','25GbE','40GbE','100GbE','FC','IPMI','sonstige'];
   const OUTLET_TYPES = ['C13','C14','C19','C20','Schuko','CEE-16A'];
 
@@ -878,6 +878,40 @@
       ...(dev.device_ports ?? []).map((p: DevicePort) => p.port_name),
     ];
   });
+
+  const cableTypes = $derived([...new Set(cables.map(c => c.typ))].sort());
+
+  const PINNED_CABLE_TYPES = ['Strom-C13-Lock', 'Strom-C19-Lock'];
+  const legendCableTypes = $derived(
+    [...new Set([...cableTypes, ...PINNED_CABLE_TYPES])].sort()
+  );
+
+  const cableDefs: Record<string, { desc: string; use: string; connector: string; badgeClass: string; dotColor: string }> = {
+    'Cat5e':          { desc: 'Netzwerk-Patch',          use: 'Switch ↔ Server, Switch ↔ Switch',          connector: 'RJ-45 · bis 1 Gbps',       badgeClass: 'bg-blue-500/10 text-blue-400 border-blue-500/30',       dotColor: 'bg-blue-400' },
+    'Cat6':           { desc: 'Netzwerk-Patch',          use: 'Switch ↔ Server, Switch ↔ Switch',          connector: 'RJ-45 · bis 1 Gbps',       badgeClass: 'bg-blue-500/10 text-blue-400 border-blue-500/30',       dotColor: 'bg-blue-400' },
+    'Cat6A':          { desc: 'Netzwerk-Patch',          use: 'Switch ↔ Server, Switch ↔ Switch',          connector: 'RJ-45 · bis 10 Gbps',      badgeClass: 'bg-blue-500/10 text-blue-400 border-blue-500/30',       dotColor: 'bg-blue-400' },
+    'Cat7':           { desc: 'Netzwerk-Patch',          use: 'Switch ↔ Server, Switch ↔ Switch',          connector: 'RJ-45 · bis 10 Gbps',      badgeClass: 'bg-blue-500/10 text-blue-400 border-blue-500/30',       dotColor: 'bg-blue-400' },
+    'DAC':            { desc: 'Direct-Attach-Kabel',     use: 'Switch ↔ Server, Uplink Switch ↔ Switch',   connector: 'SFP+ / QSFP · 10–100 Gbps',badgeClass: 'bg-slate-500/10 text-slate-400 border-slate-500/30',     dotColor: 'bg-slate-400' },
+    'SFP+':           { desc: 'SFP+ Transceiver-Kabel',  use: 'Switch ↔ Server, Uplink',                  connector: 'SFP+ · 10 Gbps',           badgeClass: 'bg-slate-500/10 text-slate-400 border-slate-500/30',     dotColor: 'bg-slate-400' },
+    'LC-LC':          { desc: 'Glasfaser LWL',           use: 'Langstrecke, RZ-übergreifend, Backbone',    connector: 'LC Duplex · OM3/OM4',      badgeClass: 'bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/30', dotColor: 'bg-fuchsia-400' },
+    'SC-SC':          { desc: 'Glasfaser LWL',           use: 'Langstrecke, RZ-übergreifend',              connector: 'SC Duplex · OM2/OM3',      badgeClass: 'bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/30', dotColor: 'bg-fuchsia-400' },
+    'Strom-C13':         { desc: 'Stromversorgung Standard',        use: 'PDU → Server, Switch, Firewall',        connector: 'IEC C13/C14 · max. 10A',              badgeClass: 'bg-red-500/10 text-red-400 border-red-500/30',       dotColor: 'bg-red-400' },
+    'Strom-C13-Lock':    { desc: 'Stromversorgung mit Verriegelung', use: 'PDU → Gerät, gesichert gegen Herausziehen', connector: 'IEC C13-Lock (Kentix) · max. 10A',  badgeClass: 'bg-orange-500/10 text-orange-400 border-orange-500/30', dotColor: 'bg-orange-400' },
+    'Strom-C19':         { desc: 'Stromversorgung Hochlast',         use: 'PDU → Server, Storage (Hochlast)',      connector: 'IEC C19/C20 · max. 16A',              badgeClass: 'bg-red-500/10 text-red-400 border-red-500/30',       dotColor: 'bg-red-400' },
+    'Strom-C19-Lock':    { desc: 'Hochlast mit Verriegelung',        use: 'PDU → Server/Storage, gesichert',       connector: 'IEC C19-Lock (Kentix) · max. 16A',    badgeClass: 'bg-orange-500/10 text-orange-400 border-orange-500/30', dotColor: 'bg-orange-400' },
+    'Strom-Schuko':      { desc: 'Schuko-Steckdose',                 use: 'PDU → Gerät (Schuko)',                  connector: 'Schuko CEE 7/4 · max. 16A',           badgeClass: 'bg-red-500/10 text-red-400 border-red-500/30',       dotColor: 'bg-red-400' },
+    'Strom-CEE-16A':     { desc: 'Einspeisung Steckdose',            use: 'Verteiler → PDU',                      connector: 'CEE 16A (blau) · 1-phasig',           badgeClass: 'bg-red-500/10 text-red-400 border-red-500/30',       dotColor: 'bg-red-400' },
+    'Strom-CEE-16A-3P':  { desc: 'Einspeisung Steckdose',            use: 'Verteiler → PDU',                      connector: 'CEE 16A (blau) · 1-phasig',           badgeClass: 'bg-red-500/10 text-red-400 border-red-500/30',       dotColor: 'bg-red-400' },
+    'Strom-CEE-32A-3P':  { desc: 'Drehstrom-Einspeisung',            use: 'Hauptverteiler → PDU (3-phasig)',       connector: 'CEE 32A (rot) · 3×32A',               badgeClass: 'bg-red-500/10 text-red-400 border-red-500/30',       dotColor: 'bg-red-400' },
+    'Strom-CEE-63A-3P':  { desc: 'Haupteinspeisung',                 use: 'RZ-Anlage → Hauptverteiler',            connector: 'CEE 63A (rot) · 3×63A',               badgeClass: 'bg-red-500/10 text-red-400 border-red-500/30',       dotColor: 'bg-red-400' },
+  };
+
+  function getCableDef(typ: string) {
+    if (cableDefs[typ]) return cableDefs[typ];
+    if (typ.startsWith('Strom')) return { desc: 'Stromkabel', use: 'Stromversorgung', connector: typ, badgeClass: 'bg-red-500/10 text-red-400 border-red-500/30', dotColor: 'bg-red-400' };
+    if (typ.startsWith('Cat'))   return { desc: 'Netzwerk-Patch', use: 'Switch ↔ Gerät', connector: 'RJ-45', badgeClass: 'bg-blue-500/10 text-blue-400 border-blue-500/30', dotColor: 'bg-blue-400' };
+    return { desc: 'Kabelverbindung', use: '–', connector: typ, badgeClass: 'bg-amber-500/10 text-amber-400 border-amber-500/30', dotColor: 'bg-amber-400' };
+  }
 </script>
 
 <svelte:head><title>KAiTix - Racks</title></svelte:head>
@@ -1481,6 +1515,50 @@
             </div>
           </div>
         {/if}
+      </div>
+    </div>
+  {/if}
+
+  <!-- ═══ Kabeltyp-Referenz für Techniker ═══════════════════════ -->
+  {#if legendCableTypes.length > 0}
+    <div class="bg-[#101622] border border-slate-800 rounded-xl p-5">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h3 class="text-sm font-bold text-white font-outfit flex items-center gap-2">
+            <CableIcon class="w-4 h-4 text-slate-400" />
+            Kabeltyp-Referenz
+          </h3>
+          <p class="text-[10px] text-slate-500 mt-0.5">Verwendungszweck und Steckverbinder · Hilfe für den Einbau</p>
+        </div>
+        <a href="/cables" class="text-[10px] text-blue-400 hover:text-blue-300 transition">
+          Kabelliste ({cables.length}) →
+        </a>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+        {#each legendCableTypes as ct}
+          {@const def = getCableDef(ct)}
+          {@const count = cables.filter(c => c.typ === ct).length}
+          {@const totalLen = cables.filter(c => c.typ === ct).reduce((s, c) => s + (Number(c.laenge_m) || 0), 0)}
+          {@const isPinned = PINNED_CABLE_TYPES.includes(ct) && count === 0}
+          <div class="flex items-start gap-3 rounded-lg p-3 {isPinned ? 'bg-orange-950/20 border border-orange-900/30' : 'bg-slate-900/50 border border-slate-800/50'}">
+            <div class="mt-0.5 shrink-0">
+              <div class="w-3 h-3 rounded-full {def.dotColor}"></div>
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-[10px] px-1.5 py-0.5 rounded border font-medium {def.badgeClass}">{ct}</span>
+                {#if count > 0}
+                  <span class="text-[10px] text-slate-500">{count}× · {totalLen.toFixed(0)} m</span>
+                {:else}
+                  <span class="text-[10px] text-slate-600 italic">Referenz</span>
+                {/if}
+              </div>
+              <p class="text-xs font-semibold text-slate-300 mt-1">{def.desc}</p>
+              <p class="text-[10px] text-slate-500 mt-0.5">{def.use}</p>
+              <p class="text-[10px] text-slate-600 mt-0.5 font-mono">{def.connector}</p>
+            </div>
+          </div>
+        {/each}
       </div>
     </div>
   {/if}
