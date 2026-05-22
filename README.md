@@ -13,6 +13,25 @@ KAiTix dokumentiert physische RZ-Infrastruktur — Racks, Server, PDUs, Kabel, U
 
 ---
 
+## Screenshots
+
+![Dashboard](docs/screenshots/dashboard.png)
+*Dashboard — Übersicht aller Racks, Phasenauslastung und Schnellexport*
+
+![Rack-Übersicht](docs/screenshots/racks-uebersicht.png)
+*Rechenzentrum Racks — Standorte, Rack-Belegung und PDU-Steckdosen*
+
+![Rack-Detail](docs/screenshots/racks-detail.png)
+*Rack-Detail — U-Position, Gerättypen, PDU-Verkabelung*
+
+![Topologie](docs/screenshots/topologie.png)
+*Topologie — Netzwerk- und Stromverbindungen zwischen Racks, filterbar nach Kabeltyp*
+
+![E-Plan Stromlaufplan](docs/screenshots/eplan-stromlaufplan-1.png)
+*E-Plan — Allpoliger Stromlaufplan nach DIN EN 61082-1 mit PDF- und CAD-Export*
+
+---
+
 ## Schnellstart (Docker — empfohlen)
 
 Läuft auf **Windows, macOS und Linux** ohne weitere Abhängigkeiten.
