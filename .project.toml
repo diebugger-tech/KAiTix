@@ -1,0 +1,9 @@
+[project]
+name = "KAiTix"
+stack = "SvelteKit 5 / FastAPI / MySQL"
+desc = "ServerFlow Infrastruktur-Dokumentation"
+icon = "🎫"
+status = "in-progress"
+tags = ["#SvelteKit", "#FastAPI", "#MySQL", "#Dashboard"]
+cmd_start = "make dev-all"
+cmd_stop = "make clean"

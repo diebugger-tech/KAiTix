@@ -1,0 +1,109 @@
+# =============================================================================
+# MeinProjekt — Global + Stack-spezifisch
+# =============================================================================
+
+# === PYTHON / FASTAPI ========================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+/lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+
+# === ENV / SECRETS ===========================================================
+.env
+.env.*
+*.env
+!.env.example
+*.key
+*.pem
+*.crt
+*.p12
+*.der
+secrets/
+credentials/
+
+# === NODE / SVELTEKIT (falls Frontend genutzt) ================================
+node_modules/
+.svelte-kit/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+.vite/
+
+# === RUST (falls Native Modules) =============================================
+target/
+Cargo.lock
+
+# === DATABASE =================================================================
+*.db
+*.sqlite
+*.sqlite3
+mysql_data/
+postgres_data/
+
+# === NIX / INFRASTRUCTURE ====================================================
+.nix-shell-deps
+result
+result-*
+
+# === LOGS / TEMP ==============================================================
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# === DOCKER ===================================================================
+docker-compose.override.yml
+
+# === IDE (nur projektspezifische, globale in ~/.gitignore_global) ==============
+# Keine IDE-spezifischen Einträge hier — siehe ~/.gitignore_global
+
+# === AGENT KNOWLEDGE ===========================================================
+knowledge/
+
+# === BACKUPS ==================================================================
+*.bak
+
+# === VENV (projektlokal, innerhalb nix-shell) ==================================
+.venv/
+venv/
+
+.claude/

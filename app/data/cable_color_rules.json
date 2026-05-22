@@ -1,0 +1,105 @@
+{
+  "version": "1.0",
+  "last_updated": "2026-05-20",
+  "rules": [
+    {
+      "id": "cat6-lan",
+      "typ": "Cat6",
+      "standard_farbe": "Blau",
+      "kategorie": "copper",
+      "verwendungszweck": "Primäres Datennetzwerk (LAN)",
+      "standard": "Internes RZ-Schema",
+      "hex": "#3B82F6"
+    },
+    {
+      "id": "cat6a-lan",
+      "typ": "Cat6A",
+      "standard_farbe": "Blau",
+      "kategorie": "copper",
+      "verwendungszweck": "Primäres Datennetzwerk (LAN)",
+      "standard": "Internes RZ-Schema",
+      "hex": "#3B82F6"
+    },
+    {
+      "id": "cat7-lan",
+      "typ": "Cat7",
+      "standard_farbe": "Blau",
+      "kategorie": "copper",
+      "verwendungszweck": "Primäres Datennetzwerk (LAN)",
+      "standard": "Internes RZ-Schema",
+      "hex": "#3B82F6"
+    },
+    {
+      "id": "dac-tor",
+      "typ": "DAC",
+      "standard_farbe": "Grau",
+      "kategorie": "dac",
+      "verwendungszweck": "Top-of-Rack Verbindungen",
+      "standard": "Hersteller-üblich",
+      "hex": "#9CA3AF"
+    },
+    {
+      "id": "lwl-lc-om4",
+      "typ": "LC-LC",
+      "standard_farbe": "Erika-Violett",
+      "kategorie": "lwl",
+      "verwendungszweck": "High-Speed Core-Netzwerke, SAN",
+      "standard": "DIN EN 50173-1",
+      "hex": "#C026D3"
+    },
+    {
+      "id": "lwl-sc-om4",
+      "typ": "SC-SC",
+      "standard_farbe": "Erika-Violett",
+      "kategorie": "lwl",
+      "verwendungszweck": "High-Speed Core-Netzwerke",
+      "standard": "DIN EN 50173-1",
+      "hex": "#C026D3"
+    },
+    {
+      "id": "sfp-dac",
+      "typ": "SFP+",
+      "standard_farbe": "Grau",
+      "kategorie": "dac",
+      "verwendungszweck": "Switch-zu-Server Verbindungen",
+      "standard": "Hersteller-üblich",
+      "hex": "#9CA3AF"
+    },
+    {
+      "id": "strom-c13-a",
+      "typ": "Strom-C13",
+      "standard_farbe": "Rot",
+      "kategorie": "power",
+      "verwendungszweck": "Strompfad A (PDU-A)",
+      "standard": "Internes RZ-Schema",
+      "hex": "#EF4444"
+    },
+    {
+      "id": "strom-c19-a",
+      "typ": "Strom-C19",
+      "standard_farbe": "Rot",
+      "kategorie": "power",
+      "verwendungszweck": "Strompfad A für Blade-Chassis / Core-Switches",
+      "standard": "Internes RZ-Schema",
+      "hex": "#EF4444"
+    },
+    {
+      "id": "strom-schuko-a",
+      "typ": "Strom-Schuko",
+      "standard_farbe": "Rot",
+      "kategorie": "power",
+      "verwendungszweck": "Strompfad A",
+      "standard": "Internes RZ-Schema",
+      "hex": "#EF4444"
+    },
+    {
+      "id": "sonstige-default",
+      "typ": "sonstige",
+      "standard_farbe": "",
+      "kategorie": "sonstige",
+      "verwendungszweck": "Projektspezifisch",
+      "standard": "Intern",
+      "hex": ""
+    }
+  ]
+}

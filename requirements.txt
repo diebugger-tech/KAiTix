@@ -1,0 +1,16 @@
+fastapi>=0.110.0
+uvicorn>=0.28.0
+sqlalchemy>=2.0.28
+pymysql>=1.1.0
+aiomysql>=0.2.0
+pydantic>=2.6.4
+python-multipart>=0.0.9
+openpyxl>=3.1.2
+odfpy>=1.4.1
+aiosqlite>=0.20.0
+pytest>=8.1.1
+pytest-asyncio>=0.23.5
+httpx>=0.27.0
+ruff>=0.3.2
+mypy>=1.9.0
+alembic>=1.13.1

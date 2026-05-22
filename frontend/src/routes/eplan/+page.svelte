@@ -1,0 +1,811 @@
+<script lang="ts">
+  import { FileText, Grid } from '@lucide/svelte';
+  
+  let activeTab = $state<'block' | 'cad'>('cad');
+</script>
+
+<div class="bg-[#101622] border border-slate-800 rounded-xl p-6 min-h-[85vh] flex flex-col">
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h3 class="text-xl font-bold text-white mb-1">Stromlaufplan & Topologie</h3>
+      <p class="text-sm text-slate-400">
+        Einspeisungs- und Verteilerstruktur des RZs (USV, Hauptverteilung, PDUs).
+      </p>
+    </div>
+    
+    <!-- Tab Toggle -->
+    <div class="flex items-center bg-[#080c14] border border-slate-800 rounded-lg p-1">
+      <button 
+        class="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-all {activeTab === 'block' ? 'bg-slate-800 text-white shadow' : 'text-slate-400 hover:text-slate-200'}"
+        onclick={() => activeTab = 'block'}
+      >
+        <Grid class="w-4 h-4" />
+        <span>Blockschaltbild</span>
+      </button>
+      <button 
+        class="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-all {activeTab === 'cad' ? 'bg-slate-800 text-white shadow' : 'text-slate-400 hover:text-slate-200'}"
+        onclick={() => activeTab = 'cad'}
+      >
+        <FileText class="w-4 h-4" />
+        <span>CAD E-Plan</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="flex-1 flex flex-col">
+    {#if activeTab === 'block'}
+      <!-- EXISTING BLOCK DIAGRAM -->
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 h-full">
+        <div class="lg:col-span-3 bg-[#0d1220] border border-slate-800 rounded-xl p-4 flex justify-center">
+          <svg viewBox="0 0 700 850" class="w-full max-w-[650px] h-auto">
+            <defs>
+              <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b" />
+              </marker>
+            </defs>
+
+            {#each Array(17) as _, i}
+              <line x1="0" y1={i * 50} x2="700" y2={i * 50} stroke="#1e293b" stroke-width="0.5" />
+            {/each}
+            {#each Array(14) as _, i}
+              <line x1={i * 50} y1="0" x2={i * 50} y2="850" stroke="#1e293b" stroke-width="0.5" />
+            {/each}
+
+            <!-- Netz to UV-RZ-01 (Sicherung moved inside UV) -->
+            <line x1="350" y1="50" x2="350" y2="150" stroke="#475569" stroke-width="2.5" marker-end="url(#arrow)" />
+
+            <!-- UV-RZ-01 to Branches -->
+            <path d="M 350 270 L 350 320" fill="none" stroke="#475569" stroke-width="2.5" />
+            <path d="M 350 320 L 180 320 L 180 430" fill="none" stroke="#475569" stroke-width="2.5" marker-end="url(#arrow)" />
+            <path d="M 350 320 L 520 320 L 520 430" fill="none" stroke="#475569" stroke-width="2.5" marker-end="url(#arrow)" />
+
+            <path d="M 180 490 L 180 570 L 290 570" fill="none" stroke="#10b981" stroke-width="3" marker-end="url(#arrow)" />
+            <path d="M 430 380 L 520 380 L 520 490" fill="none" stroke="#ef4444" stroke-dasharray="5,4" stroke-width="2.5" />
+            <path d="M 520 490 L 520 570 L 400 570" fill="none" stroke="#ef4444" stroke-dasharray="5,4" stroke-width="2.5" marker-end="url(#arrow)" />
+            <line x1="350" y1="600" x2="350" y2="650" stroke="#475569" stroke-width="2.5" marker-end="url(#arrow)" />
+
+            <path d="M 230 710 L 130 710 L 130 760" fill="none" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrow)" />
+            <line x1="350" y1="710" x2="350" y2="760" stroke="#eab308" stroke-width="2" marker-end="url(#arrow)" />
+            <path d="M 470 710 L 570 710 L 570 760" fill="none" stroke="#a855f7" stroke-width="2" marker-end="url(#arrow)" />
+
+            <!-- Netz -->
+            <rect x="230" y="10" width="240" height="40" rx="6" fill="#1e293b" stroke="#475569" stroke-width="1.5" />
+            <text x="350" y="28" fill="#f8fafc" font-size="11" font-weight="bold" text-anchor="middle">Netz 3~ 400V / 50Hz</text>
+            <text x="350" y="42" fill="#94a3b8" font-size="9" text-anchor="middle">Hauptverteilung (HV)</text>
+
+            <!-- UV-RZ-01 (now includes the fuses) -->
+            <rect x="210" y="150" width="280" height="120" rx="6" fill="#0f172a" stroke="#334155" stroke-width="1.5" />
+            <text x="350" y="172" fill="#f8fafc" font-size="12" font-weight="bold" text-anchor="middle">Unterverteilung UV-RZ-01</text>
+            <rect x="250" y="185" width="200" height="40" rx="4" fill="#1e1b4b" stroke="#4338ca" stroke-width="1" />
+            <text x="350" y="202" fill="#f8fafc" font-size="10" font-weight="bold" text-anchor="middle">NH-Sicherung 80A gG</text>
+            <text x="350" y="215" fill="#818cf8" font-size="8" text-anchor="middle">3-polige Hauptabsicherung</text>
+            <text x="350" y="240" fill="#94a3b8" font-size="9" text-anchor="middle">Hauptzuleitung ungepuffert</text>
+            <text x="350" y="255" fill="#64748b" font-size="8" text-anchor="middle">LS 3P 63A Abgänge</text>
+
+            <!-- USV Schrank (Left Branch) -->
+            <rect x="80" y="430" width="200" height="60" rx="6" fill="#064e3b" stroke="#059669" stroke-width="1.5" />
+            <text x="180" y="452" fill="#ecfdf5" font-size="11" font-weight="bold" text-anchor="middle">USV-Schrank 40 kW</text>
+            <text x="180" y="468" fill="#a7f3d0" font-size="9" text-anchor="middle">WP2-R / 93PM (N+1)</text>
+            <text x="180" y="482" fill="#34d399" font-size="8" text-anchor="middle">Zuleitung: NYY-J 5x16 mm²</text>
+
+            <!-- Bypass LS (Right Branch) -->
+            <rect x="420" y="430" width="200" height="60" rx="6" fill="#78350f" stroke="#d97706" stroke-width="1.5" />
+            <text x="520" y="452" fill="#fffbeb" font-size="11" font-weight="bold" text-anchor="middle">Bypass-Zuleitung (MBS)</text>
+            <text x="520" y="468" fill="#fde68a" font-size="9" text-anchor="middle">Direktnetz (LS 3P 63A)</text>
+            <text x="520" y="482" fill="#fbbf24" font-size="8" text-anchor="middle">Kabel: NYY-J 5x16 mm²</text>
+
+            <!-- MBS Schalter (Middle) -->
+            <polygon points="350,530 410,570 350,610 290,570" fill="#1e293b" stroke="#64748b" stroke-width="2" />
+            <text x="350" y="566" fill="#f8fafc" font-size="10" font-weight="bold" text-anchor="middle">Bypass MBS</text>
+            <text x="350" y="580" fill="#94a3b8" font-size="8" text-anchor="middle">Mechanisch verriegelt</text>
+
+            <!-- UV-USV-01 -->
+            <rect x="210" y="650" width="280" height="60" rx="6" fill="#14532d" stroke="#16a34a" stroke-width="1.5" />
+            <text x="350" y="672" fill="#f0fdf4" font-size="12" font-weight="bold" text-anchor="middle">Unterverteilung UV-USV-01</text>
+            <text x="350" y="688" fill="#bbf7d0" font-size="9" text-anchor="middle">Gepufferte USV-Schiene</text>
+            <text x="350" y="702" fill="#4ade80" font-size="8" text-anchor="middle">LS 1P 32A Abgänge</text>
+
+            <!-- PDU L1 -->
+            <rect x="30" y="760" width="200" height="60" rx="6" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5" />
+            <text x="130" y="780" fill="#f8fafc" font-size="10" font-weight="bold" text-anchor="middle">SmartPDU A-0UL</text>
+            <text x="130" y="794" fill="#94a3b8" font-size="8" text-anchor="middle">Phase L1 | 3x10 mm²</text>
+            <text x="130" y="808" fill="#60a5fa" font-size="8" text-anchor="middle">Server Netzteile A</text>
+
+            <!-- PDU L2 -->
+            <rect x="250" y="760" width="200" height="60" rx="6" fill="#1e293b" stroke="#eab308" stroke-width="1.5" />
+            <text x="350" y="780" fill="#f8fafc" font-size="10" font-weight="bold" text-anchor="middle">SmartPDU A-0UR</text>
+            <text x="350" y="794" fill="#94a3b8" font-size="8" text-anchor="middle">Phase L2 | 3x10 mm²</text>
+            <text x="350" y="808" fill="#facc15" font-size="8" text-anchor="middle">Server Netzteile B</text>
+
+            <!-- PDU L3 -->
+            <rect x="470" y="760" width="200" height="60" rx="6" fill="#1e293b" stroke="#a855f7" stroke-width="1.5" />
+            <text x="570" y="780" fill="#f8fafc" font-size="10" font-weight="bold" text-anchor="middle">SmartPDU B-0UL</text>
+            <text x="570" y="794" fill="#94a3b8" font-size="8" text-anchor="middle">Phase L3 | 3x10 mm²</text>
+            <text x="570" y="808" fill="#c084fc" font-size="8" text-anchor="middle">Redundante A/B Server</text>
+          </svg>
+        </div>
+
+        <div class="space-y-4">
+          <div class="bg-[#182030] border border-slate-700/50 rounded-xl p-4">
+            <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-3">Legende & Kabel</h4>
+            <div class="space-y-3 text-xs">
+              <div class="flex items-center space-x-2">
+                <div class="w-4 h-1 bg-slate-500"></div>
+                <span class="text-slate-400">Normalnetz (ungepuffert)</span>
+              </div>
+              <div class="flex items-center space-x-2">
+                <div class="w-4 h-1 bg-emerald-500"></div>
+                <span class="text-slate-400">USV-Pfad (aktiv gepuffert)</span>
+              </div>
+              <div class="flex items-center space-x-2">
+                <div class="w-4 h-1 bg-red-500 stroke-dasharray-2"></div>
+                <span class="text-slate-400">Direktnetz / Bypass</span>
+              </div>
+            </div>
+          </div>
+          <div class="bg-[#182030] border border-slate-700/50 rounded-xl p-4 text-xs text-slate-400 leading-relaxed space-y-2">
+            <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Information</h4>
+            <p>
+              Dieses Blockschaltbild zeigt die logische Topologie. Die Sicherungen (NH) sind nun korrekt innerhalb der UV-RZ-01 dargestellt. Wechsle auf den Reiter "CAD E-Plan", um den allpoligen Stromlaufplan zu sehen.
+            </p>
+          </div>
+        </div>
+      </div>
+    
+    {:else}
+      <!-- NEW CAD E-PLAN SVG -->
+      <div class="bg-white border-2 border-slate-300 rounded shadow-inner p-4 w-full h-full flex justify-center overflow-auto" style="min-height: 800px;">
+        <svg viewBox="0 0 1000 700" class="w-full max-w-[1200px] h-auto drop-shadow-sm font-sans" shape-rendering="crispEdges">
+          
+          <!-- Outer Frame (DIN format logic) -->
+          <rect x="20" y="20" width="960" height="660" fill="none" stroke="#334155" stroke-width="2" />
+          
+          <!-- Drawing Area Grid marks -->
+          {#each Array(10) as _, i}
+            <line x1={20 + (i * 96)} y1="15" x2={20 + (i * 96)} y2="25" stroke="#94a3b8" stroke-width="1" />
+            <text x={68 + (i * 96)} y="15" font-size="10" fill="#94a3b8" text-anchor="middle">{i}</text>
+          {/each}
+          {#each Array(6) as _, i}
+            <line x1="15" y1={20 + (i * 110)} x2="25" y2={20 + (i * 110)} stroke="#94a3b8" stroke-width="1" />
+            <text x="10" y={75 + (i * 110)} font-size="10" fill="#94a3b8" text-anchor="end">{String.fromCharCode(65 + i)}</text>
+          {/each}
+
+          <!-- Title Block (Schriftfeld nach DIN) -->
+          <g transform="translate(680, 580)">
+            <rect x="0" y="0" width="300" height="100" fill="none" stroke="#334155" stroke-width="2" />
+            <!-- Rows -->
+            <line x1="0" y1="20" x2="300" y2="20" stroke="#334155" stroke-width="1" />
+            <line x1="0" y1="40" x2="300" y2="40" stroke="#334155" stroke-width="1" />
+            <line x1="0" y1="80" x2="300" y2="80" stroke="#334155" stroke-width="1" />
+            <!-- Cols -->
+            <line x1="100" y1="0" x2="100" y2="40" stroke="#334155" stroke-width="1" />
+            <line x1="200" y1="80" x2="200" y2="100" stroke="#334155" stroke-width="1" />
+            <line x1="250" y1="80" x2="250" y2="100" stroke="#334155" stroke-width="1" />
+            
+            <text x="5" y="14" font-size="9" fill="#64748b">Datum</text>
+            <text x="40" y="14" font-size="10" fill="#0f172a" font-weight="bold">2026-05-22</text>
+            
+            <text x="105" y="14" font-size="9" fill="#64748b">Bearbeiter</text>
+            <text x="155" y="14" font-size="10" fill="#0f172a" font-weight="bold">Andreas</text>
+            
+            <text x="5" y="34" font-size="9" fill="#64748b">Geprüft</text>
+            <text x="105" y="34" font-size="9" fill="#64748b">Norm</text>
+            <text x="155" y="34" font-size="10" fill="#0f172a">EN 61082-1</text>
+            
+            <text x="5" y="55" font-size="11" fill="#64748b">Projektbezeichnung:</text>
+            <text x="5" y="72" font-size="16" fill="#0f172a" font-weight="bold">KAiTix ServerFlow</text>
+
+            <text x="5" y="94" font-size="11" fill="#0f172a">Anlage: USV-Einspeisung RZ</text>
+            <text x="205" y="94" font-size="10" fill="#64748b">Blatt:</text>
+            <text x="235" y="94" font-size="11" fill="#0f172a" font-weight="bold">1</text>
+            
+            <text x="255" y="94" font-size="10" fill="#64748b">V.Bl.:</text>
+            <text x="285" y="94" font-size="11" fill="#0f172a">-</text>
+          </g>
+
+          <!-- ============================================== -->
+          <!-- SCHALTPLAN LOGIC -->
+          <!-- ============================================== -->
+          <g stroke-linecap="round" stroke-linejoin="round">
+            
+            <!-- Horizontal Busbars (Potentiale) -->
+            <g stroke-width="1.5">
+              <line x1="50" y1="80" x2="950" y2="80" stroke="#78350f" /> <text x="35" y="83" font-size="10" fill="#78350f" font-weight="bold">L1</text>
+              <line x1="50" y1="100" x2="950" y2="100" stroke="#0f172a" /> <text x="35" y="103" font-size="10" fill="#0f172a" font-weight="bold">L2</text>
+              <line x1="50" y1="120" x2="950" y2="120" stroke="#475569" /> <text x="35" y="123" font-size="10" fill="#475569" font-weight="bold">L3</text>
+              <line x1="50" y1="140" x2="950" y2="140" stroke="#2563eb" /> <text x="35" y="143" font-size="10" fill="#2563eb" font-weight="bold">N</text>
+              <line x1="50" y1="160" x2="950" y2="160" stroke="#16a34a" stroke-dasharray="8,4" /> <text x="35" y="163" font-size="10" fill="#16a34a" font-weight="bold">PE</text>
+            </g>
+
+            <!-- Abzweig 1: UV-RZ-01 Einspeisung -->
+            <!-- Connection Dots -->
+            <circle cx="200" cy="80" r="2.5" fill="#78350f"/>
+            <circle cx="220" cy="100" r="2.5" fill="#0f172a"/>
+            <circle cx="240" cy="120" r="2.5" fill="#475569"/>
+            <circle cx="260" cy="140" r="2.5" fill="#2563eb"/>
+            <circle cx="280" cy="160" r="2.5" fill="#16a34a"/>
+            
+            <!-- Vertical Drop -->
+            <line x1="200" y1="80" x2="200" y2="250" stroke="#78350f" stroke-width="1"/>
+            <line x1="220" y1="100" x2="220" y2="250" stroke="#0f172a" stroke-width="1"/>
+            <line x1="240" y1="120" x2="240" y2="250" stroke="#475569" stroke-width="1"/>
+            <line x1="260" y1="140" x2="260" y2="520" stroke="#2563eb" stroke-width="1"/>
+            <line x1="280" y1="160" x2="280" y2="520" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
+
+            <!-- Box UV-RZ-01 =A1 -->
+            <rect x="150" y="220" width="160" height="260" fill="none" stroke="#64748b" stroke-dasharray="10,5" stroke-width="1"/>
+            <text x="160" y="215" font-size="12" font-weight="bold" fill="#0f172a">=A1</text>
+            <text x="160" y="235" font-size="10" fill="#0f172a">UV-RZ-01</text>
+
+            <!-- -F1 NH-Sicherung 80A im UV -->
+            <g stroke="#0f172a" stroke-width="1.5" fill="none">
+              <rect x="195" y="250" width="10" height="30"/>
+              <line x1="195" y1="250" x2="205" y2="280"/>
+              
+              <rect x="215" y="250" width="10" height="30"/>
+              <line x1="215" y1="250" x2="225" y2="280"/>
+              
+              <rect x="235" y="250" width="10" height="30"/>
+              <line x1="235" y1="250" x2="245" y2="280"/>
+              
+              <line x1="185" y1="265" x2="255" y2="265" stroke-dasharray="3,3" stroke-width="1"/>
+            </g>
+            <text x="160" y="265" font-size="10" font-weight="bold" fill="#0f172a">-F1</text>
+            <text x="250" y="265" font-size="9" fill="#0f172a">NH 80A</text>
+
+            <!-- Drops after fuse -->
+            <line x1="200" y1="280" x2="200" y2="350" stroke="#78350f" stroke-width="1"/>
+            <line x1="220" y1="280" x2="220" y2="350" stroke="#0f172a" stroke-width="1"/>
+            <line x1="240" y1="280" x2="240" y2="350" stroke="#475569" stroke-width="1"/>
+
+            <!-- -Q1 Leistungsschalter 63A im UV -->
+            <g stroke="#0f172a" stroke-width="1.5" fill="none">
+              <!-- Schließer -->
+              <line x1="200" y1="350" x2="192" y2="380"/>
+              <line x1="220" y1="350" x2="212" y2="380"/>
+              <line x1="240" y1="350" x2="232" y2="380"/>
+              <line x1="185" y1="365" x2="255" y2="365" stroke-dasharray="3,3" stroke-width="1"/>
+            </g>
+            <text x="160" y="370" font-size="10" font-weight="bold" fill="#0f172a">-Q1</text>
+            <text x="250" y="370" font-size="9" fill="#0f172a">LS 63A</text>
+
+            <!-- Drops to Terminal -X1 -->
+            <line x1="200" y1="380" x2="200" y2="450" stroke="#78350f" stroke-width="1"/>
+            <line x1="220" y1="380" x2="220" y2="450" stroke="#0f172a" stroke-width="1"/>
+            <line x1="240" y1="380" x2="240" y2="450" stroke="#475569" stroke-width="1"/>
+
+            <!-- -X1 Klemmenleiste Abgang USV -->
+            <g fill="#ffffff" stroke="#0f172a" stroke-width="1.5">
+              <circle cx="200" cy="450" r="3.5"/>
+              <circle cx="220" cy="450" r="3.5"/>
+              <circle cx="240" cy="450" r="3.5"/>
+              <circle cx="260" cy="450" r="3.5"/>
+              <circle cx="280" cy="450" r="3.5"/>
+            </g>
+            <text x="160" y="455" font-size="10" font-weight="bold" fill="#0f172a">-X1</text>
+
+            <!-- Zuleitung zur USV -W1 -->
+            <line x1="200" y1="453" x2="200" y2="520" stroke="#78350f" stroke-width="1"/>
+            <line x1="220" y1="453" x2="220" y2="520" stroke="#0f172a" stroke-width="1"/>
+            <line x1="240" y1="453" x2="240" y2="520" stroke="#475569" stroke-width="1"/>
+            <!-- W1 designation -->
+            <path d="M 180 480 C 190 470, 290 470, 300 480" fill="none" stroke="#64748b" stroke-width="1" stroke-dasharray="2,2"/>
+            <text x="310" y="483" font-size="9" fill="#0f172a">-W1 <tspan fill="#64748b">(NYY-J 5x16 mm²)</tspan></text>
+
+            <!-- USV-Anlage =T1 -->
+            <rect x="150" y="520" width="160" height="90" fill="#f8fafc" stroke="#0f172a" stroke-width="2"/>
+            <text x="230" y="555" font-size="14" font-weight="bold" text-anchor="middle" fill="#0f172a">=T1</text>
+            <text x="230" y="575" font-size="10" text-anchor="middle" fill="#0f172a">USV-Anlage 40kW</text>
+            <text x="230" y="590" font-size="9" text-anchor="middle" fill="#64748b">AC IN / AC OUT</text>
+            
+            <!-- Output from USV to MBS -->
+            <line x1="200" y1="610" x2="200" y2="650" stroke="#78350f" stroke-width="1"/>
+            <line x1="220" y1="610" x2="220" y2="650" stroke="#0f172a" stroke-width="1"/>
+            <line x1="240" y1="610" x2="240" y2="650" stroke="#475569" stroke-width="1"/>
+            
+            <path d="M 200 650 L 350 650 L 350 590" fill="none" stroke="#78350f" stroke-width="1"/>
+            <path d="M 220 645 L 370 645 L 370 590" fill="none" stroke="#0f172a" stroke-width="1"/>
+            <path d="M 240 640 L 390 640 L 390 590" fill="none" stroke="#475569" stroke-width="1"/>
+
+            <!-- Abzweig 2: Bypass / MBS -->
+            <circle cx="500" cy="80" r="2.5" fill="#78350f"/>
+            <circle cx="520" cy="100" r="2.5" fill="#0f172a"/>
+            <circle cx="540" cy="120" r="2.5" fill="#475569"/>
+            
+            <line x1="500" y1="80" x2="500" y2="250" stroke="#78350f" stroke-width="1"/>
+            <line x1="520" y1="100" x2="520" y2="250" stroke="#0f172a" stroke-width="1"/>
+            <line x1="540" y1="120" x2="540" y2="250" stroke="#475569" stroke-width="1"/>
+
+            <text x="460" y="215" font-size="12" font-weight="bold" fill="#0f172a">=A1</text>
+            <text x="460" y="235" font-size="10" fill="#0f172a">UV-RZ-01 (Bypass)</text>
+
+            <!-- -Q2 Bypass LS 63A -->
+            <g stroke="#0f172a" stroke-width="1.5" fill="none">
+              <!-- Schließer -->
+              <line x1="500" y1="250" x2="492" y2="280"/>
+              <line x1="520" y1="250" x2="512" y2="280"/>
+              <line x1="540" y1="250" x2="532" y2="280"/>
+              <line x1="485" y1="265" x2="555" y2="265" stroke-dasharray="3,3" stroke-width="1"/>
+            </g>
+            <text x="460" y="270" font-size="10" font-weight="bold" fill="#0f172a">-Q2</text>
+            <text x="550" y="270" font-size="9" fill="#0f172a">LS 63A (Direktnetz)</text>
+
+            <line x1="500" y1="280" x2="500" y2="350" stroke="#78350f" stroke-width="1"/>
+            <line x1="520" y1="280" x2="520" y2="350" stroke="#0f172a" stroke-width="1"/>
+            <line x1="540" y1="280" x2="540" y2="350" stroke="#475569" stroke-width="1"/>
+
+            <!-- -X2 Klemmenleiste Abgang MBS -->
+            <g fill="#ffffff" stroke="#0f172a" stroke-width="1.5">
+              <circle cx="500" cy="350" r="3.5"/>
+              <circle cx="520" cy="350" r="3.5"/>
+              <circle cx="540" cy="350" r="3.5"/>
+            </g>
+            <text x="460" y="355" font-size="10" font-weight="bold" fill="#0f172a">-X2</text>
+
+            <path d="M 480 380 C 490 370, 550 370, 560 380" fill="none" stroke="#64748b" stroke-width="1" stroke-dasharray="2,2"/>
+            <text x="570" y="383" font-size="9" fill="#0f172a">-W2 <tspan fill="#64748b">(NYY-J 5x16 mm²)</tspan></text>
+
+            <!-- To MBS Box -->
+            <line x1="500" y1="353" x2="500" y2="500" stroke="#78350f" stroke-width="1"/>
+            <line x1="520" y1="353" x2="520" y2="500" stroke="#0f172a" stroke-width="1"/>
+            <line x1="540" y1="353" x2="540" y2="500" stroke="#475569" stroke-width="1"/>
+            
+            <path d="M 500 500 L 450 500 L 450 520" fill="none" stroke="#78350f" stroke-width="1"/>
+            <path d="M 520 500 L 470 500 L 470 520" fill="none" stroke="#0f172a" stroke-width="1"/>
+            <path d="M 540 500 L 490 500 L 490 520" fill="none" stroke="#475569" stroke-width="1"/>
+
+            <rect x="330" y="520" width="180" height="70" fill="#f8fafc" stroke="#0f172a" stroke-width="1.5" stroke-dasharray="5,3"/>
+            <text x="420" y="545" font-size="12" font-weight="bold" text-anchor="middle" fill="#0f172a">=S1</text>
+            <text x="420" y="560" font-size="10" text-anchor="middle" fill="#0f172a">MBS Schalter (1-0-2)</text>
+            <text x="420" y="575" font-size="8" text-anchor="middle" fill="#64748b">Handumgehung</text>
+            
+            <!-- Output from MBS to Load -->
+            <line x1="390" y1="590" x2="390" y2="650" stroke="#78350f" stroke-width="1"/>
+            <line x1="410" y1="590" x2="410" y2="650" stroke="#0f172a" stroke-width="1"/>
+            <line x1="430" y1="590" x2="430" y2="650" stroke="#475569" stroke-width="1"/>
+            
+            <line x1="390" y1="650" x2="600" y2="650" stroke="#78350f" stroke-width="1"/>
+            <line x1="410" y1="645" x2="600" y2="645" stroke="#0f172a" stroke-width="1"/>
+            <line x1="430" y1="640" x2="600" y2="640" stroke="#475569" stroke-width="1"/>
+
+            <text x="610" y="645" font-size="10" font-style="italic" fill="#64748b">Weiter zu UV-USV-01 (Blatt 2)</text>
+            
+          </g>
+        </svg>
+      </div>
+
+      <!-- BLATT 2: Verteilung -->
+      <div class="bg-white border-2 border-slate-300 rounded shadow-inner p-4 w-full flex justify-center mt-8" style="min-height: 800px;">
+        <svg viewBox="0 0 1000 700" class="w-full max-w-[1200px] h-auto drop-shadow-sm font-sans" shape-rendering="crispEdges">
+          
+          <!-- Outer Frame -->
+          <rect x="20" y="20" width="960" height="660" fill="none" stroke="#334155" stroke-width="2" />
+          
+          <!-- Grid -->
+          {#each Array(10) as _, i}
+            <line x1={20 + (i * 96)} y1="15" x2={20 + (i * 96)} y2="25" stroke="#94a3b8" stroke-width="1" />
+            <text x={68 + (i * 96)} y="15" font-size="10" fill="#94a3b8" text-anchor="middle">{i}</text>
+          {/each}
+          {#each Array(6) as _, i}
+            <line x1="15" y1={20 + (i * 110)} x2="25" y2={20 + (i * 110)} stroke="#94a3b8" stroke-width="1" />
+            <text x="10" y={75 + (i * 110)} font-size="10" fill="#94a3b8" text-anchor="end">{String.fromCharCode(65 + i)}</text>
+          {/each}
+
+          <!-- Title Block -->
+          <g transform="translate(680, 580)">
+            <rect x="0" y="0" width="300" height="100" fill="none" stroke="#334155" stroke-width="2" />
+            <line x1="0" y1="20" x2="300" y2="20" stroke="#334155" stroke-width="1" />
+            <line x1="0" y1="40" x2="300" y2="40" stroke="#334155" stroke-width="1" />
+            <line x1="0" y1="80" x2="300" y2="80" stroke="#334155" stroke-width="1" />
+            <line x1="100" y1="0" x2="100" y2="40" stroke="#334155" stroke-width="1" />
+            <line x1="200" y1="80" x2="200" y2="100" stroke="#334155" stroke-width="1" />
+            <line x1="250" y1="80" x2="250" y2="100" stroke="#334155" stroke-width="1" />
+            
+            <text x="5" y="14" font-size="9" fill="#64748b">Datum</text><text x="40" y="14" font-size="10" fill="#0f172a" font-weight="bold">2026-05-22</text>
+            <text x="105" y="14" font-size="9" fill="#64748b">Bearbeiter</text><text x="155" y="14" font-size="10" fill="#0f172a" font-weight="bold">Andreas</text>
+            <text x="5" y="34" font-size="9" fill="#64748b">Geprüft</text>
+            <text x="105" y="34" font-size="9" fill="#64748b">Norm</text><text x="155" y="34" font-size="10" fill="#0f172a">EN 61082-1</text>
+            
+            <text x="5" y="55" font-size="11" fill="#64748b">Projektbezeichnung:</text>
+            <text x="5" y="72" font-size="16" fill="#0f172a" font-weight="bold">KAiTix ServerFlow</text>
+            <text x="5" y="94" font-size="11" fill="#0f172a">Anlage: UV-USV-01 (Verteilung)</text>
+            <text x="205" y="94" font-size="10" fill="#64748b">Blatt:</text><text x="235" y="94" font-size="11" fill="#0f172a" font-weight="bold">2</text>
+            <text x="255" y="94" font-size="10" fill="#64748b">V.Bl.:</text><text x="285" y="94" font-size="11" fill="#0f172a">1</text>
+          </g>
+
+          <g stroke-linecap="round" stroke-linejoin="round">
+            <text x="30" y="65" font-size="10" font-style="italic" fill="#64748b">Von Blatt 1</text>
+            
+            <!-- Busbars -->
+            <g stroke-width="1.5">
+              <line x1="50" y1="80" x2="950" y2="80" stroke="#78350f" /> <text x="35" y="83" font-size="10" fill="#78350f" font-weight="bold">L1</text>
+              <line x1="50" y1="100" x2="950" y2="100" stroke="#0f172a" /> <text x="35" y="103" font-size="10" fill="#0f172a" font-weight="bold">L2</text>
+              <line x1="50" y1="120" x2="950" y2="120" stroke="#475569" /> <text x="35" y="123" font-size="10" fill="#475569" font-weight="bold">L3</text>
+              <line x1="50" y1="140" x2="950" y2="140" stroke="#2563eb" /> <text x="35" y="143" font-size="10" fill="#2563eb" font-weight="bold">N</text>
+              <line x1="50" y1="160" x2="950" y2="160" stroke="#16a34a" stroke-dasharray="8,4" /> <text x="35" y="163" font-size="10" fill="#16a34a" font-weight="bold">PE</text>
+            </g>
+
+            <!-- Branch 1 -->
+            <circle cx="170" cy="80" r="2.5" fill="#78350f"/>
+            <circle cx="180" cy="100" r="2.5" fill="#0f172a"/>
+            <circle cx="190" cy="120" r="2.5" fill="#475569"/>
+            <circle cx="200" cy="140" r="2.5" fill="#2563eb"/>
+            <circle cx="210" cy="160" r="2.5" fill="#16a34a"/>
+            
+            <line x1="170" y1="80" x2="170" y2="220" stroke="#78350f" stroke-width="1"/>
+            <line x1="180" y1="100" x2="180" y2="220" stroke="#0f172a" stroke-width="1"/>
+            <line x1="190" y1="120" x2="190" y2="220" stroke="#475569" stroke-width="1"/>
+            <line x1="200" y1="140" x2="200" y2="400" stroke="#2563eb" stroke-width="1"/>
+            <line x1="210" y1="160" x2="210" y2="400" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
+
+            <!-- LS -Q3.1 -->
+            <g stroke="#0f172a" stroke-width="1.5" fill="none">
+              <line x1="170" y1="220" x2="165" y2="250"/>
+              <line x1="180" y1="220" x2="175" y2="250"/>
+              <line x1="190" y1="220" x2="185" y2="250"/>
+              <line x1="160" y1="235" x2="200" y2="235" stroke-dasharray="2,2" stroke-width="1"/>
+            </g>
+            <text x="150" y="240" font-size="9" font-weight="bold" fill="#0f172a">-Q3.1</text>
+            <text x="205" y="240" font-size="8" fill="#0f172a">LS 32A</text>
+
+            <line x1="170" y1="250" x2="170" y2="300" stroke="#78350f" stroke-width="1"/>
+            <line x1="180" y1="250" x2="180" y2="300" stroke="#0f172a" stroke-width="1"/>
+            <line x1="190" y1="250" x2="190" y2="300" stroke="#475569" stroke-width="1"/>
+
+            <!-- Terminal -X3.1 -->
+            <g fill="#ffffff" stroke="#0f172a" stroke-width="1.5">
+              <circle cx="170" cy="300" r="3"/>
+              <circle cx="180" cy="300" r="3"/>
+              <circle cx="190" cy="300" r="3"/>
+              <circle cx="200" cy="300" r="3"/>
+              <circle cx="210" cy="300" r="3"/>
+            </g>
+            <text x="150" y="303" font-size="9" font-weight="bold" fill="#0f172a">-X1</text>
+
+            <!-- Cable -->
+            <line x1="170" y1="303" x2="170" y2="400" stroke="#78350f" stroke-width="1"/>
+            <line x1="180" y1="303" x2="180" y2="400" stroke="#0f172a" stroke-width="1"/>
+            <line x1="190" y1="303" x2="190" y2="400" stroke="#475569" stroke-width="1"/>
+            <path d="M 160 340 C 160 330, 220 330, 220 340" fill="none" stroke="#64748b" stroke-width="1" stroke-dasharray="2,2"/>
+            <text x="225" y="342" font-size="7" fill="#64748b">-W3.1 (5x6)</text>
+
+            <!-- Rack Box (Ortskasten) -->
+            <rect x="150" y="380" width="80" height="150" fill="none" stroke="#0f172a" stroke-dasharray="8,4" stroke-width="1"/>
+            <text x="155" y="395" font-size="10" font-weight="bold" fill="#0f172a">+Rack 1</text>
+
+            <!-- Kentix PDU -->
+            <rect x="160" y="400" width="60" height="100" fill="#f8fafc" stroke="#0f172a" stroke-width="1.5"/>
+            <text x="190" y="440" font-size="10" font-weight="bold" text-anchor="middle" fill="#0f172a">-PDU1</text>
+            <text x="190" y="455" font-size="8" text-anchor="middle" fill="#0f172a">Kentix 32A</text>
+            <text x="190" y="470" font-size="7" text-anchor="middle" fill="#64748b">SmartPDU</text>
+    
+            <!-- Branch 2 -->
+            <circle cx="290" cy="80" r="2.5" fill="#78350f"/>
+            <circle cx="300" cy="100" r="2.5" fill="#0f172a"/>
+            <circle cx="310" cy="120" r="2.5" fill="#475569"/>
+            <circle cx="320" cy="140" r="2.5" fill="#2563eb"/>
+            <circle cx="330" cy="160" r="2.5" fill="#16a34a"/>
+            
+            <line x1="290" y1="80" x2="290" y2="220" stroke="#78350f" stroke-width="1"/>
+            <line x1="300" y1="100" x2="300" y2="220" stroke="#0f172a" stroke-width="1"/>
+            <line x1="310" y1="120" x2="310" y2="220" stroke="#475569" stroke-width="1"/>
+            <line x1="320" y1="140" x2="320" y2="400" stroke="#2563eb" stroke-width="1"/>
+            <line x1="330" y1="160" x2="330" y2="400" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
+
+            <!-- LS -Q3.2 -->
+            <g stroke="#0f172a" stroke-width="1.5" fill="none">
+              <line x1="290" y1="220" x2="285" y2="250"/>
+              <line x1="300" y1="220" x2="295" y2="250"/>
+              <line x1="310" y1="220" x2="305" y2="250"/>
+              <line x1="280" y1="235" x2="320" y2="235" stroke-dasharray="2,2" stroke-width="1"/>
+            </g>
+            <text x="270" y="240" font-size="9" font-weight="bold" fill="#0f172a">-Q3.2</text>
+            <text x="325" y="240" font-size="8" fill="#0f172a">LS 32A</text>
+
+            <line x1="290" y1="250" x2="290" y2="300" stroke="#78350f" stroke-width="1"/>
+            <line x1="300" y1="250" x2="300" y2="300" stroke="#0f172a" stroke-width="1"/>
+            <line x1="310" y1="250" x2="310" y2="300" stroke="#475569" stroke-width="1"/>
+
+            <!-- Terminal -X3.2 -->
+            <g fill="#ffffff" stroke="#0f172a" stroke-width="1.5">
+              <circle cx="290" cy="300" r="3"/>
+              <circle cx="300" cy="300" r="3"/>
+              <circle cx="310" cy="300" r="3"/>
+              <circle cx="320" cy="300" r="3"/>
+              <circle cx="330" cy="300" r="3"/>
+            </g>
+            <text x="270" y="303" font-size="9" font-weight="bold" fill="#0f172a">-X2</text>
+
+            <!-- Cable -->
+            <line x1="290" y1="303" x2="290" y2="400" stroke="#78350f" stroke-width="1"/>
+            <line x1="300" y1="303" x2="300" y2="400" stroke="#0f172a" stroke-width="1"/>
+            <line x1="310" y1="303" x2="310" y2="400" stroke="#475569" stroke-width="1"/>
+            <path d="M 280 340 C 280 330, 340 330, 340 340" fill="none" stroke="#64748b" stroke-width="1" stroke-dasharray="2,2"/>
+            <text x="345" y="342" font-size="7" fill="#64748b">-W3.2 (5x6)</text>
+
+            <!-- Rack Box (Ortskasten) -->
+            <rect x="270" y="380" width="80" height="150" fill="none" stroke="#0f172a" stroke-dasharray="8,4" stroke-width="1"/>
+            <text x="275" y="395" font-size="10" font-weight="bold" fill="#0f172a">+Rack 2</text>
+
+            <!-- Kentix PDU -->
+            <rect x="280" y="400" width="60" height="100" fill="#f8fafc" stroke="#0f172a" stroke-width="1.5"/>
+            <text x="310" y="440" font-size="10" font-weight="bold" text-anchor="middle" fill="#0f172a">-PDU1</text>
+            <text x="310" y="455" font-size="8" text-anchor="middle" fill="#0f172a">Kentix 32A</text>
+            <text x="310" y="470" font-size="7" text-anchor="middle" fill="#64748b">SmartPDU</text>
+    
+            <!-- Branch 3 -->
+            <circle cx="410" cy="80" r="2.5" fill="#78350f"/>
+            <circle cx="420" cy="100" r="2.5" fill="#0f172a"/>
+            <circle cx="430" cy="120" r="2.5" fill="#475569"/>
+            <circle cx="440" cy="140" r="2.5" fill="#2563eb"/>
+            <circle cx="450" cy="160" r="2.5" fill="#16a34a"/>
+            
+            <line x1="410" y1="80" x2="410" y2="220" stroke="#78350f" stroke-width="1"/>
+            <line x1="420" y1="100" x2="420" y2="220" stroke="#0f172a" stroke-width="1"/>
+            <line x1="430" y1="120" x2="430" y2="220" stroke="#475569" stroke-width="1"/>
+            <line x1="440" y1="140" x2="440" y2="400" stroke="#2563eb" stroke-width="1"/>
+            <line x1="450" y1="160" x2="450" y2="400" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
+
+            <!-- LS -Q3.3 -->
+            <g stroke="#0f172a" stroke-width="1.5" fill="none">
+              <line x1="410" y1="220" x2="405" y2="250"/>
+              <line x1="420" y1="220" x2="415" y2="250"/>
+              <line x1="430" y1="220" x2="425" y2="250"/>
+              <line x1="400" y1="235" x2="440" y2="235" stroke-dasharray="2,2" stroke-width="1"/>
+            </g>
+            <text x="390" y="240" font-size="9" font-weight="bold" fill="#0f172a">-Q3.3</text>
+            <text x="445" y="240" font-size="8" fill="#0f172a">LS 32A</text>
+
+            <line x1="410" y1="250" x2="410" y2="300" stroke="#78350f" stroke-width="1"/>
+            <line x1="420" y1="250" x2="420" y2="300" stroke="#0f172a" stroke-width="1"/>
+            <line x1="430" y1="250" x2="430" y2="300" stroke="#475569" stroke-width="1"/>
+
+            <!-- Terminal -X3.3 -->
+            <g fill="#ffffff" stroke="#0f172a" stroke-width="1.5">
+              <circle cx="410" cy="300" r="3"/>
+              <circle cx="420" cy="300" r="3"/>
+              <circle cx="430" cy="300" r="3"/>
+              <circle cx="440" cy="300" r="3"/>
+              <circle cx="450" cy="300" r="3"/>
+            </g>
+            <text x="390" y="303" font-size="9" font-weight="bold" fill="#0f172a">-X3</text>
+
+            <!-- Cable -->
+            <line x1="410" y1="303" x2="410" y2="400" stroke="#78350f" stroke-width="1"/>
+            <line x1="420" y1="303" x2="420" y2="400" stroke="#0f172a" stroke-width="1"/>
+            <line x1="430" y1="303" x2="430" y2="400" stroke="#475569" stroke-width="1"/>
+            <path d="M 400 340 C 400 330, 460 330, 460 340" fill="none" stroke="#64748b" stroke-width="1" stroke-dasharray="2,2"/>
+            <text x="465" y="342" font-size="7" fill="#64748b">-W3.3 (5x6)</text>
+
+            <!-- Rack Box (Ortskasten) -->
+            <rect x="390" y="380" width="80" height="150" fill="none" stroke="#0f172a" stroke-dasharray="8,4" stroke-width="1"/>
+            <text x="395" y="395" font-size="10" font-weight="bold" fill="#0f172a">+Rack 3</text>
+
+            <!-- Kentix PDU -->
+            <rect x="400" y="400" width="60" height="100" fill="#f8fafc" stroke="#0f172a" stroke-width="1.5"/>
+            <text x="430" y="440" font-size="10" font-weight="bold" text-anchor="middle" fill="#0f172a">-PDU1</text>
+            <text x="430" y="455" font-size="8" text-anchor="middle" fill="#0f172a">Kentix 32A</text>
+            <text x="430" y="470" font-size="7" text-anchor="middle" fill="#64748b">SmartPDU</text>
+    
+            <!-- Branch 4 -->
+            <circle cx="530" cy="80" r="2.5" fill="#78350f"/>
+            <circle cx="540" cy="100" r="2.5" fill="#0f172a"/>
+            <circle cx="550" cy="120" r="2.5" fill="#475569"/>
+            <circle cx="560" cy="140" r="2.5" fill="#2563eb"/>
+            <circle cx="570" cy="160" r="2.5" fill="#16a34a"/>
+            
+            <line x1="530" y1="80" x2="530" y2="220" stroke="#78350f" stroke-width="1"/>
+            <line x1="540" y1="100" x2="540" y2="220" stroke="#0f172a" stroke-width="1"/>
+            <line x1="550" y1="120" x2="550" y2="220" stroke="#475569" stroke-width="1"/>
+            <line x1="560" y1="140" x2="560" y2="400" stroke="#2563eb" stroke-width="1"/>
+            <line x1="570" y1="160" x2="570" y2="400" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
+
+            <!-- LS -Q3.4 -->
+            <g stroke="#0f172a" stroke-width="1.5" fill="none">
+              <line x1="530" y1="220" x2="525" y2="250"/>
+              <line x1="540" y1="220" x2="535" y2="250"/>
+              <line x1="550" y1="220" x2="545" y2="250"/>
+              <line x1="520" y1="235" x2="560" y2="235" stroke-dasharray="2,2" stroke-width="1"/>
+            </g>
+            <text x="510" y="240" font-size="9" font-weight="bold" fill="#0f172a">-Q3.4</text>
+            <text x="565" y="240" font-size="8" fill="#0f172a">LS 32A</text>
+
+            <line x1="530" y1="250" x2="530" y2="300" stroke="#78350f" stroke-width="1"/>
+            <line x1="540" y1="250" x2="540" y2="300" stroke="#0f172a" stroke-width="1"/>
+            <line x1="550" y1="250" x2="550" y2="300" stroke="#475569" stroke-width="1"/>
+
+            <!-- Terminal -X3.4 -->
+            <g fill="#ffffff" stroke="#0f172a" stroke-width="1.5">
+              <circle cx="530" cy="300" r="3"/>
+              <circle cx="540" cy="300" r="3"/>
+              <circle cx="550" cy="300" r="3"/>
+              <circle cx="560" cy="300" r="3"/>
+              <circle cx="570" cy="300" r="3"/>
+            </g>
+            <text x="510" y="303" font-size="9" font-weight="bold" fill="#0f172a">-X4</text>
+
+            <!-- Cable -->
+            <line x1="530" y1="303" x2="530" y2="400" stroke="#78350f" stroke-width="1"/>
+            <line x1="540" y1="303" x2="540" y2="400" stroke="#0f172a" stroke-width="1"/>
+            <line x1="550" y1="303" x2="550" y2="400" stroke="#475569" stroke-width="1"/>
+            <path d="M 520 340 C 520 330, 580 330, 580 340" fill="none" stroke="#64748b" stroke-width="1" stroke-dasharray="2,2"/>
+            <text x="585" y="342" font-size="7" fill="#64748b">-W3.4 (5x6)</text>
+
+            <!-- Rack Box (Ortskasten) -->
+            <rect x="510" y="380" width="80" height="150" fill="none" stroke="#0f172a" stroke-dasharray="8,4" stroke-width="1"/>
+            <text x="515" y="395" font-size="10" font-weight="bold" fill="#0f172a">+Rack 4</text>
+
+            <!-- Kentix PDU -->
+            <rect x="520" y="400" width="60" height="100" fill="#f8fafc" stroke="#0f172a" stroke-width="1.5"/>
+            <text x="550" y="440" font-size="10" font-weight="bold" text-anchor="middle" fill="#0f172a">-PDU1</text>
+            <text x="550" y="455" font-size="8" text-anchor="middle" fill="#0f172a">Kentix 32A</text>
+            <text x="550" y="470" font-size="7" text-anchor="middle" fill="#64748b">SmartPDU</text>
+    
+            <!-- Branch 5 -->
+            <circle cx="650" cy="80" r="2.5" fill="#78350f"/>
+            <circle cx="660" cy="100" r="2.5" fill="#0f172a"/>
+            <circle cx="670" cy="120" r="2.5" fill="#475569"/>
+            <circle cx="680" cy="140" r="2.5" fill="#2563eb"/>
+            <circle cx="690" cy="160" r="2.5" fill="#16a34a"/>
+            
+            <line x1="650" y1="80" x2="650" y2="220" stroke="#78350f" stroke-width="1"/>
+            <line x1="660" y1="100" x2="660" y2="220" stroke="#0f172a" stroke-width="1"/>
+            <line x1="670" y1="120" x2="670" y2="220" stroke="#475569" stroke-width="1"/>
+            <line x1="680" y1="140" x2="680" y2="400" stroke="#2563eb" stroke-width="1"/>
+            <line x1="690" y1="160" x2="690" y2="400" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
+
+            <!-- LS -Q3.5 -->
+            <g stroke="#0f172a" stroke-width="1.5" fill="none">
+              <line x1="650" y1="220" x2="645" y2="250"/>
+              <line x1="660" y1="220" x2="655" y2="250"/>
+              <line x1="670" y1="220" x2="665" y2="250"/>
+              <line x1="640" y1="235" x2="680" y2="235" stroke-dasharray="2,2" stroke-width="1"/>
+            </g>
+            <text x="630" y="240" font-size="9" font-weight="bold" fill="#0f172a">-Q3.5</text>
+            <text x="685" y="240" font-size="8" fill="#0f172a">LS 32A</text>
+
+            <line x1="650" y1="250" x2="650" y2="300" stroke="#78350f" stroke-width="1"/>
+            <line x1="660" y1="250" x2="660" y2="300" stroke="#0f172a" stroke-width="1"/>
+            <line x1="670" y1="250" x2="670" y2="300" stroke="#475569" stroke-width="1"/>
+
+            <!-- Terminal -X3.5 -->
+            <g fill="#ffffff" stroke="#0f172a" stroke-width="1.5">
+              <circle cx="650" cy="300" r="3"/>
+              <circle cx="660" cy="300" r="3"/>
+              <circle cx="670" cy="300" r="3"/>
+              <circle cx="680" cy="300" r="3"/>
+              <circle cx="690" cy="300" r="3"/>
+            </g>
+            <text x="630" y="303" font-size="9" font-weight="bold" fill="#0f172a">-X5</text>
+
+            <!-- Cable -->
+            <line x1="650" y1="303" x2="650" y2="400" stroke="#78350f" stroke-width="1"/>
+            <line x1="660" y1="303" x2="660" y2="400" stroke="#0f172a" stroke-width="1"/>
+            <line x1="670" y1="303" x2="670" y2="400" stroke="#475569" stroke-width="1"/>
+            <path d="M 640 340 C 640 330, 700 330, 700 340" fill="none" stroke="#64748b" stroke-width="1" stroke-dasharray="2,2"/>
+            <text x="705" y="342" font-size="7" fill="#64748b">-W3.5 (5x6)</text>
+
+            <!-- Rack Box (Ortskasten) -->
+            <rect x="630" y="380" width="80" height="150" fill="none" stroke="#0f172a" stroke-dasharray="8,4" stroke-width="1"/>
+            <text x="635" y="395" font-size="10" font-weight="bold" fill="#0f172a">+Rack 5</text>
+
+            <!-- Kentix PDU -->
+            <rect x="640" y="400" width="60" height="100" fill="#f8fafc" stroke="#0f172a" stroke-width="1.5"/>
+            <text x="670" y="440" font-size="10" font-weight="bold" text-anchor="middle" fill="#0f172a">-PDU1</text>
+            <text x="670" y="455" font-size="8" text-anchor="middle" fill="#0f172a">Kentix 32A</text>
+            <text x="670" y="470" font-size="7" text-anchor="middle" fill="#64748b">SmartPDU</text>
+    
+            <!-- Branch 6 -->
+            <circle cx="770" cy="80" r="2.5" fill="#78350f"/>
+            <circle cx="780" cy="100" r="2.5" fill="#0f172a"/>
+            <circle cx="790" cy="120" r="2.5" fill="#475569"/>
+            <circle cx="800" cy="140" r="2.5" fill="#2563eb"/>
+            <circle cx="810" cy="160" r="2.5" fill="#16a34a"/>
+            
+            <line x1="770" y1="80" x2="770" y2="220" stroke="#78350f" stroke-width="1"/>
+            <line x1="780" y1="100" x2="780" y2="220" stroke="#0f172a" stroke-width="1"/>
+            <line x1="790" y1="120" x2="790" y2="220" stroke="#475569" stroke-width="1"/>
+            <line x1="800" y1="140" x2="800" y2="400" stroke="#2563eb" stroke-width="1"/>
+            <line x1="810" y1="160" x2="810" y2="400" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
+
+            <!-- LS -Q3.6 -->
+            <g stroke="#0f172a" stroke-width="1.5" fill="none">
+              <line x1="770" y1="220" x2="765" y2="250"/>
+              <line x1="780" y1="220" x2="775" y2="250"/>
+              <line x1="790" y1="220" x2="785" y2="250"/>
+              <line x1="760" y1="235" x2="800" y2="235" stroke-dasharray="2,2" stroke-width="1"/>
+            </g>
+            <text x="750" y="240" font-size="9" font-weight="bold" fill="#0f172a">-Q3.6</text>
+            <text x="805" y="240" font-size="8" fill="#0f172a">LS 32A</text>
+
+            <line x1="770" y1="250" x2="770" y2="300" stroke="#78350f" stroke-width="1"/>
+            <line x1="780" y1="250" x2="780" y2="300" stroke="#0f172a" stroke-width="1"/>
+            <line x1="790" y1="250" x2="790" y2="300" stroke="#475569" stroke-width="1"/>
+
+            <!-- Terminal -X3.6 -->
+            <g fill="#ffffff" stroke="#0f172a" stroke-width="1.5">
+              <circle cx="770" cy="300" r="3"/>
+              <circle cx="780" cy="300" r="3"/>
+              <circle cx="790" cy="300" r="3"/>
+              <circle cx="800" cy="300" r="3"/>
+              <circle cx="810" cy="300" r="3"/>
+            </g>
+            <text x="750" y="303" font-size="9" font-weight="bold" fill="#0f172a">-X6</text>
+
+            <!-- Cable -->
+            <line x1="770" y1="303" x2="770" y2="400" stroke="#78350f" stroke-width="1"/>
+            <line x1="780" y1="303" x2="780" y2="400" stroke="#0f172a" stroke-width="1"/>
+            <line x1="790" y1="303" x2="790" y2="400" stroke="#475569" stroke-width="1"/>
+            <path d="M 760 340 C 760 330, 820 330, 820 340" fill="none" stroke="#64748b" stroke-width="1" stroke-dasharray="2,2"/>
+            <text x="825" y="342" font-size="7" fill="#64748b">-W3.6 (5x6)</text>
+
+            <!-- Rack Box (Ortskasten) -->
+            <rect x="750" y="380" width="80" height="150" fill="none" stroke="#0f172a" stroke-dasharray="8,4" stroke-width="1"/>
+            <text x="755" y="395" font-size="10" font-weight="bold" fill="#0f172a">+Rack 6</text>
+
+            <!-- Kentix PDU -->
+            <rect x="760" y="400" width="60" height="100" fill="#f8fafc" stroke="#0f172a" stroke-width="1.5"/>
+            <text x="790" y="440" font-size="10" font-weight="bold" text-anchor="middle" fill="#0f172a">-PDU1</text>
+            <text x="790" y="455" font-size="8" text-anchor="middle" fill="#0f172a">Kentix 32A</text>
+            <text x="790" y="470" font-size="7" text-anchor="middle" fill="#64748b">SmartPDU</text>
+    
+            <!-- Branch 7 -->
+            <circle cx="890" cy="80" r="2.5" fill="#78350f"/>
+            <circle cx="900" cy="100" r="2.5" fill="#0f172a"/>
+            <circle cx="910" cy="120" r="2.5" fill="#475569"/>
+            <circle cx="920" cy="140" r="2.5" fill="#2563eb"/>
+            <circle cx="930" cy="160" r="2.5" fill="#16a34a"/>
+            
+            <line x1="890" y1="80" x2="890" y2="220" stroke="#78350f" stroke-width="1"/>
+            <line x1="900" y1="100" x2="900" y2="220" stroke="#0f172a" stroke-width="1"/>
+            <line x1="910" y1="120" x2="910" y2="220" stroke="#475569" stroke-width="1"/>
+            <line x1="920" y1="140" x2="920" y2="400" stroke="#2563eb" stroke-width="1"/>
+            <line x1="930" y1="160" x2="930" y2="400" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
+
+            <!-- LS -Q3.7 -->
+            <g stroke="#0f172a" stroke-width="1.5" fill="none">
+              <line x1="890" y1="220" x2="885" y2="250"/>
+              <line x1="900" y1="220" x2="895" y2="250"/>
+              <line x1="910" y1="220" x2="905" y2="250"/>
+              <line x1="880" y1="235" x2="920" y2="235" stroke-dasharray="2,2" stroke-width="1"/>
+            </g>
+            <text x="870" y="240" font-size="9" font-weight="bold" fill="#0f172a">-Q3.7</text>
+            <text x="925" y="240" font-size="8" fill="#0f172a">LS 32A</text>
+
+            <line x1="890" y1="250" x2="890" y2="300" stroke="#78350f" stroke-width="1"/>
+            <line x1="900" y1="250" x2="900" y2="300" stroke="#0f172a" stroke-width="1"/>
+            <line x1="910" y1="250" x2="910" y2="300" stroke="#475569" stroke-width="1"/>
+
+            <!-- Terminal -X3.7 -->
+            <g fill="#ffffff" stroke="#0f172a" stroke-width="1.5">
+              <circle cx="890" cy="300" r="3"/>
+              <circle cx="900" cy="300" r="3"/>
+              <circle cx="910" cy="300" r="3"/>
+              <circle cx="920" cy="300" r="3"/>
+              <circle cx="930" cy="300" r="3"/>
+            </g>
+            <text x="870" y="303" font-size="9" font-weight="bold" fill="#0f172a">-X7</text>
+
+            <!-- Cable -->
+            <line x1="890" y1="303" x2="890" y2="400" stroke="#78350f" stroke-width="1"/>
+            <line x1="900" y1="303" x2="900" y2="400" stroke="#0f172a" stroke-width="1"/>
+            <line x1="910" y1="303" x2="910" y2="400" stroke="#475569" stroke-width="1"/>
+            <path d="M 880 340 C 880 330, 940 330, 940 340" fill="none" stroke="#64748b" stroke-width="1" stroke-dasharray="2,2"/>
+            <text x="945" y="342" font-size="7" fill="#64748b">-W3.7 (5x6)</text>
+
+            <!-- Rack Box (Ortskasten) -->
+            <rect x="870" y="380" width="80" height="150" fill="none" stroke="#0f172a" stroke-dasharray="8,4" stroke-width="1"/>
+            <text x="875" y="395" font-size="10" font-weight="bold" fill="#0f172a">+Rack 7</text>
+
+            <!-- Kentix PDU -->
+            <rect x="880" y="400" width="60" height="100" fill="#f8fafc" stroke="#0f172a" stroke-width="1.5"/>
+            <text x="910" y="440" font-size="10" font-weight="bold" text-anchor="middle" fill="#0f172a">-PDU1</text>
+            <text x="910" y="455" font-size="8" text-anchor="middle" fill="#0f172a">Kentix 32A</text>
+            <text x="910" y="470" font-size="7" text-anchor="middle" fill="#64748b">SmartPDU</text>
+    
+          </g>
+        </svg>
+      </div>
+    {/if}
+  </div>
+</div>

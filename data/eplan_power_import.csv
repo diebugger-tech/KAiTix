@@ -1,0 +1,9 @@
+Kabelnummer;Typ;Länge;Farbe;Quelle Rack;Quelle Gerät;Quelle Port;Ziel Rack;Ziel Gerät;Ziel Port
+W-HV-UV-01;Strom-CEE-63A-3P;15;Schwarz;Verteilerraum;HV-RZ-01;Abgang-UV-RZ-01;Verteilerraum;UV-RZ-01;Einspeisung
+W-UV-USV-01;Strom-CEE-63A-3P;8;Schwarz;Verteilerraum;UV-RZ-01;Abgang-USV;Rack-A;USV-Schrank-40kW;Einspeisung
+W-UV-MBS-01;Strom-CEE-63A-3P;8;Schwarz;Verteilerraum;UV-RZ-01;Abgang-Bypass;Verteilerraum;MBS-Bypass;Einspeisung-Bypass
+W-USV-UV-USV-01;Strom-CEE-63A-3P;3;Schwarz;Rack-A;USV-Schrank-40kW;Ausgang;Verteilerraum;UV-USV-01;Einspeisung-USV
+W-MBS-UV-USV-01;Strom-CEE-63A-3P;3;Rot;Verteilerraum;MBS-Bypass;Ausgang-Bypass;Verteilerraum;UV-USV-01;Einspeisung-Bypass
+W-UV-USV-PDU-A-0L;Strom-CEE-32A-3P;10;Blau;Verteilerraum;UV-USV-01;Abgang-PDU-A-L;Rack-A;SmartPDU-A-0UL;Einspeisung
+W-UV-USV-PDU-A-0R;Strom-CEE-32A-3P;10;Gelb;Verteilerraum;UV-USV-01;Abgang-PDU-A-R;Rack-A;SmartPDU-A-0UR;Einspeisung
+W-UV-USV-PDU-B-0L;Strom-CEE-32A-3P;12;Violett;Verteilerraum;UV-USV-01;Abgang-PDU-B-L;Rack-B;SmartPDU-B-0UL;Einspeisung
