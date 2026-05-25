@@ -1,322 +1,145 @@
-"""Seed-Script: Erzeugt realistische Testdaten für KAiTix.
+"""Seed-Script: Erzeugt vollständige Showcase-Testdaten für KAiTix.
 
-Aufruf: python scripts/seed_testdata.py
+Dieses Skript leert die Datenbank komplett und fügt 4 Racks, Wöhrle USVs,
+komplexe Verkabelung (Strom, LAN, SAN), virtuelle Maschinen und Runbooks ein,
+um KAiTix auf GitHub eindrucksvoll präsentieren zu können.
 """
 
 import asyncio
 from sqlalchemy import select
-from app.core.database import AsyncSessionLocal
-from app.domains.hardware.models import Rack, DeviceDependency, Device, PduOutlet, VirtualMachine
+from app.core.database import AsyncSessionLocal, engine, Base
+from app.domains.hardware.models import Rack, Device, PduOutlet, VirtualMachine
 from app.domains.cabling.models import Cable, CableStrand, Interface
 from app.domains.power.models import UsvUnit, UsvModule, UsvSimulationEvent
-from app.domains.runbooks.models import Runbook, RunbookLayer, RunbookDevice, RunbookExecution, RunbookExecutionStep
+from app.domains.runbooks.models import Runbook, RunbookLayer, RunbookDevice
 
 async def main():
+    # 1. Clean Slate: Wipe and recreate all tables
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+        await conn.run_sync(Base.metadata.create_all)
+        
+    print("Datenbank geleert und Schema neu erstellt.")
+
     async with AsyncSessionLocal() as db:
-        # Check and delete existing test data to make the script idempotent
-        # Delete runbooks with matching names
-        rb_names = ["Geplanter Shutdown EG", "Notfall-Startup EG"]
-        for rb_name in rb_names:
-            q = await db.execute(select(Runbook).where(Runbook.name == rb_name))
-            rb = q.scalars().first()
-            if rb:
-                await db.delete(rb)
+        # 2. Racks (4 Racks for different purposes)
+        rack_netzwerk = Rack(name="RACK-NET-01", standort="RZ1-ReiheA", hoehe_u=42, breite_mm=800, hersteller="Rittal", bemerkung="Core Netzwerk & Routing")
+        rack_app = Rack(name="RACK-APP-01", standort="RZ1-ReiheA", hoehe_u=47, breite_mm=600, hersteller="Rittal", bemerkung="Compute Nodes")
+        rack_db = Rack(name="RACK-DB-01", standort="RZ1-ReiheA", hoehe_u=47, breite_mm=600, hersteller="Rittal", bemerkung="High-Density Database")
+        rack_storage = Rack(name="RACK-SAN-01", standort="RZ1-ReiheB", hoehe_u=42, breite_mm=800, hersteller="Rittal", bemerkung="Storage & Backup")
         
-        # Clear specific VMs
-        vm_names = ["vm-db-master", "vm-db-slave", "vm-app-backend", "vm-app-worker", "vm-web-nginx", "vm-monitoring"]
-        for vm_name in vm_names:
-            q = await db.execute(select(VirtualMachine).where(VirtualMachine.name == vm_name))
-            vm = q.scalars().first()
-            if vm:
-                await db.delete(vm)
-                
-        # Clear specific devices
-        dev_hostnames = ["sw-core-01", "sw-access-01", "srv-db-01", "srv-db-02", "srv-app-01", "srv-app-02", "srv-web-01", "kentix-01"]
-        for host in dev_hostnames:
-            q = await db.execute(select(Device).where(Device.hostname == host))
-            dev = q.scalars().first()
-            if dev:
-                await db.delete(dev)
-                
-        # Clear specific Racks
-        rack_names = ["RACK-01", "RACK-02"]
-        for rname in rack_names:
-            q = await db.execute(select(Rack).where(Rack.name == rname))
-            rack = q.scalars().first()
-            if rack:
-                await db.delete(rack)
-                
+        db.add_all([rack_netzwerk, rack_app, rack_db, rack_storage])
+        await db.flush()
+
+        # 3. Power (PDUs & Wöhrle USV)
+        # RACK-NET-01 PDUs
+        pdu_net_a = Device(hostname="PDU-NET-A", typ="pdu", hersteller="Kentix", modell="SmartPDU", rack_id=rack_netzwerk.id, u_position=0, phase="L1", anschlussleistung_watt=0)
+        pdu_net_b = Device(hostname="PDU-NET-B", typ="pdu", hersteller="Kentix", modell="SmartPDU", rack_id=rack_netzwerk.id, u_position=0, phase="L2", anschlussleistung_watt=0)
+        
+        # RACK-APP-01 PDUs (Intentionally imbalanced to test Phase Balancer)
+        pdu_app_a = Device(hostname="PDU-APP-A", typ="pdu", hersteller="Kentix", modell="SmartPDU", rack_id=rack_app.id, u_position=0, phase="L1", anschlussleistung_watt=0)
+        pdu_app_b = Device(hostname="PDU-APP-B", typ="pdu", hersteller="Kentix", modell="SmartPDU", rack_id=rack_app.id, u_position=0, phase="L1", anschlussleistung_watt=0) # Also L1!
+        
+        db.add_all([pdu_net_a, pdu_net_b, pdu_app_a, pdu_app_b])
+        await db.flush()
+        
+        # Wöhrle USV System in RACK-APP-01
+        usv1 = UsvUnit(bezeichnung="Wöhrle WP2-R 40kW Haupt-USV", hersteller="Wöhrle SVS", rack_id=rack_app.id, max_kw=40.0)
+        db.add(usv1)
+        await db.flush()
+        
+        # Add 3 Modules to USV (30kW total, N+1 ready if load < 20kW)
+        usv_mod1 = UsvModule(usv_unit_id=usv1.id, slot=1, leistung_kw=10.0, status="aktiv")
+        usv_mod2 = UsvModule(usv_unit_id=usv1.id, slot=2, leistung_kw=10.0, status="aktiv")
+        usv_mod3 = UsvModule(usv_unit_id=usv1.id, slot=3, leistung_kw=10.0, status="reserve")
+        db.add_all([usv_mod1, usv_mod2, usv_mod3])
+
+        # 4. Networking Devices (RACK-NET-01)
+        fw1 = Device(hostname="fw-core-01", typ="firewall", hersteller="Fortinet", modell="FortiGate 100F", rack_id=rack_netzwerk.id, u_position=40, u_hoehe=1, tdp_watt=120, phase="L1")
+        sw_core1 = Device(hostname="sw-core-01", typ="switch", hersteller="Cisco", modell="Nexus 93180", rack_id=rack_netzwerk.id, u_position=38, u_hoehe=1, tdp_watt=400, phase="L2")
+        sw_core2 = Device(hostname="sw-core-02", typ="switch", hersteller="Cisco", modell="Nexus 93180", rack_id=rack_netzwerk.id, u_position=36, u_hoehe=1, tdp_watt=400, phase="L3")
+        db.add_all([fw1, sw_core1, sw_core2])
+        await db.flush()
+
+        # 5. Compute Servers (RACK-APP-01) - Imbalanced on phases
+        servers_app = []
+        for i in range(1, 7):
+            # Put most on L1 to create imbalance
+            phase = "L1" if i <= 4 else ("L2" if i == 5 else "L3")
+            srv = Device(hostname=f"srv-compute-{i:02d}", typ="server", hersteller="Dell", modell="PowerEdge R750", rack_id=rack_app.id, u_position=i*2, u_hoehe=2, tdp_watt=850, phase=phase)
+            servers_app.append(srv)
+        db.add_all(servers_app)
+        
+        # 6. Database Servers (RACK-DB-01)
+        srv_db_master = Device(hostname="srv-db-master", typ="server", hersteller="HPE", modell="ProLiant DL380", rack_id=rack_db.id, u_position=10, u_hoehe=2, tdp_watt=1200, phase="L2")
+        srv_db_slave = Device(hostname="srv-db-slave", typ="server", hersteller="HPE", modell="ProLiant DL380", rack_id=rack_db.id, u_position=12, u_hoehe=2, tdp_watt=1200, phase="L3")
+        db.add_all([srv_db_master, srv_db_slave])
+        
+        # 7. Storage (RACK-SAN-01)
+        san_controller = Device(hostname="san-ctrl-01", typ="storage", hersteller="PureStorage", modell="FlashArray//X", rack_id=rack_storage.id, u_position=20, u_hoehe=3, tdp_watt=1500, phase="L1")
+        db.add(san_controller)
+        await db.flush()
+
+        # 8. Virtual Machines (Microservice Architecture)
+        vm_db = VirtualMachine(name="vm-pg-cluster", host_device_id=srv_db_master.id, hypervisor_typ="vmware", dienst="PostgreSQL 16", ip_adresse="10.0.1.10", shutdown_priority=1, responsible="DBA")
+        db.add(vm_db)
+        await db.flush()
+        
+        vm_redis = VirtualMachine(name="vm-redis-cache", host_device_id=servers_app[0].id, hypervisor_typ="vmware", dienst="Redis Cluster", ip_adresse="10.0.1.20", shutdown_priority=2, depends_on_vm_id=vm_db.id)
+        db.add(vm_redis)
+        await db.flush()
+        
+        vm_backend_api = VirtualMachine(name="vm-backend-api", host_device_id=servers_app[1].id, hypervisor_typ="vmware", dienst="FastAPI Core", ip_adresse="10.0.1.30", shutdown_priority=3, depends_on_vm_id=vm_redis.id)
+        vm_backend_worker = VirtualMachine(name="vm-backend-worker", host_device_id=servers_app[2].id, hypervisor_typ="vmware", dienst="Celery Workers", ip_adresse="10.0.1.31", shutdown_priority=4, depends_on_vm_id=vm_redis.id)
+        db.add_all([vm_backend_api, vm_backend_worker])
+        await db.flush()
+        
+        vm_frontend = VirtualMachine(name="vm-frontend-ssr", host_device_id=servers_app[3].id, hypervisor_typ="vmware", dienst="SvelteKit SSR", ip_adresse="10.0.1.40", shutdown_priority=5, depends_on_vm_id=vm_backend_api.id)
+        vm_nginx = VirtualMachine(name="vm-nginx-ingress", host_device_id=servers_app[4].id, hypervisor_typ="vmware", dienst="NGINX Reverse Proxy", ip_adresse="10.0.1.50", shutdown_priority=6, depends_on_vm_id=vm_frontend.id)
+        db.add_all([vm_frontend, vm_nginx])
+        await db.flush()
+
+        # 9. Cables
+        # Connect servers to core switch (LAN - Blau)
+        cables = []
+        for i, srv in enumerate(servers_app):
+            c = Cable(kabel_nr=f"LAN-{100+i}", typ="Cat6A", farbe="Blau", laenge_m=5.0, von_device_id=srv.id, von_port="eth0", nach_device_id=sw_core1.id, nach_port=f"Gi1/0/{i+1}")
+            cables.append(c)
+        
+        # Connect DB servers to SAN (Fibre - Erika-Violett)
+        cables.append(Cable(kabel_nr="SAN-001", typ="LC-LC", farbe="Erika-Violett", laenge_m=10.0, von_device_id=srv_db_master.id, von_port="fc1", nach_device_id=san_controller.id, nach_port="port1"))
+        cables.append(Cable(kabel_nr="SAN-002", typ="LC-LC", farbe="Erika-Violett", laenge_m=10.0, von_device_id=srv_db_slave.id, von_port="fc1", nach_device_id=san_controller.id, nach_port="port2"))
+        db.add_all(cables)
+        await db.flush()
+
+        # 10. Runbooks
+        rb_shutdown = Runbook(name="Geplanter RZ Shutdown", typ="shutdown", beschreibung="Sicheres Herunterfahren der gesamten KAiTix Showcase Umgebung inkl. Storage und Netzwerk.")
+        db.add(rb_shutdown)
+        await db.flush()
+        
+        l_web = RunbookLayer(runbook_id=rb_shutdown.id, name="Web & Ingress", position=1, markdown_note="Zuerst Traffic von außen stoppen (NGINX).")
+        l_app = RunbookLayer(runbook_id=rb_shutdown.id, name="Applikationen & Worker", position=2)
+        l_db = RunbookLayer(runbook_id=rb_shutdown.id, name="Datenbanken & Caches", position=3)
+        l_infra = RunbookLayer(runbook_id=rb_shutdown.id, name="Storage & Core Netz", position=4)
+        db.add_all([l_web, l_app, l_db, l_infra])
+        await db.flush()
+        
+        # Devices in Runbook
+        db.add(RunbookDevice(runbook_id=rb_shutdown.id, layer_id=l_web.id, vm_id=vm_nginx.id, position=1, delay_seconds=10))
+        db.add(RunbookDevice(runbook_id=rb_shutdown.id, layer_id=l_web.id, vm_id=vm_frontend.id, position=2, delay_seconds=10))
+        
+        db.add(RunbookDevice(runbook_id=rb_shutdown.id, layer_id=l_app.id, vm_id=vm_backend_api.id, position=1, delay_seconds=30))
+        db.add(RunbookDevice(runbook_id=rb_shutdown.id, layer_id=l_app.id, vm_id=vm_backend_worker.id, position=2, delay_seconds=30))
+        
+        db.add(RunbookDevice(runbook_id=rb_shutdown.id, layer_id=l_db.id, vm_id=vm_redis.id, position=1, delay_seconds=60))
+        db.add(RunbookDevice(runbook_id=rb_shutdown.id, layer_id=l_db.id, vm_id=vm_db.id, position=2, delay_seconds=120, responsible="DBA"))
+        
+        db.add(RunbookDevice(runbook_id=rb_shutdown.id, layer_id=l_infra.id, device_id=srv_db_master.id, position=1))
+        db.add(RunbookDevice(runbook_id=rb_shutdown.id, layer_id=l_infra.id, device_id=san_controller.id, position=2, note="SAN Controller sauber herunterfahren", delay_seconds=300))
+        db.add(RunbookDevice(runbook_id=rb_shutdown.id, layer_id=l_infra.id, device_id=sw_core1.id, position=3))
+
         await db.commit()
-        
-        # 1. Racks
-        rack1 = Rack(
-            name="RACK-01", 
-            standort="Serverraum EG", 
-            hoehe_u=42, 
-            breite_mm=600, 
-            hersteller="Rittal", 
-            modell="VX IT 42HE 600mm",
-            bemerkung="Hauptverteiler-Rack"
-        )
-        rack2 = Rack(
-            name="RACK-02", 
-            standort="Serverraum EG", 
-            hoehe_u=47, 
-            breite_mm=800, 
-            hersteller="Rittal", 
-            modell="TS IT 47HE 800mm",
-            bemerkung="Applikations-Rack"
-        )
-        db.add_all([rack1, rack2])
-        await db.flush()
-        
-        # 2. Devices
-        dev_sw_core = Device(
-            hostname="sw-core-01", 
-            typ="switch", 
-            hersteller="Cisco", 
-            modell="Catalyst 9500", 
-            rack_id=rack1.id, 
-            u_position=1, 
-            u_hoehe=1, 
-            anschlussleistung_watt=150, 
-            phase="L1"
-        )
-        dev_sw_access = Device(
-            hostname="sw-access-01", 
-            typ="switch", 
-            hersteller="Cisco", 
-            modell="Catalyst 9300", 
-            rack_id=rack1.id, 
-            u_position=2, 
-            u_hoehe=1, 
-            anschlussleistung_watt=80, 
-            phase="L2"
-        )
-        dev_srv_db1 = Device(
-            hostname="srv-db-01", 
-            typ="server", 
-            hersteller="Dell", 
-            modell="PowerEdge R750", 
-            rack_id=rack1.id, 
-            u_position=10, 
-            u_hoehe=2, 
-            anschlussleistung_watt=400, 
-            phase="L1"
-        )
-        dev_srv_db2 = Device(
-            hostname="srv-db-02", 
-            typ="server", 
-            hersteller="Dell", 
-            modell="PowerEdge R750", 
-            rack_id=rack1.id, 
-            u_position=12, 
-            u_hoehe=2, 
-            anschlussleistung_watt=400, 
-            phase="L1"
-        )
-        dev_srv_app1 = Device(
-            hostname="srv-app-01", 
-            typ="server", 
-            hersteller="HP", 
-            modell="ProLiant DL360", 
-            rack_id=rack1.id, 
-            u_position=20, 
-            u_hoehe=1, 
-            anschlussleistung_watt=350, 
-            phase="L2"
-        )
-        dev_srv_app2 = Device(
-            hostname="srv-app-02", 
-            typ="server", 
-            hersteller="HP", 
-            modell="ProLiant DL360", 
-            rack_id=rack1.id, 
-            u_position=22, 
-            u_hoehe=1, 
-            anschlussleistung_watt=350, 
-            phase="L2"
-        )
-        dev_srv_web = Device(
-            hostname="srv-web-01", 
-            typ="server", 
-            hersteller="HP", 
-            modell="ProLiant DL360", 
-            rack_id=rack2.id, 
-            u_position=5, 
-            u_hoehe=1, 
-            anschlussleistung_watt=250, 
-            phase="L3"
-        )
-        dev_kentix = Device(
-            hostname="kentix-01", 
-            typ="kentix_raconode", 
-            hersteller="Kentix", 
-            modell="RACOONODE", 
-            rack_id=rack1.id, 
-            u_position=42, 
-            u_hoehe=1, 
-            ip_adresse="192.168.1.200"
-        )
-        
-        db.add_all([dev_sw_core, dev_sw_access, dev_srv_db1, dev_srv_db2, dev_srv_app1, dev_srv_app2, dev_srv_web, dev_kentix])
-        await db.flush()
-        
-        # 3. VMs
-        vm_db_master = VirtualMachine(
-            name="vm-db-master", 
-            host_device_id=dev_srv_db1.id, 
-            hypervisor_typ="kvm", 
-            dienst="MySQL Master", 
-            ip_adresse="192.168.10.10", 
-            shutdown_priority=1,
-            responsible="DBA Team"
-        )
-        db.add(vm_db_master)
-        await db.flush()
-        
-        vm_db_slave = VirtualMachine(
-            name="vm-db-slave", 
-            host_device_id=dev_srv_db2.id, 
-            hypervisor_typ="kvm", 
-            dienst="MySQL Slave", 
-            ip_adresse="192.168.10.11", 
-            shutdown_priority=2, 
-            depends_on_vm_id=vm_db_master.id,
-            responsible="DBA Team"
-        )
-        vm_app_backend = VirtualMachine(
-            name="vm-app-backend", 
-            host_device_id=dev_srv_app1.id, 
-            hypervisor_typ="kvm", 
-            dienst="FastAPI Backend", 
-            ip_adresse="192.168.10.20", 
-            shutdown_priority=3, 
-            depends_on_vm_id=vm_db_master.id,
-            responsible="Backend Team"
-        )
-        vm_monitoring = VirtualMachine(
-            name="vm-monitoring", 
-            host_device_id=dev_srv_app1.id, 
-            hypervisor_typ="kvm", 
-            dienst="Prometheus+Grafana", 
-            ip_adresse="192.168.10.40", 
-            shutdown_priority=6, 
-            depends_on_vm_id=vm_db_master.id,
-            responsible="Ops Team"
-        )
-        
-        db.add_all([vm_db_slave, vm_app_backend, vm_monitoring])
-        await db.flush()
-        
-        vm_app_worker = VirtualMachine(
-            name="vm-app-worker", 
-            host_device_id=dev_srv_app2.id, 
-            hypervisor_typ="kvm", 
-            dienst="Celery Worker", 
-            ip_adresse="192.168.10.21", 
-            shutdown_priority=4, 
-            depends_on_vm_id=vm_app_backend.id,
-            responsible="Backend Team"
-        )
-        vm_web_nginx = VirtualMachine(
-            name="vm-web-nginx", 
-            host_device_id=dev_srv_web.id, 
-            hypervisor_typ="kvm", 
-            dienst="Nginx Proxy", 
-            ip_adresse="192.168.10.30", 
-            shutdown_priority=5, 
-            depends_on_vm_id=vm_app_backend.id,
-            responsible="Ops Team"
-        )
-        
-        db.add_all([vm_app_worker, vm_web_nginx])
-        await db.flush()
-        
-        # 4. Runbook 1: Geplanter Shutdown EG
-        rb1 = Runbook(
-            name="Geplanter Shutdown EG", 
-            typ="shutdown", 
-            beschreibung="Sicherer Shutdown des EG Serverraums."
-        )
-        db.add(rb1)
-        await db.flush()
-        
-        l1 = RunbookLayer(runbook_id=rb1.id, name="Web-Tier", position=1)
-        l2 = RunbookLayer(runbook_id=rb1.id, name="App-Tier", position=2)
-        l3 = RunbookLayer(runbook_id=rb1.id, name="Datenbank-Tier", position=3)
-        l4 = RunbookLayer(runbook_id=rb1.id, name="Netzwerk", position=4)
-        
-        db.add_all([l1, l2, l3, l4])
-        await db.flush()
-        
-        # Layer 1 Devices
-        rd1 = RunbookDevice(runbook_id=rb1.id, layer_id=l1.id, vm_id=vm_web_nginx.id, position=1)
-        rd2 = RunbookDevice(runbook_id=rb1.id, layer_id=l1.id, device_id=dev_srv_web.id, position=2)
-        
-        # Layer 2 Devices
-        rd3 = RunbookDevice(runbook_id=rb1.id, layer_id=l2.id, vm_id=vm_app_backend.id, position=1)
-        rd4 = RunbookDevice(runbook_id=rb1.id, layer_id=l2.id, vm_id=vm_app_worker.id, position=2)
-        rd5 = RunbookDevice(runbook_id=rb1.id, layer_id=l2.id, device_id=dev_srv_app1.id, position=3)
-        rd6 = RunbookDevice(runbook_id=rb1.id, layer_id=l2.id, device_id=dev_srv_app2.id, position=4)
-        
-        # Layer 3 Devices
-        rd7 = RunbookDevice(runbook_id=rb1.id, layer_id=l3.id, vm_id=vm_db_master.id, position=1)
-        rd8 = RunbookDevice(runbook_id=rb1.id, layer_id=l3.id, vm_id=vm_db_slave.id, position=2)
-        rd9 = RunbookDevice(runbook_id=rb1.id, layer_id=l3.id, device_id=dev_srv_db1.id, position=3)
-        rd10 = RunbookDevice(runbook_id=rb1.id, layer_id=l3.id, device_id=dev_srv_db2.id, position=4)
-        
-        # Layer 4 Devices
-        rd11 = RunbookDevice(runbook_id=rb1.id, layer_id=l4.id, device_id=dev_sw_access.id, position=1)
-        rd12 = RunbookDevice(runbook_id=rb1.id, layer_id=l4.id, device_id=dev_sw_core.id, position=2)
-        
-        db.add_all([rd1, rd2, rd3, rd4, rd5, rd6, rd7, rd8, rd9, rd10, rd11, rd12])
-        await db.flush()
-        
-        # 5. Runbook 2: Notfall-Startup EG (Umkehrung von Runbook 1)
-        rb2 = Runbook(
-            name="Notfall-Startup EG", 
-            typ="startup", 
-            beschreibung="Sicherer Startup des EG Serverraums.", 
-            generated_from_id=rb1.id
-        )
-        db.add(rb2)
-        await db.flush()
-        
-        # Reversed layers
-        ls1 = RunbookLayer(runbook_id=rb2.id, name="Netzwerk", position=1)
-        ls2 = RunbookLayer(runbook_id=rb2.id, name="Datenbank-Tier", position=2)
-        ls3 = RunbookLayer(runbook_id=rb2.id, name="App-Tier", position=3)
-        ls4 = RunbookLayer(runbook_id=rb2.id, name="Web-Tier", position=4)
-        
-        db.add_all([ls1, ls2, ls3, ls4])
-        await db.flush()
-        
-        # ls1 Netzwerk Devices
-        rds1 = RunbookDevice(runbook_id=rb2.id, layer_id=ls1.id, device_id=dev_sw_access.id, position=1)
-        rds2 = RunbookDevice(runbook_id=rb2.id, layer_id=ls1.id, device_id=dev_sw_core.id, position=2)
-        
-        # ls2 Datenbank Devices
-        rds3 = RunbookDevice(runbook_id=rb2.id, layer_id=ls2.id, vm_id=vm_db_master.id, position=1)
-        rds4 = RunbookDevice(runbook_id=rb2.id, layer_id=ls2.id, vm_id=vm_db_slave.id, position=2)
-        rds5 = RunbookDevice(runbook_id=rb2.id, layer_id=ls2.id, device_id=dev_srv_db1.id, position=3)
-        rds6 = RunbookDevice(runbook_id=rb2.id, layer_id=ls2.id, device_id=dev_srv_db2.id, position=4)
-        
-        # ls3 App Devices
-        rds7 = RunbookDevice(runbook_id=rb2.id, layer_id=ls3.id, vm_id=vm_app_backend.id, position=1)
-        rds8 = RunbookDevice(runbook_id=rb2.id, layer_id=ls3.id, vm_id=vm_app_worker.id, position=2)
-        rds9 = RunbookDevice(runbook_id=rb2.id, layer_id=ls3.id, device_id=dev_srv_app1.id, position=3)
-        rds10 = RunbookDevice(runbook_id=rb2.id, layer_id=ls3.id, device_id=dev_srv_app2.id, position=4)
-        
-        # ls4 Web Devices
-        rds11 = RunbookDevice(runbook_id=rb2.id, layer_id=ls4.id, vm_id=vm_web_nginx.id, position=1)
-        rds12 = RunbookDevice(runbook_id=rb2.id, layer_id=ls4.id, device_id=dev_srv_web.id, position=2)
-        
-        db.add_all([rds1, rds2, rds3, rds4, rds5, rds6, rds7, rds8, rds9, rds10, rds11, rds12])
-        await db.flush()
-        
-        await db.commit()
-        print("Realistische Testdaten erfolgreich initialisiert!")
+        print("Showcase Testdaten erfolgreich in die Datenbank geschrieben!")
 
 if __name__ == "__main__":
     asyncio.run(main())
