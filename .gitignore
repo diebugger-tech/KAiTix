@@ -109,6 +109,9 @@ scratch/
 *.csv
 data/*.csv
 
+# === UPLOADED MEDIA ===========================================================
+uploaded_media_*
+
 # === VENV (projektlokal, innerhalb nix-shell) ==================================
 .venv/
 venv/
