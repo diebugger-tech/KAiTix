@@ -176,7 +176,7 @@ virtuelle Maschinen und Shutdown/Startup-Runbooks.
 - Schemas: `app/schemas/<domain>.py`
 - Keine globalen pip installs (immer venv)
 - Seed-Scripts: Bestehende Seed-Scripts in `scripts/` (z.B. `seed_testdata.py`) immer komplett überschreiben (Clean Slate mit `drop_all`) oder sinnvoll ergänzen. Keine neuen, redundanten Seed-Skripte anlegen.
-- **Zero-U PDUs:** PDUs, die vertikal an der Seite im Rack montiert werden (Zero-U), MÜSSEN die Attribute `side="left"` oder `side="right"` sowie `u_position=0` besitzen. Zudem sollten korrekte Kentix-Modellbezeichnungen für vertikale PDUs (z.B. `KPMDU-RCSW-24`) verwendet werden.
+- **Zero-U PDUs:** PDUs, die vertikal an der Seite im Rack montiert werden (Zero-U), MÜSSEN die Attribute `side="left"` oder `side="right"` sowie `u_position=0` besitzen. Zudem sollten korrekte Kentix-Modellbezeichnungen für vertikale PDUs (z.B. `SmartPDU Vertikal 40HE 3P-32A`) verwendet werden.
 ---
 
 ## Referenzen

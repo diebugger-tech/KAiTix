@@ -36,21 +36,21 @@ async def main():
 
         # 3. Power (PDUs & Wöhrle USV)
         
-        # RACK-NET-01 PDUs
-        pdu_net_a = Device(hostname="PDU-NET-A", typ="pdu", hersteller="Kentix", modell="KPMDU-RCSW-24", rack_id=rack_netzwerk.id, u_position=0, side="left", phase="L1", anschlussleistung_watt=0)
-        pdu_net_b = Device(hostname="PDU-NET-B", typ="pdu", hersteller="Kentix", modell="KPMDU-RCSW-24", rack_id=rack_netzwerk.id, u_position=0, side="right", phase="L2", anschlussleistung_watt=0)
+        # RACK-NET-01 PDUs (42HE Rack -> 40HE PDU)
+        pdu_net_a = Device(hostname="PDU-NET-A", typ="pdu", hersteller="Kentix", modell="SmartPDU Vertikal 40HE 3P-16A", rack_id=rack_netzwerk.id, u_position=0, side="left", phase="L1", anschlussleistung_watt=0)
+        pdu_net_b = Device(hostname="PDU-NET-B", typ="pdu", hersteller="Kentix", modell="SmartPDU Vertikal 40HE 3P-16A", rack_id=rack_netzwerk.id, u_position=0, side="right", phase="L2", anschlussleistung_watt=0)
         
-        # RACK-APP-01 PDUs (Intentionally imbalanced to test Phase Balancer)
-        pdu_app_a = Device(hostname="PDU-APP-A", typ="pdu", hersteller="Kentix", modell="KPMDU-RCSW-24", rack_id=rack_app.id, u_position=0, side="left", phase="L1", anschlussleistung_watt=0)
-        pdu_app_b = Device(hostname="PDU-APP-B", typ="pdu", hersteller="Kentix", modell="KPMDU-RCSW-24", rack_id=rack_app.id, u_position=0, side="right", phase="L1", anschlussleistung_watt=0) # Also L1!
+        # RACK-APP-01 PDUs (47HE Rack -> 47HE PDU, Intentionally imbalanced)
+        pdu_app_a = Device(hostname="PDU-APP-A", typ="pdu", hersteller="Kentix", modell="cXale SmartPDU 47HE 3P-32A", rack_id=rack_app.id, u_position=0, side="left", phase="L1", anschlussleistung_watt=0)
+        pdu_app_b = Device(hostname="PDU-APP-B", typ="pdu", hersteller="Kentix", modell="cXale SmartPDU 47HE 3P-32A", rack_id=rack_app.id, u_position=0, side="right", phase="L1", anschlussleistung_watt=0) # Also L1!
         
-        # RACK-DB-01 PDUs
-        pdu_db_a = Device(hostname="PDU-DB-A", typ="pdu", hersteller="Kentix", modell="KPMDU-RCSW-24", rack_id=rack_db.id, u_position=0, side="left", phase="L2", anschlussleistung_watt=0)
-        pdu_db_b = Device(hostname="PDU-DB-B", typ="pdu", hersteller="Kentix", modell="KPMDU-RCSW-24", rack_id=rack_db.id, u_position=0, side="right", phase="L3", anschlussleistung_watt=0)
+        # RACK-DB-01 PDUs (47HE Rack -> 47HE PDU)
+        pdu_db_a = Device(hostname="PDU-DB-A", typ="pdu", hersteller="Kentix", modell="cXale SmartPDU 47HE 3P-32A", rack_id=rack_db.id, u_position=0, side="left", phase="L2", anschlussleistung_watt=0)
+        pdu_db_b = Device(hostname="PDU-DB-B", typ="pdu", hersteller="Kentix", modell="cXale SmartPDU 47HE 3P-32A", rack_id=rack_db.id, u_position=0, side="right", phase="L3", anschlussleistung_watt=0)
         
-        # RACK-SAN-01 PDUs
-        pdu_san_a = Device(hostname="PDU-SAN-A", typ="pdu", hersteller="Kentix", modell="KPMDU-RCSW-24", rack_id=rack_storage.id, u_position=0, side="left", phase="L1", anschlussleistung_watt=0)
-        pdu_san_b = Device(hostname="PDU-SAN-B", typ="pdu", hersteller="Kentix", modell="KPMDU-RCSW-24", rack_id=rack_storage.id, u_position=0, side="right", phase="L2", anschlussleistung_watt=0)
+        # RACK-SAN-01 PDUs (42HE Rack -> 40HE PDU)
+        pdu_san_a = Device(hostname="PDU-SAN-A", typ="pdu", hersteller="Kentix", modell="SmartPDU Vertikal 40HE 3P-32A", rack_id=rack_storage.id, u_position=0, side="left", phase="L1", anschlussleistung_watt=0)
+        pdu_san_b = Device(hostname="PDU-SAN-B", typ="pdu", hersteller="Kentix", modell="SmartPDU Vertikal 40HE 3P-32A", rack_id=rack_storage.id, u_position=0, side="right", phase="L2", anschlussleistung_watt=0)
 
         db.add_all([pdu_net_a, pdu_net_b, pdu_app_a, pdu_app_b, pdu_db_a, pdu_db_b, pdu_san_a, pdu_san_b])
         await db.flush()
