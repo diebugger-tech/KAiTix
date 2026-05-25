@@ -1,5 +1,5 @@
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Header
 from fastapi.responses import PlainTextResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -46,8 +46,14 @@ async def create_runbook(
     db_runbook = RunbookModel(**runbook_in.model_dump(), erstellt_von=x_username)
     db.add(db_runbook)
     await db.commit()
-    await db.refresh(db_runbook)
-    return db_runbook
+    
+    # Reload with options to ensure all relationships are preloaded
+    reloaded = await db.execute(
+        select(RunbookModel)
+        .where(RunbookModel.id == db_runbook.id)
+        .options(*_runbook_options())
+    )
+    return reloaded.scalar_one()
 
 @router.get("/{id}", response_model=Runbook)
 async def get_runbook(id: int, db: AsyncSession = Depends(get_db)):
@@ -73,8 +79,14 @@ async def update_runbook(id: int, runbook_in: RunbookUpdate, db: AsyncSession = 
         setattr(runbook, field, value)
         
     await db.commit()
-    await db.refresh(runbook)
-    return runbook
+    
+    # Reload with options to avoid lazy-loading issues during serialization
+    reloaded = await db.execute(
+        select(RunbookModel)
+        .where(RunbookModel.id == id)
+        .options(*_runbook_options())
+    )
+    return reloaded.scalar_one()
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_runbook(id: int, db: AsyncSession = Depends(get_db)):
@@ -232,13 +244,13 @@ async def check_execution_step(
         step = RunbookExecutionStepModel(
             execution_id=eid,
             runbook_device_id=sid,
-            abgehakt_am=datetime.utcnow(),
+            abgehakt_am=datetime.now(timezone.utc).replace(tzinfo=None),
             abgehakt_von=x_username,
             note=req.note
         )
         db.add(step)
     else:
-        step.abgehakt_am = datetime.utcnow()
+        step.abgehakt_am = datetime.now(timezone.utc).replace(tzinfo=None)
         step.abgehakt_von = x_username
         if req.note is not None:
             step.note = req.note
@@ -280,8 +292,14 @@ async def update_execution_status(eid: int, req: RunbookExecutionStatusUpdate, d
     if req.note is not None:
         execution.note = req.note
     await db.commit()
-    await db.refresh(execution)
-    return execution
+    
+    # Reload execution with steps preloaded to avoid lazy-loading issues during serialization
+    reloaded = await db.execute(
+        select(RunbookExecutionModel)
+        .where(RunbookExecutionModel.id == eid)
+        .options(selectinload(RunbookExecutionModel.steps))
+    )
+    return reloaded.scalar_one()
 
 # === STARTUP GENERATION ===
 

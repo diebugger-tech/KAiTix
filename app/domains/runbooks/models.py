@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from sqlalchemy import Integer, String, DateTime, Enum, ForeignKey, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -13,7 +13,7 @@ class Runbook(Base):
         Enum("shutdown", "startup", "wartung", "notfall", "custom"), nullable=False
     )
     beschreibung: Mapped[Optional[str]] = mapped_column(Text)
-    erstellt_am: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    erstellt_am: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     erstellt_von: Mapped[Optional[str]] = mapped_column(String(100))
     generated_from_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("runbooks.id", ondelete="SET NULL")
@@ -93,7 +93,7 @@ class RunbookExecution(Base):
     runbook_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("runbooks.id", ondelete="CASCADE"), nullable=False
     )
-    gestartet_am: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    gestartet_am: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     gestartet_von: Mapped[Optional[str]] = mapped_column(String(100))
     modus: Mapped[str] = mapped_column(Enum("shutdown", "startup"), nullable=False)
     status: Mapped[str] = mapped_column(
