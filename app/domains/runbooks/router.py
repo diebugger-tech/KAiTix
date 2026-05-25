@@ -31,8 +31,14 @@ executions_router = APIRouter()
 
 @router.get("/", response_model=List[Runbook])
 async def list_runbooks(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(RunbookModel))
-    return result.scalars().all()
+    result = await db.execute(
+        select(RunbookModel)
+        .options(
+            selectinload(RunbookModel.layers).selectinload(RunbookLayerModel.devices).selectinload(RunbookDeviceModel.device),
+            selectinload(RunbookModel.layers).selectinload(RunbookLayerModel.devices).selectinload(RunbookDeviceModel.vm),
+        )
+    )
+    return result.scalars().unique().all()
 
 @router.post("/", response_model=Runbook, status_code=status.HTTP_201_CREATED)
 async def create_runbook(runbook_in: RunbookCreate, db: AsyncSession = Depends(get_db)):

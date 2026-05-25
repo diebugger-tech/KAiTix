@@ -21,7 +21,7 @@ class Runbook(Base):
 
     # Relationships
     layers: Mapped[List["RunbookLayer"]] = relationship(
-        back_populates="runbook", cascade="all, delete-orphan", passive_deletes=True, order_by="RunbookLayer.position"
+        back_populates="runbook", cascade="all, delete-orphan", passive_deletes=True, order_by="RunbookLayer.position", lazy="selectin"
     )
     devices: Mapped[List["RunbookDevice"]] = relationship(
         back_populates="runbook", cascade="all, delete-orphan", passive_deletes=True
@@ -49,7 +49,7 @@ class RunbookLayer(Base):
     # Relationships
     runbook: Mapped["Runbook"] = relationship(back_populates="layers")
     devices: Mapped[List["RunbookDevice"]] = relationship(
-        back_populates="layer", cascade="all, delete-orphan", passive_deletes=True, order_by="RunbookDevice.position"
+        back_populates="layer", cascade="all, delete-orphan", passive_deletes=True, order_by="RunbookDevice.position", lazy="selectin"
     )
 
 class RunbookDevice(Base):
@@ -79,8 +79,8 @@ class RunbookDevice(Base):
     layer: Mapped["RunbookLayer"] = relationship(back_populates="devices")
     # To avoid circular import, we can import Device and VirtualMachine at the module level or specify as strings
     # "Device" and "VirtualMachine" will be resolved by SQLAlchemy's registry if they are imported elsewhere
-    device = relationship("Device", foreign_keys=[device_id])
-    vm = relationship("VirtualMachine", foreign_keys=[vm_id])
+    device = relationship("Device", foreign_keys=[device_id], lazy="selectin")
+    vm = relationship("VirtualMachine", foreign_keys=[vm_id], lazy="selectin")
     
     execution_steps: Mapped[List["RunbookExecutionStep"]] = relationship(
         back_populates="runbook_device", cascade="all, delete-orphan", passive_deletes=True
