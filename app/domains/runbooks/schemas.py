@@ -54,6 +54,7 @@ class RunbookDeviceCreate(RunbookDeviceBase):
     layer_id: int
 
 class RunbookDeviceUpdate(BaseModel):
+    layer_id: Optional[int] = None
     delay_seconds: Optional[int] = None
     responsible: Optional[str] = None
     note: Optional[str] = None

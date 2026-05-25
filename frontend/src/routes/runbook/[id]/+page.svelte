@@ -15,6 +15,13 @@
 
   let activeTab = $state<'PLANER' | 'AUSFÜHRUNG' | 'PROTOKOLL'>('PLANER');
 
+  // Drag & Drop / Sidebar states
+  let searchQuery = $state('');
+  let sidebarTab = $state<'vms' | 'devices'>('vms');
+  let draggedOverLayerId = $state<number | null>(null);
+  let draggedOverDeviceId = $state<number | null>(null);
+  let draggedOverAddButtonLayerId = $state<number | null>(null);
+
   // Modal states
   let showLayerModal = $state(false);
   let newLayerName = $state('');
@@ -287,6 +294,162 @@
   function exportMarkdown() {
     window.open(`/api/v1/runbooks/${runbookId}/export/markdown`, '_blank');
   }
+
+  // --- DRAG & DROP FUNCTIONS ---
+
+  function handleDragStartResource(e: DragEvent, type: 'vm' | 'device', id: number, name: string) {
+    if (!e.dataTransfer) return;
+    e.dataTransfer.setData('text/plain', JSON.stringify({ type, id, name }));
+    e.dataTransfer.effectAllowed = 'copy';
+  }
+
+  function handleDragStartFreitext(e: DragEvent) {
+    if (!e.dataTransfer) return;
+    e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'freitext' }));
+    e.dataTransfer.effectAllowed = 'copy';
+  }
+
+  function handleDragStartDevice(e: DragEvent, devId: number, layerId: number, index: number) {
+    if (!e.dataTransfer) return;
+    e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'runbook-device', id: devId, layerId, index }));
+    e.dataTransfer.effectAllowed = 'move';
+  }
+
+  function handleDragOverLayer(e: DragEvent, layerId: number) {
+    e.preventDefault();
+    draggedOverLayerId = layerId;
+  }
+
+  function handleDragLeaveLayer() {
+    draggedOverLayerId = null;
+  }
+
+  async function handleDropLayer(e: DragEvent, layerId: number) {
+    e.preventDefault();
+    draggedOverLayerId = null;
+    if (!e.dataTransfer || !runbook) return;
+    
+    try {
+      const rawData = e.dataTransfer.getData('text/plain');
+      if (!rawData) return;
+      const data = JSON.parse(rawData);
+      
+      if (data.type === 'vm') {
+        await api.createRunbookDevice(runbook.id, {
+          layer_id: layerId,
+          vm_id: data.id,
+          device_id: null,
+          freitext: null,
+          delay_seconds: 30,
+          position: 999
+        });
+        await loadData();
+      } else if (data.type === 'device') {
+        await api.createRunbookDevice(runbook.id, {
+          layer_id: layerId,
+          device_id: data.id,
+          vm_id: null,
+          freitext: null,
+          delay_seconds: 30,
+          position: 999
+        });
+        await loadData();
+      } else if (data.type === 'freitext') {
+        targetLayerId = layerId;
+        deviceType = 'freitext';
+        freitext = '';
+        delay = 30;
+        responsible = '';
+        deviceNote = '';
+        showDeviceModal = true;
+      } else if (data.type === 'runbook-device') {
+        if (data.layerId !== layerId) {
+          await api.updateRunbookDevice(runbook.id, data.id, {
+            layer_id: layerId
+          });
+          await loadData();
+        }
+      }
+    } catch (err: any) {
+      console.error(err);
+    }
+  }
+
+  async function handleDropDevice(e: DragEvent, targetLid: number, targetIdx: number) {
+    e.preventDefault();
+    draggedOverLayerId = null;
+    if (!e.dataTransfer || !runbook) return;
+    
+    try {
+      const rawData = e.dataTransfer.getData('text/plain');
+      if (!rawData) return;
+      const data = JSON.parse(rawData);
+      
+      if (data.type === 'runbook-device') {
+        const deviceId = data.id;
+        const sourceLid = data.layerId;
+        
+        if (sourceLid !== targetLid) {
+          await api.updateRunbookDevice(runbook.id, deviceId, {
+            layer_id: targetLid
+          });
+        }
+        
+        const rb = await api.getRunbook(runbook.id);
+        runbook = rb;
+        
+        const layer = runbook.layers?.find(l => l.id === targetLid);
+        if (!layer || !layer.devices) return;
+        
+        let devices = [...layer.devices].sort((a, b) => a.position - b.position);
+        const itemIdx = devices.findIndex(d => d.id === deviceId);
+        const draggedItem = devices.find(d => d.id === deviceId);
+        
+        if (draggedItem) {
+          if (itemIdx > -1) {
+            devices.splice(itemIdx, 1);
+          }
+          devices.splice(targetIdx, 0, draggedItem);
+          const deviceIds = devices.map(d => d.id);
+          await api.reorderRunbookDevices(runbook.id, deviceIds);
+        }
+        await loadData();
+      } else if (data.type === 'vm' || data.type === 'device') {
+        const newDev = await api.createRunbookDevice(runbook.id, {
+          layer_id: targetLid,
+          vm_id: data.type === 'vm' ? data.id : null,
+          device_id: data.type === 'device' ? data.id : null,
+          position: 999
+        });
+        
+        const rb = await api.getRunbook(runbook.id);
+        runbook = rb;
+        const layer = runbook.layers?.find(l => l.id === targetLid);
+        if (layer && layer.devices) {
+          let devices = [...layer.devices].sort((a, b) => a.position - b.position);
+          const itemIdx = devices.findIndex(d => d.id === newDev.id);
+          if (itemIdx > -1) {
+            devices.splice(itemIdx, 1);
+          }
+          devices.splice(targetIdx, 0, newDev);
+          const deviceIds = devices.map(d => d.id);
+          await api.reorderRunbookDevices(runbook.id, deviceIds);
+        }
+        await loadData();
+      }
+    } catch (err: any) {
+      console.error(err);
+    }
+  }
+
+  function isAlreadyInRunbook(type: 'vm' | 'device', id: number) {
+    if (!runbook || !runbook.layers) return false;
+    return runbook.layers.some(l => 
+      (l.devices || []).some(d => 
+        (type === 'vm' && d.vm_id === id) || (type === 'device' && d.device_id === id)
+      )
+    );
+  }
 </script>
 
 <div class="h-full flex flex-col space-y-4">
@@ -343,89 +506,197 @@
     <!-- Content -->
     <div class="flex-1 overflow-y-auto">
       {#if activeTab === 'PLANER'}
-        <div class="space-y-6 pb-12">
-          <!-- Layers -->
-          {#each (runbook.layers || []).sort((a,b) => a.position - b.position) as layer, i}
-            <div class="bg-[#101622] border border-slate-800 rounded-xl overflow-hidden">
-              <!-- Layer Header -->
-              <div class="bg-slate-800/50 p-4 border-b border-slate-800 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <div class="w-6 h-6 rounded bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-400 border border-slate-700">
-                    {layer.position}
+        <div class="flex gap-6 pb-12 items-start">
+          <!-- Left Column: Layers (2/3 width) -->
+          <div class="flex-1 space-y-6">
+            {#each (runbook.layers || []).sort((a,b) => a.position - b.position) as layer, i}
+              <div 
+                class={`bg-[#101622] border rounded-xl overflow-hidden transition ${draggedOverLayerId === layer.id ? 'border-blue-500 bg-blue-950/5' : 'border-slate-800'}`}
+                ondragover={(e) => handleDragOverLayer(e, layer.id)}
+                ondragleave={handleDragLeaveLayer}
+                ondrop={(e) => handleDropLayer(e, layer.id)}
+              >
+                <!-- Layer Header -->
+                <div class="bg-slate-800/50 p-4 border-b border-slate-800 flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <div class="w-6 h-6 rounded bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-400 border border-slate-700">
+                      {layer.position}
+                    </div>
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                      <Layers class="w-4 h-4 text-blue-400" />
+                      {layer.name}
+                    </h3>
                   </div>
-                  <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                    <Layers class="w-4 h-4 text-blue-400" />
-                    {layer.name}
-                  </h3>
+                  <div class="flex items-center gap-1">
+                    <button disabled={i === 0} onclick={() => moveLayer(i, -1)} class="p-1.5 text-slate-500 hover:text-white hover:bg-slate-700 rounded disabled:opacity-30"><ArrowUp class="w-3.5 h-3.5" /></button>
+                    <button disabled={i === (runbook.layers?.length || 0) - 1} onclick={() => moveLayer(i, 1)} class="p-1.5 text-slate-500 hover:text-white hover:bg-slate-700 rounded disabled:opacity-30"><ArrowDown class="w-3.5 h-3.5" /></button>
+                    <button onclick={() => deleteLayer(layer.id)} class="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded ml-2"><Trash2 class="w-3.5 h-3.5" /></button>
+                  </div>
                 </div>
-                <div class="flex items-center gap-1">
-                  <button disabled={i === 0} onclick={() => moveLayer(i, -1)} class="p-1.5 text-slate-500 hover:text-white hover:bg-slate-700 rounded disabled:opacity-30"><ArrowUp class="w-3.5 h-3.5" /></button>
-                  <button disabled={i === (runbook.layers?.length || 0) - 1} onclick={() => moveLayer(i, 1)} class="p-1.5 text-slate-500 hover:text-white hover:bg-slate-700 rounded disabled:opacity-30"><ArrowDown class="w-3.5 h-3.5" /></button>
-                  <button onclick={() => deleteLayer(layer.id)} class="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded ml-2"><Trash2 class="w-3.5 h-3.5" /></button>
-                </div>
-              </div>
 
-              <!-- Layer Body -->
-              <div class="p-4">
-                <textarea 
-                  class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-300 focus:border-blue-500 resize-none mb-4"
-                  rows="2"
-                  placeholder="Notizen / Instruktionen (Markdown unterstützt) ..."
-                  value={layer.markdown_note || ''}
-                  onblur={(e) => updateLayerNote(layer.id, e.currentTarget.value)}
-                ></textarea>
+                <!-- Layer Body -->
+                <div class="p-4">
+                  <textarea 
+                    class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-300 focus:border-blue-500 resize-none mb-4"
+                    rows="2"
+                    placeholder="Notizen / Instruktionen (Markdown unterstützt) ..."
+                    value={layer.markdown_note || ''}
+                    onblur={(e) => updateLayerNote(layer.id, e.currentTarget.value)}
+                  ></textarea>
 
-                <div class="space-y-2">
-                  {#each (layer.devices || []).sort((a,b) => a.position - b.position) as dev, dIdx}
-                    {@const Icon = getDeviceIcon(dev)}
-                    <div class="flex items-center justify-between bg-slate-900/50 border border-slate-800/80 rounded-lg p-2.5 group hover:border-slate-600 transition">
-                      <div class="flex items-center gap-3">
-                        <div class="flex flex-col gap-0.5">
-                          <button disabled={dIdx === 0} onclick={() => moveDevice(layer, dIdx, -1)} class="text-slate-600 hover:text-slate-300 disabled:opacity-30"><ArrowUp class="w-3 h-3" /></button>
-                          <button disabled={dIdx === (layer.devices?.length || 0) - 1} onclick={() => moveDevice(layer, dIdx, 1)} class="text-slate-600 hover:text-slate-300 disabled:opacity-30"><ArrowDown class="w-3 h-3" /></button>
-                        </div>
-                        
-                        <div class="w-8 h-8 rounded bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0">
-                          <Icon class={`w-4 h-4 ${dev.vm ? 'text-pink-400' : dev.device ? 'text-slate-300' : 'text-blue-400'}`} />
-                        </div>
-                        
-                        <div>
-                          <div class="text-sm font-medium text-slate-200">{getDeviceName(dev)}</div>
-                          <div class="text-[10px] text-slate-500 flex items-center gap-2 mt-0.5">
-                            <span class="flex items-center gap-1"><Clock class="w-3 h-3" /> {dev.delay_seconds}s</span>
-                            {#if dev.responsible}
-                              <span class="flex items-center gap-1"><User class="w-3 h-3" /> {dev.responsible}</span>
+                  <div class="space-y-2">
+                    {#each (layer.devices || []).sort((a,b) => a.position - b.position) as dev, dIdx}
+                      {@const Icon = getDeviceIcon(dev)}
+                      <div 
+                        draggable="true"
+                        ondragstart={(e) => handleDragStartDevice(e, dev.id, layer.id, dIdx)}
+                        ondragover={(e) => { e.preventDefault(); draggedOverDeviceId = dev.id; }}
+                        ondragleave={() => draggedOverDeviceId = null}
+                        ondrop={(e) => { draggedOverDeviceId = null; handleDropDevice(e, layer.id, dIdx); }}
+                        class={`flex items-center justify-between bg-slate-900/50 border rounded-lg p-2.5 group hover:border-slate-600 transition ${draggedOverDeviceId === dev.id ? 'border-blue-500 bg-blue-950/20' : 'border-slate-800/80'}`}
+                      >
+                        <div class="flex items-center gap-3">
+                          <div class="flex flex-col gap-0.5">
+                            <button disabled={dIdx === 0} onclick={() => moveDevice(layer, dIdx, -1)} class="text-slate-600 hover:text-slate-300 disabled:opacity-30"><ArrowUp class="w-3 h-3" /></button>
+                            <button disabled={dIdx === (layer.devices?.length || 0) - 1} onclick={() => moveDevice(layer, dIdx, 1)} class="text-slate-600 hover:text-slate-300 disabled:opacity-30"><ArrowDown class="w-3 h-3" /></button>
+                          </div>
+                          
+                          <div class="w-8 h-8 rounded bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0">
+                            <Icon class={`w-4 h-4 ${dev.vm ? 'text-pink-400' : dev.device ? 'text-slate-300' : 'text-blue-400'}`} />
+                          </div>
+                          
+                          <div>
+                            <div class="text-sm font-medium text-slate-200">{getDeviceName(dev)}</div>
+                            <div class="text-[10px] text-slate-500 flex items-center gap-2 mt-0.5">
+                              <span class="flex items-center gap-1"><Clock class="w-3 h-3" /> {dev.delay_seconds}s</span>
+                              {#if dev.responsible}
+                                <span class="flex items-center gap-1"><User class="w-3 h-3" /> {dev.responsible}</span>
+                              {/if}
+                            </div>
+                            {#if dev.note}
+                              <div class="text-xs text-amber-500/80 mt-1 italic">{dev.note}</div>
                             {/if}
                           </div>
-                          {#if dev.note}
-                            <div class="text-xs text-amber-500/80 mt-1 italic">{dev.note}</div>
-                          {/if}
+                        </div>
+                        <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
+                          <button onclick={() => openEditDevice(dev)} class="p-1.5 text-blue-400 hover:bg-blue-500/10 rounded"><Edit class="w-4 h-4" /></button>
+                          <button onclick={() => deleteDevice(dev.id)} class="p-1.5 text-red-400 hover:bg-red-500/10 rounded"><Trash2 class="w-4 h-4" /></button>
                         </div>
                       </div>
-                      <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
-                        <button onclick={() => openEditDevice(dev)} class="p-1.5 text-blue-400 hover:bg-blue-500/10 rounded"><Edit class="w-4 h-4" /></button>
-                        <button onclick={() => deleteDevice(dev.id)} class="p-1.5 text-red-400 hover:bg-red-500/10 rounded"><Trash2 class="w-4 h-4" /></button>
-                      </div>
-                    </div>
-                  {/each}
-                  
-                  <button 
-                    onclick={() => { targetLayerId = layer.id; showDeviceModal = true; }}
-                    class="w-full flex items-center justify-center gap-2 py-2 border-2 border-dashed border-slate-800 hover:border-slate-600 rounded-lg text-xs text-slate-400 hover:text-slate-200 transition"
-                  >
-                    <Plus class="w-3.5 h-3.5" /> Gerät hinzufügen
-                  </button>
+                    {/each}
+                    
+                    <button 
+                      onclick={() => { targetLayerId = layer.id; showDeviceModal = true; }}
+                      ondragover={(e) => { e.preventDefault(); draggedOverAddButtonLayerId = layer.id; }}
+                      ondragleave={() => draggedOverAddButtonLayerId = null}
+                      ondrop={(e) => { draggedOverAddButtonLayerId = null; handleDropLayer(e, layer.id); }}
+                      class={`w-full flex items-center justify-center gap-2 py-2 border-2 border-dashed rounded-lg text-xs transition ${draggedOverAddButtonLayerId === layer.id ? 'border-blue-500 bg-blue-950/20 text-blue-300' : 'border-slate-800 hover:border-slate-600 text-slate-400 hover:text-slate-200'}`}
+                    >
+                      <Plus class="w-3.5 h-3.5" /> Gerät hinzufügen (oder hierher ziehen)
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          {/each}
+            {/each}
 
-          <button 
-            onclick={() => showLayerModal = true}
-            class="w-full flex items-center justify-center gap-2 py-4 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-600/20 rounded-xl text-sm font-medium transition"
-          >
-            <Plus class="w-4 h-4" /> Neue Ebene hinzufügen
-          </button>
+            <button 
+              onclick={() => showLayerModal = true}
+              class="w-full flex items-center justify-center gap-2 py-4 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-600/20 rounded-xl text-sm font-medium transition"
+            >
+              <Plus class="w-4 h-4" /> Neue Ebene hinzufügen
+            </button>
+          </div>
+
+          <!-- Right Column: Sidebar (1/3 width, sticky) -->
+          <div class="w-80 bg-[#101622] border border-slate-800 rounded-xl p-4 sticky top-4 shrink-0 flex flex-col max-h-[85vh]">
+            <h3 class="text-sm font-bold text-white mb-1">Ressourcen-Katalog</h3>
+            <p class="text-[10px] text-slate-400 mb-3">Ziehe Elemente per Drag & Drop in eine beliebige Ebene, um sie hinzuzufügen.</p>
+
+            <!-- Sidebar Tabs -->
+            <div class="flex border-b border-slate-800 mb-3 shrink-0">
+              <button 
+                onclick={() => sidebarTab = 'vms'}
+                class={`flex-1 pb-2 text-xs font-semibold border-b-2 transition ${sidebarTab === 'vms' ? 'border-pink-500 text-pink-400' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
+              >
+                VMs ({allVms.length})
+              </button>
+              <button 
+                onclick={() => sidebarTab = 'devices'}
+                class={`flex-1 pb-2 text-xs font-semibold border-b-2 transition ${sidebarTab === 'devices' ? 'border-blue-500 text-blue-400' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
+              >
+                Geräte ({allDevices.length})
+              </button>
+            </div>
+
+            <!-- Search Input -->
+            <div class="mb-3 shrink-0">
+              <input 
+                type="text" 
+                bind:value={searchQuery} 
+                placeholder="Suchen..." 
+                class="w-full bg-[#182030] border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500"
+              />
+            </div>
+
+            <!-- Drag Template for Freitext -->
+            <div 
+              draggable="true"
+              ondragstart={handleDragStartFreitext}
+              class="mb-3 p-2 bg-blue-500/10 border border-dashed border-blue-500/30 rounded-lg flex items-center justify-center gap-2 cursor-grab hover:bg-blue-500/20 text-xs text-blue-400 font-semibold select-none shrink-0"
+            >
+              <Plus class="w-3.5 h-3.5" />
+              Freitext-Gerät (ziehen)
+            </div>
+
+            <!-- Scrollable List -->
+            <div class="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+              {#if sidebarTab === 'vms'}
+                {#each allVms.filter(v => v.name.toLowerCase().includes(searchQuery.toLowerCase())) as vm}
+                  {@const added = isAlreadyInRunbook('vm', vm.id)}
+                  <div 
+                    draggable="true"
+                    ondragstart={(e) => handleDragStartResource(e, 'vm', vm.id, vm.name)}
+                    class={`p-2 bg-slate-900/40 border rounded-lg cursor-grab hover:border-pink-500/60 transition select-none flex items-center justify-between ${added ? 'border-emerald-500/30 opacity-70 bg-emerald-950/5' : 'border-slate-800'}`}
+                  >
+                    <div class="flex items-center gap-2 min-w-0">
+                      <Monitor class="w-3.5 h-3.5 text-pink-400 shrink-0" />
+                      <div class="truncate text-xs">
+                        <div class="font-medium text-slate-200 truncate">{vm.name}</div>
+                        <div class="text-[9px] text-slate-500 mt-0.5">{vm.ip_adresse || 'Keine IP'}</div>
+                      </div>
+                    </div>
+                    {#if added}
+                      <span class="text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded shrink-0">
+                        Plan
+                      </span>
+                    {/if}
+                  </div>
+                {/each}
+              {:else}
+                {#each allDevices.filter(d => d.hostname.toLowerCase().includes(searchQuery.toLowerCase())) as dev}
+                  {@const added = isAlreadyInRunbook('device', dev.id)}
+                  <div 
+                    draggable="true"
+                    ondragstart={(e) => handleDragStartResource(e, 'device', dev.id, dev.hostname)}
+                    class={`p-2 bg-slate-900/40 border rounded-lg cursor-grab hover:border-blue-500/60 transition select-none flex items-center justify-between ${added ? 'border-emerald-500/30 opacity-70 bg-emerald-950/5' : 'border-slate-800'}`}
+                  >
+                    <div class="flex items-center gap-2 min-w-0">
+                      <Server class="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <div class="truncate text-xs">
+                        <div class="font-medium text-slate-200 truncate">{dev.hostname}</div>
+                        <div class="text-[9px] text-slate-500 mt-0.5 capitalize">{dev.typ} | {dev.ip_adresse || 'Keine IP'}</div>
+                      </div>
+                    </div>
+                    {#if added}
+                      <span class="text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded shrink-0">
+                        Plan
+                      </span>
+                    {/if}
+                  </div>
+                {/each}
+              {/if}
+            </div>
+          </div>
         </div>
       {/if}
 
@@ -765,3 +1036,19 @@
   </div>
 </div>
 {/if}
+
+<style>
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #1e293b;
+    border-radius: 2px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #334155;
+  }
+</style>
