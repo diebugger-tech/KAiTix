@@ -175,15 +175,16 @@ virtuelle Maschinen und Shutdown/Startup-Runbooks.
 
 ## Letzte Session
 
-**Datum:** 2026-05-25
+**Datum:** 2026-05-25 (Nachmittag)
 **Was gemacht:**
-- Nix+direnv Dev-Umgebung eingerichtet
-- zsh installiert, direnv Hook gesetzt
-- nixubuntu Repo angelegt
-- Alle 4 Runbook-Features implementiert (Bugfix, Execution, D&D Planer, VM-Graph)
-- 20 pytest Tests grün, npm run build grün
+- Neue API & DB-Migration für Runbook-Execution `note` Spalte implementiert (erzwingt Pflicht-Begründung beim Verwerfen).
+- Backend-Validierung für Status `verworfen` (HTTP 400 ohne Notiz) hinzugefügt und getestet.
+- Planer-Sperre & Tab-Trennung im Frontend implementiert: Planer ist komplett schreibgeschützt und Ressourcen-Katalog deaktiviert (pointer-events-none), wenn eine Ausführung offen ist.
+- PDU-Outlet Info-Badges in allen drei Ansichten (Planer, Ausführung, Protokoll-Details) eingebunden.
+- Layer Inline-Dropdown Ebenen-Hinzufügung per Dropdown-Templates implementiert.
+- Automatisierte GUI-Tests (`test_gui.py`) an neuen Workflow angepasst und erfolgreich validiert.
 
 **Nächste Schritte:**
-- Protokoll-Tab fertigstellen
-- PDF/Markdown Export
-- Phasen-Imbalance beheben
+- Phasen-Imbalance beheben (12-17 kW unausgeglichen)
+- PDF-Export für Runbook
+- Healthcheck-URL pro Gerät im Runbook integrieren
