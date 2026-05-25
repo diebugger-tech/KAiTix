@@ -10,6 +10,8 @@
   let showModal = $state(false);
   let editMode = $state(false);
   let currentVm = $state<Partial<VirtualMachine>>({ shutdown_priority: 5 });
+  let activeTab = $state<'table' | 'graph'>('table');
+  let hoveredVmId = $state<number | null>(null);
 
   onMount(async () => {
     try {
@@ -75,6 +77,117 @@
       }
     }
   }
+
+  // Finds all ancestor VM IDs that this VM depends on (directly or transitively)
+  function getAncestors(vmId: number): Set<number> {
+    const ancestors = new Set<number>();
+    let queue = [vmId];
+    let visited = new Set<number>();
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      if (visited.has(current)) continue;
+      visited.add(current);
+      
+      const vm = vms.find(v => v.id === current);
+      if (vm && vm.depends_on_vm_id) {
+        ancestors.add(vm.depends_on_vm_id);
+        queue.push(vm.depends_on_vm_id);
+      }
+    }
+    return ancestors;
+  }
+
+  // Finds all descendant VM IDs that depend on this VM (directly or transitively)
+  function getDescendants(vmId: number): Set<number> {
+    const descendants = new Set<number>();
+    let queue = [vmId];
+    let visited = new Set<number>();
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      if (visited.has(current)) continue;
+      visited.add(current);
+      
+      // Find all VMs that depend on 'current'
+      const children = vms.filter(v => v.depends_on_vm_id === current);
+      for (const child of children) {
+        descendants.add(child.id);
+        queue.push(child.id);
+      }
+    }
+    return descendants;
+  }
+
+  const vmLevels = $derived.by(() => {
+    let levels = new Map<number, number>();
+    vms.forEach(vm => levels.set(vm.id, 0));
+    
+    for (let i = 0; i < vms.length; i++) {
+      let changed = false;
+      for (const vm of vms) {
+        if (vm.depends_on_vm_id) {
+          const depLevel = levels.get(vm.depends_on_vm_id) ?? 0;
+          const curLevel = levels.get(vm.id) ?? 0;
+          if (curLevel <= depLevel) {
+            levels.set(vm.id, depLevel + 1);
+            changed = true;
+          }
+        }
+      }
+      if (!changed) break;
+    }
+    return levels;
+  });
+
+  const graphData = $derived.by(() => {
+    const levels = vmLevels;
+    const vmsByLevel = new Map<number, VirtualMachine[]>();
+    let maxLevel = 0;
+    
+    for (const vm of vms) {
+      const lvl = levels.get(vm.id) ?? 0;
+      if (lvl > maxLevel) maxLevel = lvl;
+      if (!vmsByLevel.has(lvl)) vmsByLevel.set(lvl, []);
+      vmsByLevel.get(lvl)!.push(vm);
+    }
+    
+    const columnWidth = 280;
+    const rowHeight = 110;
+    const verticalPadding = 50;
+    const horizontalPadding = 50;
+    
+    let maxRows = 0;
+    for (let l = 0; l <= maxLevel; l++) {
+      const count = vmsByLevel.get(l)?.length ?? 0;
+      if (count > maxRows) maxRows = count;
+    }
+    
+    const canvasHeight = Math.max(500, maxRows * rowHeight + 2 * verticalPadding);
+    const canvasWidth = Math.max(900, (maxLevel + 1) * columnWidth + 2 * horizontalPadding);
+    
+    const coords = new Map<number, {x: number, y: number}>();
+    for (let l = 0; l <= maxLevel; l++) {
+      const list = vmsByLevel.get(l) ?? [];
+      const sortedList = [...list].sort((a, b) => a.name.localeCompare(b.name));
+      const colHeight = sortedList.length * rowHeight;
+      const startY = (canvasHeight - colHeight) / 2 + rowHeight / 2;
+      sortedList.forEach((vm, index) => {
+        coords.set(vm.id, {
+          x: horizontalPadding + l * columnWidth + columnWidth / 2,
+          y: startY + index * rowHeight
+        });
+      });
+    }
+    
+    return {
+      coords,
+      canvasWidth,
+      canvasHeight,
+      maxLevel
+    };
+  });
+
+  const activeAncestors = $derived(hoveredVmId !== null ? getAncestors(hoveredVmId) : new Set<number>());
+  const activeDescendants = $derived(hoveredVmId !== null ? getDescendants(hoveredVmId) : new Set<number>());
 </script>
 
 <div class="h-full flex flex-col space-y-6">
@@ -98,56 +211,200 @@
   </div>
 
   <div class="bg-[#101622] border border-slate-800 rounded-xl flex-1 overflow-hidden flex flex-col shadow-2xl">
-    <div class="overflow-x-auto flex-1">
-      <table class="w-full text-left text-sm text-slate-300">
-        <thead class="text-xs uppercase bg-slate-800/50 text-slate-400 sticky top-0 z-10">
-          <tr>
-            <th class="px-4 py-3 font-semibold">Name</th>
-            <th class="px-4 py-3 font-semibold">Hypervisor</th>
-            <th class="px-4 py-3 font-semibold">Läuft auf (Host)</th>
-            <th class="px-4 py-3 font-semibold">Dienst</th>
-            <th class="px-4 py-3 font-semibold">IP-Adresse</th>
-            <th class="px-4 py-3 font-semibold text-center">Prio</th>
-            <th class="px-4 py-3 font-semibold">Verantwortlich</th>
-            <th class="px-4 py-3 text-right">Aktionen</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-800/50">
-          {#if loading}
-            <tr><td colspan="8" class="text-center py-8 text-slate-500">Lade VMs...</td></tr>
-          {:else if vms.length === 0}
-            <tr><td colspan="8" class="text-center py-8 text-slate-500">Keine VMs dokumentiert.</td></tr>
-          {:else}
-            {#each vms as vm}
-              <tr class="hover:bg-slate-800/30 transition group">
-                <td class="px-4 py-3 font-medium text-slate-200">{vm.name}</td>
-                <td class="px-4 py-3 text-xs">
-                  <span class="bg-slate-800 border border-slate-700 px-2 py-0.5 rounded text-slate-300">
-                    {vm.hypervisor_typ || '—'}
-                  </span>
-                </td>
-                <td class="px-4 py-3 flex items-center gap-2">
-                  <Server class="w-3.5 h-3.5 text-slate-500" />
-                  <span class="font-mono text-xs">{getHostName(vm.host_device_id)}</span>
-                </td>
-                <td class="px-4 py-3 text-slate-400 max-w-[200px] truncate" title={vm.dienst || ''}>{vm.dienst || '—'}</td>
-                <td class="px-4 py-3 font-mono text-xs text-slate-400">{vm.ip_adresse || '—'}</td>
-                <td class="px-4 py-3 text-center">
-                  <span class={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${vm.shutdown_priority === 1 ? 'bg-red-500/20 text-red-400' : vm.shutdown_priority === 2 ? 'bg-orange-500/20 text-orange-400' : 'bg-slate-800 text-slate-400'}`}>
-                    {vm.shutdown_priority}
-                  </span>
-                </td>
-                <td class="px-4 py-3 text-slate-400 text-xs">{vm.responsible || '—'}</td>
-                <td class="px-4 py-3 text-right space-x-2">
-                  <button onclick={() => openEdit(vm)} class="text-blue-400 hover:text-blue-300 text-xs font-medium">Bearbeiten</button>
-                  <button onclick={() => deleteVm(vm.id)} class="text-red-400 hover:text-red-300 text-xs font-medium">Löschen</button>
-                </td>
-              </tr>
-            {/each}
-          {/if}
-        </tbody>
-      </table>
+    <!-- Tabs Header -->
+    <div class="flex border-b border-slate-800 bg-slate-900/40 px-4 py-2 justify-between items-center shrink-0 select-none">
+      <div class="flex space-x-2">
+        <button 
+          onclick={() => activeTab = 'table'} 
+          class={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${activeTab === 'table' ? 'bg-slate-800 text-white border border-slate-700' : 'text-slate-400 hover:text-slate-200'}`}
+        >
+          Tabelle
+        </button>
+        <button 
+          onclick={() => activeTab = 'graph'} 
+          class={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${activeTab === 'graph' ? 'bg-slate-800 text-white border border-slate-700' : 'text-slate-400 hover:text-slate-200'}`}
+        >
+          Abhängigkeitsgraph
+        </button>
+      </div>
+      
+      {#if activeTab === 'graph'}
+        <div class="text-[10px] text-slate-400 italic">
+          Tipp: Bewege den Mauszeiger über eine VM, um Abhängigkeitsketten anzuzeigen.
+        </div>
+      {/if}
     </div>
+
+    {#if activeTab === 'table'}
+      <div class="overflow-x-auto flex-1">
+        <table class="w-full text-left text-sm text-slate-300">
+          <thead class="text-xs uppercase bg-slate-800/50 text-slate-400 sticky top-0 z-10">
+            <tr>
+              <th class="px-4 py-3 font-semibold">Name</th>
+              <th class="px-4 py-3 font-semibold">Hypervisor</th>
+              <th class="px-4 py-3 font-semibold">Läuft auf (Host)</th>
+              <th class="px-4 py-3 font-semibold">Dienst</th>
+              <th class="px-4 py-3 font-semibold">IP-Adresse</th>
+              <th class="px-4 py-3 font-semibold text-center">Prio</th>
+              <th class="px-4 py-3 font-semibold">Verantwortlich</th>
+              <th class="px-4 py-3 text-right">Aktionen</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/50">
+            {#if loading}
+              <tr><td colspan="8" class="text-center py-8 text-slate-500">Lade VMs...</td></tr>
+            {:else if vms.length === 0}
+              <tr><td colspan="8" class="text-center py-8 text-slate-500">Keine VMs dokumentiert.</td></tr>
+            {:else}
+              {#each vms as vm}
+                <tr class="hover:bg-slate-800/30 transition group">
+                  <td class="px-4 py-3 font-medium text-slate-200">{vm.name}</td>
+                  <td class="px-4 py-3 text-xs">
+                    <span class="bg-slate-800 border border-slate-700 px-2 py-0.5 rounded text-slate-300">
+                      {vm.hypervisor_typ || '—'}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3 flex items-center gap-2">
+                    <Server class="w-3.5 h-3.5 text-slate-500" />
+                    <span class="font-mono text-xs">{getHostName(vm.host_device_id)}</span>
+                  </td>
+                  <td class="px-4 py-3 text-slate-400 max-w-[200px] truncate" title={vm.dienst || ''}>{vm.dienst || '—'}</td>
+                  <td class="px-4 py-3 font-mono text-xs text-slate-400">{vm.ip_adresse || '—'}</td>
+                  <td class="px-4 py-3 text-center">
+                    <span class={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${vm.shutdown_priority === 1 ? 'bg-red-500/20 text-red-400' : vm.shutdown_priority === 2 ? 'bg-orange-500/20 text-orange-400' : 'bg-slate-800 text-slate-400'}`}>
+                      {vm.shutdown_priority}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3 text-slate-400 text-xs">{vm.responsible || '—'}</td>
+                  <td class="px-4 py-3 text-right space-x-2">
+                    <button onclick={() => openEdit(vm)} class="text-blue-400 hover:text-blue-300 text-xs font-medium">Bearbeiten</button>
+                    <button onclick={() => deleteVm(vm.id)} class="text-red-400 hover:text-red-300 text-xs font-medium">Löschen</button>
+                  </td>
+                </tr>
+              {/each}
+            {/if}
+          </tbody>
+        </table>
+      </div>
+    {:else}
+      <div class="flex-1 overflow-auto bg-[#0b0f19] relative min-h-[500px]">
+        {#if loading}
+          <div class="absolute inset-0 flex items-center justify-center text-slate-500">Lade Graph...</div>
+        {:else if vms.length === 0}
+          <div class="absolute inset-0 flex items-center justify-center text-slate-500">Keine VMs für Graph vorhanden.</div>
+        {:else}
+          <div style="width: {graphData.canvasWidth}px; height: {graphData.canvasHeight}px; position: relative;">
+            
+            <!-- SVG Canvas for connections -->
+            <svg class="absolute inset-0 pointer-events-none" width={graphData.canvasWidth} height={graphData.canvasHeight}>
+              <defs>
+                <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#334155" />
+                </marker>
+                <marker id="arrow-parent" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#10b981" />
+                </marker>
+                <marker id="arrow-child" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#ec4899" />
+                </marker>
+              </defs>
+              
+              <!-- Connections -->
+              {#each vms as vm}
+                {#if vm.depends_on_vm_id && graphData.coords.has(vm.id) && graphData.coords.has(vm.depends_on_vm_id)}
+                  {@const fromCoord = graphData.coords.get(vm.depends_on_vm_id)!}
+                  {@const toCoord = graphData.coords.get(vm.id)!}
+                  {@const x1 = fromCoord.x + 110}
+                  {@const y1 = fromCoord.y}
+                  {@const x2 = toCoord.x - 110}
+                  {@const y2 = toCoord.y}
+                  
+                  {@const isParentChain = hoveredVmId !== null && (hoveredVmId === vm.id || (activeAncestors.has(vm.id) && (activeAncestors.has(vm.depends_on_vm_id) || vm.depends_on_vm_id === hoveredVmId)))}
+                  {@const isChildChain = hoveredVmId !== null && (hoveredVmId === vm.depends_on_vm_id || (activeDescendants.has(vm.depends_on_vm_id) && (activeDescendants.has(vm.id) || vm.id === hoveredVmId)))}
+                  
+                  <path
+                    d="M {x1} {y1} C {x1 + 80} {y1}, {x2 - 85} {y2}, {x2} {y2}"
+                    fill="none"
+                    stroke={isParentChain ? '#10b981' : isChildChain ? '#ec4899' : '#1e293b'}
+                    stroke-width={isParentChain || isChildChain ? 2.5 : 1.5}
+                    stroke-opacity={hoveredVmId === null ? 0.6 : (isParentChain || isChildChain ? 1.0 : 0.15)}
+                    marker-end={isParentChain ? 'url(#arrow-parent)' : isChildChain ? 'url(#arrow-child)' : 'url(#arrow)'}
+                  />
+                {/if}
+              {/each}
+            </svg>
+            
+            <!-- VM Cards -->
+            {#each vms as vm}
+              {#if graphData.coords.has(vm.id)}
+                {@const coord = graphData.coords.get(vm.id)!}
+                {@const isHovered = hoveredVmId === vm.id}
+                {@const isParent = hoveredVmId !== null && activeAncestors.has(vm.id)}
+                {@const isChild = hoveredVmId !== null && activeDescendants.has(vm.id)}
+                {@const isUnrelated = hoveredVmId !== null && !isHovered && !isParent && !isChild}
+                
+                <div
+                  class="absolute flex flex-col justify-between p-3 rounded-lg border text-left cursor-pointer transition-all duration-200 select-none bg-[#111827] group shadow-md"
+                  style="width: 220px; height: 75px; left: {coord.x - 110}px; top: {coord.y - 37}px;
+                         border-color: {isHovered ? '#3b82f6' : isParent ? '#10b981' : isChild ? '#ec4899' : '#1f2937'};
+                         box-shadow: {isHovered ? '0 0 10px rgba(59, 130, 246, 0.4)' : isParent ? '0 0 10px rgba(16, 185, 129, 0.4)' : isChild ? '0 0 10px rgba(236, 72, 153, 0.4)' : 'none'};
+                         opacity: {isUnrelated ? 0.35 : 1};"
+                  onmouseenter={() => hoveredVmId = vm.id}
+                  onmouseleave={() => hoveredVmId = null}
+                  onclick={() => openEdit(vm)}
+                >
+                  <div class="flex items-start justify-between gap-1.5 min-w-0">
+                    <div class="flex items-center gap-1.5 min-w-0">
+                      <Monitor class="w-4 h-4 text-pink-400 shrink-0" />
+                      <div class="truncate text-xs font-semibold text-slate-100" title={vm.name}>{vm.name}</div>
+                    </div>
+                    <div class="flex items-center gap-1 shrink-0">
+                      <span class={`inline-flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-bold ${vm.shutdown_priority === 1 ? 'bg-red-500/20 text-red-400' : vm.shutdown_priority === 2 ? 'bg-orange-500/20 text-orange-400' : 'bg-slate-800 text-slate-400'}`} title="Shutdown Priorität">
+                        {vm.shutdown_priority}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div class="flex items-end justify-between gap-1.5 min-w-0">
+                    <div class="truncate text-[10px] text-slate-400">
+                      <span class="text-slate-500">Host:</span> {getHostName(vm.host_device_id)}
+                    </div>
+                    <div class="font-mono text-[9px] text-slate-500 shrink-0">
+                      {vm.ip_adresse || 'Keine IP'}
+                    </div>
+                  </div>
+                  
+                  <!-- Quick actions on hover -->
+                  <div class="absolute -top-2 -right-2 hidden group-hover:flex items-center gap-1 bg-slate-900 border border-slate-700 rounded-md p-1 shadow-lg z-20">
+                    <button
+                      onclick={(e) => { e.stopPropagation(); openEdit(vm); }}
+                      class="p-0.5 text-blue-400 hover:text-blue-300 hover:bg-slate-800 rounded"
+                      title="Bearbeiten"
+                    >
+                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 20h9"></path>
+                        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+                      </svg>
+                    </button>
+                    <button
+                      onclick={(e) => { e.stopPropagation(); deleteVm(vm.id); }}
+                      class="p-0.5 text-red-400 hover:text-red-300 hover:bg-slate-800 rounded"
+                      title="Löschen"
+                    >
+                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 6h18"></path>
+                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              {/if}
+            {/each}
+          </div>
+        {/if}
+      </div>
+    {/if}
   </div>
 </div>
 
