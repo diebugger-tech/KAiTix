@@ -1,5 +1,10 @@
 import os
+from pathlib import Path
+from dotenv import load_dotenv
 from pydantic import BaseModel
+
+# Load .env from project root so os.getenv picks up DATABASE_URL etc.
+load_dotenv(Path(__file__).resolve().parents[2] / ".env")
 
 
 def _parse_origins(raw: str) -> list[str]:

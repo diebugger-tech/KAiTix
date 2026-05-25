@@ -1,7 +1,13 @@
 from logging.config import fileConfig
+from pathlib import Path
 
 from sqlalchemy import pool, create_engine
 from alembic import context
+
+# Load .env BEFORE importing app modules so os.getenv picks up the values
+from dotenv import load_dotenv
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
+
 from app.core.database import Base
 import app.models  # ensure models are imported so they register with Base.metadata
 
