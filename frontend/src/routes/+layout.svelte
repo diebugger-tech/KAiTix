@@ -88,7 +88,7 @@
         </div>
         <div>
           <h1 class="text-lg font-bold font-outfit tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">KAiTix</h1>
-          <span class="text-[10px] text-slate-500 font-mono tracking-widest uppercase">Serverraum Management</span>
+          <span class="text-[10px] text-slate-500 font-mono tracking-widest uppercase">Predictive Analytics</span>
         </div>
       </div>
 
