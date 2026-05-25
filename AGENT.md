@@ -9,6 +9,8 @@ rack-übergreifend.
 
 **Was KAiTix ist:**
 - Statische Hardwaredokumentation (Racks, Geräte, Kabel, Interfaces)
+- Dokumentation der VM-Landschaft (virtuelle Maschinen mit Host-Server-Zuordnung)
+- Runbook Orchestrator: Planung, Ausführung und Protokollierung von Shutdown-/Startup-Sequenzen
 - USV-Simulation auf Basis dokumentierter Nennleistungen (offline/mathematisch)
 - Statische Validierungen beim Einbauen (z.B. min_rack_hoehe vs. rack.hoehe_u)
 - Periodische Datenerfassung von Kentix SmartPDU via REST-API
@@ -18,6 +20,7 @@ rack-übergreifend.
 - Kein SNMP-Monitoring / kein Echtzeit-Dashboard
 - Kein Alarmsystem (Kentix-Alarme werden erfasst, nicht live angezeigt)
 - Kein Ersatz für KentixONE
+- Keine Live-Daten von VMs — rein dokumentarisch
 
 ---
 
@@ -27,12 +30,17 @@ rack-übergreifend.
 |------------|------------------------------------------|
 | Frontend   | Svelte 5, Vite, kein TypeScript          |
 | Backend    | FastAPI + Pydantic v2                    |
-| ORM        | SQLAlchemy 2.x sync + PyMySQL            |
-| DB         | MySQL 8+ — eine einzige DB `serverflow`  |
+| ORM        | SQLAlchemy 2.x **async** + aiomysql (App), PyMySQL (Alembic) |
+| DB         | MySQL 8+ — eine einzige DB **`kaitix`**  |
+| Config     | python-dotenv — `.env` im Projektroot    |
 | Live       | FastAPI SSE (kein SurrealDB, kein WS)    |
-| Deployment | Lokal / NixOS                            |
+| Deployment | Lokal / NixOS / Docker                   |
 
 Kein PostgreSQL. Kein SQLite. Kein SurrealDB. Kein zweites ORM.
+
+> **DB-Name:** Die Datenbank heißt `kaitix` (nicht `serverflow` — alter Name).
+> **Credentials lokal:** `kaitix:kaitix@127.0.0.1:3306/kaitix` (in `.env`).
+> **`.env` Pflicht:** Ohne `.env` im Projektroot schlägt Backend und Alembic fehl!
 
 ---
 
@@ -312,12 +320,21 @@ auf schwächste Phase verschieben — iterativ bis Imbalance ≤10%.
 
 ## Backlog (priorisiert)
 
+### Implementiert ✅ (seit letzter Session)
+- [x] `virtual_machines` Tabelle + CRUD-API + Frontend-Seite
+- [x] Runbook Orchestrator — Datenmodell, API, Frontend (Übersicht + Detailansicht)
+- [x] `python-dotenv` in `app/core/config.py` + `alembic/env.py` integriert
+- [x] Alembic-Migrationskette repariert (split-head behoben)
+- [x] Tabellen per `Base.metadata.create_all()` + `alembic stamp head` initialisiert
+- [x] `lazy="selectin"` für alle Runbook-Relationships (MissingGreenletError behoben)
+- [x] `psu_count`, `psu_nennwatt`, `last_pct` zu devices hinzugefügt (Migration d02c996b4cfd)
+- [x] `shutdown_priority`, `shutdown_delay_seconds`, `depends_on_device_id` zu devices
+
 ### Kurzfristig
 - [ ] `min_rack_hoehe` in hardware_types.json korrigieren (40→42)
 - [ ] Backend-Validierung `min_rack_hoehe` in devices.py
 - [ ] Frontend-Warnung bei inkompatiblen PDUs
 - [ ] `alarm_ok` → `alarm_aktiv` in kentix.py korrigieren
-- [ ] `psu_count`, `psu_nennwatt`, `last_pct` zu devices hinzufügen
 - [ ] Unterverteilung (distribution_panel) mit USV verknüpfen
 - [ ] Phasen-Ist-Zustand erfassen (welches Gerät hängt an welchem Outlet/Phase)
 - [ ] RackModal hoehe_u: Dropdown dynamisch aus hardware_types (nicht hardcodiert)
@@ -326,6 +343,9 @@ auf schwächste Phase verschieben — iterativ bis Imbalance ≤10%.
 - [ ] devices.side Spalte (left/right) für 0U-PDU Seitenzuordnung
 - [ ] Max. 1 vertikale PDU pro Seite pro Rack — Backend + Frontend
 - [ ] PDU-Spalte im Rack-Diagramm füllt exakt rack.hoehe_u (nicht PDU-Höhe)
+- [ ] Runbook: Gerät aus VM-Liste oder Device-Liste in Layer per Drag & Drop
+- [ ] Runbook-Detailseite: Layer anlegen / bearbeiten / löschen
+- [ ] Runbook-Execution: Step abhaken (check-off) im Frontend
 
 ### Mittelfristig
 - [ ] `pdu_outlet_readings` Tabelle + Kentix-Poller erweitern
@@ -336,25 +356,18 @@ auf schwächste Phase verschieben — iterativ bis Imbalance ≤10%.
 - [ ] Batterielaufzeit-Berechnung (`kapazitaet_kwh` in usv_units)
 - [ ] Rittal-Racks als Modelle im Hardware-Katalog anlegen
 - [ ] Ältere horizontale PDUs (Lagerbestand) im Katalog anlegen
+- [ ] VM-Seite: Abhängigkeitsgraph (depends_on_vm_id) visualisieren
 
 ### Langfristig
 - [ ] Ausfallszenarien-Simulation (welches USV-Modul fällt aus?)
+      - Interaktiver "Was-wäre-wenn"-Modus in der Topologie (Phasen-/USV-/PDU-Ausfall)
+      - Visualisierung der betroffenen Geräte (Rot = stromlos, Gelb = redundante PSU, Grün = unbetroffen)
+      - Chronologische Shutdown-Sequenzierung basierend auf `shutdown_priority`, `shutdown_delay_seconds` und `depends_on_device_id`
 - [ ] Lasthistorie-Chart aus pdu_outlet_readings
 - [ ] ~~iDRAC/iLO-Integration~~ — nicht relevant, reines Doku-Tool
 - [ ] SNMP/LLDP-Discovery für automatische Topologie
-- [ ] **E-Plan / Einlinienschaltbild Generator** — SVG-Stromlaufplan aus KAiTix-Daten:
-      - Netz → Hauptschalter → USV (Wöhrle) → Externer Bypass
-      - Unterverteilung L1/L2/L3 → PDUs pro Rack
-      - Automatisch generiert wenn Anzahl Racks + USV dokumentiert
-      - Export als SVG oder PDF
-      - Später: DXF für AutoCAD/EPlan-kompatiblen Export
-- [ ] **Leistungsbeschreibung / Angebots-Export** — aus KAiTix-Daten generieren:
-      - Stückliste aller verbauten Hardware (devices + hardware_types)
-      - USV-Dimensionierung mit N+1 Nachweis (usv_units + usv_modules)
-      - Phasenverteilung und Lastberechnung (distribution_circuits)
-      - Kabelplan (cables)
-      - Export als PDF oder Word-Dokument
-      - Verwendbar als Grundlage für Auftragsunterlagen
+- [ ] **E-Plan / Einlinienschaltbild Generator** — SVG-Stromlaufplan aus KAiTix-Daten
+- [ ] **Leistungsbeschreibung / Angebots-Export** — PDF/Word aus KAiTix-Daten
 
 ---
 
@@ -402,6 +415,14 @@ Server PSU1 + PSU2 (devices, psu_count=2, psu_nennwatt)
     nur PDUs mit min_rack_hoehe <= rack.hoehe_u sind wählbar
 17. Pro Rack-Seite (0UL / 0UR) maximal eine vertikale PDU
 18. 0U-PDU Spalte im Diagramm immer rack.hoehe_u hoch zeichnen
+19. **VMs sind Dokumentation, keine Live-Daten** — `virtual_machines` Tabelle,
+    kein Agent darf dort Live-Metriken schreiben
+20. **Runbooks**: `runbook_devices` kann `device_id` ODER `vm_id` ODER `freitext`
+    enthalten — niemals alle drei gleichzeitig zwingend
+21. **SQLAlchemy async**: Alle neuen Router-Relationships brauchen `lazy="selectin"`
+    oder explizites `selectinload()` im Query — kein lazy default in async Context
+22. **`.env` immer prüfen**: Fehlt `.env`, schlägt alles mit `Access denied for root` fehl.
+    Vorlage: `DATABASE_URL=mysql+aiomysql://kaitix:kaitix@127.0.0.1:3306/kaitix`
 
 ---
 
@@ -409,7 +430,7 @@ Server PSU1 + PSU2 (devices, psu_count=2, psu_nennwatt)
 
 - **Kein Auth** — internes Tool, kein Login, keine Rollen
 - **Kein JWT, kein LDAP, keine Sessions**
-- **CORS** — nur localhost:5175 erlaubt (kein wildcard *)
+- **CORS** — localhost:5175/5176/5177 + LAN-IP erlaubt (in `ALLOWED_ORIGINS` in `.env`)
 - **.env in .gitignore** — Secrets nie ins Git
 - **Audit-Log** — geaendert_von (Freitext) + geaendert_am Timestamp
 - **Username** — Freitext im Frontend, in localStorage gespeichert
@@ -426,10 +447,21 @@ Server PSU1 + PSU2 (devices, psu_count=2, psu_nennwatt)
 
 ```
 PROJEKT: KAiTix — ~/Projekte/aktiv/KAiTix
-STACK: FastAPI + SQLAlchemy 2.x sync + Svelte 5 + MySQL
+STACK: FastAPI + SQLAlchemy 2.x async + aiomysql + Svelte 5 (kein TypeScript) + MySQL (DB: kaitix)
 LIES ZUERST: ~/Projekte/aktiv/KAiTix/AGENT.md
 DANN ERST: Aufgabe umsetzen — kein anderer Kontext gilt.
 ```
+
+### Neue Module (Stand 2026-05-25)
+
+| Route / Prefix         | Datei(en)                                          | Beschreibung                          |
+|------------------------|----------------------------------------------------|---------------------------------------|
+| `/api/v1/virtual-machines` | `app/domains/hardware/routers/virtual_machines.py` | VM-Dokumentation CRUD                 |
+| `/api/v1/runbooks`     | `app/domains/runbooks/router.py`                   | Runbook + Layer + Device CRUD         |
+| `/api/v1/executions`   | `app/domains/runbooks/router.py`                   | Ausführungen + Step-Check             |
+| Frontend `/virtual-machines` | `frontend/src/routes/virtual-machines/+page.svelte` | VM-Übersicht + Modal               |
+| Frontend `/runbook`    | `frontend/src/routes/runbook/+page.svelte`         | Runbook-Liste + Neu-Anlegen           |
+| Frontend `/runbook/[id]` | `frontend/src/routes/runbook/[id]/+page.svelte`  | Runbook-Detailansicht (Layers/Steps)  |
 
 ---
 
