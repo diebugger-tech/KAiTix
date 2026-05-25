@@ -2,7 +2,7 @@
 
 ## ⚠️ WICHTIGSTE REGEL — Gilt für alle KI-Agenten
 
-KAiTix ist ein reines Dokumentations-Tool.
+KAiTix ist ein reines Dokumentations- und Berechnungs-Tool.
 
 VERBOTEN:
 - Kein Live-Monitoring
@@ -11,16 +11,23 @@ VERBOTEN:
 - Keine externen API-Calls zur Laufzeit
 - Keine PDU/Kentix API-Calls
 - Keine automatischen Aktionen
+- Kein automatisches Schalten von Hardware
 
-ERLAUBT:
-- Daten aus MySQL lesen/schreiben
-- Manuelle Eingaben durch Techniker
-- Info-Anzeige aus dokumentierten DB-Daten
+ERLAUBT — Berechnungen aus DB-Daten:
+- USV-Auslegung: Berechnung aus dokumentierten TDP-Werten
+- Phasen-Simulation: L1/L2/L3 Lastverteilung berechnen
+- USV N+1 Kaltstart-Simulation: mathematisch aus Modulen
+- Rack-Belegung: HE-Berechnung aus dokumentierten Geräten
+- Kabellisten, Topologie: aus DB lesen/anzeigen
 - PDU-Outlet als Info-Text (aus DB, kein API-Call)
-- Ausführungs-Status manuell setzen
+- Ausführungs-Status manuell durch Techniker setzen
+- Runbook-Checkliste: manuell abhaken
 
-Jede neue Funktion die Live-Daten, Polling oder 
-externe API-Calls einbaut ist ein Bug — sofort entfernen.
+FAUSTREGEL:
+Kommt der Wert aus der MySQL-DB → erlaubt.
+Kommt der Wert von einem externen Gerät zur Laufzeit → verboten.
+
+Jede neue Funktion die Live-Daten, Polling oder externe API-Calls einbaut ist ein Bug — sofort entfernen.
 
 ---
 
