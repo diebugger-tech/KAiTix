@@ -1,4 +1,29 @@
 # AGENT.md — KAiTix
+
+## ⚠️ WICHTIGSTE REGEL — Gilt für alle KI-Agenten
+
+KAiTix ist ein reines Dokumentations-Tool.
+
+VERBOTEN:
+- Kein Live-Monitoring
+- Keine Echtzeit-Daten
+- Keine WebSockets / Polling-Loops
+- Keine externen API-Calls zur Laufzeit
+- Keine PDU/Kentix API-Calls
+- Keine automatischen Aktionen
+
+ERLAUBT:
+- Daten aus MySQL lesen/schreiben
+- Manuelle Eingaben durch Techniker
+- Info-Anzeige aus dokumentierten DB-Daten
+- PDU-Outlet als Info-Text (aus DB, kein API-Call)
+- Ausführungs-Status manuell setzen
+
+Jede neue Funktion die Live-Daten, Polling oder 
+externe API-Calls einbaut ist ein Bug — sofort entfernen.
+
+---
+
 Letzte Aktualisierung: 2026-05-25
 
 ---
