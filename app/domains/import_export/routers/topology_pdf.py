@@ -7,7 +7,7 @@ from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.domains.cabling.services.topology_loader import load_topology, build_edges, build_racks_out
+from app.domains.cabling.services import CablingService
 from app.domains.import_export.services.topology_pdf import generate_topology_pdf
 
 logger = logging.getLogger(__name__)
@@ -22,7 +22,8 @@ def remove_file(path: str):
 
 
 async def _build_pdf_data(db: AsyncSession) -> dict:
-    raw = await load_topology(db)
+    service = CablingService(db)
+    raw = await service.load_topology()
 
     devices = [
         {
@@ -43,7 +44,7 @@ async def _build_pdf_data(db: AsyncSession) -> dict:
         for dev in raw.devices
     ]
 
-    return {"racks": build_racks_out(raw), "devices": devices, "edges": build_edges(raw)}
+    return {"racks": CablingService.build_racks_out(raw), "devices": devices, "edges": CablingService.build_edges(raw)}
 
 
 @router.get("/pdf")

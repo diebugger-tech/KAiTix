@@ -10,12 +10,12 @@ from app.api.deps import get_username
 
 from app.models import Device as DeviceModel, Rack as RackModel, PduOutlet
 from app.domains.hardware.models import DeviceDependency
-from app.schemas import (
+from app.domains.hardware.schemas import (
     Device,
     DeviceCreate,
     DeviceUpdate,
-    InterfaceBody,
 )
+from app.domains.cabling.schemas import InterfaceBody
 
 router = APIRouter()
 

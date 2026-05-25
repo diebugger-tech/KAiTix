@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { page } from '$app/state';
   import { api, type Runbook, type RunbookLayer, type RunbookDevice, type Device, type VirtualMachine, type RunbookExecution } from '$lib/api';
-  import { BookOpen, Layers, Monitor, Server, Plus, ArrowLeft, Trash2, ArrowUp, ArrowDown, Play, CheckCircle2, Copy, FileText, Clock, User, XCircle, AlertCircle, Edit } from '@lucide/svelte';
+  import { BookOpen, Layers, Monitor, Server, Plus, ArrowLeft, Trash2, ArrowUp, ArrowDown, Play, CheckCircle2, Copy, FileText, Clock, User, XCircle, AlertCircle, Edit, Download } from '@lucide/svelte';
   import { goto } from '$app/navigation';
 
   let runbookId = parseInt(page.params.id);
@@ -330,6 +330,10 @@
     window.open(`/api/v1/runbooks/${runbookId}/export/markdown`, '_blank');
   }
 
+  function exportPdf() {
+    window.open(`/api/v1/runbooks/${runbookId}/export/pdf`, '_blank');
+  }
+
   // --- DRAG & DROP FUNCTIONS ---
 
   function handleDragStartResource(e: DragEvent, type: 'vm' | 'device', id: number, name: string) {
@@ -522,6 +526,10 @@
         <button onclick={exportMarkdown} class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-medium transition">
           <FileText class="w-3.5 h-3.5" />
           MD Export
+        </button>
+        <button onclick={exportPdf} class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-medium transition">
+          <Download class="w-3.5 h-3.5" />
+          PDF Export
         </button>
       </div>
     </div>

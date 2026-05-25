@@ -7,7 +7,7 @@ from sqlalchemy.orm import selectinload
 from app.core.database import get_db
 from app.api.deps import get_username
 from app.models import Device as DeviceModel, PduOutlet as PduOutletModel
-from app.schemas import (
+from app.domains.hardware.schemas import (
     Device,
     DeviceCreate,
     DeviceUpdate,

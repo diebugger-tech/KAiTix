@@ -116,3 +116,148 @@ class RunbookService:
                     lines.append(f"      _Notiz: {dev.note}_")
 
         return "\n".join(lines)
+
+    async def export_pdf(self, id: int) -> bytes:
+        result = await self.db.execute(
+            select(RunbookModel)
+            .where(RunbookModel.id == id)
+            .options(
+                selectinload(RunbookModel.layers).selectinload(RunbookLayerModel.devices).selectinload(RunbookDeviceModel.device),
+                selectinload(RunbookModel.layers).selectinload(RunbookLayerModel.devices).selectinload(RunbookDeviceModel.vm),
+            )
+        )
+        runbook = result.scalar_one_or_none()
+        if not runbook:
+            raise HTTPException(status_code=404, detail="Runbook not found")
+
+        from io import BytesIO
+        from reportlab.lib.pagesizes import A4
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib import colors
+
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=40, leftMargin=40, topMargin=40, bottomMargin=40)
+        story = []
+
+        styles = getSampleStyleSheet()
+        
+        # Custom Typography Styles
+        title_style = ParagraphStyle(
+            'RunbookTitle',
+            parent=styles['Heading1'],
+            fontSize=20,
+            leading=24,
+            textColor=colors.HexColor('#0f172a'),
+            spaceAfter=10
+        )
+        meta_style = ParagraphStyle(
+            'RunbookMeta',
+            parent=styles['Normal'],
+            fontSize=9.5,
+            leading=13,
+            textColor=colors.HexColor('#475569'),
+            spaceAfter=15
+        )
+        layer_style = ParagraphStyle(
+            'RunbookLayer',
+            parent=styles['Heading2'],
+            fontSize=13,
+            leading=17,
+            textColor=colors.HexColor('#1e3a8a'),
+            spaceBefore=12,
+            spaceAfter=6
+        )
+        item_style = ParagraphStyle(
+            'RunbookItem',
+            parent=styles['Normal'],
+            fontSize=10,
+            leading=14,
+            textColor=colors.HexColor('#1e293b')
+        )
+        note_style = ParagraphStyle(
+            'RunbookNote',
+            parent=styles['Normal'],
+            fontSize=9,
+            leading=12,
+            textColor=colors.HexColor('#64748b'),
+            leftIndent=20
+        )
+
+        story.append(Paragraph(f"Runbook: {runbook.name}", title_style))
+        
+        typ_str = "Shutdown" if runbook.typ == "shutdown" else "Startup" if runbook.typ == "startup" else runbook.typ.capitalize()
+        erstellt_am_str = runbook.erstellt_am.strftime('%Y-%m-%d %H:%M')
+        story.append(Paragraph(f"<b>Typ:</b> {typ_str} | <b>Erstellt:</b> {erstellt_am_str} | <b>Erstellt von:</b> {runbook.erstellt_von or 'System'}", meta_style))
+        
+        if runbook.beschreibung:
+            desc_style = ParagraphStyle(
+                'RunbookDesc',
+                parent=styles['Normal'],
+                fontSize=10.5,
+                leading=14,
+                textColor=colors.HexColor('#334155'),
+                spaceAfter=15
+            )
+            story.append(Paragraph(runbook.beschreibung, desc_style))
+            
+        story.append(Spacer(1, 10))
+        
+        sorted_layers = sorted(runbook.layers, key=lambda x: x.position)
+        for layer in sorted_layers:
+            story.append(Paragraph(f"Ebene {layer.position}: {layer.name}", layer_style))
+            if layer.markdown_note:
+                layer_note_style = ParagraphStyle(
+                    'LayerNote',
+                    parent=styles['Normal'],
+                    fontSize=9,
+                    leading=12,
+                    textColor=colors.HexColor('#475569'),
+                    backColor=colors.HexColor('#f1f5f9'),
+                    borderColor=colors.HexColor('#cbd5e1'),
+                    borderWidth=0.5,
+                    borderPadding=6,
+                    spaceAfter=8,
+                    borderRadius=4
+                )
+                story.append(Paragraph(layer.markdown_note, layer_note_style))
+            
+            sorted_devices = sorted(layer.devices, key=lambda x: x.position)
+            
+            # Draw checklist table
+            table_data = []
+            for dev in sorted_devices:
+                ident = dev.freitext or (dev.vm.name if dev.vm else (dev.device.hostname if dev.device else "Unknown"))
+                resp_str = f" ({dev.responsible})" if dev.responsible else ""
+                delay_str = f"{dev.delay_seconds}s"
+                
+                checkbox_html = "<b>[  ]</b>"
+                info_html = f"<b>{ident}</b> ({delay_str}){resp_str}"
+                
+                row = [
+                    Paragraph(checkbox_html, item_style),
+                    Paragraph(info_html, item_style)
+                ]
+                table_data.append(row)
+                
+                if dev.note:
+                    note_html = f"<i>Notiz: {dev.note}</i>"
+                    table_data.append([Paragraph("", item_style), Paragraph(note_html, note_style)])
+            
+            if table_data:
+                t = Table(table_data, colWidths=[24, 476])
+                t.setStyle(TableStyle([
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+                    ('TOPPADDING', (0, 0), (-1, -1), 3),
+                ]))
+                story.append(t)
+            else:
+                empty_style = ParagraphStyle('Empty', parent=styles['Normal'], fontSize=9.5, textColor=colors.HexColor('#94a3b8'), leftIndent=20)
+                story.append(Paragraph("Keine Geräte in dieser Ebene.", empty_style))
+                
+            story.append(Spacer(1, 10))
+
+        doc.build(story)
+        buffer.seek(0)
+        return buffer.getvalue()

@@ -98,3 +98,59 @@ async def test_runbook_execution_and_username_audit(client: AsyncClient, db: Asy
     assert response.status_code == 200
     assert response.json()["status"] == "verworfen"
     assert response.json()["note"] == "Abbruchgrund"
+
+
+@pytest.mark.asyncio
+async def test_runbook_pdf_export(client: AsyncClient, db: AsyncSession):
+    # 1. Create a Runbook
+    rb_payload = {
+        "name": "PDF Test Runbook",
+        "typ": "shutdown",
+        "beschreibung": "Test runbook for PDF export"
+    }
+    response = await client.post("/api/v1/runbooks/", json=rb_payload)
+    assert response.status_code == 201
+    rb_id = response.json()["id"]
+
+    # 2. Add a Layer
+    layer_payload = {
+        "name": "App Tier",
+        "position": 1
+    }
+    response = await client.post(f"/api/v1/runbooks/{rb_id}/layers", json=layer_payload)
+    assert response.status_code == 201
+
+    # 3. Export to PDF
+    response = await client.get(f"/api/v1/runbooks/{rb_id}/export/pdf")
+    assert response.status_code == 200
+    assert "application/pdf" in response.headers["content-type"]
+    assert response.headers["content-disposition"] == f"attachment; filename=runbook-{rb_id}.pdf"
+    assert len(response.content) > 0
+
+
+@pytest.mark.asyncio
+async def test_usv_phase_balancing(client: AsyncClient, db: AsyncSession):
+    from app.models import Device, Rack
+    
+    # 1. Create a Rack
+    rack = Rack(name="Test Rack Phase Balance", standort="RZ-A1")
+    db.add(rack)
+    await db.flush()
+
+    # 2. Seed some devices on L1, L2, L3 with different loads
+    dev1 = Device(hostname="Server L1-1", typ="server", rack_id=rack.id, phase="L1", tdp_watt=1000)
+    dev2 = Device(hostname="Server L1-2", typ="server", rack_id=rack.id, phase="L1", tdp_watt=2000)
+    dev3 = Device(hostname="Server L2-1", typ="server", rack_id=rack.id, phase="L2", tdp_watt=500)
+    db.add_all([dev1, dev2, dev3])
+    await db.commit()
+
+    # 3. Call phase-balancing endpoint
+    response = await client.get(f"/api/v1/usv/racks/{rack.id}/phase-balancing")
+    assert response.status_code == 200
+    data = response.json()
+    assert "initial_imbalance_pct" in data
+    assert "final_imbalance_pct" in data
+    assert "recommendations" in data
+    assert len(data["recommendations"]) > 0
+    assert data["recommendations"][0]["from_phase"] == "L1"
+    assert data["recommendations"][0]["to_phase"] == "L3"

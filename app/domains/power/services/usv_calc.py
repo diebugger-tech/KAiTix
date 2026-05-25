@@ -988,3 +988,127 @@ class ShutdownSimulationEngine:
             "timeline": timeline,
             "device_statuses": list(device_statuses.values()),
         }
+
+
+class PhaseBalancer:
+    @staticmethod
+    def _device_effective_watt(dev) -> float:
+        if dev.psu_nennwatt is not None:
+            last_pct = float(dev.last_pct or 60.0)
+            return float(dev.psu_nennwatt) * last_pct / 100.0
+        if dev.tdp_watt is not None:
+            return float(dev.tdp_watt)
+        if dev.anschlussleistung_watt is not None:
+            return float(dev.anschlussleistung_watt)
+        return 0.0
+
+    @classmethod
+    def calculate_balancing(cls, devices: list) -> dict:
+        """
+        Calculates recommendations to balance phases (L1, L2, L3) to at most 10% imbalance.
+        devices is a list of Device objects from SQLAlchemy.
+        """
+        device_list = []
+        for dev in devices:
+            if dev.typ in ["pdu", "usv"]:
+                continue
+            phase = dev.phase or "L1"
+            watt = cls._device_effective_watt(dev)
+            device_list.append({
+                "id": dev.id,
+                "hostname": dev.hostname,
+                "phase": phase,
+                "watt": watt
+            })
+
+        current_phases = {d["id"]: d["phase"] for d in device_list}
+        device_watts = {d["id"]: d["watt"] for d in device_list}
+        device_hostnames = {d["id"]: d["hostname"] for d in device_list}
+
+        def _get_imbalance(loads: dict[str, float]) -> float:
+            vals = list(loads.values())
+            mx = max(vals)
+            mn = min(vals)
+            return (mx - mn) / mx if mx > 0 else 0.0
+
+        def _get_loads(phases_map: dict[int, str]) -> dict[str, float]:
+            loads_map = {"L1": 0.0, "L2": 0.0, "L3": 0.0}
+            for d_id, p in phases_map.items():
+                if p in loads_map:
+                    loads_map[p] += device_watts[d_id]
+            return loads_map
+
+        initial_loads = _get_loads(current_phases)
+        initial_imbalance = _get_imbalance(initial_loads)
+
+        recommendations = []
+        phases = dict(current_phases)
+        loads = dict(initial_loads)
+
+        # Allow up to 5 moves to balance
+        max_moves = 5
+        for _ in range(max_moves):
+            current_imbalance = _get_imbalance(loads)
+            if current_imbalance <= 0.10:
+                break
+
+            # Find max and min phases
+            sorted_phases = sorted(loads.items(), key=lambda x: x[1])
+            min_p_name = sorted_phases[0][0]
+            max_p_name = sorted_phases[-1][0]
+
+            # Find a device on max phase that, when moved to min phase, minimizes the new imbalance
+            best_device_id = None
+            best_new_imbalance = current_imbalance
+            best_to_phase = None
+
+            for d_id, current_p in phases.items():
+                if current_p != max_p_name:
+                    continue
+                w = device_watts[d_id]
+                if w <= 0:
+                    continue
+
+                # Simulate moving d_id from max_p_name to min_p_name
+                sim_loads = dict(loads)
+                sim_loads[max_p_name] -= w
+                sim_loads[min_p_name] += w
+
+                sim_imbalance = _get_imbalance(sim_loads)
+                if sim_imbalance < best_new_imbalance:
+                    best_new_imbalance = sim_imbalance
+                    best_device_id = d_id
+                    best_to_phase = min_p_name
+
+            if best_device_id is not None and best_new_imbalance < current_imbalance:
+                # Apply move
+                from_p = phases[best_device_id]
+                phases[best_device_id] = best_to_phase
+                loads[from_p] -= device_watts[best_device_id]
+                loads[best_to_phase] += device_watts[best_device_id]
+                recommendations.append({
+                    "device_id": best_device_id,
+                    "hostname": device_hostnames[best_device_id],
+                    "from_phase": from_p,
+                    "to_phase": best_to_phase,
+                    "load_watt": float(round(device_watts[best_device_id], 2))
+                })
+            else:
+                # No move can improve the imbalance, stop searching
+                break
+
+            # Check if we reached target
+            if _get_imbalance(loads) <= 0.10:
+                break
+
+        final_loads = _get_loads(phases)
+        final_imbalance = _get_imbalance(final_loads)
+
+        return {
+            "initial_imbalance_pct": float(round(initial_imbalance * 100, 2)),
+            "initial_loads": {k: float(round(v, 2)) for k, v in initial_loads.items()},
+            "final_imbalance_pct": float(round(final_imbalance * 100, 2)),
+            "final_loads": {k: float(round(v, 2)) for k, v in final_loads.items()},
+            "balanced": final_imbalance <= 0.10,
+            "recommendations": recommendations
+        }

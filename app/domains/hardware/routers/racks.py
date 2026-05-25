@@ -7,7 +7,7 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import IntegrityError
 from app.core.database import get_db
 from app.models import Rack as RackModel
-from app.schemas import Rack, RackCreate, RackUpdate
+from app.domains.hardware.schemas import Rack, RackCreate, RackUpdate
 from app.api.deps import get_username
 
 router = APIRouter()

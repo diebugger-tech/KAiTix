@@ -256,7 +256,7 @@
             <text x="155" y="34" font-size="10" fill="#0f172a">EN 61082-1</text>
             
             <text x="5" y="55" font-size="11" fill="#64748b">Projektbezeichnung:</text>
-            <text x="5" y="72" font-size="16" fill="#0f172a" font-weight="bold">KAiTix ServerFlow</text>
+            <text x="5" y="72" font-size="16" fill="#0f172a" font-weight="bold">KAiTix</text>
 
             <text x="5" y="94" font-size="11" fill="#0f172a">Anlage: USV-Einspeisung RZ</text>
             <text x="205" y="94" font-size="10" fill="#64748b">Blatt:</text>
@@ -594,7 +594,7 @@
             <text x="105" y="34" font-size="9" fill="#64748b">Norm</text><text x="155" y="34" font-size="10" fill="#0f172a">EN 61082-1</text>
             
             <text x="5" y="55" font-size="11" fill="#64748b">Projektbezeichnung:</text>
-            <text x="5" y="72" font-size="16" fill="#0f172a" font-weight="bold">KAiTix ServerFlow</text>
+            <text x="5" y="72" font-size="16" fill="#0f172a" font-weight="bold">KAiTix</text>
             <text x="5" y="94" font-size="11" fill="#0f172a">Anlage: UV-USV-01 (Verteilung)</text>
             <text x="205" y="94" font-size="10" fill="#64748b">Blatt:</text><text x="235" y="94" font-size="11" fill="#0f172a" font-weight="bold">2</text>
             <text x="255" y="94" font-size="10" fill="#64748b">V.Bl.:</text><text x="285" y="94" font-size="11" fill="#0f172a">1</text>

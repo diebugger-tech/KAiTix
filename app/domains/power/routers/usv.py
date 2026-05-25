@@ -14,7 +14,7 @@ from app.models import (
     UsvModule as UsvModuleModel,
     UsvSimulationEvent,
 )
-from app.schemas import (
+from app.domains.power.schemas import (
     UsvUnit,
     UsvUnitCreate,
     UsvModule,
@@ -27,6 +27,7 @@ from app.domains.power.services.usv_calc import (
     FaultSimulationEngine,
     BatteryCabinetEngine,
     ShutdownSimulationEngine,
+    PhaseBalancer,
 )
 
 router = APIRouter()
@@ -384,3 +385,20 @@ async def simulate_shutdown(
     )
 
     return sim_result
+
+
+@router.get("/racks/{rack_id}/phase-balancing")
+async def get_phase_balancing(rack_id: int, db: AsyncSession = Depends(get_db)):
+    """
+    Suggests phase reassignments (L1, L2, L3) to balance load for a given rack (target <= 10% imbalance).
+    """
+    result = await db.execute(
+        select(DeviceModel).where(DeviceModel.rack_id == rack_id)
+    )
+    devices = result.scalars().all()
+    if not devices:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No devices found in rack {rack_id}",
+        )
+    return PhaseBalancer.calculate_balancing(devices)

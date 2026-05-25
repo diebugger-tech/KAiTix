@@ -90,6 +90,19 @@ virtuelle Maschinen und Shutdown/Startup-Runbooks.
 - Notizen auf 3 Ebenen: pro Layer, pro Gerät, pro Ausführungsschritt
 - Ausführungs-Protokoll: `runbook_executions` + `runbook_execution_steps`
 
+### Authentifizierung
+- Bewusst KEIN Auth-System — Intranet-only
+- Mitarbeitername wird im Frontend einfach eingetippt
+- X-Username Header = Freitext, keine Verifikation — so gewollt
+- Kein SSO, kein JWT, kein OAuth — nicht implementieren
+- Default DB-Credentials admin/root sind für Doku-Tool akzeptabel
+
+### Netzwerk & Middleware
+- Kein Rate-Limiting — Intranet-only, kein öffentliches API
+- Keine IP-Logging Middleware
+- Keine externen Netzwerk-Calls aus dem Backend
+- KAiTix kommuniziert nur mit den lokalen DBs
+
 ---
 
 ## Implementierte Features (diese Session)

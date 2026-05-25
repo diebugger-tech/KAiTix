@@ -89,7 +89,7 @@
 </script>
 
 <svelte:head>
-  <title>KAiTix - ServerFlow Dashboard</title>
+  <title>KAiTix Dashboard</title>
   <meta name="description" content="Übersicht über die Server- und Strominfrastruktur im Rechenzentrum" />
 </svelte:head>
 

@@ -317,9 +317,14 @@ async def export_markdown(id: int, db: AsyncSession = Depends(get_db)):
     return PlainTextResponse(content, media_type="text/markdown")
 
 @router.get("/{id}/export/pdf")
-async def export_pdf(id: int):
-    # Dummy endpoint for PDF
-    return {"message": "PDF export not implemented in python backend yet, normally done via frontend print"}
+async def export_pdf(id: int, db: AsyncSession = Depends(get_db)):
+    service = RunbookService(db)
+    pdf_content = await service.export_pdf(id)
+    return Response(
+        content=pdf_content,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=runbook-{id}.pdf"}
+    )
 
 @router.get("/{id}/executions", response_model=List[RunbookExecution])
 async def get_runbook_executions(id: int, db: AsyncSession = Depends(get_db)):
