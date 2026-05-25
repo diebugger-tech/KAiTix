@@ -84,6 +84,7 @@ class Device(Base):
     u_position: Mapped[Optional[int]] = mapped_column(Integer)
     u_hoehe: Mapped[int] = mapped_column(Integer, default=1)
     side: Mapped[Optional[str]] = mapped_column(Enum("left", "right"), nullable=True)
+    subnet_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("subnets.id", ondelete="SET NULL"), nullable=True)
 
     phase: Mapped[Optional[str]] = mapped_column(Enum("L1", "L2", "L3"))
     tdp_watt: Mapped[Optional[float]] = mapped_column(
@@ -236,6 +237,7 @@ class VirtualMachine(Base):
     )
     shutdown_priority: Mapped[Optional[int]] = mapped_column(Integer, default=5)
     responsible: Mapped[Optional[str]] = mapped_column(String(100))
+    subnet_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("subnets.id", ondelete="SET NULL"), nullable=True)
     bemerkung: Mapped[Optional[str]] = mapped_column(String(1000))
 
     # Relationships

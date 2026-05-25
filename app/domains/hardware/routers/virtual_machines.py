@@ -9,6 +9,7 @@ from app.domains.hardware.schemas import (
     VirtualMachineCreate,
     VirtualMachineUpdate,
 )
+from app.domains.network.services.ipam_service import validate_and_check_ip
 
 router = APIRouter()
 
@@ -24,6 +25,11 @@ async def create_virtual_machine(vm_in: VirtualMachineCreate, db: AsyncSession =
     db_vm = VirtualMachineModel(**vm_in.model_dump())
     if db_vm.host_device_id is None:
         raise HTTPException(status_code=422, detail="host_device_id is required")
+        
+    # IP Validation
+    if db_vm.ip_adresse:
+        db_vm.ip_adresse = await validate_and_check_ip(db, db_vm.ip_adresse)
+
     db.add(db_vm)
     await db.commit()
     await db.refresh(db_vm)
@@ -56,6 +62,10 @@ async def update_virtual_machine(
         
     for field, value in update_data.items():
         setattr(vm, field, value)
+
+    # IP Validation
+    if vm.ip_adresse:
+        vm.ip_adresse = await validate_and_check_ip(db, vm.ip_adresse, exclude_vm_id=vm.id)
 
     # Simple circular dependency check
     if vm.depends_on_vm_id == vm.id:

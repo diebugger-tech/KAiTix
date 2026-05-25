@@ -13,6 +13,8 @@ from app.domains.runbooks.models import (
 ServerInterface = Interface
 DevicePort = Interface
 
+from app.domains.network.models import Vlan, Subnet
+
 __all__ = [
     "Rack",
     "Device",
@@ -31,5 +33,6 @@ __all__ = [
     "RunbookDevice",
     "RunbookExecution",
     "RunbookExecutionStep",
+    "Vlan",
+    "Subnet",
 ]
-

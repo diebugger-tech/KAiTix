@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 from sqlalchemy import select
 from app.core.database import AsyncSessionLocal, engine, Base
 from app.domains.hardware.models import Rack, Device, PduOutlet, VirtualMachine
+from app.domains.network.models import Vlan, Subnet
 from app.domains.cabling.models import Cable, CableStrand, Interface
 from app.domains.power.models import UsvUnit, UsvModule, UsvSimulationEvent
 from app.domains.runbooks.models import Runbook, RunbookLayer, RunbookDevice
@@ -95,12 +96,25 @@ async def main():
         db.add(sim_event)
         await db.flush()
 
+        # 3.5 IPAM (VLANs & Subnets)
+        vlan_mgmt = Vlan(vlan_id=10, name="Management")
+        vlan_app = Vlan(vlan_id=20, name="Applications")
+        vlan_db = Vlan(vlan_id=30, name="Database")
+        db.add_all([vlan_mgmt, vlan_app, vlan_db])
+        await db.flush()
+
+        subnet_mgmt = Subnet(network="192.168.10.0/24", gateway="192.168.10.1", vlan_id=vlan_mgmt.id)
+        subnet_app = Subnet(network="10.0.1.0/24", gateway="10.0.1.1", vlan_id=vlan_app.id)
+        subnet_db = Subnet(network="10.0.2.0/24", gateway="10.0.2.1", vlan_id=vlan_db.id)
+        db.add_all([subnet_mgmt, subnet_app, subnet_db])
+        await db.flush()
+
         # 4. Networking Devices (RACK-NET-01)
-        fw1 = Device(hostname="fw-core-01", typ="firewall", hersteller="Fortinet", modell="FortiGate 100F", rack_id=rack_netzwerk.id, u_position=40, u_hoehe=1, tdp_watt=120, phase="L1")
-        sw_core1 = Device(hostname="sw-core-01", typ="switch", hersteller="Cisco", modell="Nexus 93180", rack_id=rack_netzwerk.id, u_position=38, u_hoehe=1, tdp_watt=400, phase="L2")
-        sw_core2 = Device(hostname="sw-core-02", typ="switch", hersteller="Cisco", modell="Nexus 93180", rack_id=rack_netzwerk.id, u_position=36, u_hoehe=1, tdp_watt=400, phase="L3")
-        lb_main = Device(hostname="lb-ext-01", typ="sonstige", hersteller="F5", modell="BIG-IP i2000", rack_id=rack_netzwerk.id, u_position=34, u_hoehe=1, tdp_watt=250, phase="L1")
-        sw_mgmt = Device(hostname="sw-mgmt-01", typ="switch", hersteller="Cisco", modell="Catalyst 9200", rack_id=rack_netzwerk.id, u_position=32, u_hoehe=1, tdp_watt=150, phase="L2")
+        fw1 = Device(hostname="fw-core-01", typ="firewall", hersteller="Fortinet", modell="FortiGate 100F", rack_id=rack_netzwerk.id, u_position=40, u_hoehe=1, tdp_watt=120, phase="L1", ip_adresse="192.168.10.254", subnet_id=subnet_mgmt.id)
+        sw_core1 = Device(hostname="sw-core-01", typ="switch", hersteller="Cisco", modell="Nexus 93180", rack_id=rack_netzwerk.id, u_position=38, u_hoehe=1, tdp_watt=400, phase="L2", ip_adresse="192.168.10.2", subnet_id=subnet_mgmt.id)
+        sw_core2 = Device(hostname="sw-core-02", typ="switch", hersteller="Cisco", modell="Nexus 93180", rack_id=rack_netzwerk.id, u_position=36, u_hoehe=1, tdp_watt=400, phase="L3", ip_adresse="192.168.10.3", subnet_id=subnet_mgmt.id)
+        lb_main = Device(hostname="lb-ext-01", typ="sonstige", hersteller="F5", modell="BIG-IP i2000", rack_id=rack_netzwerk.id, u_position=34, u_hoehe=1, tdp_watt=250, phase="L1", ip_adresse="192.168.10.4", subnet_id=subnet_mgmt.id)
+        sw_mgmt = Device(hostname="sw-mgmt-01", typ="switch", hersteller="Cisco", modell="Catalyst 9200", rack_id=rack_netzwerk.id, u_position=32, u_hoehe=1, tdp_watt=150, phase="L2", ip_adresse="192.168.10.5", subnet_id=subnet_mgmt.id)
         
         # Environmental Monitoring (Kentix)
         kentix_raco = Device(hostname="kentix-raco-01", typ="kentix_raconode", hersteller="Kentix", modell="RACOONODE", rack_id=rack_netzwerk.id, u_position=30, u_hoehe=1, tdp_watt=10, phase="L1")
@@ -131,22 +145,22 @@ async def main():
         await db.flush()
 
         # 8. Virtual Machines (Microservice Architecture)
-        vm_db = VirtualMachine(name="vm-pg-cluster", host_device_id=srv_db_master.id, hypervisor_typ="vmware", dienst="PostgreSQL 16", ip_adresse="10.0.1.10", shutdown_priority=1, responsible="DBA")
+        vm_db = VirtualMachine(name="vm-pg-cluster", host_device_id=srv_db_master.id, hypervisor_typ="vmware", dienst="PostgreSQL 16", ip_adresse="10.0.2.10", subnet_id=subnet_db.id, shutdown_priority=1, responsible="DBA")
         db.add(vm_db)
         await db.flush()
         
-        vm_redis = VirtualMachine(name="vm-redis-cache", host_device_id=servers_app[0].id, hypervisor_typ="vmware", dienst="Redis Cluster", ip_adresse="10.0.1.20", shutdown_priority=2, depends_on_vm_id=vm_db.id)
+        vm_redis = VirtualMachine(name="vm-redis-cache", host_device_id=servers_app[0].id, hypervisor_typ="vmware", dienst="Redis Cluster", ip_adresse="10.0.1.20", subnet_id=subnet_app.id, shutdown_priority=2, depends_on_vm_id=vm_db.id)
         db.add(vm_redis)
         await db.flush()
         
-        vm_backend_api = VirtualMachine(name="vm-backend-api", host_device_id=servers_app[1].id, hypervisor_typ="vmware", dienst="FastAPI Core", ip_adresse="10.0.1.30", shutdown_priority=3, depends_on_vm_id=vm_redis.id)
-        vm_backend_worker = VirtualMachine(name="vm-backend-worker", host_device_id=servers_app[2].id, hypervisor_typ="vmware", dienst="Celery Workers", ip_adresse="10.0.1.31", shutdown_priority=4, depends_on_vm_id=vm_redis.id)
+        vm_backend_api = VirtualMachine(name="vm-backend-api", host_device_id=servers_app[1].id, hypervisor_typ="vmware", dienst="FastAPI Core", ip_adresse="10.0.1.30", subnet_id=subnet_app.id, shutdown_priority=3, depends_on_vm_id=vm_redis.id)
+        vm_backend_worker = VirtualMachine(name="vm-backend-worker", host_device_id=servers_app[2].id, hypervisor_typ="vmware", dienst="Celery Workers", ip_adresse="10.0.1.31", subnet_id=subnet_app.id, shutdown_priority=4, depends_on_vm_id=vm_redis.id)
         db.add_all([vm_backend_api, vm_backend_worker])
         await db.flush()
         
-        vm_frontend = VirtualMachine(name="vm-frontend-ssr", host_device_id=servers_app[3].id, hypervisor_typ="vmware", dienst="SvelteKit SSR", ip_adresse="10.0.1.40", shutdown_priority=5, depends_on_vm_id=vm_backend_api.id)
-        vm_nginx = VirtualMachine(name="vm-nginx-ingress", host_device_id=servers_app[4].id, hypervisor_typ="vmware", dienst="NGINX Reverse Proxy", ip_adresse="10.0.1.50", shutdown_priority=6, depends_on_vm_id=vm_frontend.id)
-        vm_monitoring = VirtualMachine(name="vm-monitoring", host_device_id=servers_app[5].id, hypervisor_typ="vmware", dienst="Prometheus+Grafana", ip_adresse="10.0.1.60", shutdown_priority=7, responsible="Ops Team")
+        vm_frontend = VirtualMachine(name="vm-frontend-ssr", host_device_id=servers_app[3].id, hypervisor_typ="vmware", dienst="SvelteKit SSR", ip_adresse="10.0.1.40", subnet_id=subnet_app.id, shutdown_priority=5, depends_on_vm_id=vm_backend_api.id)
+        vm_nginx = VirtualMachine(name="vm-nginx-ingress", host_device_id=servers_app[4].id, hypervisor_typ="vmware", dienst="NGINX Reverse Proxy", ip_adresse="10.0.1.50", subnet_id=subnet_app.id, shutdown_priority=6, depends_on_vm_id=vm_frontend.id)
+        vm_monitoring = VirtualMachine(name="vm-monitoring", host_device_id=servers_app[5].id, hypervisor_typ="vmware", dienst="Prometheus+Grafana", ip_adresse="192.168.10.60", subnet_id=subnet_mgmt.id, shutdown_priority=7, responsible="Ops Team")
         db.add_all([vm_frontend, vm_nginx, vm_monitoring])
         await db.flush()
 

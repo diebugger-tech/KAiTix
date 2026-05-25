@@ -33,3 +33,6 @@ api_router.include_router(topology.router, prefix="/topology", tags=["topology"]
 api_router.include_router(topology_pdf.router, prefix="/topology", tags=["topology"])
 api_router.include_router(search.router, prefix="/search", tags=["search"])
 api_router.include_router(simulation_router, prefix="/simulation", tags=["simulation"])
+
+from app.domains.network.routers import ipam
+api_router.include_router(ipam.router, tags=["network"])
