@@ -51,7 +51,13 @@ Shutdown- und Startup-Sequenzen als Runbooks planen und ausführen:
 Kabelliste mit Typ, Länge, Farbe und Quelle/Ziel. EPLAN CSV-Import mit Live-Vorschau. Export als XLSX, ODS oder CSV.
 
 ### Stromlaufplan & Topologie
-Allpoliger Stromlaufplan (DIN EN 61082-1) als SVG. Topologie-Graph mit Geräten und Kabelverbindungen. **PDF-Export** direkt aus der Oberfläche.
+Allpoliger Stromlaufplan (DIN EN 61082-1) als SVG. Topologie-Graph mit Geräten und Kabelverbindungen (filterbar nach **Standort** und Kabeltyp). **PDF-Export** direkt aus der Oberfläche.
+
+### Predictive Analytics: Blast Radius (Ausfall-Simulation)
+Simuliere den Ausfall von Core-Switches oder PDUs und berechne kaskadierende Effekte:
+- **Redundanz-Check:** Welche Server werden isoliert (Netzwerk) oder stromlos?
+- **VM-Kaskaden:** Welche VMs stürzen mit ihrem Host ab? Welche abhängigen VMs (z.B. App-Server ohne DB) sind ebenfalls betroffen?
+- **Runbook-Impact:** Welche geplanten Runbooks enthalten betroffene Systeme?
 
 ### USV-Simulation
 N+1 Redundanz-Kalkulation auf Basis dokumentierter Nennleistungen. Phasen-Imbalance-Anzeige (L1/L2/L3). MBS-Bypass-Simulation: welche Server werden bei Phasenausfall stromlos?

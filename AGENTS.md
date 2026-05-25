@@ -83,6 +83,7 @@ Vor jedem Agenten-Task:
 ❌ make install außerhalb nix-shell aufrufen
 ❌ Bestehende Migrations-Dateien ändern (Alembic: einmal generiert = immutable)
 ❌ Frontend-Dateien direkt auf Prod deployen ohne Build-Check
+❌ Bilder bleiben unangetastet auf GitHub (Agenten dürfen keine existierenden Bilder/Screenshots in `docs/screenshots/` modifizieren oder löschen)
 ❌ `git reset --hard` ohne vorheriges Backup
 ❌ Große Binary-Dateien (>1MB) ins Repo committen
 ❌ .env oder .key-Dateien committen
