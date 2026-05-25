@@ -69,6 +69,22 @@ class PduOutlet(PduOutletBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+# === DEVICE DEPENDENCY SCHEMAS ===
+class DeviceDependencyBase(BaseModel):
+    device_id: int
+    depends_on_device_id: int
+    dependency_type: Optional[str] = "service"
+    dependency_group: Optional[str] = None
+
+
+class DeviceDependencyCreate(DeviceDependencyBase):
+    pass
+
+
+class DeviceDependency(DeviceDependencyBase):
+    model_config = ConfigDict(from_attributes=True)
+
+
 # === DEVICE SCHEMAS ===
 class DeviceBase(BaseModel):
     typ: str
@@ -86,10 +102,12 @@ class DeviceBase(BaseModel):
     tdp_watt: Optional[Decimal] = Field(None, ge=0)
     psu_count: Optional[int] = Field(None, ge=0)
     psu_nennwatt: Optional[Decimal] = Field(None, ge=0)
+    last_pct: Optional[Decimal] = Field(Decimal("60.0"), ge=0, le=100)
     anschlussleistung_watt: Optional[Decimal] = Field(None, ge=0)
     einschaltstrom_faktor: Optional[Decimal] = Field(Decimal("2.5"), ge=0)
     shutdown_delay_seconds: Optional[int] = Field(0, ge=0)
     shutdown_priority: Optional[int] = Field(2, ge=1, le=4)
+    shutdown_method: Optional[str] = "ACPI_Graceful"
     bemerkung: Optional[str] = None
     strom_typ: Optional[str] = None
     spannung_v: Optional[int] = Field(None, ge=0)
@@ -117,10 +135,12 @@ class DeviceUpdate(BaseModel):
     tdp_watt: Optional[Decimal] = Field(None, ge=0)
     psu_count: Optional[int] = Field(None, ge=0)
     psu_nennwatt: Optional[Decimal] = Field(None, ge=0)
+    last_pct: Optional[Decimal] = Field(None, ge=0, le=100)
     anschlussleistung_watt: Optional[Decimal] = Field(None, ge=0)
     einschaltstrom_faktor: Optional[Decimal] = Field(None, ge=0)
     shutdown_delay_seconds: Optional[int] = Field(None, ge=0)
     shutdown_priority: Optional[int] = Field(None, ge=1, le=4)
+    shutdown_method: Optional[str] = None
     bemerkung: Optional[str] = None
     strom_typ: Optional[str] = None
     spannung_v: Optional[int] = Field(None, ge=0)
@@ -132,7 +152,43 @@ class Device(DeviceBase):
     id: int
     pdu_outlets: List[PduOutlet] = []
     connected_pdu_outlets: List[PduOutlet] = []
+    dependencies: List[DeviceDependency] = []
     # Note: interfaces relationship is in the cabling domain
     geaendert_von: Optional[str] = None
     geaendert_am: Optional[datetime] = None
     model_config = ConfigDict(from_attributes=True)
+
+# === VIRTUAL MACHINE SCHEMAS ===
+class VirtualMachineBase(BaseModel):
+    name: str
+    host_device_id: Optional[int] = None
+    hypervisor_typ: Optional[str] = None
+    vm_id_extern: Optional[str] = None
+    betriebssystem: Optional[str] = None
+    dienst: Optional[str] = None
+    ip_adresse: Optional[str] = None
+    depends_on_vm_id: Optional[int] = None
+    shutdown_priority: Optional[int] = Field(5, ge=1)
+    responsible: Optional[str] = None
+    bemerkung: Optional[str] = None
+
+class VirtualMachineCreate(VirtualMachineBase):
+    pass
+
+class VirtualMachineUpdate(BaseModel):
+    name: Optional[str] = None
+    host_device_id: Optional[int] = None
+    hypervisor_typ: Optional[str] = None
+    vm_id_extern: Optional[str] = None
+    betriebssystem: Optional[str] = None
+    dienst: Optional[str] = None
+    ip_adresse: Optional[str] = None
+    depends_on_vm_id: Optional[int] = None
+    shutdown_priority: Optional[int] = Field(None, ge=1)
+    responsible: Optional[str] = None
+    bemerkung: Optional[str] = None
+
+class VirtualMachine(VirtualMachineBase):
+    id: int
+    model_config = ConfigDict(from_attributes=True)
+

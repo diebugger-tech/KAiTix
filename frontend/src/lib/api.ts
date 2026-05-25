@@ -22,6 +22,7 @@ export interface Device {
   einschaltstrom_faktor?: number;
   shutdown_delay_seconds?: number;
   shutdown_priority?: number;
+  shutdown_method?: string;
   bemerkung?: string;
   strom_typ?: string;
   spannung_v?: number;
@@ -31,6 +32,7 @@ export interface Device {
   pdu_outlets?: PduOutlet[];
   server_interfaces?: any[];
   connected_pdu_outlets?: PduOutlet[];
+  dependencies?: DeviceDependency[];
 }
 
 export interface Rack {
@@ -63,6 +65,13 @@ export interface Cable {
   bemerkung?: string;
   von_device?: { hostname: string };
   nach_device?: { hostname: string };
+}
+
+export interface DeviceDependency {
+  device_id: number;
+  depends_on_device_id: number;
+  dependency_type?: string;
+  dependency_group?: string;
 }
 
 export interface DevicePort {
@@ -271,6 +280,104 @@ export interface ShutdownSimResult {
   device_statuses: ShutdownDeviceStatus[];
 }
 
+export interface SimulationScenario {
+  target_type: string;
+  target_id?: number | null;
+  target_name?: string | null;
+}
+
+export interface AffectedDevice {
+  device_id: number;
+  state: string;
+  reasons: string[];
+}
+
+export interface TimelineEvent {
+  time_seconds: number;
+  device_id: number;
+  action: string;
+  method: string;
+  warning: boolean;
+  message: string;
+}
+
+export interface SimulationResult {
+  affected_devices: AffectedDevice[];
+  shutdown_timeline: TimelineEvent[];
+  boot_timeline: TimelineEvent[];
+  usv_battery_warning: boolean;
+  messages: string[];
+}
+
+export interface VirtualMachine {
+  id: number;
+  name: string;
+  host_device_id?: number | null;
+  hypervisor_typ?: 'vmware' | 'hyper-v' | 'kvm' | 'xcpng' | 'sonstige' | null;
+  vm_id_extern?: string | null;
+  betriebssystem?: string | null;
+  dienst?: string | null;
+  ip_adresse?: string | null;
+  depends_on_vm_id?: number | null;
+  shutdown_priority?: number | null;
+  responsible?: string | null;
+  bemerkung?: string | null;
+}
+
+export interface Runbook {
+  id: number;
+  name: string;
+  typ: 'shutdown' | 'startup' | 'wartung' | 'notfall' | 'custom';
+  beschreibung?: string | null;
+  generated_from_id?: number | null;
+  erstellt_am: string;
+  erstellt_von?: string | null;
+  layers?: RunbookLayer[];
+}
+
+export interface RunbookLayer {
+  id: number;
+  runbook_id: number;
+  position: number;
+  name: string;
+  markdown_note?: string | null;
+  devices?: RunbookDevice[];
+}
+
+export interface RunbookDevice {
+  id: number;
+  runbook_id: number;
+  layer_id: number;
+  device_id?: number | null;
+  vm_id?: number | null;
+  freitext?: string | null;
+  delay_seconds: number;
+  responsible?: string | null;
+  note?: string | null;
+  position: number;
+  device?: Device;
+  vm?: VirtualMachine;
+}
+
+export interface RunbookExecution {
+  id: number;
+  runbook_id: number;
+  modus: 'shutdown' | 'startup';
+  gestartet_am: string;
+  gestartet_von?: string | null;
+  status: 'aktiv' | 'abgeschlossen' | 'abgebrochen';
+  steps?: RunbookExecutionStep[];
+}
+
+export interface RunbookExecutionStep {
+  id: number;
+  execution_id: number;
+  runbook_device_id: number;
+  abgehakt_am?: string | null;
+  abgehakt_von?: string | null;
+  note?: string | null;
+}
+
 async function request(path: string, options: RequestInit = {}) {
   // Vite proxy routes /api to http://localhost:8003
   const url = path.startsWith('/') ? path : `/api/v1/${path}`;
@@ -388,7 +495,7 @@ export const api = {
   }): Promise<DimensioningResult> =>
     request('usv/battery/dimension', { method: 'POST', body: JSON.stringify(data) }),
   simulateShutdown: (data: {
-    rack_id: number;
+    rack_id?: number | null;
     battery_type?: string;
     series_blocks?: number;
     parallel_strings?: number;
@@ -487,4 +594,41 @@ export const api = {
     hops: number;
   }> => request(`cables/${id}/trace`),
 
+  // Simulation
+  runSimulation: (scenario: SimulationScenario): Promise<SimulationResult> => 
+    request('simulation/run', { method: 'POST', body: JSON.stringify(scenario) }),
+
+  // Virtual Machines
+  getVirtualMachines: (): Promise<VirtualMachine[]> => request('virtual-machines/'),
+  getVirtualMachine: (id: number): Promise<VirtualMachine> => request(`virtual-machines/${id}`),
+  createVirtualMachine: (vm: Partial<VirtualMachine>): Promise<VirtualMachine> => request('virtual-machines/', { method: 'POST', body: JSON.stringify(vm) }),
+  updateVirtualMachine: (id: number, vm: Partial<VirtualMachine>): Promise<VirtualMachine> => request(`virtual-machines/${id}`, { method: 'PUT', body: JSON.stringify(vm) }),
+  deleteVirtualMachine: (id: number): Promise<null> => request(`virtual-machines/${id}`, { method: 'DELETE' }),
+
+  // Runbooks
+  getRunbooks: (): Promise<Runbook[]> => request('runbooks/'),
+  getRunbook: (id: number): Promise<Runbook> => request(`runbooks/${id}`),
+  createRunbook: (runbook: Partial<Runbook>): Promise<Runbook> => request('runbooks/', { method: 'POST', body: JSON.stringify(runbook) }),
+  updateRunbook: (id: number, runbook: Partial<Runbook>): Promise<Runbook> => request(`runbooks/${id}`, { method: 'PUT', body: JSON.stringify(runbook) }),
+  deleteRunbook: (id: number): Promise<null> => request(`runbooks/${id}`, { method: 'DELETE' }),
+  generateStartupRunbook: (id: number): Promise<Runbook> => request(`runbooks/${id}/generate-startup`, { method: 'POST' }),
+
+  // Runbook Layers
+  getRunbookLayers: (id: number): Promise<RunbookLayer[]> => request(`runbooks/${id}/layers`),
+  createRunbookLayer: (id: number, layer: Partial<RunbookLayer>): Promise<RunbookLayer> => request(`runbooks/${id}/layers`, { method: 'POST', body: JSON.stringify(layer) }),
+  updateRunbookLayer: (id: number, lid: number, layer: Partial<RunbookLayer>): Promise<RunbookLayer> => request(`runbooks/${id}/layers/${lid}`, { method: 'PUT', body: JSON.stringify(layer) }),
+  deleteRunbookLayer: (id: number, lid: number): Promise<null> => request(`runbooks/${id}/layers/${lid}`, { method: 'DELETE' }),
+  reorderRunbookLayers: (id: number, layer_ids: number[]): Promise<any> => request(`runbooks/${id}/layers/reorder`, { method: 'PUT', body: JSON.stringify({ layer_ids }) }),
+
+  // Runbook Devices
+  createRunbookDevice: (id: number, device: Partial<RunbookDevice>): Promise<RunbookDevice> => request(`runbooks/${id}/devices`, { method: 'POST', body: JSON.stringify(device) }),
+  updateRunbookDevice: (id: number, did: number, device: Partial<RunbookDevice>): Promise<RunbookDevice> => request(`runbooks/${id}/devices/${did}`, { method: 'PUT', body: JSON.stringify(device) }),
+  deleteRunbookDevice: (id: number, did: number): Promise<null> => request(`runbooks/${id}/devices/${did}`, { method: 'DELETE' }),
+  reorderRunbookDevices: (id: number, device_ids: number[]): Promise<any> => request(`runbooks/${id}/devices/reorder`, { method: 'PUT', body: JSON.stringify({ device_ids }) }),
+
+  // Runbook Executions
+  executeRunbook: (id: number, exec: Partial<RunbookExecution>): Promise<RunbookExecution> => request(`runbooks/${id}/execute`, { method: 'POST', body: JSON.stringify(exec) }),
+  getExecution: (eid: number): Promise<RunbookExecution> => request(`executions/${eid}`),
+  updateExecutionStatus: (eid: number, status: string): Promise<RunbookExecution> => request(`executions/${eid}/status`, { method: 'PUT', body: JSON.stringify({ status }) }),
+  checkExecutionStep: (eid: number, sid: number, note?: string): Promise<RunbookExecutionStep> => request(`executions/${eid}/steps/${sid}/check`, { method: 'POST', body: JSON.stringify({ note }) }),
 };

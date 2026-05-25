@@ -19,7 +19,9 @@
     Cpu,
     Layers,
     Network,
-    Search
+    Search,
+    Monitor,
+    BookOpen
   } from '@lucide/svelte';
   import { goto } from '$app/navigation';
 
@@ -69,6 +71,8 @@
     if (route === '/eplan') return 'E-Plan';
     if (route === '/cables') return 'Kabelliste & Export';
     if (route === '/hardware') return 'Hardware-Katalog';
+    if (route === '/virtual-machines') return 'Virtuelle Maschinen';
+    if (route.startsWith('/runbook')) return 'Runbook Orchestrator';
     return 'KAiTix';
   });
 </script>
@@ -152,6 +156,22 @@
         >
           <Cpu class="w-4 h-4" />
           <span>Hardware</span>
+        </a>
+
+        <a 
+          href="/virtual-machines" 
+          class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 {page.url.pathname === '/virtual-machines' ? 'bg-pink-500/20 text-pink-400 border-l-2 border-pink-500 pl-3.5' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}"
+        >
+          <Monitor class="w-4 h-4" />
+          <span>Virtuelle Maschinen</span>
+        </a>
+
+        <a 
+          href="/runbook" 
+          class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 {page.url.pathname.startsWith('/runbook') ? 'bg-yellow-500/20 text-yellow-400 border-l-2 border-yellow-500 pl-3.5' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}"
+        >
+          <BookOpen class="w-4 h-4" />
+          <span>Runbook Orchestrator</span>
         </a>
       </nav>
 

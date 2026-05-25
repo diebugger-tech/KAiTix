@@ -34,6 +34,27 @@ class Rack(Base):
     )
 
 
+class DeviceDependency(Base):
+    __tablename__ = "device_dependencies"
+
+    device_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("devices.id", ondelete="CASCADE"), primary_key=True
+    )
+    depends_on_device_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("devices.id", ondelete="CASCADE"), primary_key=True
+    )
+    dependency_type: Mapped[Optional[str]] = mapped_column(String(50), default="service")
+    dependency_group: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+
+    # Relationships
+    device: Mapped["Device"] = relationship(
+        foreign_keys=[device_id], back_populates="dependencies"
+    )
+    depends_on_device: Mapped["Device"] = relationship(
+        foreign_keys=[depends_on_device_id], back_populates="depended_by"
+    )
+
+
 class Device(Base):
     __tablename__ = "devices"
 
@@ -70,6 +91,7 @@ class Device(Base):
     )  # CPU/Komponenten-TDP
     psu_count: Mapped[Optional[int]] = mapped_column(Integer)
     psu_nennwatt: Mapped[Optional[float]] = mapped_column(DECIMAL(8, 2))
+    last_pct: Mapped[Optional[float]] = mapped_column(DECIMAL(5, 1), default=60.0)
     anschlussleistung_watt: Mapped[Optional[float]] = mapped_column(
         DECIMAL(8, 2)
     )  # Netzteileingabe für USV
@@ -81,6 +103,9 @@ class Device(Base):
     )
     shutdown_priority: Mapped[Optional[int]] = mapped_column(
         Integer, default=2
+    )
+    shutdown_method: Mapped[Optional[str]] = mapped_column(
+        Enum("ACPI_Graceful", "SSH_Script", "Hard_Power_Cut_PDU"), default="ACPI_Graceful"
     )
 
     bemerkung: Mapped[Optional[str]] = mapped_column(String(255))
@@ -103,6 +128,19 @@ class Device(Base):
     # Relationships
     rack: Mapped[Optional["Rack"]] = relationship(back_populates="devices")
 
+    dependencies: Mapped[List["DeviceDependency"]] = relationship(
+        foreign_keys="[DeviceDependency.device_id]",
+        back_populates="device",
+        cascade="all, delete-orphan",
+        passive_deletes=True
+    )
+    depended_by: Mapped[List["DeviceDependency"]] = relationship(
+        foreign_keys="[DeviceDependency.depends_on_device_id]",
+        back_populates="depends_on_device",
+        cascade="all, delete-orphan",
+        passive_deletes=True
+    )
+
     interfaces: Mapped[List["Interface"]] = relationship(
         back_populates="device", cascade="all, delete-orphan", passive_deletes=True
     )
@@ -124,6 +162,13 @@ class Device(Base):
     connected_pdu_outlets: Mapped[List["PduOutlet"]] = relationship(
         foreign_keys="[PduOutlet.connected_device_id]",
         back_populates="connected_device",
+    )
+
+    virtual_machines: Mapped[List["VirtualMachine"]] = relationship(
+        foreign_keys="[VirtualMachine.host_device_id]",
+        back_populates="host_device",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     @property
@@ -161,4 +206,34 @@ class PduOutlet(Base):
     )
     connected_device: Mapped[Optional["Device"]] = relationship(
         foreign_keys=[connected_device_id], back_populates="connected_pdu_outlets"
+    )
+
+class VirtualMachine(Base):
+    __tablename__ = "virtual_machines"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    host_device_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("devices.id", ondelete="SET NULL")
+    )
+    hypervisor_typ: Mapped[Optional[str]] = mapped_column(
+        Enum("vmware", "hyper-v", "kvm", "xcpng", "sonstige")
+    )
+    vm_id_extern: Mapped[Optional[str]] = mapped_column(String(50))
+    betriebssystem: Mapped[Optional[str]] = mapped_column(String(100))
+    dienst: Mapped[Optional[str]] = mapped_column(String(255))
+    ip_adresse: Mapped[Optional[str]] = mapped_column(String(45))
+    depends_on_vm_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("virtual_machines.id", ondelete="SET NULL")
+    )
+    shutdown_priority: Mapped[Optional[int]] = mapped_column(Integer, default=5)
+    responsible: Mapped[Optional[str]] = mapped_column(String(100))
+    bemerkung: Mapped[Optional[str]] = mapped_column(String(1000))
+
+    # Relationships
+    host_device: Mapped[Optional["Device"]] = relationship(
+        foreign_keys=[host_device_id], back_populates="virtual_machines"
+    )
+    depends_on_vm: Mapped[Optional["VirtualMachine"]] = relationship(
+        foreign_keys=[depends_on_vm_id], remote_side=[id]
     )

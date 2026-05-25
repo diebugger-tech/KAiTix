@@ -1,7 +1,14 @@
 from app.domains.hardware.models import Rack, Device, PduOutlet
 from app.domains.cabling.models import Cable, CableStrand, Interface
 from app.domains.power.models import UsvUnit, UsvModule, UsvSimulationEvent
-
+from app.domains.hardware.models import VirtualMachine
+from app.domains.runbooks.models import (
+    Runbook,
+    RunbookLayer,
+    RunbookDevice,
+    RunbookExecution,
+    RunbookExecutionStep,
+)
 # Legacy aliases for unified Interface model
 ServerInterface = Interface
 DevicePort = Interface
@@ -18,6 +25,11 @@ __all__ = [
     "UsvUnit",
     "UsvModule",
     "UsvSimulationEvent",
+    "VirtualMachine",
+    "Runbook",
+    "RunbookLayer",
+    "RunbookDevice",
+    "RunbookExecution",
+    "RunbookExecutionStep",
 ]
-
 

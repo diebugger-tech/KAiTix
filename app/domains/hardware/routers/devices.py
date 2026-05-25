@@ -2,13 +2,14 @@ from datetime import datetime, timezone
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import IntegrityError
 from app.core.database import get_db
 from app.api.deps import get_username
 
 from app.models import Device as DeviceModel, Rack as RackModel, PduOutlet
+from app.domains.hardware.models import DeviceDependency
 from app.schemas import (
     Device,
     DeviceCreate,
@@ -119,6 +120,7 @@ def get_device_options():
     return [
         selectinload(DeviceModel.pdu_outlets),
         selectinload(DeviceModel.connected_pdu_outlets),
+        selectinload(DeviceModel.dependencies),
     ]
 
 
@@ -199,6 +201,18 @@ async def update_device(
         raise HTTPException(status_code=404, detail="Device not found")
 
     update_data = device_in.model_dump(exclude_unset=True)
+
+    if "dependencies" in update_data:
+        deps_data = update_data.pop("dependencies")
+        await db.execute(delete(DeviceDependency).where(DeviceDependency.device_id == device_id))
+        for dep in deps_data:
+            db.add(DeviceDependency(
+                device_id=device_id,
+                depends_on_device_id=dep["depends_on_device_id"],
+                dependency_type=dep["dependency_type"],
+                dependency_group=dep.get("dependency_group")
+            ))
+
     for field, value in update_data.items():
         setattr(device, field, value)
 
