@@ -152,7 +152,10 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
     const groupLabels: Array<{ name: string; x: number; w: number }> = [];
 
     // Sort by standort for geographic grouping
-    const sortedRacks = [...data.racks].sort((a, b) => (a.standort ?? '').localeCompare(b.standort ?? ''));
+    let sortedRacks = [...data.racks].sort((a, b) => (a.standort ?? '').localeCompare(b.standort ?? ''));
+    if (topologieStandort) {
+      sortedRacks = sortedRacks.filter(r => r.standort === topologieStandort);
+    }
 
     let x = 20;
     let prevStandort: string | null = null;
@@ -377,6 +380,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
   }
 
   let rackFilter = $state<number | null>(null);
+  let topologieStandort = $state('');
 
   // ── Netzplan filters ─────────────────────────────────────────────────────────
   let netzplanStandort = $state('');
@@ -460,6 +464,13 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
   const visibleNodeIds = $derived.by(() => {
     if (!data) return new Set<number>();
     let ids = new Set(data.nodes.filter(n => showDeviceTypes.has(n.typ)).map(n => n.id));
+    if (topologieStandort) {
+      const rIds = new Set(data.racks.filter(r => r.standort === topologieStandort).map(r => r.id));
+      ids = new Set([...ids].filter(id => {
+        const n = data!.nodes.find(node => node.id === id);
+        return n && (rIds.has(n.rack_id!) || !n.rack_id);
+      }));
+    }
     if (rackFilter !== null) {
       const rIds = new Set(data.nodes.filter(n => n.rack_id === rackFilter).map(n => n.id));
       ids = new Set([...ids].filter(id => rIds.has(id)));
@@ -580,6 +591,15 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
 
         <!-- Rack filter -->
         {#if data}
+          <div class="flex items-center gap-2 border-l border-slate-800 pl-3">
+            <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500">Standort</span>
+            <select bind:value={topologieStandort} class="bg-[#182030] border border-slate-700 hover:border-slate-600 rounded-lg px-2 py-1 text-xs text-white focus:outline-none">
+              <option value="">Alle</option>
+              {#each [...new Set(data.racks.map(r => r.standort).filter(Boolean))] as s}
+                <option value={s}>{s}</option>
+              {/each}
+            </select>
+          </div>
           <div class="flex items-center gap-2 border-l border-slate-800 pl-3">
             <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500">Rack</span>
             <select bind:value={rackFilter} class="bg-[#182030] border border-slate-700 hover:border-slate-600 rounded-lg px-2 py-1 text-xs text-white focus:outline-none">

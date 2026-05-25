@@ -52,77 +52,28 @@ async def validate_no_cycles(session: AsyncSession, device_id: int, depends_on_i
 async def run_simulation(session: AsyncSession, scenario: SimulationScenario) -> SimulationResult:
     messages = []
     
-    # 1. Fetch devices with their outlets and dependencies
+    # 1. Fetch devices with outlets, dependencies, cables, and VMs
     stmt = select(Device).options(
         selectinload(Device.connected_pdu_outlets),
-        selectinload(Device.dependencies)
+        selectinload(Device.dependencies),
+        selectinload(Device.virtual_machines),
+        selectinload(Device.cables_from),
+        selectinload(Device.cables_to)
     )
     res = await session.execute(stmt)
     devices = res.scalars().all()
 
-    # Track states: "green", "yellow", "red"
+    # Track states
     device_states = {d.id: "green" for d in devices}
     device_reasons = defaultdict(list)
     
-    # 2. Simulate Power Loss
-    if scenario.target_type == "phase":
-        failed_phase = scenario.target_name
-        messages.append(f"Simulating power loss on phase {failed_phase}")
-        
-        for dev in devices:
-            if dev.typ in ["pdu", "usv"]:
-                continue # Skip infrastructure for now, focus on consumers
-                
-            outlets = dev.connected_pdu_outlets
-            if not outlets:
-                continue
-                
-            active_psus = 0
-            lost_psus = 0
-            for outlet in outlets:
-                # If the outlet phase matches the failed phase, it loses power
-                if outlet.phase == failed_phase:
-                    lost_psus += 1
-                else:
-                    active_psus += 1
-                    
-            if lost_psus > 0:
-                if active_psus > 0:
-                    device_states[dev.id] = "yellow"
-                    device_reasons[dev.id].append(f"Lost redundant PSU on phase {failed_phase}")
-                else:
-                    device_states[dev.id] = "red"
-                    device_reasons[dev.id].append(f"Lost all power from phase {failed_phase}")
-                    
-    elif scenario.target_type == "pdu_outlet" and scenario.target_id:
-        failed_outlet_id = scenario.target_id
-        messages.append(f"Simulating power loss on outlet {failed_outlet_id}")
-        
-        for dev in devices:
-            outlets = dev.connected_pdu_outlets
-            if not outlets:
-                continue
-                
-            active_psus = 0
-            lost_psus = 0
-            for outlet in outlets:
-                if outlet.id == failed_outlet_id:
-                    lost_psus += 1
-                else:
-                    active_psus += 1
-                    
-            if lost_psus > 0:
-                if active_psus > 0:
-                    device_states[dev.id] = "yellow"
-                    device_reasons[dev.id].append(f"Lost redundant power from outlet {failed_outlet_id}")
-                else:
-                    device_states[dev.id] = "red"
-                    device_reasons[dev.id].append(f"Lost all power from outlet {failed_outlet_id}")
-    
-    # Add Network logic, etc. based on scenario...
-    
-    # 3. Calculate dependent failures (if A is red, what happens to B?)
-    # A device dies if its required dependencies are all red (or based on HA logic)
+    # Pre-populate failed target
+    if scenario.target_type == "device" and scenario.target_id:
+        device_states[scenario.target_id] = "red"
+        device_reasons[scenario.target_id].append("Primary failure target")
+        messages.append(f"Simulating failure of device {scenario.target_id}")
+
+    # 2. Iterative cascading failure resolution
     changed = True
     while changed:
         changed = False
@@ -130,46 +81,150 @@ async def run_simulation(session: AsyncSession, scenario: SimulationScenario) ->
             if device_states[dev.id] == "red":
                 continue # already dead
                 
+            new_state = device_states[dev.id]
+            reasons = []
+
+            # Check power
+            outlets = dev.connected_pdu_outlets
+            if outlets:
+                active_psus = 0
+                lost_psus = 0
+                for outlet in outlets:
+                    if (scenario.target_type == "phase" and outlet.phase == scenario.target_name) or \
+                       (scenario.target_type == "pdu_outlet" and outlet.id == scenario.target_id) or \
+                       (outlet.pdu_id and device_states.get(outlet.pdu_id) == "red"):
+                        lost_psus += 1
+                    else:
+                        active_psus += 1
+                        
+                if lost_psus > 0:
+                    if active_psus > 0 and new_state == "green":
+                        new_state = "yellow"
+                        reasons.append("Lost redundant power")
+                    elif active_psus == 0:
+                        new_state = "red"
+                        reasons.append("Lost all power")
+
+            # Check network isolation
+            net_cables = [c for c in (dev.cables_from + dev.cables_to) if c.typ and not str(c.typ).startswith("Strom")]
+            if net_cables:
+                active_net = 0
+                lost_net = 0
+                for cable in net_cables:
+                    peer_id = cable.nach_device_id if cable.von_device_id == dev.id else cable.von_device_id
+                    if not peer_id:
+                        continue
+                    if device_states.get(peer_id) == "red":
+                        lost_net += 1
+                    else:
+                        active_net += 1
+                
+                if lost_net > 0 and active_net == 0:
+                    new_state = "red"
+                    reasons.append("Network isolated: lost all upstream connections")
+
+            # Check device dependencies
             deps = dev.dependencies
-            if not deps:
-                continue
-                
-            # Group by dependency_group
-            groups = defaultdict(list)
-            for d in deps:
-                g = d.dependency_group or f"single_{d.depends_on_device_id}"
-                groups[g].append(d.depends_on_device_id)
-                
-            # If ANY group is entirely RED, this device fails
-            failed_groups = []
-            for g_name, member_ids in groups.items():
-                all_red = all(device_states.get(m_id) == "red" for m_id in member_ids)
-                if all_red:
-                    failed_groups.append(g_name)
+            if deps and new_state != "red":
+                groups = defaultdict(list)
+                for d in deps:
+                    g = d.dependency_group or f"single_{d.depends_on_device_id}"
+                    groups[g].append(d.depends_on_device_id)
                     
-            if failed_groups:
-                device_states[dev.id] = "red"
-                device_reasons[dev.id].append(f"Lost dependencies: {', '.join(failed_groups)}")
+                failed_groups = []
+                for g_name, member_ids in groups.items():
+                    if all(device_states.get(m_id) == "red" for m_id in member_ids):
+                        failed_groups.append(g_name)
+                        
+                if failed_groups:
+                    new_state = "red"
+                    reasons.append(f"Lost dependencies: {', '.join(failed_groups)}")
+
+            # Update state if worsened
+            if new_state != device_states[dev.id]:
+                device_states[dev.id] = new_state
+                device_reasons[dev.id].extend(reasons)
                 changed = True
 
-    # 4. Gather affected devices
-    affected = []
+    # 3. Process VMs
+    from app.domains.hardware.models import VirtualMachine
+    from app.domains.runbooks.models import Runbook, RunbookDevice
+    stmt_vms = select(VirtualMachine)
+    res_vms = await session.execute(stmt_vms)
+    vms = res_vms.scalars().all()
+    
+    vm_states = {v.id: "green" for v in vms}
+    vm_reasons = defaultdict(list)
+    
+    vm_changed = True
+    while vm_changed:
+        vm_changed = False
+        for vm in vms:
+            if vm_states[vm.id] == "red":
+                continue
+                
+            new_state = vm_states[vm.id]
+            reasons = []
+            
+            # Host failure
+            if vm.host_device_id and device_states.get(vm.host_device_id) == "red":
+                new_state = "red"
+                reasons.append("Host device failed")
+                
+            # Dependent VM failure
+            if vm.depends_on_vm_id and vm_states.get(vm.depends_on_vm_id) == "red":
+                new_state = "red"
+                reasons.append(f"Dependent VM ({vm.depends_on_vm_id}) failed")
+                
+            if new_state != vm_states[vm.id]:
+                vm_states[vm.id] = new_state
+                vm_reasons[vm.id].extend(reasons)
+                vm_changed = True
+
+    # 4. Gather affected entities
+    affected_devs = []
+    affected_vms_list = []
+    from app.domains.simulation.schemas import AffectedVM, AffectedRunbook
+    
     for d_id, state in device_states.items():
         if state != "green":
-            affected.append(AffectedDevice(
-                device_id=d_id,
-                state=state,
-                reasons=device_reasons[d_id]
-            ))
+            affected_devs.append(AffectedDevice(device_id=d_id, state=state, reasons=list(set(device_reasons[d_id]))))
+            
+    for v_id, state in vm_states.items():
+        if state != "green":
+            affected_vms_list.append(AffectedVM(vm_id=v_id, state=state, reasons=list(set(vm_reasons[v_id]))))
 
-    # 5. Build Shutdown Timeline
+    # 5. Check Runbook Impact
+    affected_runbooks = []
+    if affected_devs or affected_vms_list:
+        red_dev_ids = [d.device_id for d in affected_devs if d.state == "red"]
+        red_vm_ids = [v.vm_id for v in affected_vms_list if v.state == "red"]
+        
+        stmt_rb = select(Runbook).options(selectinload(Runbook.devices))
+        res_rb = await session.execute(stmt_rb)
+        runbooks = res_rb.scalars().unique().all()
+        
+        for rb in runbooks:
+            rb_reasons = []
+            for rd in rb.devices:
+                if rd.device_id and rd.device_id in red_dev_ids:
+                    rb_reasons.append(f"Contains failed device ID {rd.device_id}")
+                if rd.vm_id and rd.vm_id in red_vm_ids:
+                    rb_reasons.append(f"Contains failed VM ID {rd.vm_id}")
+            if rb_reasons:
+                affected_runbooks.append(AffectedRunbook(
+                    runbook_id=rb.id,
+                    reasons=list(set(rb_reasons))
+                ))
+
+    # Build Timelines (using original logic)
     shutdown_timeline = _build_shutdown_timeline(devices, device_states)
-    
-    # 6. Build Boot Timeline
     boot_timeline = _build_boot_timeline(devices, device_states)
 
     return SimulationResult(
-        affected_devices=affected,
+        affected_devices=affected_devs,
+        affected_vms=affected_vms_list,
+        affected_runbooks=affected_runbooks,
         shutdown_timeline=shutdown_timeline,
         boot_timeline=boot_timeline,
         usv_battery_warning=False,
