@@ -53,6 +53,31 @@ async def main():
         usv_mod2 = UsvModule(usv_unit_id=usv1.id, slot=2, leistung_kw=10.0, status="aktiv")
         usv_mod3 = UsvModule(usv_unit_id=usv1.id, slot=3, leistung_kw=10.0, status="reserve")
         db.add_all([usv_mod1, usv_mod2, usv_mod3])
+        await db.flush()
+
+        import json
+        from datetime import datetime, timezone
+
+        # Add a realistic simulation event showing Peukert battery curve calculation
+        sim_event = UsvSimulationEvent(
+            usv_unit_id=usv1.id,
+            timestamp=datetime.now(timezone.utc),
+            event_type="simulation",
+            severity="info",
+            description="Kalkulation der Batterie-Entladekurve (Peukert 1.15, 60Ah)",
+            snapshot_json=json.dumps({
+                "peukert_k": 1.15,
+                "nominal_capacity_ah": 60,
+                "temperature_c": 22,
+                "aging_factor_pct": 98,
+                "expected_runtime_minutes": 45.5,
+                "total_load_kw": 18.5,
+                "n1_safe": True,
+                "notes": "Optimale Entladekurve berechnet. Reservekapazität ausreichend für geplanten Shutdown."
+            })
+        )
+        db.add(sim_event)
+        await db.flush()
 
         # 4. Networking Devices (RACK-NET-01)
         fw1 = Device(hostname="fw-core-01", typ="firewall", hersteller="Fortinet", modell="FortiGate 100F", rack_id=rack_netzwerk.id, u_position=40, u_hoehe=1, tdp_watt=120, phase="L1")
