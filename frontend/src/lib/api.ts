@@ -95,6 +95,7 @@ export interface PduOutlet {
   id: number;
   pdu_id: number;
   outlet_name: string;
+  pdu_name?: string;
   phase?: 'L1' | 'L2' | 'L3';
   steckdosentyp?: 'C13' | 'C19' | 'C14' | 'C20' | 'Schuko' | 'CEE-16A';
   max_watt?: number;
@@ -373,7 +374,8 @@ export interface RunbookExecution {
   modus: 'shutdown' | 'startup';
   gestartet_am: string;
   gestartet_von?: string | null;
-  status: 'aktiv' | 'abgeschlossen' | 'abgebrochen';
+  status: 'offen' | 'abgeschlossen' | 'verworfen';
+  note?: string | null;
   steps?: RunbookExecutionStep[];
 }
 
@@ -640,7 +642,7 @@ export const api = {
   // Runbook Executions
   executeRunbook: (id: number, exec: Partial<RunbookExecution>): Promise<RunbookExecution> => request(`runbooks/${id}/execute`, { method: 'POST', body: JSON.stringify(exec) }),
   getExecution: (eid: number): Promise<RunbookExecution> => request(`executions/${eid}`),
-  updateExecutionStatus: (eid: number, status: string): Promise<RunbookExecution> => request(`executions/${eid}/status`, { method: 'PUT', body: JSON.stringify({ status }) }),
+  updateExecutionStatus: (eid: number, status: string, note?: string): Promise<RunbookExecution> => request(`executions/${eid}/status`, { method: 'PUT', body: JSON.stringify({ status, note }) }),
   checkExecutionStep: (eid: number, sid: number, note?: string): Promise<RunbookExecutionStep> => request(`executions/${eid}/steps/${sid}/check`, { method: 'POST', body: JSON.stringify({ note }) }),
   uncheckExecutionStep: (eid: number, sid: number): Promise<null> => request(`executions/${eid}/steps/${sid}/uncheck`, { method: 'DELETE' }),
   getRunbookExecutions: (id: number): Promise<RunbookExecution[]> => request(`runbooks/${id}/executions`),

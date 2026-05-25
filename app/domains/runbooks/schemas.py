@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import List, Optional
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 from app.domains.hardware.schemas import Device, VirtualMachine
 
 # === RUNBOOK EXECUTION STEP SCHEMAS ===
@@ -34,11 +34,13 @@ class RunbookExecution(RunbookExecutionBase):
     gestartet_am: datetime
     gestartet_von: Optional[str] = None
     status: str
+    note: Optional[str] = None
     steps: List[RunbookExecutionStep] = []
     model_config = ConfigDict(from_attributes=True)
 
 class RunbookExecutionStatusUpdate(BaseModel):
     status: str
+    note: Optional[str] = None
 
 # === RUNBOOK DEVICE SCHEMAS ===
 class RunbookDeviceBase(BaseModel):

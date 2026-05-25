@@ -132,13 +132,15 @@ class Device(Base):
         foreign_keys="[DeviceDependency.device_id]",
         back_populates="device",
         cascade="all, delete-orphan",
-        passive_deletes=True
+        passive_deletes=True,
+        lazy="selectin"
     )
     depended_by: Mapped[List["DeviceDependency"]] = relationship(
         foreign_keys="[DeviceDependency.depends_on_device_id]",
         back_populates="depends_on_device",
         cascade="all, delete-orphan",
-        passive_deletes=True
+        passive_deletes=True,
+        lazy="selectin"
     )
 
     interfaces: Mapped[List["Interface"]] = relationship(
@@ -158,10 +160,12 @@ class Device(Base):
         back_populates="pdu",
         cascade="all, delete-orphan",
         passive_deletes=True,
+        lazy="selectin"
     )
     connected_pdu_outlets: Mapped[List["PduOutlet"]] = relationship(
         foreign_keys="[PduOutlet.connected_device_id]",
         back_populates="connected_device",
+        lazy="selectin"
     )
 
     virtual_machines: Mapped[List["VirtualMachine"]] = relationship(
@@ -207,6 +211,10 @@ class PduOutlet(Base):
     connected_device: Mapped[Optional["Device"]] = relationship(
         foreign_keys=[connected_device_id], back_populates="connected_pdu_outlets"
     )
+
+    @property
+    def pdu_name(self) -> Optional[str]:
+        return self.pdu.hostname if self.pdu else None
 
 class VirtualMachine(Base):
     __tablename__ = "virtual_machines"

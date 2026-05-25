@@ -35,7 +35,7 @@
       const created = await api.createRunbook(newRunbook);
       showCreateModal = false;
       await loadRunbooks();
-      goto(`/runbook/${created.id}`);
+      goto(`/runbook-orchestrator/${created.id}`);
     } catch (e: any) {
       alert(e.message);
     }
@@ -98,8 +98,8 @@
         <div 
           role="button"
           tabindex="0"
-          onkeydown={(e) => e.key === 'Enter' && goto(`/runbook/${runbook.id}`)}
-          onclick={() => goto(`/runbook/${runbook.id}`)}
+          onkeydown={(e) => e.key === 'Enter' && goto(`/runbook-orchestrator/${runbook.id}`)}
+          onclick={() => goto(`/runbook-orchestrator/${runbook.id}`)}
           class="bg-[#101622] border border-slate-800 hover:border-slate-600 rounded-xl p-5 flex flex-col transition cursor-pointer group"
         >
           <div class="flex items-start justify-between mb-3">

@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, Integer, String, DECIMAL, Enum, DateTime, Boolean, Text
+from sqlalchemy import ForeignKey, Integer, String, DECIMAL, Enum, DateTime, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 from datetime import datetime, timezone

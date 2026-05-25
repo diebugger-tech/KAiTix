@@ -50,7 +50,7 @@ async def test_runbook_execution_and_username_audit(client: AsyncClient, db: Asy
     response = await client.post(f"/api/v1/runbooks/{rb_id}/execute", json=exec_payload, headers={"X-Username": "Andreas"})
     assert response.status_code == 201
     exec_data = response.json()
-    assert exec_data["status"] == "aktiv"
+    assert exec_data["status"] == "offen"
     assert exec_data["gestartet_von"] == "Andreas"
     exec_id = exec_data["id"]
 
@@ -88,3 +88,13 @@ async def test_runbook_execution_and_username_audit(client: AsyncClient, db: Asy
     executions_list = response.json()
     assert len(executions_list) == 1
     assert executions_list[0]["id"] == exec_id
+
+    # 10. Update status to 'verworfen' without a note should fail (400)
+    response = await client.put(f"/api/v1/executions/{exec_id}/status", json={"status": "verworfen"})
+    assert response.status_code == 400
+
+    # 11. Update status to 'verworfen' with a note should succeed
+    response = await client.put(f"/api/v1/executions/{exec_id}/status", json={"status": "verworfen", "note": "Abbruchgrund"})
+    assert response.status_code == 200
+    assert response.json()["status"] == "verworfen"
+    assert response.json()["note"] == "Abbruchgrund"

@@ -2,7 +2,7 @@
 # KAiTix — Development Makefile
 # =============================================================================
 
-.PHONY: install dev dev-frontend dev-all help test lint format migrate-create migrate-apply db-shell restart-all clean clean-bak check-branch
+.PHONY: install dev dev-frontend dev-all status help test lint format migrate-create migrate-apply db-shell restart-all clean clean-bak check-branch
 
 # === UTILS & CHECKS ==========================================================
 check-branch:
@@ -38,9 +38,18 @@ dev-frontend:
 
 dev-all:
 	@if [ ! -d ".venv" ]; then echo "FEHLER: .venv fehlt. nix-shell starten und 'make install' ausführen."; exit 1; fi
-	@echo ">>> Starte Backend + Frontend parallel..."
-	@. .venv/bin/activate && uvicorn app.main:app --reload --host 0.0.0.0 --port 8003 & \
-	cd frontend && npm run dev
+	@echo ">>> Starte Backend + Frontend parallel (Ctrl+C stoppt beide)..."
+	@trap 'kill %1 %2 2>/dev/null; exit' INT TERM; \
+	. .venv/bin/activate && uvicorn app.main:app --reload --host 0.0.0.0 --port 8003 & \
+	cd frontend && npm run dev & \
+	wait
+
+status:
+	@echo "=== KAiTix Service Status ==="
+	@ss -tlnp 2>/dev/null | grep -E "8003|5175" && echo "" || echo "Keine Services aktiv"
+	@[ -d ".venv" ] && echo "venv:        OK (.venv vorhanden)" || echo "venv:        FEHLT"
+	@[ -n "$$IN_NIX_SHELL" ] && echo "nix-shell:   AKTIV" || echo "nix-shell:   nicht aktiv"
+	@[ -n "$$VIRTUAL_ENV" ] && echo "venv aktiv:  $$VIRTUAL_ENV" || echo "venv aktiv:  nein"
 
 help:
 	@echo ""
@@ -49,6 +58,7 @@ help:
 	@echo "  make dev              Backend starten (Port 8003)"
 	@echo "  make dev-frontend     Frontend starten (Port 5175)"
 	@echo "  make dev-all          Backend + Frontend parallel"
+	@echo "  make status           Service-Status anzeigen"
 	@echo "  make install          Abhängigkeiten installieren (nix-shell!)"
 	@echo "  make test             pytest"
 	@echo "  make lint             ruff + mypy"

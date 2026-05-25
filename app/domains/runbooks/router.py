@@ -3,7 +3,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Header
 from fastapi.responses import PlainTextResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, delete
+from sqlalchemy import select, update
 from sqlalchemy.orm import selectinload
 from app.core.database import get_db
 
@@ -14,7 +14,7 @@ from app.domains.runbooks.models import (
     RunbookExecution as RunbookExecutionModel,
     RunbookExecutionStep as RunbookExecutionStepModel,
 )
-from app.domains.hardware.models import Device, VirtualMachine
+from app.domains.hardware.models import Device, PduOutlet
 
 from app.domains.runbooks.schemas import (
     Runbook, RunbookCreate, RunbookUpdate,
@@ -34,7 +34,7 @@ async def list_runbooks(db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(RunbookModel)
         .options(
-            selectinload(RunbookModel.layers).selectinload(RunbookLayerModel.devices).selectinload(RunbookDeviceModel.device),
+            selectinload(RunbookModel.layers).selectinload(RunbookLayerModel.devices).selectinload(RunbookDeviceModel.device).selectinload(Device.connected_pdu_outlets).selectinload(PduOutlet.pdu),
             selectinload(RunbookModel.layers).selectinload(RunbookLayerModel.devices).selectinload(RunbookDeviceModel.vm),
         )
     )
@@ -58,7 +58,7 @@ async def get_runbook(id: int, db: AsyncSession = Depends(get_db)):
         select(RunbookModel)
         .where(RunbookModel.id == id)
         .options(
-            selectinload(RunbookModel.layers).selectinload(RunbookLayerModel.devices).selectinload(RunbookDeviceModel.device),
+            selectinload(RunbookModel.layers).selectinload(RunbookLayerModel.devices).selectinload(RunbookDeviceModel.device).selectinload(Device.connected_pdu_outlets).selectinload(PduOutlet.pdu),
             selectinload(RunbookModel.layers).selectinload(RunbookLayerModel.devices).selectinload(RunbookDeviceModel.vm),
         )
     )
@@ -279,7 +279,12 @@ async def update_execution_status(eid: int, req: RunbookExecutionStatusUpdate, d
     if not execution:
         raise HTTPException(status_code=404, detail="Execution not found")
         
+    if req.status == "verworfen" and (not req.note or not req.note.strip()):
+        raise HTTPException(status_code=400, detail="Eine Notiz ist für den Status 'verworfen' zwingend erforderlich")
+        
     execution.status = req.status
+    if req.note is not None:
+        execution.note = req.note
     await db.commit()
     await db.refresh(execution)
     return execution

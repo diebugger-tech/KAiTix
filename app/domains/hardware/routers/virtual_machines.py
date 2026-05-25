@@ -2,7 +2,6 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from sqlalchemy.orm import selectinload
 from app.core.database import get_db
 from app.domains.hardware.models import VirtualMachine as VirtualMachineModel
 from app.domains.hardware.schemas import (

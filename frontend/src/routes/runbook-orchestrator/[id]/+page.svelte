@@ -22,9 +22,14 @@
   let draggedOverDeviceId = $state<number | null>(null);
   let draggedOverAddButtonLayerId = $state<number | null>(null);
 
-  // Modal states
-  let showLayerModal = $state(false);
-  let newLayerName = $state('');
+  // Layer Inline-Editing
+  let editingLayerId = $state<number | null>(null);
+  let editingLayerName = $state('');
+
+  // Layer Inline Add state
+  let showInlineLayerForm = $state(false);
+  let selectedLayerTemplate = $state('Web-Tier');
+  let inlineLayerFreitext = $state('');
   
   let showDeviceModal = $state(false);
   let targetLayerId = $state<number | null>(null);
@@ -88,7 +93,7 @@
     try {
       executions = await api.getRunbookExecutions(runbookId);
       // Find active execution if any
-      const active = executions.find(e => e.status === 'aktiv');
+      const active = executions.find(e => e.status === 'offen');
       if (active) {
         currentExecution = await api.getExecution(active.id);
       } else {
@@ -111,14 +116,15 @@
   // --- PLANER ACTIONS ---
 
   async function addLayer() {
-    if (!newLayerName || !runbook) return;
+    let nameToSave = selectedLayerTemplate === 'freitext' ? inlineLayerFreitext : selectedLayerTemplate;
+    if (!nameToSave || !nameToSave.trim() || !runbook) return;
     try {
       await api.createRunbookLayer(runbook.id, {
-        name: newLayerName,
+        name: nameToSave.trim(),
         position: (runbook.layers?.length || 0) + 1
       });
-      showLayerModal = false;
-      newLayerName = '';
+      showInlineLayerForm = false;
+      inlineLayerFreitext = '';
       await loadData();
     } catch (e) { alert(e); }
   }
@@ -129,6 +135,22 @@
       await api.deleteRunbookLayer(runbook!.id, lid);
       await loadData();
     } catch (e) { alert(e); }
+  }
+
+  async function saveLayerName(lid: number) {
+    if (!editingLayerName.trim() || !runbook) {
+      editingLayerId = null;
+      return;
+    }
+    try {
+      await api.updateRunbookLayer(runbook.id, lid, { name: editingLayerName });
+      const l = runbook.layers?.find(x => x.id === lid);
+      if (l) l.name = editingLayerName;
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      editingLayerId = null;
+    }
   }
 
   async function updateLayerNote(lid: number, note: string) {
@@ -219,7 +241,7 @@
     if (!runbook) return;
     try {
       const newRb = await api.generateStartupRunbook(runbook.id);
-      goto(`/runbook/${newRb.id}`);
+      goto(`/runbook-orchestrator/${newRb.id}`);
     } catch (e: any) {
       alert("Fehler: " + e.message);
     }
@@ -261,11 +283,24 @@
     } catch (e: any) { alert("Fehler: " + e.message); }
   }
 
-  async function updateExecutionStatus(status: 'abgeschlossen' | 'abgebrochen') {
+  async function updateExecutionStatus(status: 'abgeschlossen' | 'verworfen') {
     if (!currentExecution) return;
-    if (!confirm(`Ausführung wirklich als ${status} markieren?`)) return;
+    
+    let note = '';
+    if (status === 'verworfen') {
+      const reason = prompt("Bitte geben Sie eine Begründung für das Verwerfen der Ausführung ein (Pflichtfeld):");
+      if (reason === null) return; // user cancelled
+      if (!reason.trim()) {
+        alert("Begründung ist zwingend erforderlich!");
+        return;
+      }
+      note = reason.trim();
+    } else {
+      if (!confirm("Ausführung wirklich abschließen?")) return;
+    }
+    
     try {
-      await api.updateExecutionStatus(currentExecution.id, status);
+      await api.updateExecutionStatus(currentExecution.id, status, note);
       currentExecution = null;
       await loadExecutions();
     } catch (e: any) { alert("Fehler: " + e.message); }
@@ -459,7 +494,7 @@
     <!-- Header -->
     <div class="flex items-center justify-between bg-[#101622] border border-slate-800 rounded-xl p-4 shrink-0">
       <div class="flex items-center gap-4">
-        <button onclick={() => goto('/runbook')} class="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition">
+        <button onclick={() => goto('/runbook-orchestrator')} class="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition">
           <ArrowLeft class="w-5 h-5" />
         </button>
         <div>
@@ -506,38 +541,68 @@
     <!-- Content -->
     <div class="flex-1 overflow-y-auto">
       {#if activeTab === 'PLANER'}
+        {#if currentExecution}
+          <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-amber-400 text-sm flex items-center gap-3 mb-6 shrink-0">
+            <AlertCircle class="w-5 h-5 shrink-0" />
+            <div>
+              <span class="font-bold">Planer gesperrt:</span> Es läuft aktuell eine Ausführung für dieses Runbook. Bitte schließen Sie diese ab oder verwerfen Sie sie im Tab "Ausführung", um Änderungen vorzunehmen.
+            </div>
+          </div>
+        {/if}
         <div class="flex gap-6 pb-12 items-start">
           <!-- Left Column: Layers (2/3 width) -->
           <div class="flex-1 space-y-6">
-            {#each (runbook.layers || []).sort((a,b) => a.position - b.position) as layer, i}
+            {#each [...(runbook.layers || [])].sort((a,b) => a.position - b.position) as layer, i}
               <div 
                 class={`bg-[#101622] border rounded-xl overflow-hidden transition ${draggedOverLayerId === layer.id ? 'border-blue-500 bg-blue-950/5' : 'border-slate-800'}`}
-                ondragover={(e) => handleDragOverLayer(e, layer.id)}
-                ondragleave={handleDragLeaveLayer}
-                ondrop={(e) => handleDropLayer(e, layer.id)}
+                ondragover={(e) => { if (!currentExecution) handleDragOverLayer(e, layer.id); }}
+                ondragleave={() => { if (!currentExecution) handleDragLeaveLayer(); }}
+                ondrop={(e) => { if (!currentExecution) handleDropLayer(e, layer.id); }}
               >
                 <!-- Layer Header -->
-                <div class="bg-slate-800/50 p-4 border-b border-slate-800 flex items-center justify-between">
+                <div class="bg-slate-800/50 p-4 border-b border-slate-800 flex items-center justify-between group/header">
                   <div class="flex items-center gap-3">
                     <div class="w-6 h-6 rounded bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-400 border border-slate-700">
                       {layer.position}
                     </div>
-                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                      <Layers class="w-4 h-4 text-blue-400" />
-                      {layer.name}
-                    </h3>
+                    {#if editingLayerId === layer.id}
+                      <input
+                        type="text"
+                        bind:value={editingLayerName}
+                        onblur={() => saveLayerName(layer.id)}
+                        onkeydown={(e) => {
+                          if (e.key === 'Enter') saveLayerName(layer.id);
+                          if (e.key === 'Escape') editingLayerId = null;
+                        }}
+                        class="bg-[#182030] text-sm font-bold text-white px-2 py-1 border border-blue-500 rounded outline-none w-64"
+                        autofocus
+                      />
+                    {:else}
+                      <h3 
+                        class={`text-sm font-bold text-white flex items-center gap-2 ${!currentExecution ? 'cursor-pointer hover:text-blue-400' : ''} transition`}
+                        onclick={() => { if (!currentExecution) { editingLayerId = layer.id; editingLayerName = layer.name; } }}
+                        title={!currentExecution ? "Klicken zum Umbenennen" : ""}
+                      >
+                        <Layers class="w-4 h-4 text-blue-400" />
+                        {layer.name}
+                      </h3>
+                    {/if}
                   </div>
-                  <div class="flex items-center gap-1">
-                    <button disabled={i === 0} onclick={() => moveLayer(i, -1)} class="p-1.5 text-slate-500 hover:text-white hover:bg-slate-700 rounded disabled:opacity-30"><ArrowUp class="w-3.5 h-3.5" /></button>
-                    <button disabled={i === (runbook.layers?.length || 0) - 1} onclick={() => moveLayer(i, 1)} class="p-1.5 text-slate-500 hover:text-white hover:bg-slate-700 rounded disabled:opacity-30"><ArrowDown class="w-3.5 h-3.5" /></button>
-                    <button onclick={() => deleteLayer(layer.id)} class="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded ml-2"><Trash2 class="w-3.5 h-3.5" /></button>
+                  <div class="flex items-center gap-1 opacity-50 group-hover/header:opacity-100 transition-opacity">
+                    {#if !currentExecution}
+                      <button onclick={() => { editingLayerId = layer.id; editingLayerName = layer.name; }} class="p-1.5 text-slate-500 hover:text-blue-400 hover:bg-slate-700 rounded mr-2" title="Ebene umbenennen"><Edit class="w-3.5 h-3.5" /></button>
+                      <button disabled={i === 0} onclick={() => moveLayer(i, -1)} class="p-1.5 text-slate-500 hover:text-white hover:bg-slate-700 rounded disabled:opacity-30"><ArrowUp class="w-3.5 h-3.5" /></button>
+                      <button disabled={i === (runbook.layers?.length || 0) - 1} onclick={() => moveLayer(i, 1)} class="p-1.5 text-slate-500 hover:text-white hover:bg-slate-700 rounded disabled:opacity-30"><ArrowDown class="w-3.5 h-3.5" /></button>
+                      <button onclick={() => deleteLayer(layer.id)} class="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded ml-2"><Trash2 class="w-3.5 h-3.5" /></button>
+                    {/if}
                   </div>
                 </div>
 
                 <!-- Layer Body -->
                 <div class="p-4">
                   <textarea 
-                    class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-300 focus:border-blue-500 resize-none mb-4"
+                    disabled={!!currentExecution}
+                    class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-300 focus:border-blue-500 resize-none mb-4 disabled:opacity-50"
                     rows="2"
                     placeholder="Notizen / Instruktionen (Markdown unterstützt) ..."
                     value={layer.markdown_note || ''}
@@ -545,21 +610,23 @@
                   ></textarea>
 
                   <div class="space-y-2">
-                    {#each (layer.devices || []).sort((a,b) => a.position - b.position) as dev, dIdx}
+                    {#each [...(layer.devices || [])].sort((a,b) => a.position - b.position) as dev, dIdx}
                       {@const Icon = getDeviceIcon(dev)}
                       <div 
-                        draggable="true"
-                        ondragstart={(e) => handleDragStartDevice(e, dev.id, layer.id, dIdx)}
-                        ondragover={(e) => { e.preventDefault(); draggedOverDeviceId = dev.id; }}
-                        ondragleave={() => draggedOverDeviceId = null}
-                        ondrop={(e) => { draggedOverDeviceId = null; handleDropDevice(e, layer.id, dIdx); }}
+                        draggable={!currentExecution}
+                        ondragstart={(e) => { if (!currentExecution) handleDragStartDevice(e, dev.id, layer.id, dIdx); }}
+                        ondragover={(e) => { if (!currentExecution) { e.preventDefault(); draggedOverDeviceId = dev.id; } }}
+                        ondragleave={() => { if (!currentExecution) draggedOverDeviceId = null; }}
+                        ondrop={(e) => { if (!currentExecution) { draggedOverDeviceId = null; handleDropDevice(e, layer.id, dIdx); } }}
                         class={`flex items-center justify-between bg-slate-900/50 border rounded-lg p-2.5 group hover:border-slate-600 transition ${draggedOverDeviceId === dev.id ? 'border-blue-500 bg-blue-950/20' : 'border-slate-800/80'}`}
                       >
                         <div class="flex items-center gap-3">
-                          <div class="flex flex-col gap-0.5">
-                            <button disabled={dIdx === 0} onclick={() => moveDevice(layer, dIdx, -1)} class="text-slate-600 hover:text-slate-300 disabled:opacity-30"><ArrowUp class="w-3 h-3" /></button>
-                            <button disabled={dIdx === (layer.devices?.length || 0) - 1} onclick={() => moveDevice(layer, dIdx, 1)} class="text-slate-600 hover:text-slate-300 disabled:opacity-30"><ArrowDown class="w-3 h-3" /></button>
-                          </div>
+                          {#if !currentExecution}
+                            <div class="flex flex-col gap-0.5">
+                              <button disabled={dIdx === 0} onclick={() => moveDevice(layer, dIdx, -1)} class="text-slate-600 hover:text-slate-300 disabled:opacity-30"><ArrowUp class="w-3 h-3" /></button>
+                              <button disabled={dIdx === (layer.devices?.length || 0) - 1} onclick={() => moveDevice(layer, dIdx, 1)} class="text-slate-600 hover:text-slate-300 disabled:opacity-30"><ArrowDown class="w-3 h-3" /></button>
+                            </div>
+                          {/if}
                           
                           <div class="w-8 h-8 rounded bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0">
                             <Icon class={`w-4 h-4 ${dev.vm ? 'text-pink-400' : dev.device ? 'text-slate-300' : 'text-blue-400'}`} />
@@ -567,6 +634,15 @@
                           
                           <div>
                             <div class="text-sm font-medium text-slate-200">{getDeviceName(dev)}</div>
+                            {#if dev.device && dev.device.connected_pdu_outlets && dev.device.connected_pdu_outlets.length > 0}
+                              <div class="flex flex-wrap gap-1 mt-1">
+                                {#each dev.device.connected_pdu_outlets as outlet}
+                                  <span class="inline-flex items-center text-[9px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-1.5 py-0.5 rounded font-mono">
+                                    {outlet.pdu_name || `PDU-${outlet.pdu_id}`} · {outlet.outlet_name}
+                                  </span>
+                                {/each}
+                              </div>
+                            {/if}
                             <div class="text-[10px] text-slate-500 flex items-center gap-2 mt-0.5">
                               <span class="flex items-center gap-1"><Clock class="w-3 h-3" /> {dev.delay_seconds}s</span>
                               {#if dev.responsible}
@@ -578,37 +654,94 @@
                             {/if}
                           </div>
                         </div>
-                        <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
-                          <button onclick={() => openEditDevice(dev)} class="p-1.5 text-blue-400 hover:bg-blue-500/10 rounded"><Edit class="w-4 h-4" /></button>
-                          <button onclick={() => deleteDevice(dev.id)} class="p-1.5 text-red-400 hover:bg-red-500/10 rounded"><Trash2 class="w-4 h-4" /></button>
-                        </div>
+                        {#if !currentExecution}
+                          <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
+                            <button onclick={() => openEditDevice(dev)} class="p-1.5 text-blue-400 hover:bg-blue-500/10 rounded"><Edit class="w-4 h-4" /></button>
+                            <button onclick={() => deleteDevice(dev.id)} class="p-1.5 text-red-400 hover:bg-red-500/10 rounded"><Trash2 class="w-4 h-4" /></button>
+                          </div>
+                        {/if}
                       </div>
                     {/each}
                     
-                    <button 
-                      onclick={() => { targetLayerId = layer.id; showDeviceModal = true; }}
-                      ondragover={(e) => { e.preventDefault(); draggedOverAddButtonLayerId = layer.id; }}
-                      ondragleave={() => draggedOverAddButtonLayerId = null}
-                      ondrop={(e) => { draggedOverAddButtonLayerId = null; handleDropLayer(e, layer.id); }}
-                      class={`w-full flex items-center justify-center gap-2 py-2 border-2 border-dashed rounded-lg text-xs transition ${draggedOverAddButtonLayerId === layer.id ? 'border-blue-500 bg-blue-950/20 text-blue-300' : 'border-slate-800 hover:border-slate-600 text-slate-400 hover:text-slate-200'}`}
-                    >
-                      <Plus class="w-3.5 h-3.5" /> Gerät hinzufügen (oder hierher ziehen)
-                    </button>
+                    {#if !currentExecution}
+                      <button 
+                        onclick={() => { targetLayerId = layer.id; showDeviceModal = true; }}
+                        ondragover={(e) => { e.preventDefault(); draggedOverAddButtonLayerId = layer.id; }}
+                        ondragleave={() => draggedOverAddButtonLayerId = null}
+                        ondrop={(e) => { draggedOverAddButtonLayerId = null; handleDropLayer(e, layer.id); }}
+                        class={`w-full flex items-center justify-center gap-2 py-2 border-2 border-dashed rounded-lg text-xs transition ${draggedOverAddButtonLayerId === layer.id ? 'border-blue-500 bg-blue-950/20 text-blue-300' : 'border-slate-800 hover:border-slate-600 text-slate-400 hover:text-slate-200'}`}
+                      >
+                        <Plus class="w-3.5 h-3.5" /> Gerät hinzufügen (oder hierher ziehen)
+                      </button>
+                    {/if}
                   </div>
                 </div>
               </div>
             {/each}
 
-            <button 
-              onclick={() => showLayerModal = true}
-              class="w-full flex items-center justify-center gap-2 py-4 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-600/20 rounded-xl text-sm font-medium transition"
-            >
-              <Plus class="w-4 h-4" /> Neue Ebene hinzufügen
-            </button>
+            {#if !currentExecution}
+              {#if showInlineLayerForm}
+                <div class="bg-[#101622] border border-slate-800 rounded-xl p-4 space-y-4">
+                  <h4 class="text-sm font-bold text-white">Neue Ebene hinzufügen</h4>
+                  <div class="flex flex-wrap gap-4 items-end">
+                    <div class="flex-1 min-w-[200px]">
+                      <label class="block text-xs font-semibold text-slate-400 mb-1">Ebenen-Typ / Template</label>
+                      <select 
+                        bind:value={selectedLayerTemplate} 
+                        class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                      >
+                        <option value="Web-Tier">Web-Tier</option>
+                        <option value="App-Tier">App-Tier</option>
+                        <option value="Datenbank-Tier">Datenbank-Tier</option>
+                        <option value="Netzwerk">Netzwerk</option>
+                        <option value="Storage">Storage</option>
+                        <option value="Sonstige">Sonstige</option>
+                        <option value="freitext">Freitext / Eigener Name...</option>
+                      </select>
+                    </div>
+                    
+                    {#if selectedLayerTemplate === 'freitext'}
+                      <div class="flex-1 min-w-[200px]">
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Eigener Ebenen-Name</label>
+                        <input 
+                          type="text" 
+                          bind:value={inlineLayerFreitext} 
+                          placeholder="z.B. Cache-Tier" 
+                          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                        />
+                      </div>
+                    {/if}
+                    
+                    <div class="flex gap-2">
+                      <button 
+                        onclick={() => { showInlineLayerForm = false; inlineLayerFreitext = ''; }} 
+                        class="px-4 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 transition"
+                      >
+                        Abbrechen
+                      </button>
+                      <button 
+                        onclick={addLayer} 
+                        disabled={selectedLayerTemplate === 'freitext' && !inlineLayerFreitext.trim()} 
+                        class="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg text-sm font-semibold transition"
+                      >
+                        Hinzufügen
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              {:else}
+                <button 
+                  onclick={() => { showInlineLayerForm = true; selectedLayerTemplate = 'Web-Tier'; }}
+                  class="w-full flex items-center justify-center gap-2 py-4 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-600/20 rounded-xl text-sm font-medium transition"
+                >
+                  <Plus class="w-4 h-4" /> Neue Ebene hinzufügen
+                </button>
+              {/if}
+            {/if}
           </div>
 
           <!-- Right Column: Sidebar (1/3 width, sticky) -->
-          <div class="w-80 bg-[#101622] border border-slate-800 rounded-xl p-4 sticky top-4 shrink-0 flex flex-col max-h-[85vh]">
+          <div class={`w-80 bg-[#101622] border border-slate-800 rounded-xl p-4 sticky top-4 shrink-0 flex flex-col max-h-[85vh] transition ${currentExecution ? 'opacity-40 pointer-events-none' : ''}`}>
             <h3 class="text-sm font-bold text-white mb-1">Ressourcen-Katalog</h3>
             <p class="text-[10px] text-slate-400 mb-3">Ziehe Elemente per Drag & Drop in eine beliebige Ebene, um sie hinzuzufügen.</p>
 
@@ -728,9 +861,9 @@
                 <div class="text-xs text-slate-400 mb-1">Status: <span class="font-bold text-emerald-400 uppercase">{currentExecution.status}</span></div>
                 <div class="text-[10px] text-slate-500">Gestartet am: {new Date(currentExecution.gestartet_am).toLocaleString()}</div>
               </div>
-              {#if currentExecution.status === 'aktiv'}
+              {#if currentExecution.status === 'offen'}
                 <div class="flex items-center gap-2">
-                  <button onclick={() => updateExecutionStatus('abgebrochen')} class="px-3 py-1.5 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-lg text-xs font-medium border border-red-500/20 transition">Abbrechen</button>
+                  <button onclick={() => updateExecutionStatus('verworfen')} class="px-3 py-1.5 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-lg text-xs font-medium border border-red-500/20 transition">Verwerfen</button>
                   <button onclick={() => updateExecutionStatus('abgeschlossen')} class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-white rounded-lg text-xs font-medium transition shadow-lg shadow-emerald-500/20 flex items-center gap-1"><CheckCircle2 class="w-3.5 h-3.5"/> Abschließen</button>
                 </div>
               {/if}
@@ -752,7 +885,7 @@
                     <div class={`p-3 flex items-start gap-3 transition-colors ${checked ? 'bg-emerald-900/5' : 'hover:bg-slate-800/30'}`}>
                       <button 
                         onclick={() => toggleStep(dev.id, '')}
-                        disabled={currentExecution.status !== 'aktiv'}
+                        disabled={currentExecution.status !== 'offen'}
                         class={`mt-1 shrink-0 w-6 h-6 rounded flex items-center justify-center border transition ${checked ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-[#182030] border-slate-600 text-transparent hover:border-emerald-400 disabled:opacity-50'}`}
                       >
                         <CheckCircle2 class="w-4 h-4" />
@@ -761,6 +894,15 @@
                         <div class="flex justify-between items-start">
                           <div>
                             <div class={`text-sm font-medium ${checked ? 'text-slate-400 line-through' : 'text-slate-200'}`}>{getDeviceName(dev)}</div>
+                            {#if dev.device && dev.device.connected_pdu_outlets && dev.device.connected_pdu_outlets.length > 0}
+                              <div class="flex flex-wrap gap-1 mt-1">
+                                {#each dev.device.connected_pdu_outlets as outlet}
+                                  <span class="inline-flex items-center text-[9px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-1.5 py-0.5 rounded font-mono">
+                                    {outlet.pdu_name || `PDU-${outlet.pdu_id}`} · {outlet.outlet_name}
+                                  </span>
+                                {/each}
+                              </div>
+                            {/if}
                             <div class="text-[10px] text-slate-500 flex items-center gap-2 mt-0.5">
                               <span class="flex items-center gap-1"><Clock class="w-3 h-3" /> {dev.delay_seconds}s</span>
                               {#if dev.responsible}
@@ -780,7 +922,7 @@
                         {#if dev.note}
                           <div class="text-[10px] text-amber-500/80 mt-1">{dev.note}</div>
                         {/if}
-                        {#if !checked && currentExecution.status === 'aktiv'}
+                        {#if !checked && currentExecution.status === 'offen'}
                           <div class="mt-2">
                             <input 
                               type="text" 
@@ -839,7 +981,7 @@
                         {exec.gestartet_von || 'System'}
                       </td>
                       <td class="px-4 py-3">
-                        <span class={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${exec.status === 'abgeschlossen' ? 'bg-emerald-500/20 text-emerald-400' : exec.status === 'abgebrochen' ? 'bg-red-500/20 text-red-400' : 'bg-blue-500/20 text-blue-400 animate-pulse'}`}>
+                        <span class={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${exec.status === 'abgeschlossen' ? 'bg-emerald-500/20 text-emerald-400' : exec.status === 'verworfen' ? 'bg-red-500/20 text-red-400' : 'bg-blue-500/20 text-blue-400 animate-pulse'}`}>
                           {exec.status}
                         </span>
                       </td>
@@ -868,8 +1010,11 @@
       <div>
         <h3 class="text-lg font-bold text-white">Protokoll: {runbook.name}</h3>
         <p class="text-xs text-slate-400 mt-1">
-          Gestartet am: {new Date(selectedExecutionDetails.gestartet_am).toLocaleString()} | Modus: <span class="uppercase font-semibold">{selectedExecutionDetails.modus}</span> | Status: <span class="uppercase font-semibold text-emerald-400">{selectedExecutionDetails.status}</span>
+          Gestartet am: {new Date(selectedExecutionDetails.gestartet_am).toLocaleString()} | Modus: <span class="uppercase font-semibold">{selectedExecutionDetails.modus}</span> | Status: <span class={`uppercase font-semibold ${selectedExecutionDetails.status === 'verworfen' ? 'text-red-400' : 'text-emerald-400'}`}>{selectedExecutionDetails.status}</span>
         </p>
+        {#if selectedExecutionDetails.status === 'verworfen' && selectedExecutionDetails.note}
+          <p class="text-xs text-red-400 mt-1 italic font-medium">Begründung: {selectedExecutionDetails.note}</p>
+        {/if}
       </div>
       <button onclick={() => showExecutionDetailsModal = false} class="text-slate-400 hover:text-white text-lg">✕</button>
     </div>
@@ -888,6 +1033,15 @@
               <div class="p-3 flex items-start justify-between gap-4">
                 <div>
                   <span class="text-sm text-slate-300 font-medium">{getDeviceName(dev)}</span>
+                  {#if dev.device && dev.device.connected_pdu_outlets && dev.device.connected_pdu_outlets.length > 0}
+                    <div class="flex flex-wrap gap-1 mt-1">
+                      {#each dev.device.connected_pdu_outlets as outlet}
+                        <span class="inline-flex items-center text-[9px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-1.5 py-0.5 rounded font-mono">
+                          {outlet.pdu_name || `PDU-${outlet.pdu_id}`} · {outlet.outlet_name}
+                        </span>
+                      {/each}
+                    </div>
+                  {/if}
                   <div class="text-[10px] text-slate-500 mt-0.5">Verzögerung: {dev.delay_seconds}s | Verantwortlich: {dev.responsible || '—'}</div>
                   {#if step?.note}
                     <div class="text-[10px] text-slate-400 bg-slate-800/50 border border-slate-800 p-1.5 rounded mt-1.5 font-mono">
@@ -925,19 +1079,7 @@
 </div>
 {/if}
 
-<!-- Modal Layer Create -->
-{#if showLayerModal}
-<div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-  <div class="bg-[#101622] border border-slate-800 rounded-xl w-full max-w-sm shadow-2xl p-6">
-    <h3 class="text-lg font-bold text-white mb-4">Neue Ebene</h3>
-    <input type="text" bind:value={newLayerName} placeholder="z.B. Datenbanken" class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 mb-4" />
-    <div class="flex justify-end gap-3">
-      <button onclick={() => showLayerModal = false} class="px-4 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800">Abbrechen</button>
-      <button onclick={addLayer} disabled={!newLayerName} class="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg text-sm font-semibold">Erstellen</button>
-    </div>
-  </div>
-</div>
-{/if}
+
 
 <!-- Modal Device Add -->
 {#if showDeviceModal}

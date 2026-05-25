@@ -1,10 +1,10 @@
-from typing import List, Dict, Set, Optional, Tuple
+from typing import List, Dict
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from collections import defaultdict
 
-from app.domains.hardware.models import Device, DeviceDependency, PduOutlet
+from app.domains.hardware.models import Device, DeviceDependency
 from app.domains.simulation.schemas import SimulationScenario, SimulationResult, AffectedDevice, TimelineEvent
 
 async def validate_no_cycles(session: AsyncSession, device_id: int, depends_on_ids: List[int]) -> bool:
@@ -58,8 +58,7 @@ async def run_simulation(session: AsyncSession, scenario: SimulationScenario) ->
     )
     res = await session.execute(stmt)
     devices = res.scalars().all()
-    device_map = {d.id: d for d in devices}
-    
+
     # Track states: "green", "yellow", "red"
     device_states = {d.id: "green" for d in devices}
     device_reasons = defaultdict(list)

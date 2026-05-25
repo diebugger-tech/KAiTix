@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import List, Optional
-from sqlalchemy import Integer, String, DateTime, Enum, DECIMAL, ForeignKey, Text
+from sqlalchemy import Integer, String, DateTime, Enum, ForeignKey, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 
@@ -97,8 +97,9 @@ class RunbookExecution(Base):
     gestartet_von: Mapped[Optional[str]] = mapped_column(String(100))
     modus: Mapped[str] = mapped_column(Enum("shutdown", "startup"), nullable=False)
     status: Mapped[str] = mapped_column(
-        Enum("aktiv", "abgeschlossen", "abgebrochen"), nullable=False, default="aktiv"
+        Enum("offen", "abgeschlossen", "verworfen"), nullable=False, default="offen"
     )
+    note: Mapped[Optional[str]] = mapped_column(Text)
 
     # Relationships
     runbook: Mapped["Runbook"] = relationship(back_populates="executions")
