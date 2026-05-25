@@ -3,7 +3,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Header
 from fastapi.responses import PlainTextResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update
+from sqlalchemy import select, update, delete
 from sqlalchemy.orm import selectinload
 from app.core.database import get_db
 
@@ -14,7 +14,6 @@ from app.domains.runbooks.models import (
     RunbookExecution as RunbookExecutionModel,
     RunbookExecutionStep as RunbookExecutionStepModel,
 )
-from app.domains.hardware.models import Device, PduOutlet
 
 from app.domains.runbooks.schemas import (
     Runbook, RunbookCreate, RunbookUpdate,
@@ -23,6 +22,7 @@ from app.domains.runbooks.schemas import (
     RunbookExecution, RunbookExecutionCreate, RunbookExecutionStatusUpdate,
     RunbookExecutionStep, RunbookExecutionStepCheckRequest
 )
+from app.domains.runbooks.services import RunbookService, _runbook_options
 
 router = APIRouter()
 executions_router = APIRouter()
@@ -33,10 +33,7 @@ executions_router = APIRouter()
 async def list_runbooks(db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(RunbookModel)
-        .options(
-            selectinload(RunbookModel.layers).selectinload(RunbookLayerModel.devices).selectinload(RunbookDeviceModel.device).selectinload(Device.connected_pdu_outlets).selectinload(PduOutlet.pdu),
-            selectinload(RunbookModel.layers).selectinload(RunbookLayerModel.devices).selectinload(RunbookDeviceModel.vm),
-        )
+        .options(*_runbook_options())
     )
     return result.scalars().unique().all()
 
@@ -57,10 +54,7 @@ async def get_runbook(id: int, db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(RunbookModel)
         .where(RunbookModel.id == id)
-        .options(
-            selectinload(RunbookModel.layers).selectinload(RunbookLayerModel.devices).selectinload(RunbookDeviceModel.device).selectinload(Device.connected_pdu_outlets).selectinload(PduOutlet.pdu),
-            selectinload(RunbookModel.layers).selectinload(RunbookLayerModel.devices).selectinload(RunbookDeviceModel.vm),
-        )
+        .options(*_runbook_options())
     )
     runbook = result.scalar_one_or_none()
     if not runbook:
@@ -293,102 +287,16 @@ async def update_execution_status(eid: int, req: RunbookExecutionStatusUpdate, d
 
 @router.post("/{id}/generate-startup", response_model=Runbook)
 async def generate_startup(id: int, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(
-        select(RunbookModel)
-        .where(RunbookModel.id == id)
-        .options(selectinload(RunbookModel.layers).selectinload(RunbookLayerModel.devices))
-    )
-    shutdown_runbook = result.scalar_one_or_none()
-    if not shutdown_runbook or shutdown_runbook.typ != "shutdown":
-        raise HTTPException(status_code=400, detail="Must generate from a 'shutdown' runbook")
-
-    startup_runbook = RunbookModel(
-        name=f"{shutdown_runbook.name} — Startup",
-        typ="startup",
-        beschreibung=shutdown_runbook.beschreibung,
-        generated_from_id=id
-    )
-    db.add(startup_runbook)
-    await db.flush() # get id
-
-    # reverse layers
-    sorted_layers = sorted(shutdown_runbook.layers, key=lambda x: x.position, reverse=True)
-    
-    for layer_idx, old_layer in enumerate(sorted_layers):
-        new_layer = RunbookLayerModel(
-            runbook_id=startup_runbook.id,
-            position=layer_idx + 1,
-            name=old_layer.name,
-            # DO NOT COPY markdown_note
-            markdown_note=None 
-        )
-        db.add(new_layer)
-        await db.flush()
-
-        # copy devices (keep their relative order within the layer, or reverse it? Prompt says:
-        # "Alle Geräte/VMs mit delay_seconds, responsible, position kopieren")
-        # Let's keep position.
-        for old_dev in old_layer.devices:
-            new_dev = RunbookDeviceModel(
-                runbook_id=startup_runbook.id,
-                layer_id=new_layer.id,
-                device_id=old_dev.device_id,
-                vm_id=old_dev.vm_id,
-                freitext=old_dev.freitext,
-                delay_seconds=old_dev.delay_seconds,
-                responsible=old_dev.responsible,
-                position=old_dev.position,
-                # DO NOT COPY note
-                note=None
-            )
-            db.add(new_dev)
-
-    await db.commit()
-    await db.refresh(startup_runbook)
-    return startup_runbook
+    service = RunbookService(db)
+    return await service.generate_startup(id)
 
 # === EXPORT ===
 
 @router.get("/{id}/export/markdown")
 async def export_markdown(id: int, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(
-        select(RunbookModel)
-        .where(RunbookModel.id == id)
-        .options(
-            selectinload(RunbookModel.layers).selectinload(RunbookLayerModel.devices).selectinload(RunbookDeviceModel.device),
-            selectinload(RunbookModel.layers).selectinload(RunbookLayerModel.devices).selectinload(RunbookDeviceModel.vm),
-        )
-    )
-    runbook = result.scalar_one_or_none()
-    if not runbook:
-        raise HTTPException(status_code=404, detail="Runbook not found")
-
-    lines = []
-    lines.append(f"# Runbook: {runbook.name}")
-    lines.append(f"**Typ:** {runbook.typ} | **Erstellt:** {runbook.erstellt_am.strftime('%Y-%m-%d %H:%M')} | **Von:** {runbook.erstellt_von or 'System'}")
-    if runbook.beschreibung:
-        lines.append(runbook.beschreibung)
-    
-    lines.append("\n---\n")
-    lines.append("## " + ("SHUTDOWN-SEQUENZ" if runbook.typ == "shutdown" else "STARTUP-SEQUENZ (umgekehrt)" if runbook.typ == "startup" else f"{runbook.typ.upper()}-SEQUENZ"))
-    
-    sorted_layers = sorted(runbook.layers, key=lambda x: x.position)
-    
-    for layer in sorted_layers:
-        lines.append(f"\n### Ebene {layer.position}: {layer.name}")
-        if layer.markdown_note:
-            lines.append(f"> {layer.markdown_note}")
-        lines.append("")
-        
-        sorted_devices = sorted(layer.devices, key=lambda x: x.position)
-        for dev in sorted_devices:
-            ident = dev.freitext or (dev.vm.name if dev.vm else (dev.device.hostname if dev.device else "Unknown"))
-            resp = f" — {dev.responsible}" if dev.responsible else ""
-            lines.append(f"- [ ] {ident} ({dev.delay_seconds}s){resp}")
-            if dev.note:
-                lines.append(f"      _Notiz: {dev.note}_")
-
-    return PlainTextResponse("\n".join(lines), media_type="text/markdown")
+    service = RunbookService(db)
+    content = await service.export_markdown(id)
+    return PlainTextResponse(content, media_type="text/markdown")
 
 @router.get("/{id}/export/pdf")
 async def export_pdf(id: int):
