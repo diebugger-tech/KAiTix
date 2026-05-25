@@ -117,3 +117,4 @@ uploaded_media_*
 venv/
 
 .claude/
+gui_test_report.md
