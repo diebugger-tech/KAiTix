@@ -35,6 +35,22 @@
   // Execution states
   let currentExecution = $state<RunbookExecution | null>(null);
   let execMode = $state<'shutdown' | 'startup'>('shutdown');
+  let showExecutionDetailsModal = $state(false);
+  let selectedExecutionDetails = $state<RunbookExecution | null>(null);
+
+  // Derived layers for execution (reversed for startup)
+  let executionLayers = $derived.by(() => {
+    if (!runbook || !runbook.layers) return [];
+    const isStartup = currentExecution?.modus === 'startup';
+    const sorted = [...runbook.layers].sort((a, b) => a.position - b.position);
+    return isStartup ? sorted.reverse() : sorted;
+  });
+
+  const getSortedDevices = (layer: RunbookLayer) => {
+    const isStartup = currentExecution?.modus === 'startup';
+    const sorted = [...(layer.devices || [])].sort((a, b) => a.position - b.position);
+    return isStartup ? sorted.reverse() : sorted;
+  };
 
   onMount(async () => {
     await loadData();
@@ -62,15 +78,27 @@
   }
 
   async function loadExecutions() {
-    // In a real app, we'd have a `api.getRunbookExecutions(runbookId)` endpoint.
-    // For now, we assume we fetch it or we don't have it implemented in the backend explicitly for one runbook.
-    // Let's assume we can fetch by ID, but since there's no endpoint listed in the prompt to list executions FOR A runbook,
-    // we'll leave it empty unless we start one.
-    // Wait, the prompt says "Alle bisherigen Ausführungen (Datum, Von, Modus, Status)" in PROTOKOLL.
-    // I didn't write an endpoint for that. Let's just catch errors.
     try {
-      // executions = await api.getRunbookExecutions(runbookId);
-    } catch (e) {}
+      executions = await api.getRunbookExecutions(runbookId);
+      // Find active execution if any
+      const active = executions.find(e => e.status === 'aktiv');
+      if (active) {
+        currentExecution = await api.getExecution(active.id);
+      } else {
+        currentExecution = null;
+      }
+    } catch (e) {
+      console.error("Fehler beim Laden der Ausführungen:", e);
+    }
+  }
+
+  async function openExecutionDetails(exec: RunbookExecution) {
+    try {
+      selectedExecutionDetails = await api.getExecution(exec.id);
+      showExecutionDetailsModal = true;
+    } catch (e: any) {
+      alert("Fehler beim Laden der Protokolldetails: " + e.message);
+    }
   }
 
   // --- PLANER ACTIONS ---
@@ -208,6 +236,21 @@
     try {
       await api.checkExecutionStep(currentExecution.id, did, note);
       currentExecution = await api.getExecution(currentExecution.id);
+      await loadExecutions();
+    } catch (e: any) { alert("Fehler: " + e.message); }
+  }
+
+  async function toggleStep(did: number, note: string = '') {
+    if (!currentExecution) return;
+    const checked = isStepChecked(did);
+    try {
+      if (checked) {
+        await api.uncheckExecutionStep(currentExecution.id, did);
+      } else {
+        await api.checkExecutionStep(currentExecution.id, did, note);
+      }
+      currentExecution = await api.getExecution(currentExecution.id);
+      await loadExecutions();
     } catch (e: any) { alert("Fehler: " + e.message); }
   }
 
@@ -216,7 +259,8 @@
     if (!confirm(`Ausführung wirklich als ${status} markieren?`)) return;
     try {
       await api.updateExecutionStatus(currentExecution.id, status);
-      currentExecution = await api.getExecution(currentExecution.id);
+      currentExecution = null;
+      await loadExecutions();
     } catch (e: any) { alert("Fehler: " + e.message); }
   }
 
@@ -421,7 +465,7 @@
               {/if}
             </div>
 
-            {#each (runbook.layers || []).sort((a,b) => a.position - b.position) as layer}
+            {#each executionLayers as layer}
               <div class="bg-[#101622] border border-slate-800 rounded-xl overflow-hidden">
                 <div class="bg-slate-800/50 p-3 border-b border-slate-800 flex items-center gap-3">
                   <div class="w-5 h-5 rounded bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-400 border border-slate-700">{layer.position}</div>
@@ -431,12 +475,12 @@
                   <div class="px-4 py-2 bg-blue-900/10 border-b border-blue-900/20 text-xs text-blue-200/80 italic">{layer.markdown_note}</div>
                 {/if}
                 <div class="divide-y divide-slate-800/50">
-                  {#each (layer.devices || []).sort((a,b) => a.position - b.position) as dev}
+                  {#each getSortedDevices(layer) as dev}
                     {@const checked = isStepChecked(dev.id)}
                     {@const step = getStep(dev.id)}
                     <div class={`p-3 flex items-start gap-3 transition-colors ${checked ? 'bg-emerald-900/5' : 'hover:bg-slate-800/30'}`}>
                       <button 
-                        onclick={() => checkStep(dev.id, '')}
+                        onclick={() => toggleStep(dev.id, '')}
                         disabled={currentExecution.status !== 'aktiv'}
                         class={`mt-1 shrink-0 w-6 h-6 rounded flex items-center justify-center border transition ${checked ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-[#182030] border-slate-600 text-transparent hover:border-emerald-400 disabled:opacity-50'}`}
                       >
@@ -454,8 +498,11 @@
                             </div>
                           </div>
                           {#if checked && step}
-                            <div class="text-[10px] text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded">
-                              {new Date(step.abgehakt_am || '').toLocaleTimeString()}
+                            <div class="text-[10px] text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded flex flex-col items-end gap-0.5">
+                              <span>{new Date(step.abgehakt_am || '').toLocaleTimeString()}</span>
+                              {#if step.abgehakt_von}
+                                <span class="text-[8px] opacity-80">von {step.abgehakt_von}</span>
+                              {/if}
                             </div>
                           {/if}
                         </div>
@@ -467,7 +514,7 @@
                             <input 
                               type="text" 
                               placeholder="Optionale Notiz zur Ausführung..." 
-                              onkeydown={(e) => { if (e.key === 'Enter') checkStep(dev.id, e.currentTarget.value); }}
+                              onkeydown={(e) => { if (e.key === 'Enter') toggleStep(dev.id, e.currentTarget.value); }}
                               class="w-full bg-[#182030] border border-slate-700 rounded text-xs px-2 py-1 focus:border-emerald-500 outline-none text-slate-300"
                             />
                           </div>
@@ -488,15 +535,124 @@
       {/if}
 
       {#if activeTab === 'PROTOKOLL'}
-        <div class="text-slate-500 py-12 text-center border border-dashed border-slate-800 rounded-xl">
-          <FileText class="w-8 h-8 mx-auto mb-2 opacity-50" />
-          Protokolle implementiert im MVP noch nicht vollständig in der UI abrufbar.<br>
-          Bitte Datenbank abfragen.
+        <div class="space-y-4">
+          {#if executions.length === 0}
+            <div class="text-slate-500 py-12 text-center border border-dashed border-slate-800 rounded-xl bg-[#101622]">
+              <FileText class="w-8 h-8 mx-auto mb-2 opacity-50 text-slate-400" />
+              Bisher keine Protokolle vorhanden.
+            </div>
+          {:else}
+            <div class="bg-[#101622] border border-slate-800 rounded-xl overflow-hidden shadow-2xl">
+              <table class="w-full text-left text-sm text-slate-300">
+                <thead class="text-xs uppercase bg-slate-800/50 text-slate-400 border-b border-slate-800">
+                  <tr>
+                    <th class="px-4 py-3 font-semibold">Datum</th>
+                    <th class="px-4 py-3 font-semibold">Modus</th>
+                    <th class="px-4 py-3 font-semibold">Gestartet von</th>
+                    <th class="px-4 py-3 font-semibold">Status</th>
+                    <th class="px-4 py-3 text-right">Aktionen</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800/40">
+                  {#each executions as exec}
+                    <tr class="hover:bg-slate-800/20 transition group">
+                      <td class="px-4 py-3 text-slate-200 font-medium">
+                        {new Date(exec.gestartet_am).toLocaleString('de-DE')}
+                      </td>
+                      <td class="px-4 py-3">
+                        <span class={`text-[10px] uppercase font-bold px-2 py-0.5 rounded border ${exec.modus === 'shutdown' ? 'bg-red-500/10 text-red-400 border-red-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}`}>
+                          {exec.modus}
+                        </span>
+                      </td>
+                      <td class="px-4 py-3 text-slate-400 text-xs">
+                        {exec.gestartet_von || 'System'}
+                      </td>
+                      <td class="px-4 py-3">
+                        <span class={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${exec.status === 'abgeschlossen' ? 'bg-emerald-500/20 text-emerald-400' : exec.status === 'abgebrochen' ? 'bg-red-500/20 text-red-400' : 'bg-blue-500/20 text-blue-400 animate-pulse'}`}>
+                          {exec.status}
+                        </span>
+                      </td>
+                      <td class="px-4 py-3 text-right">
+                        <button onclick={() => openExecutionDetails(exec)} class="text-blue-400 hover:text-blue-300 text-xs font-semibold">
+                          Details anzeigen
+                        </button>
+                      </td>
+                    </tr>
+                  {/each}
+                </tbody>
+              </table>
+            </div>
+          {/if}
         </div>
       {/if}
     </div>
   {/if}
 </div>
+
+<!-- Modal for Execution Details (Protocol View) -->
+{#if showExecutionDetailsModal && selectedExecutionDetails}
+<div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  <div class="bg-[#101622] border border-slate-800 rounded-xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div class="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/50">
+      <div>
+        <h3 class="text-lg font-bold text-white">Protokoll: {runbook.name}</h3>
+        <p class="text-xs text-slate-400 mt-1">
+          Gestartet am: {new Date(selectedExecutionDetails.gestartet_am).toLocaleString()} | Modus: <span class="uppercase font-semibold">{selectedExecutionDetails.modus}</span> | Status: <span class="uppercase font-semibold text-emerald-400">{selectedExecutionDetails.status}</span>
+        </p>
+      </div>
+      <button onclick={() => showExecutionDetailsModal = false} class="text-slate-400 hover:text-white text-lg">✕</button>
+    </div>
+    
+    <div class="p-6 overflow-y-auto space-y-6">
+      <!-- Derived layers list for this execution -->
+      {#each selectedExecutionDetails.modus === 'startup' ? [...runbook.layers].sort((a, b) => a.position - b.position).reverse() : [...runbook.layers].sort((a, b) => a.position - b.position) as layer}
+        <div class="bg-slate-900/40 border border-slate-800 rounded-lg overflow-hidden">
+          <div class="bg-slate-800/40 px-3 py-2 border-b border-slate-800 flex items-center gap-2">
+            <span class="w-5 h-5 rounded bg-slate-800 flex items-center justify-center text-[10px] text-slate-400 font-bold border border-slate-700">{layer.position}</span>
+            <span class="text-xs font-bold text-slate-200">{layer.name}</span>
+          </div>
+          <div class="divide-y divide-slate-800/40">
+            {#each selectedExecutionDetails.modus === 'startup' ? [...(layer.devices || [])].sort((a, b) => a.position - b.position).reverse() : [...(layer.devices || [])].sort((a, b) => a.position - b.position) as dev}
+              {@const step = selectedExecutionDetails.steps?.find(s => s.runbook_device_id === dev.id)}
+              <div class="p-3 flex items-start justify-between gap-4">
+                <div>
+                  <span class="text-sm text-slate-300 font-medium">{getDeviceName(dev)}</span>
+                  <div class="text-[10px] text-slate-500 mt-0.5">Verzögerung: {dev.delay_seconds}s | Verantwortlich: {dev.responsible || '—'}</div>
+                  {#if step?.note}
+                    <div class="text-[10px] text-slate-400 bg-slate-800/50 border border-slate-800 p-1.5 rounded mt-1.5 font-mono">
+                      Notiz: {step.note}
+                    </div>
+                  {/if}
+                </div>
+                <div>
+                  {#if step?.abgehakt_am}
+                    <span class="inline-flex flex-col items-end gap-0.5 text-[10px] text-emerald-400 bg-emerald-950/20 border border-emerald-900/30 px-2 py-1 rounded">
+                      <span>✓ Abgehakt um {new Date(step.abgehakt_am).toLocaleTimeString()}</span>
+                      {#if step.abgehakt_von}
+                        <span class="text-[8px] opacity-80">von {step.abgehakt_von}</span>
+                      {/if}
+                    </span>
+                  {:else}
+                    <span class="text-[10px] text-slate-500 bg-slate-800/40 border border-slate-800/60 px-2 py-1 rounded">
+                      Ausstehend
+                    </span>
+                  {/if}
+                </div>
+              </div>
+            {/each}
+          </div>
+        </div>
+      {/each}
+    </div>
+    
+    <div class="p-4 border-t border-slate-800 bg-slate-900/50 flex justify-end shrink-0">
+      <button onclick={() => showExecutionDetailsModal = false} class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-lg text-sm font-semibold transition">
+        Schließen
+      </button>
+    </div>
+  </div>
+</div>
+{/if}
 
 <!-- Modal Layer Create -->
 {#if showLayerModal}
