@@ -1,8 +1,11 @@
 from fastapi import APIRouter, Depends
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.domains.cabling.services.topology_loader import load_topology, build_edges, build_racks_out
+from app.domains.cabling.services.anomaly_scorer import AnomalyScorer
+from app.domains.power.models import UsvUnit
 
 router = APIRouter()
 
@@ -28,3 +31,18 @@ async def get_topology(db: AsyncSession = Depends(get_db)):
     ]
 
     return {"racks": build_racks_out(raw), "nodes": nodes, "edges": build_edges(raw)}
+
+
+@router.get("/anomaly-scores")
+async def get_anomaly_scores(db: AsyncSession = Depends(get_db)):
+    raw = await load_topology(db)
+    usv_rack_ids = set(
+        (await db.execute(select(UsvUnit.rack_id))).scalars().all()
+    )
+    return AnomalyScorer.score_all_racks(
+        racks=raw.racks,
+        devices=raw.devices,
+        outlets=raw.outlets,
+        usv_rack_ids=usv_rack_ids,
+    )
+

@@ -333,6 +333,7 @@
 
                 <div class="space-y-2">
                   {#each (layer.devices || []).sort((a,b) => a.position - b.position) as dev, dIdx}
+                    {@const Icon = getDeviceIcon(dev)}
                     <div class="flex items-center justify-between bg-slate-900/50 border border-slate-800/80 rounded-lg p-2.5 group hover:border-slate-600 transition">
                       <div class="flex items-center gap-3">
                         <div class="flex flex-col gap-0.5">
@@ -341,7 +342,6 @@
                         </div>
                         
                         <div class="w-8 h-8 rounded bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0">
-                          {@const Icon = getDeviceIcon(dev)}
                           <Icon class={`w-4 h-4 ${dev.vm ? 'text-pink-400' : dev.device ? 'text-slate-300' : 'text-blue-400'}`} />
                         </div>
                         

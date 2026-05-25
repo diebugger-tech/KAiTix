@@ -181,21 +181,21 @@ def poll_device(device: Device):
     temp = client.get_temperature()
     humidity = client.get_humidity()
     alarms = client.get_alarms()
-    alarm_ok = len(alarms) > 0
-    alarm_typ = ", ".join(client.get_alarm_types()) if alarm_ok else None
+    alarm_aktiv = len(alarms) > 0
+    alarm_typ = ", ".join(client.get_alarm_types()) if alarm_aktiv else None
     raw = client.get_status()
 
     write_reading(
         device_id=device.id,
         temp=temp,
         humidity=humidity,
-        alarm_aktiv=alarm_ok,
+        alarm_aktiv=alarm_aktiv,
         alarm_typ=alarm_typ,
         raw=raw,
     )
 
     status_str = f"T={temp}°C  H={humidity}%"
-    if alarm_ok:
+    if alarm_aktiv:
         logger.warning(f"[ALARM] {device.hostname}: {alarm_typ}  |  {status_str}")
     else:
         logger.info(f"[OK]    {device.hostname}: {status_str}")

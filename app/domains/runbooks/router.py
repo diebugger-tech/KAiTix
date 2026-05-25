@@ -1,6 +1,6 @@
-from typing import List
+from typing import List, Optional
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, status, Response
+from fastapi import APIRouter, Depends, HTTPException, status, Response, Header
 from fastapi.responses import PlainTextResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, delete
@@ -41,8 +41,12 @@ async def list_runbooks(db: AsyncSession = Depends(get_db)):
     return result.scalars().unique().all()
 
 @router.post("/", response_model=Runbook, status_code=status.HTTP_201_CREATED)
-async def create_runbook(runbook_in: RunbookCreate, db: AsyncSession = Depends(get_db)):
-    db_runbook = RunbookModel(**runbook_in.model_dump())
+async def create_runbook(
+    runbook_in: RunbookCreate,
+    db: AsyncSession = Depends(get_db),
+    x_username: Optional[str] = Header(None, alias="X-Username")
+):
+    db_runbook = RunbookModel(**runbook_in.model_dump(), erstellt_von=x_username)
     db.add(db_runbook)
     await db.commit()
     await db.refresh(db_runbook)
@@ -187,11 +191,16 @@ async def delete_runbook_device(id: int, did: int, db: AsyncSession = Depends(ge
 # === EXECUTIONS ===
 
 @router.post("/{id}/execute", response_model=RunbookExecution, status_code=status.HTTP_201_CREATED)
-async def execute_runbook(id: int, exec_in: RunbookExecutionCreate, db: AsyncSession = Depends(get_db)):
+async def execute_runbook(
+    id: int,
+    exec_in: RunbookExecutionCreate,
+    db: AsyncSession = Depends(get_db),
+    x_username: Optional[str] = Header(None, alias="X-Username")
+):
     if exec_in.runbook_id != id:
         raise HTTPException(status_code=400, detail="Runbook ID mismatch")
         
-    db_exec = RunbookExecutionModel(**exec_in.model_dump())
+    db_exec = RunbookExecutionModel(**exec_in.model_dump(), gestartet_von=x_username)
     db.add(db_exec)
     await db.commit()
     await db.refresh(db_exec)
@@ -210,32 +219,58 @@ async def get_execution(eid: int, db: AsyncSession = Depends(get_db)):
     return execution
 
 @executions_router.post("/{eid}/steps/{sid}/check", response_model=RunbookExecutionStep)
-async def check_execution_step(eid: int, sid: int, req: RunbookExecutionStepCheckRequest, db: AsyncSession = Depends(get_db)):
+async def check_execution_step(
+    eid: int,
+    sid: int,
+    req: RunbookExecutionStepCheckRequest,
+    db: AsyncSession = Depends(get_db),
+    x_username: Optional[str] = Header(None, alias="X-Username")
+):
     result = await db.execute(
         select(RunbookExecutionStepModel)
-        .where(RunbookExecutionStepModel.id == sid, RunbookExecutionStepModel.execution_id == eid)
+        .where(
+            RunbookExecutionStepModel.runbook_device_id == sid,
+            RunbookExecutionStepModel.execution_id == eid
+        )
     )
     step = result.scalar_one_or_none()
     if not step:
-        # Step might not exist yet, we create it dynamically if it's the first time it's checked
-        # Wait, the prompt says "POST /api/v1/executions/{eid}/steps/{sid}/check".
-        # Let's assume {sid} is actually the runbook_device_id we are checking off, to make it easier,
-        # or we create the step. Let's create it.
         step = RunbookExecutionStepModel(
             execution_id=eid,
             runbook_device_id=sid,
             abgehakt_am=datetime.utcnow(),
+            abgehakt_von=x_username,
             note=req.note
         )
         db.add(step)
     else:
         step.abgehakt_am = datetime.utcnow()
+        step.abgehakt_von = x_username
         if req.note is not None:
             step.note = req.note
 
     await db.commit()
     await db.refresh(step)
     return step
+
+@executions_router.delete("/{eid}/steps/{sid}/uncheck", status_code=status.HTTP_204_NO_CONTENT)
+async def uncheck_execution_step(
+    eid: int,
+    sid: int,
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(
+        select(RunbookExecutionStepModel)
+        .where(
+            RunbookExecutionStepModel.runbook_device_id == sid,
+            RunbookExecutionStepModel.execution_id == eid
+        )
+    )
+    step = result.scalar_one_or_none()
+    if step:
+        await db.delete(step)
+        await db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 @executions_router.put("/{eid}/status", response_model=RunbookExecution)
 async def update_execution_status(eid: int, req: RunbookExecutionStatusUpdate, db: AsyncSession = Depends(get_db)):
@@ -354,3 +389,13 @@ async def export_markdown(id: int, db: AsyncSession = Depends(get_db)):
 async def export_pdf(id: int):
     # Dummy endpoint for PDF
     return {"message": "PDF export not implemented in python backend yet, normally done via frontend print"}
+
+@router.get("/{id}/executions", response_model=List[RunbookExecution])
+async def get_runbook_executions(id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(RunbookExecutionModel)
+        .where(RunbookExecutionModel.runbook_id == id)
+        .options(selectinload(RunbookExecutionModel.steps))
+        .order_by(RunbookExecutionModel.gestartet_am.desc())
+    )
+    return result.scalars().all()

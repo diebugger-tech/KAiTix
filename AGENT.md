@@ -465,6 +465,70 @@ DANN ERST: Aufgabe umsetzen — kein anderer Kontext gilt.
 
 ---
 
+## Nix Dev Environment (Stand 2026-05-25)
+
+### Architektur
+
+```
+Ubuntu (System-Basis)          Nix Single-User (Dev-Umgebungen)
+─────────────────────          ────────────────────────────────
+MySQL 8 als systemd-Service    Python 3.12 + Node.js 22 (shell.nix)
+systemd, apt, GUI-Apps         direnv: Auto-Aktivierung beim cd
+zsh als Login-Shell            common.nix: geteilte Pakete alle Projekte
+```
+
+### Setup-Dateien
+
+| Datei | Pfad | Zweck |
+|-------|------|-------|
+| `shell.nix` | `~/Projekte/aktiv/KAiTix/shell.nix` | Projekt-Dev-Shell |
+| `common.nix` | `~/Projekte/nix/common.nix` | Geteilte Pakete |
+| `.envrc` | `~/Projekte/aktiv/KAiTix/.envrc` | `use nix` — direnv Trigger |
+
+### Pakete (aus common.nix)
+
+- `python312` — Python Runtime
+- `nodejs_22` — Node.js + npm (Svelte 5)
+- `openssl` — SSL für PyMySQL/httpx
+- `pkg-config` — Build-Helper
+- `mariadb-connector-c` — Fallback C-Connector
+- `git`, `curl`, `jq` — Standard-Tools
+
+### Workflow
+
+```bash
+# Automatisch beim cd in das Verzeichnis:
+cd ~/Projekte/aktiv/KAiTix
+# → direnv lädt automatisch: "direnv: loading .envrc"
+# → nix-shell startet: "=== KAiTix Dev Shell ==="
+# → Python 3.12 + Node 22 verfügbar
+
+# venv weiterhin manuell aktivieren (direnv aktiviert es NICHT):
+source .venv/bin/activate
+
+# Entwicklung starten:
+make dev-all   # Backend (Port 8003) + Frontend parallel
+```
+
+### Wichtige Regeln für Agenten
+
+- **nodejs_22** (nicht nodejs_20 — EOL!)
+- **zsh** als Shell (nicht bash — seit dieser Session migriert)
+- **direnv** Hook in `~/.zshrc`: `eval "$(direnv hook zsh)"`
+- **venv** wird NICHT automatisch aktiviert — manuell nötig
+- **`nix-shell`** muss nicht manuell gestartet werden — direnv übernimmt das
+- **Shell-Hook** setzt `LD_LIBRARY_PATH` für Ubuntu-Kompatibilität (openssl, mariadb)
+
+### CDP / Browser (für Playwright/E2E)
+
+```bash
+flatpak run com.google.Chrome -- --remote-debugging-port=9222
+```
+
+**NIEMALS** Brave/Vivaldi für CDP nutzen — nur Chrome!
+
+---
+
 ## Memory-Import
 
 ### Lokale Kopie einspielen

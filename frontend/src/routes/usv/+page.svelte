@@ -1,7 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { api, type HardwareType, type SystemState, type USVSimulationEvent, type RuntimeCurveData, type DimensioningResult } from '$lib/api';
+  import { api, type HardwareType, type SystemState, type USVSimulationEvent, type RuntimeCurveData, type DimensioningResult, type SimulationResult } from '$lib/api';
   import ShutdownSimulator from '$lib/components/ShutdownSimulator.svelte';
+  import SimulationTimeline from '$lib/components/SimulationTimeline.svelte';
   import {
     Zap, Battery, AlertTriangle, RefreshCw, Activity, Gauge,
     CircleCheck, CircleAlert, CircleX, Power, ChevronDown, ChevronUp,
@@ -10,6 +11,22 @@
 
   // --- Tab state ---
   let activeTab = $state<'simulation' | 'battery' | 'schaltbild' | 'shutdown_sequence'>('simulation');
+
+  // --- Topology Simulation ---
+  let topologySimResult = $state<SimulationResult | null>(null);
+  let isTopologySimulating = $state(false);
+
+  async function triggerScenario(type: string, name: string) {
+    isTopologySimulating = true;
+    error = '';
+    try {
+      topologySimResult = await api.runSimulation({ target_type: type, target_name: name });
+    } catch (e: any) {
+      error = e.message || 'Simulation failed';
+    } finally {
+      isTopologySimulating = false;
+    }
+  }
 
   // --- Simulation state ---
   let l1_kw = $state(4);
@@ -72,7 +89,7 @@
   });
 
   const batteryDischargeCurrent = $derived(systemState ? Math.round((systemState.total_load_kw * 1000) / (systemState.battery_voltage * systemState.inverter_efficiency)) : 0);
-  const batteryDischargeGauge = $derived(batteryDischargeCurrent);
+  const cableSection = $derived(Math.ceil(batteryDischargeCurrent / 5));
 
   // --- Simulation actions ---
   async function runSimulation() {
@@ -225,7 +242,7 @@
     return m ? m[1].trim() : '';
   }
 
-  const usvGroups = $derived(() => {
+  const usvGroups = $derived.by(() => {
     const groups: Record<string, HardwareType[]> = {};
     for (const hw of usvModels) {
       const mfr = hw.hersteller || 'Sonstige';
@@ -251,7 +268,8 @@
   }
 
   function formatTime(ts: string): string {
-    return new Date(ts + 'Z').toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const iso = ts.endsWith('Z') || ts.includes('+') ? ts : ts + 'Z';
+    return new Date(iso).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   }
 
   function loadPct(): number {
@@ -327,7 +345,7 @@
           <select bind:value={hwTemplateId}
             class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500">
             <option value={0}>— Manuelle Eingabe —</option>
-            {#each Object.entries(usvGroups()) as [mfr, models]}
+            {#each Object.entries(usvGroups) as [mfr, models]}
               <optgroup label="── {mfr} ──">
                 {#each models as hw}
                   <option value={hw.id}>{hw.name} ({extractModulesDesc(hw) || `${hw.psu_count ?? 1}×${(hw.psu_nennwatt ?? 10000) / 1000}kW`}){isRecommended(hw) ? ' ← ✓ empfohlen' : ''}</option>
@@ -503,7 +521,7 @@
               </div>
               <div class="flex justify-between items-center">
                 <span class="text-[10px] text-slate-500">DC-Kabelquerschnitt empfohlen:</span>
-                <span class="text-[10px] font-mono text-slate-400">≥ {batteryDischargeGauge} mm²</span>
+                <span class="text-[10px] font-mono text-slate-400">≥ {cableSection} mm²</span>
               </div>
               {#if batteryDischargeCurrent > 200}
                 <div class="mt-2 p-1.5 bg-red-500/10 border border-red-500/20 rounded text-[10px] text-red-400 flex items-center space-x-1.5">
@@ -798,7 +816,12 @@
       <h3 class="text-lg font-bold text-white mb-2">Stromlaufplan & Topologie (40kW USV)</h3>
       <p class="text-sm text-slate-400 mb-6">
         Die schematische Einspeisungs- und Verteilerstruktur des RZs. Die Zuleitung zur Unterverteilung ist für 40kW mit <strong>5x25 mm²</strong> dimensioniert.
+        <br/><span class="text-blue-400 font-semibold mt-2 inline-block">Interaktiv:</span> Klicke auf Elemente (z.B. Phasen oder USV), um einen Ausfall zu simulieren und die Kaskadeneffekte auf angeschlossene Geräte zu sehen.
       </p>
+
+      {#if isTopologySimulating}
+        <div class="mb-4 text-sm text-blue-400 flex items-center gap-2"><RefreshCw class="w-4 h-4 animate-spin"/> Berechne Kaskadeneffekte...</div>
+      {/if}
 
       <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <!-- SVG diagram column (occupies 3 cols) -->
@@ -873,9 +896,11 @@
 
             <!-- Nodes / Boxes -->
             <!-- Netz -->
-            <rect x="230" y="10" width="240" height="40" rx="6" fill="#1e293b" stroke="#475569" stroke-width="1.5" />
-            <text x="350" y="28" fill="#f8fafc" font-size="11" font-weight="bold" text-anchor="middle">Netz 3~ 400V / 50Hz</text>
-            <text x="350" y="42" fill="#94a3b8" font-size="9" text-anchor="middle">Hauptverteilung (HV)</text>
+            <g class="cursor-pointer group" onclick={() => triggerScenario('grid', 'Main Grid')}>
+              <rect x="230" y="10" width="240" height="40" rx="6" fill="#1e293b" stroke="#475569" stroke-width="1.5" class="group-hover:fill-slate-800 group-hover:stroke-slate-400 transition" />
+              <text x="350" y="28" fill="#f8fafc" font-size="11" font-weight="bold" text-anchor="middle" class="pointer-events-none">Netz 3~ 400V / 50Hz (Totalausfall)</text>
+              <text x="350" y="42" fill="#94a3b8" font-size="9" text-anchor="middle" class="pointer-events-none">Hauptverteilung (HV)</text>
+            </g>
 
             <!-- NH Sicherung -->
             <rect x="250" y="100" width="200" height="60" rx="6" fill="#1e1b4b" stroke="#4338ca" stroke-width="1.5" />
@@ -890,10 +915,12 @@
             <text x="350" y="262" fill="#64748b" font-size="8" text-anchor="middle">LS 3P 63A Abgänge</text>
 
             <!-- USV Schrank (Left Branch) -->
-            <rect x="80" y="430" width="200" height="60" rx="6" fill="#064e3b" stroke="#059669" stroke-width="1.5" />
-            <text x="180" y="452" fill="#ecfdf5" font-size="11" font-weight="bold" text-anchor="middle">USV-Schrank 40 kW</text>
-            <text x="180" y="468" fill="#a7f3d0" font-size="9" text-anchor="middle">WP2-R / 93PM (N+1)</text>
-            <text x="180" y="482" fill="#34d399" font-size="8" text-anchor="middle">Zuleitung: NYY-J 5x16 mm²</text>
+            <g class="cursor-pointer group" onclick={() => triggerScenario('usv', 'USV Total')}>
+              <rect x="80" y="430" width="200" height="60" rx="6" fill="#064e3b" stroke="#059669" stroke-width="1.5" class="group-hover:fill-emerald-900 group-hover:stroke-emerald-400 transition" />
+              <text x="180" y="452" fill="#ecfdf5" font-size="11" font-weight="bold" text-anchor="middle" class="pointer-events-none">USV-Schrank (Ausfall sim.)</text>
+              <text x="180" y="468" fill="#a7f3d0" font-size="9" text-anchor="middle" class="pointer-events-none">WP2-R / 93PM (N+1)</text>
+              <text x="180" y="482" fill="#34d399" font-size="8" text-anchor="middle" class="pointer-events-none">Zuleitung: NYY-J 5x16 mm²</text>
+            </g>
 
             <!-- Bypass LS (Right Branch) -->
             <rect x="420" y="430" width="200" height="60" rx="6" fill="#78350f" stroke="#d97706" stroke-width="1.5" />
@@ -913,22 +940,28 @@
             <text x="350" y="702" fill="#4ade80" font-size="8" text-anchor="middle">LS 1P 32A Abgänge</text>
 
             <!-- PDU L1 -->
-            <rect x="30" y="760" width="200" height="60" rx="6" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5" />
-            <text x="130" y="780" fill="#f8fafc" font-size="10" font-weight="bold" text-anchor="middle">SmartPDU A-0UL</text>
-            <text x="130" y="794" fill="#94a3b8" font-size="8" text-anchor="middle">Phase L1 | Zuleitung: 3x10 mm²</text>
-            <text x="130" y="808" fill="#60a5fa" font-size="8" text-anchor="middle">Server Netzteile A</text>
+            <g class="cursor-pointer group" onclick={() => triggerScenario('pdu', 'A-0UL')}>
+              <rect x="30" y="760" width="200" height="60" rx="6" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5" class="group-hover:fill-blue-900/40 group-hover:stroke-blue-400 transition" />
+              <text x="130" y="780" fill="#f8fafc" font-size="10" font-weight="bold" text-anchor="middle" class="pointer-events-none">SmartPDU A-0UL</text>
+              <text x="130" y="794" fill="#94a3b8" font-size="8" text-anchor="middle" class="pointer-events-none">Phase L1 | Zuleitung: 3x10 mm²</text>
+              <text x="130" y="808" fill="#60a5fa" font-size="8" text-anchor="middle" class="pointer-events-none">Klick für Ausfall (Server A)</text>
+            </g>
 
             <!-- PDU L2 -->
-            <rect x="250" y="760" width="200" height="60" rx="6" fill="#1e293b" stroke="#eab308" stroke-width="1.5" />
-            <text x="350" y="780" fill="#f8fafc" font-size="10" font-weight="bold" text-anchor="middle">SmartPDU A-0UR</text>
-            <text x="350" y="794" fill="#94a3b8" font-size="8" text-anchor="middle">Phase L2 | Zuleitung: 3x10 mm²</text>
-            <text x="350" y="808" fill="#facc15" font-size="8" text-anchor="middle">Server Netzteile B</text>
+            <g class="cursor-pointer group" onclick={() => triggerScenario('pdu', 'A-0UR')}>
+              <rect x="250" y="760" width="200" height="60" rx="6" fill="#1e293b" stroke="#eab308" stroke-width="1.5" class="group-hover:fill-yellow-900/40 group-hover:stroke-yellow-400 transition" />
+              <text x="350" y="780" fill="#f8fafc" font-size="10" font-weight="bold" text-anchor="middle" class="pointer-events-none">SmartPDU A-0UR</text>
+              <text x="350" y="794" fill="#94a3b8" font-size="8" text-anchor="middle" class="pointer-events-none">Phase L2 | Zuleitung: 3x10 mm²</text>
+              <text x="350" y="808" fill="#facc15" font-size="8" text-anchor="middle" class="pointer-events-none">Klick für Ausfall (Server B)</text>
+            </g>
 
             <!-- PDU L3 -->
-            <rect x="470" y="760" width="200" height="60" rx="6" fill="#1e293b" stroke="#a855f7" stroke-width="1.5" />
-            <text x="570" y="780" fill="#f8fafc" font-size="10" font-weight="bold" text-anchor="middle">SmartPDU B-0UL</text>
-            <text x="570" y="794" fill="#94a3b8" font-size="8" text-anchor="middle">Phase L3 | Zuleitung: 3x10 mm²</text>
-            <text x="570" y="808" fill="#c084fc" font-size="8" text-anchor="middle">Redundante A/B Server</text>
+            <g class="cursor-pointer group" onclick={() => triggerScenario('pdu', 'B-0UL')}>
+              <rect x="470" y="760" width="200" height="60" rx="6" fill="#1e293b" stroke="#a855f7" stroke-width="1.5" class="group-hover:fill-purple-900/40 group-hover:stroke-purple-400 transition" />
+              <text x="570" y="780" fill="#f8fafc" font-size="10" font-weight="bold" text-anchor="middle" class="pointer-events-none">SmartPDU B-0UL</text>
+              <text x="570" y="794" fill="#94a3b8" font-size="8" text-anchor="middle" class="pointer-events-none">Phase L3 | Zuleitung: 3x10 mm²</text>
+              <text x="570" y="808" fill="#c084fc" font-size="8" text-anchor="middle" class="pointer-events-none">Klick für Ausfall (Redundanz)</text>
+            </g>
           </svg>
         </div>
 
@@ -969,5 +1002,8 @@
         </div>
       </div>
     </div>
+
+    <!-- Timeline overlay -->
+    <SimulationTimeline result={topologySimResult} onClose={() => topologySimResult = null} />
   {/if}
 </div>

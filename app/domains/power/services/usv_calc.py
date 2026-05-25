@@ -88,7 +88,15 @@ class UsvCalculator:
 
         if devices:
             for device in devices:
-                effective_watt = device.anschlussleistung_watt or device.tdp_watt
+                # Priorisierung: 1. psu_nennwatt * last_pct, 2. tdp_watt, 3. anschlussleistung_watt
+                if device.psu_nennwatt is not None:
+                    last_pct = device.last_pct if device.last_pct is not None else 60.0
+                    effective_watt = Decimal(str(device.psu_nennwatt)) * Decimal(str(last_pct)) / Decimal("100.0")
+                elif device.tdp_watt is not None:
+                    effective_watt = Decimal(str(device.tdp_watt))
+                else:
+                    effective_watt = Decimal(str(device.anschlussleistung_watt or 0))
+
                 if not effective_watt:
                     continue
 

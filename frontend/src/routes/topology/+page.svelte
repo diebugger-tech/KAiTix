@@ -36,6 +36,29 @@
 
   let pdfLoading = $state(false);
 
+  // Heatmap State
+  let showHeatmap = $state(false);
+  let anomalyScores = $state<Array<{ rack_id: number; rack_name: string; score: number; level: 'ok' | 'warning' | 'critical'; issues: string[] }>>([]);
+  let hoveredScoreId = $state<number | null>(null);
+  let hoveredNodeId = $state<number | null>(null);
+  let mousePos = $state({ x: 0, y: 0 });
+
+  const hoveredScore = $derived.by(() => {
+    if (hoveredScoreId === null) return null;
+    return anomalyScores.find(s => s.rack_id === hoveredScoreId) || null;
+  });
+
+  async function toggleHeatmap() {
+    showHeatmap = !showHeatmap;
+    if (showHeatmap && anomalyScores.length === 0) {
+      try {
+        anomalyScores = await api.getAnomalyScores();
+      } catch (e) {
+        console.error("Failed to load anomaly scores", e);
+      }
+    }
+  }
+
   async function downloadTopologyPdf() {
     pdfLoading = true;
     try {
@@ -54,7 +77,7 @@
   }
 
   function printNetzplan() {
-    const items = netzplanData();
+    const items = netzplanData;
     const racks = data?.racks ?? [];
     const rows = items.flatMap(item => {
       const rack = racks.find(r => r.id === item.node.rack_id);
@@ -122,7 +145,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
 
   const GROUP_GAP = 60;
 
-  const baseLayout = $derived(() => {
+  const baseLayout = $derived.by(() => {
     if (!data) return { rackBoxes: [], nodeBoxes: new Map<number, NodeBox>(), totalW: 0, totalH: 0, groupLabels: [] as Array<{ name: string; x: number; w: number }> };
     const rackBoxes: Array<{ rack: TopoData['racks'][number]; x: number; y: number; w: number; h: number }> = [];
     const nodeBoxes = new Map<number, NodeBox>();
@@ -144,16 +167,17 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
       }
       prevStandort = standort;
 
-      const rackH = rack.hoehe_u * U_HEIGHT + LABEL_H + DEV_PAD * 2;
-      const rackX = x + PDU_SIDE_W + PDU_SIDE_GAP;
-      rackBoxes.push({ rack, x: rackX, y: RACK_TOP, w: RACK_WIDTH, h: rackH });
-
       const rackDevices = data.nodes.filter(n => n.rack_id === rack.id);
       const sidePdus = rackDevices.filter(n => n.u_hoehe === 0);
       const slotted = rackDevices
         .filter(n => (n.u_hoehe ?? 1) > 0 && n.u_position != null)
         .sort((a, b) => (b.u_position ?? 0) - (a.u_position ?? 0));
       const floating = rackDevices.filter(n => (n.u_hoehe ?? 1) > 0 && n.u_position == null);
+
+      const floatingH = floating.length > 0 ? floating.length * 22 + 8 : 0;
+      const rackH = rack.hoehe_u * U_HEIGHT + LABEL_H + DEV_PAD * 2 + floatingH;
+      const rackX = x + PDU_SIDE_W + PDU_SIDE_GAP;
+      rackBoxes.push({ rack, x: rackX, y: RACK_TOP, w: RACK_WIDTH, h: rackH });
 
       for (const dev of slotted) {
         const uPos = dev.u_position ?? 1;
@@ -179,7 +203,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
         nodeBoxes.set(dev.id, { x: rightX, y: py, w: PDU_SIDE_W, h: ph, cx: rightX + PDU_SIDE_W / 2, cy: py + ph / 2, node: dev, isSide: true });
       });
 
-      let uy = RACK_TOP + rackH + 8;
+      let uy = RACK_TOP + rackH - floatingH + 8;
       for (const dev of floating) {
         nodeBoxes.set(dev.id, { x: rackX + DEV_PAD, y: uy, w: RACK_WIDTH - DEV_PAD * 2, h: 18, cx: rackX + RACK_WIDTH / 2, cy: uy + 9, node: dev });
         uy += 22;
@@ -205,7 +229,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
   });
 
   function getBox(id: number): NodeBox | undefined {
-    const base = baseLayout().nodeBoxes.get(id);
+    const base = baseLayout.nodeBoxes.get(id);
     if (!base) return undefined;
     const off = nodeOffsets.get(id);
     if (!off) return base;
@@ -213,7 +237,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
   }
 
   // ── Edges ───────────────────────────────────────────────────────────────────
-  const filteredEdges = $derived(() => {
+  const filteredEdges = $derived.by(() => {
     if (!data) return [];
     return data.edges.filter(e => {
       const isPower = (e as any).edge_type === 'power';
@@ -297,8 +321,12 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
     dragOffset = { x: pt.x - box.cx, y: pt.y - box.cy };
   }
   function onMouseMove(e: MouseEvent) {
+    if (svgEl) {
+      const r = svgEl.getBoundingClientRect();
+      mousePos = { x: e.clientX - r.left, y: e.clientY - r.top };
+    }
     if (dragNodeId !== null) {
-      const pt = svgPoint(e), base = baseLayout().nodeBoxes.get(dragNodeId);
+      const pt = svgPoint(e), base = baseLayout.nodeBoxes.get(dragNodeId);
       if (!base) return;
       const next = new Map(nodeOffsets);
       next.set(dragNodeId, { x: pt.x - dragOffset.x - base.cx, y: pt.y - dragOffset.y - base.cy });
@@ -311,14 +339,14 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
   }
   function onMouseUp() { isPanning = false; dragNodeId = null; }
   function resetView() {
-    const l = baseLayout();
+    const l = baseLayout;
     viewBox = { x: 0, y: 0, w: Math.max(l.totalW + 40, 800), h: Math.max(l.totalH + 40, 600) };
     nodeOffsets = new Map();
   }
   function zoomIn()  { const f = 0.8;  viewBox = { x: viewBox.x + viewBox.w*(1-f)/2, y: viewBox.y + viewBox.h*(1-f)/2, w: viewBox.w*f, h: viewBox.h*f }; }
   function zoomOut() { const f = 1.25; viewBox = { x: viewBox.x + viewBox.w*(1-f)/2, y: viewBox.y + viewBox.h*(1-f)/2, w: viewBox.w*f, h: viewBox.h*f }; }
 
-  const nodeEdges = $derived(() => {
+  const nodeEdges = $derived.by(() => {
     if (!data || !selectedNode) return [];
     return data.edges.filter(e => e.von_device_id === selectedNode!.id || e.nach_device_id === selectedNode!.id);
   });
@@ -418,7 +446,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
   }
 
   // Search: returns null when inactive, Set<id> when active
-  const searchMatchIds = $derived(() => {
+  const searchMatchIds = $derived.by(() => {
     if (!data || !searchQuery.trim()) return null;
     const q = searchQuery.toLowerCase();
     return new Set(data.nodes
@@ -429,7 +457,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
       .map(n => n.id));
   });
 
-  const visibleNodeIds = $derived(() => {
+  const visibleNodeIds = $derived.by(() => {
     if (!data) return new Set<number>();
     let ids = new Set(data.nodes.filter(n => showDeviceTypes.has(n.typ)).map(n => n.id));
     if (rackFilter !== null) {
@@ -444,7 +472,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
     node: Node;
     connections: Array<{ edge: Edge; localPort: string; remoteNode: Node | undefined; remotePort: string; isPower: boolean }>;
   }
-  const netzplanData = $derived(() => {
+  const netzplanData = $derived.by(() => {
     if (!data) return [];
     const result: NetzplanDevice[] = [];
     const sorted = [...data.nodes].sort((a, b) => {
@@ -470,8 +498,8 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
     return result;
   });
 
-  const filteredNetzplanData = $derived(() => {
-    let items = netzplanData();
+  const filteredNetzplanData = $derived.by(() => {
+    let items = netzplanData;
     if (netzplanStandort) {
       items = items.filter(item => {
         const rack = data?.racks.find(r => r.id === item.node.rack_id);
@@ -559,6 +587,11 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
               {#each data.racks as rack}<option value={rack.id}>{rack.name}</option>{/each}
             </select>
           </div>
+          <!-- Heatmap Toggle -->
+          <button onclick={toggleHeatmap}
+            class="flex items-center gap-1.5 px-2.5 py-1 bg-slate-800 hover:bg-slate-700 border rounded-lg text-xs transition shrink-0 ml-2 {showHeatmap ? 'border-red-500/50 text-red-400 bg-red-950/20' : 'border-slate-700 text-slate-300'}">
+            🌡 Heatmap
+          </button>
         {/if}
       {/if}
 
@@ -578,8 +611,8 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
       </div>
       {#if data}
         <span class="text-xs text-slate-600 shrink-0">
-          {#if viewMode === 'rack' && searchMatchIds()}{searchMatchIds()!.size} Treffer ·{/if}
-          {#if viewMode === 'netzplan'}{filteredNetzplanData().length} / {netzplanData().length} Geräte{:else}{data.nodes.length} Geräte · {data.edges.length} Verb.{/if}
+          {#if viewMode === 'rack' && searchMatchIds}{searchMatchIds!.size} Treffer ·{/if}
+          {#if viewMode === 'netzplan'}{filteredNetzplanData.length} / {netzplanData.length} Geräte{:else}{data.nodes.length} Geräte · {data.edges.length} Verb.{/if}
         </span>
       {/if}
     </div>
@@ -647,7 +680,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
             <p class="text-slate-400 text-sm">Keine Geräte gefunden</p>
           </div>
         {:else if data}
-          {@const l = baseLayout()}
+          {@const l = baseLayout}
           <svg bind:this={svgEl}
             class="w-full h-full {dragNodeId !== null || isPanning ? 'cursor-grabbing' : 'cursor-grab'}"
             viewBox="{viewBox.x} {viewBox.y} {viewBox.w} {viewBox.h}"
@@ -657,6 +690,17 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
               <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
                 <circle cx="0" cy="0" r="0.7" fill="#1e293b" />
               </pattern>
+              <!-- Glow filter for nodes -->
+              <filter id="glow-filter" x="-30%" y="-30%" width="160%" height="160%">
+                <feGaussianBlur stdDeviation="5" result="blur" />
+                <feComponentTransfer in="blur" result="boost">
+                  <feFuncA type="linear" slope="0.8"/>
+                </feComponentTransfer>
+                <feMerge>
+                  <feMergeNode in="boost" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
             </defs>
             <rect x={viewBox.x} y={viewBox.y} width={viewBox.w} height={viewBox.h} fill="url(#grid)" />
 
@@ -675,7 +719,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
 
             <!-- Edges -->
             <g>
-              {#each filteredEdges() as edge}
+              {#each filteredEdges as edge}
                 {@const path = edgePath(edge)}
                 {@const isHov = hoveredEdge === edge.id}
                 {@const isPow = (edge as any).edge_type === 'power'}
@@ -684,6 +728,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
                 {@const clStatus = crossLocationStatus(edge)}
                 {#if path}
                   <path d={path} fill="none" stroke={edgeColor(edge)}
+                    class={isPow ? 'power-flow-anim' : ''}
                     stroke-width={clStatus === 'invalid' ? (isHov || isSel ? 3.5 : 2) : (isHov || isSel ? 2.5 : 1.2)}
                     stroke-dasharray={clStatus ? '6 3 2 3' : isPow ? '3 4' : edge.cross_rack ? '7 3' : 'none'}
                     opacity={dim ? 0.06 : clStatus === 'invalid' ? (isHov || isSel ? 1 : 0.75) : (isHov || isSel ? 1 : 0.4)}
@@ -708,7 +753,24 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
               {@const usedU = data.nodes.filter(n => n.rack_id === rb.rack.id && (n.u_hoehe ?? 0) > 0).reduce((s, n) => s + (n.u_hoehe ?? 0), 0)}
               {@const utilPct = rb.rack.hoehe_u > 0 ? usedU / rb.rack.hoehe_u : 0}
               {@const utilCol = utilPct > 0.9 ? '#ef4444' : utilPct > 0.7 ? '#f59e0b' : '#10b981'}
+              <!-- Pseudo-3D Rack-Kanten (Behind front face) -->
+              <polygon points="{rb.x + rb.w},{rb.y + 4} {rb.x + rb.w + 6},{rb.y + 10} {rb.x + rb.w + 6},{rb.y + rb.h + 6} {rb.x + rb.w},{rb.y + rb.h}"
+                fill="#04060f" stroke="#111625" stroke-width="0.5" />
+              <polygon points="{rb.x + 4},{rb.y + rb.h} {rb.x + 10},{rb.y + rb.h + 6} {rb.x + rb.w + 6},{rb.y + rb.h + 6} {rb.x + rb.w},{rb.y + rb.h}"
+                fill="#080c18" stroke="#111625" stroke-width="0.5" />
+
               <rect x={rb.x} y={rb.y} width={rb.w} height={rb.h} rx="5" fill="#0f172a" stroke="#1e293b" stroke-width="1" />
+              {#if showHeatmap}
+                {@const scoreObj = anomalyScores.find(s => s.rack_id === rb.rack.id)}
+                {#if scoreObj}
+                  {@const fillCol = scoreObj.level === 'critical' ? 'rgba(239, 68, 68, 0.15)' : scoreObj.level === 'warning' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.08)'}
+                  {@const strokeCol = scoreObj.level === 'critical' ? '#ef4444' : scoreObj.level === 'warning' ? '#f59e0b' : '#10b981'}
+                  <rect x={rb.x} y={rb.y} width={rb.w} height={rb.h} rx="5"
+                    fill={fillCol} stroke={strokeCol} stroke-width="2" class="cursor-help"
+                    onmouseenter={() => hoveredScoreId = rb.rack.id}
+                    onmouseleave={() => hoveredScoreId = null} />
+                {/if}
+              {/if}
               <text x={rb.x+rb.w/2} y={rb.y+17} text-anchor="middle" font-size="10" font-weight="bold" fill="#64748b" class="select-none">{rb.rack.name}</text>
               <text x={rb.x+rb.w/2} y={rb.y+27} text-anchor="middle" font-size="8" fill="#334155" class="select-none">{rb.rack.standort}</text>
               {#each Array.from({ length: rb.rack.hoehe_u }, (_, i) => i) as u}
@@ -728,23 +790,27 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
             <!-- Nodes -->
             {#each Array.from(l.nodeBoxes.keys()) as id}
               {@const box = getBox(id)}
-              {@const hidden = !visibleNodeIds().has(id)}
+              {@const hidden = !visibleNodeIds.has(id)}
               {#if box && !hidden}
                 {@const isSel = selectedNode?.id === id}
-                {@const isConn = selectedNode && nodeEdges().some(e => e.von_device_id === id || e.nach_device_id === id) && id !== selectedNode.id}
+                {@const isConn = selectedNode && nodeEdges.some(e => e.von_device_id === id || e.nach_device_id === id) && id !== selectedNode.id}
                 {@const dimSel = selectedNode && !isSel && !isConn}
-                {@const sMatch = searchMatchIds()}
+                {@const sMatch = searchMatchIds}
                 {@const isMatch = sMatch !== null && sMatch.has(id)}
                 {@const dimSearch = sMatch !== null && !isMatch}
                 {@const isSide = (box as any).isSide}
                 <g class="node-hit" opacity={dimSel || dimSearch ? 0.12 : 1}
                   style="cursor: {dragNodeId === id ? 'grabbing' : 'pointer'}"
                   onmousedown={(e) => onNodeMouseDown(e, id)}
+                  onmouseenter={() => hoveredNodeId = id}
+                  onmouseleave={() => hoveredNodeId = null}
                   onclick={() => { if (dragNodeId !== null) return; selectedNode = isSel ? null : box.node; }}>
                   <rect x={box.x} y={box.y} width={box.w} height={box.h} rx={isSide ? 2 : 3}
+                    class="node-glow"
                     fill={nodeColor(box.node.typ)}
                     stroke={isSel ? '#a78bfa' : isMatch ? '#fbbf24' : nodeStroke(box.node.typ)}
-                    stroke-width={isSel || isMatch ? 2 : 0.8} />
+                    stroke-width={isSel || isMatch ? 2 : 0.8}
+                    filter={hoveredNodeId === id ? 'url(#glow-filter)' : undefined} />
                   {#if isSide}
                     <text x={box.cx} y={box.cy} text-anchor="middle" dominant-baseline="middle"
                       font-size="6" font-weight="600" fill={isSel ? '#e2e8f0' : '#94a3b8'}
@@ -766,6 +832,31 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
             <button onclick={zoomOut} class="w-7 h-7 bg-[#182030] hover:bg-slate-700 border-x border-slate-700 text-xs text-white flex items-center justify-center transition">−</button>
             <button onclick={resetView} class="w-7 h-7 bg-[#182030] hover:bg-slate-700 border border-slate-700 rounded-b-lg text-xs text-white flex items-center justify-center transition">⊙</button>
           </div>
+
+          <!-- Heatmap Tooltip -->
+          {#if showHeatmap && hoveredScore}
+            <div class="absolute bg-[#0f172a]/95 border border-slate-700/80 rounded-lg p-3 shadow-xl backdrop-blur text-xs text-white max-w-xs pointer-events-none z-50 transition-all duration-75"
+              style="left: {mousePos.x + 15}px; top: {mousePos.y + 15}px;">
+              <div class="flex items-center justify-between gap-4 mb-1 border-b border-slate-800 pb-1">
+                <span class="font-bold">{hoveredScore.rack_name}</span>
+                <span class="px-1.5 py-0.5 rounded font-mono text-[9px] font-bold
+                  {hoveredScore.level === 'critical' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
+                   hoveredScore.level === 'warning' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
+                   'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'}">
+                  Score: {Math.round(hoveredScore.score * 100)}%
+                </span>
+              </div>
+              {#if hoveredScore.issues.length > 0}
+                <ul class="list-disc list-inside space-y-1 text-slate-300 mt-2 text-[9px]">
+                  {#each hoveredScore.issues as issue}
+                    <li>{issue}</li>
+                  {/each}
+                </ul>
+              {:else}
+                <p class="text-slate-500 text-[9px] mt-1.5">Keine Anomalien festgestellt.</p>
+              {/if}
+            </div>
+          {/if}
         {/if}
       </div>
 
@@ -805,6 +896,25 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
             </div>
             <span class="text-[10px] text-slate-500">Rack-Auslastung (HE)</span>
           </div>
+          {#if showHeatmap}
+            <div class="border-t border-slate-800 mt-2.5 pt-2">
+              <p class="text-[9px] uppercase font-bold tracking-wider text-slate-400 mb-1.5">Anomalie-Heatmap</p>
+              <div class="space-y-1 text-[10px] text-slate-400">
+                <div class="flex items-center gap-1.5">
+                  <div class="w-3 h-3 rounded bg-red-500/20 border border-red-500 shrink-0"></div>
+                  <span>Kritisch (Score &ge; 60%)</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <div class="w-3 h-3 rounded bg-amber-500/20 border border-amber-500 shrink-0"></div>
+                  <span>Warnung (Score 30-59%)</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <div class="w-3 h-3 rounded bg-emerald-500/10 border border-emerald-500 shrink-0"></div>
+                  <span>Normal (Score &lt; 30%)</span>
+                </div>
+              </div>
+            </div>
+          {/if}
           <p class="text-[9px] text-slate-600 mt-2">PDUs seitlich · Drag: verschieben · Scroll: Zoom</p>
         </div>
 
@@ -826,10 +936,10 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
             {#if selectedNode.u_position}
               <p class="text-[10px] text-slate-500 mb-3">HE {selectedNode.u_position} · {selectedNode.u_hoehe}U</p>
             {/if}
-            {#if nodeEdges().length > 0}
-              <p class="text-[10px] uppercase font-bold tracking-wider text-slate-500 mb-2">Verbindungen ({nodeEdges().length})</p>
+            {#if nodeEdges.length > 0}
+              <p class="text-[10px] uppercase font-bold tracking-wider text-slate-500 mb-2">Verbindungen ({nodeEdges.length})</p>
               <div class="space-y-1.5">
-                {#each nodeEdges() as edge}
+                {#each nodeEdges as edge}
                   {@const otherId = connectedNodeId(edge)}
                   {@const other = data?.nodes.find(n => n.id === otherId)}
                   {@const isPow = (edge as any).edge_type === 'power'}
@@ -883,13 +993,13 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
         <div class="space-y-3 pb-6">
           <div class="bg-[#101622] border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-500 flex items-center justify-between">
             <span>Port-Routing · Verbindungen nach Kabeltyp und Standort filterbar.</span>
-            <span class="text-slate-600">{filteredNetzplanData().length} / {netzplanData().length} Geräte</span>
+            <span class="text-slate-600">{filteredNetzplanData.length} / {netzplanData.length} Geräte</span>
           </div>
-          {#each filteredNetzplanData() as item, idx}
+          {#each filteredNetzplanData as item, idx}
             {@const rack = data.racks.find(r => r.id === item.node.rack_id)}
-            {@const prevItem = filteredNetzplanData()[idx - 1]}
+            {@const prevItem = filteredNetzplanData[idx - 1]}
             {@const prevRack = prevItem ? data.racks.find(r => r.id === prevItem.node.rack_id) : null}
-            {@const standortChanged = netzplanStandort === null && rack?.standort !== prevRack?.standort}
+            {@const standortChanged = netzplanStandort === '' && rack?.standort !== prevRack?.standort}
 
             {#if standortChanged && rack?.standort}
               {@const locTyp = locationStore.getTyp(rack.standort)}
@@ -979,7 +1089,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
               </div>
             </div>
           {/each}
-          {#if filteredNetzplanData().length === 0}
+          {#if filteredNetzplanData.length === 0}
             <div class="text-center py-12 text-slate-500 text-sm">Keine Verbindungen für aktive Filter.</div>
           {/if}
         </div>
@@ -987,3 +1097,22 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
     </div>
   {/if}
 </div>
+
+<style>
+  @keyframes power-flow {
+    from {
+      stroke-dashoffset: 20;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  :global(.power-flow-anim) {
+    animation: power-flow 0.8s linear infinite !important;
+  }
+
+  :global(.node-glow) {
+    transition: filter 0.2s ease-in-out;
+  }
+</style>

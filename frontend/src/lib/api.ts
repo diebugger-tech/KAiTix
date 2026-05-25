@@ -50,6 +50,14 @@ export interface Rack {
   hardware_type_id?: number;
 }
 
+export interface RackAnomalyScore {
+  rack_id: number;
+  rack_name: string;
+  score: number;          // 0.0 – 1.0
+  level: 'ok' | 'warning' | 'critical';
+  issues: string[];
+}
+
 export interface Cable {
   id: number;
   kabel_nr: string;
@@ -538,11 +546,14 @@ export const api = {
       hersteller: string | null; modell: string | null; ip_adresse: string | null;
     }>;
     edges: Array<{
-      id: string; kabel_nr: string; typ: string; laenge_m: number; farbe: string | null;
+      id: string; kabel_nr: string; typ: string; laenge_m: number | null; farbe: string | null;
       von_device_id: number; von_port: string | null;
       nach_device_id: number; nach_port: string | null; cross_rack: boolean;
+      edge_type: 'cable' | 'power';
+      phase?: 'L1' | 'L2' | 'L3';
     }>;
   }> => request('topology'),
+  getAnomalyScores: (): Promise<RackAnomalyScore[]> => request('topology/anomaly-scores'),
 
   // CSV Import
   previewDeviceCsv: (file: File): Promise<any> => {
@@ -631,4 +642,6 @@ export const api = {
   getExecution: (eid: number): Promise<RunbookExecution> => request(`executions/${eid}`),
   updateExecutionStatus: (eid: number, status: string): Promise<RunbookExecution> => request(`executions/${eid}/status`, { method: 'PUT', body: JSON.stringify({ status }) }),
   checkExecutionStep: (eid: number, sid: number, note?: string): Promise<RunbookExecutionStep> => request(`executions/${eid}/steps/${sid}/check`, { method: 'POST', body: JSON.stringify({ note }) }),
+  uncheckExecutionStep: (eid: number, sid: number): Promise<null> => request(`executions/${eid}/steps/${sid}/uncheck`, { method: 'DELETE' }),
+  getRunbookExecutions: (id: number): Promise<RunbookExecution[]> => request(`runbooks/${id}/executions`),
 };

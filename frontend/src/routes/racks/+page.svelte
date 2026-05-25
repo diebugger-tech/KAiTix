@@ -93,6 +93,10 @@
   let editUPos       = $state<number|null>(1);
   let editUHoehe     = $state<number|null>(1);
   let editSide       = $state<'left'|'right'>('left');
+  let editShutdownDelay = $state<number|null>(0);
+  let editShutdownPriority = $state<number|null>(2);
+  let editShutdownMethod = $state<string>('ACPI_Graceful');
+  let editDependencies = $state<any[]>([]);
 
   // Kabel anlegen modal
   let showAddCable  = $state(false);
@@ -2139,6 +2143,52 @@
         <label class="block text-xs font-semibold text-slate-400 mb-1">Bemerkung</label>
         <textarea bind:value={editBemerkung} rows="2"
           class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500 resize-none"></textarea>
+      </div>
+
+      <div class="border-t border-slate-800 pt-4 mt-2">
+        <h4 class="text-sm font-bold text-white mb-3">Ausfall- & Boot-Verhalten</h4>
+        <div class="grid grid-cols-3 gap-4 mb-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Priorität (1=Höchste)</label>
+            <input type="number" bind:value={editShutdownPriority} min="1" max="4"
+              class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Delay (Sekunden)</label>
+            <input type="number" bind:value={editShutdownDelay} min="0"
+              class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Methode</label>
+            <select bind:value={editShutdownMethod}
+              class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+              <option value="ACPI_Graceful">ACPI Graceful</option>
+              <option value="SSH_Script">SSH Script</option>
+              <option value="Hard_Power_Cut">Hard Power Cut</option>
+            </select>
+          </div>
+        </div>
+
+        <h4 class="text-sm font-bold text-white mb-2">Abhängigkeiten (DAG)</h4>
+        <p class="text-[10px] text-slate-500 mb-2">Wenn die ausgewählten Geräte ausfallen, fällt dieses Gerät ebenfalls aus. Nutze 'HA-Cluster' für redundante Systeme (Gerät überlebt, solange mind. eines im Cluster online ist).</p>
+        
+        {#each editDependencies as dep, i}
+          <div class="flex items-center space-x-2 mb-2 bg-slate-900/50 p-2 rounded border border-slate-800">
+            <select bind:value={dep.depends_on_device_id} class="flex-1 bg-[#182030] border border-slate-700 rounded px-2 py-1 text-xs text-white">
+              {#each devices.filter(d => d.id !== selectedDevice!.id) as d}
+                <option value={d.id}>{d.hostname} ({d.typ})</option>
+              {/each}
+            </select>
+            <select bind:value={dep.dependency_type} class="w-24 bg-[#182030] border border-slate-700 rounded px-2 py-1 text-xs text-white">
+              <option value="power">Power</option>
+              <option value="network">Network</option>
+            </select>
+            <input type="text" bind:value={dep.dependency_group} placeholder="HA-Cluster (opt)" class="w-28 bg-[#182030] border border-slate-700 rounded px-2 py-1 text-xs text-white" />
+            <button type="button" onclick={() => editDependencies = editDependencies.filter((_, idx) => idx !== i)} class="p-1 text-red-500/50 hover:text-red-400"><X class="w-3 h-3"/></button>
+          </div>
+        {/each}
+        <button type="button" onclick={() => editDependencies = [...editDependencies, {depends_on_device_id: devices.find(d=>d.id!==selectedDevice!.id)?.id, dependency_type: 'power', dependency_group: ''}]}
+          class="text-xs text-blue-400 hover:text-blue-300 mt-1 flex items-center gap-1">+ Abhängigkeit hinzufügen</button>
       </div>
       <div class="flex justify-end space-x-3 pt-2">
         <button type="button" onclick={() => showEditDevice=false}

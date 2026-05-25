@@ -1,18 +1,27 @@
-{ pkgs ? import <nixpkgs> {} }:
-pkgs.mkShell {
-  buildInputs = with pkgs; [
-    python312
-    mariadb-connector-c
-    openssl
-    pkg-config
-  ];
+# KAiTix shell.nix
+# Importiert gemeinsame Pakete aus ~/Projekte/nix/common.nix
+# Stack: FastAPI + Svelte5 + MySQL
+# Nix Single-User auf Ubuntu
 
-  shellHook = ''
-    export LD_LIBRARY_PATH="${pkgs.mariadb-connector-c}/lib:${pkgs.openssl.out}/lib:$LD_LIBRARY_PATH"
-    export PYTHONNOUSERSITE=1
-    export PIP_REQUIRE_VIRTUALENV=false
+{ pkgs ? import <nixpkgs> {} }:
+let
+  common = import ../../nix/common.nix { inherit pkgs; };
+in pkgs.mkShell {
+  buildInputs = common.buildInputs;
+
+  shellHook = common.shellHook + ''
     echo "=== KAiTix Dev Shell ==="
-    echo "Python: \$(python3 --version)"
-    echo "Tipp: python3 -m venv .venv && source .venv/bin/activate && make install"
+    echo "Python: $(python3 --version)"
+    echo "Node:   $(node --version)"
+    echo ""
+    echo "Befehle:"
+    echo "  source .venv/bin/activate   # venv aktivieren"
+    echo "  make dev                    # Backend starten (Port 8003)"
+    echo "  make dev-frontend           # Svelte Frontend starten"
+    echo "  make dev-all                # Backend + Frontend parallel"
+    echo ""
+    if [ ! -d ".venv" ]; then
+      echo "Tipp: python3 -m venv .venv && source .venv/bin/activate && make install"
+    fi
   '';
 }

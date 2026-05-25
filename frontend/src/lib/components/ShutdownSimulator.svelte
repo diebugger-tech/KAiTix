@@ -7,8 +7,6 @@
   } from '@lucide/svelte';
 
   // --- State ---
-  let racks = $state<Rack[]>([]);
-  let selectedRackId = $state(0);
   let simResult = $state<ShutdownSimResult | null>(null);
   let isLoading = $state(false);
   let error = $state('');
@@ -99,14 +97,12 @@
 
   // --- Actions ---
   async function runShutdown() {
-    if (!selectedRackId) return;
     isLoading = true;
     error = '';
     stopPlayback();
     playbackIdx = 0;
     try {
       simResult = await api.simulateShutdown({
-        rack_id: selectedRackId,
         battery_type: batType,
         series_blocks: batSeries,
         parallel_strings: batParallel,
@@ -212,10 +208,8 @@
     return markers;
   }
 
-  onMount(async () => {
-    try {
-      racks = await api.getRacks();
-    } catch { /* ignore */ }
+  onMount(() => {
+    runShutdown();
     return () => { if (playbackTimer) clearInterval(playbackTimer); };
   });
 </script>
@@ -223,36 +217,33 @@
 <div class="space-y-6">
   <!-- Config bar -->
   <div class="bg-[#111827] border border-slate-700/50 rounded-xl p-4">
-    <div class="flex flex-wrap items-end gap-4">
-      <div class="flex-1 min-w-[200px]">
-        <label class="block text-xs text-slate-400 mb-1">Rack auswählen</label>
-        <select bind:value={selectedRackId}
-          class="w-full bg-[#0d1220] border border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-200 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500">
-          <option value={0}>— Rack wählen —</option>
-          {#each racks as rack}
-            <option value={rack.id}>{rack.name} ({rack.standort})</option>
-          {/each}
-        </select>
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center space-x-2">
+        <Server class="w-5 h-5 text-blue-400" />
+        <h3 class="text-sm font-semibold text-slate-200">RZ-weiter Shutdown-Plan</h3>
+        <span class="text-xs text-slate-500 ml-2">Basierend auf Server-Priorität</span>
       </div>
 
-      <button onclick={() => showConfig = !showConfig}
-        class="flex items-center space-x-1 text-xs text-slate-400 hover:text-slate-200 transition px-3 py-2 border border-slate-700 rounded-lg">
-        <Battery class="w-3.5 h-3.5" />
-        <span>Batterie-Konfiguration</span>
-        <ChevronDown class="w-3 h-3 transition-transform {showConfig ? 'rotate-180' : ''}" />
-      </button>
+      <div class="flex items-center gap-3">
+        <button onclick={() => showConfig = !showConfig}
+          class="flex items-center space-x-1 text-xs text-slate-400 hover:text-slate-200 transition px-3 py-2 border border-slate-700 rounded-lg">
+          <Battery class="w-3.5 h-3.5" />
+          <span>Batterie-Konfiguration</span>
+          <ChevronDown class="w-3 h-3 transition-transform {showConfig ? 'rotate-180' : ''}" />
+        </button>
 
-      <button onclick={runShutdown} disabled={!selectedRackId || isLoading}
-        class="px-5 py-2 rounded-lg text-sm font-medium transition
-          {selectedRackId && !isLoading
-            ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white hover:from-amber-500 hover:to-orange-500 shadow-lg shadow-amber-900/30'
-            : 'bg-slate-700 text-slate-400 cursor-not-allowed'}">
-        {#if isLoading}
-          <span class="animate-spin inline-block mr-1">⏳</span> Simuliere…
-        {:else}
-          <Zap class="w-4 h-4 inline mr-1" /> Shutdown simulieren
-        {/if}
-      </button>
+        <button onclick={runShutdown} disabled={isLoading}
+          class="px-5 py-2 rounded-lg text-sm font-medium transition
+            {!isLoading
+              ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white hover:from-amber-500 hover:to-orange-500 shadow-lg shadow-amber-900/30'
+              : 'bg-slate-700 text-slate-400 cursor-not-allowed'}">
+          {#if isLoading}
+            <span class="animate-spin inline-block mr-1">⏳</span> Simuliere…
+          {:else}
+            <Zap class="w-4 h-4 inline mr-1" /> Shutdown simulieren
+          {/if}
+        </button>
+      </div>
     </div>
 
     {#if showConfig}
@@ -329,7 +320,7 @@
           <!-- Speed -->
           <div class="flex items-center space-x-1 text-xs text-slate-400">
             <FastForward class="w-3 h-3" />
-            <select bind:value={playbackSpeed} onchange={() => { if (isPlaying) { stopPlayback(); startPlayback(); } }}
+            <select bind:value={playbackSpeed} onchange={() => { const was = isPlaying; stopPlayback(); if (was) startPlayback(); }}
               class="bg-[#0d1220] border border-slate-600 rounded px-1 py-0.5 text-xs text-slate-200">
               <option value={0.5}>0.5×</option>
               <option value={1}>1×</option>
@@ -473,15 +464,14 @@
     <!-- Empty state -->
     <div class="bg-[#111827] border border-slate-700/50 rounded-xl p-8 text-center">
       <Server class="w-12 h-12 mx-auto text-slate-600 mb-3" />
-      <h3 class="text-sm font-semibold text-slate-300 mb-1">Shutdown-Simulation</h3>
+      <h3 class="text-sm font-semibold text-slate-300 mb-1">Globale Shutdown-Simulation</h3>
       <p class="text-xs text-slate-500 max-w-md mx-auto">
-        Wähle ein Rack aus und starte die Simulation, um den kontrollierten Shutdown-Ablauf
-        bei Stromausfall zu visualisieren. Die Simulation berechnet die Akku-Entladung nach Peukert
-        und zeigt, welche Geräte sicher herunterfahren und welche abstürzen.
+        Die Simulation zeigt den kontrollierten Shutdown-Ablauf über alle Standorte bei Stromausfall.
+        Die Priorisierung erfolgt server-basiert (kritisch vs. unkritisch).
       </p>
       <p class="text-xs text-slate-600 mt-3">
         💡 Tipp: Konfiguriere <code class="text-amber-400/60">shutdown_priority</code> und
-        <code class="text-amber-400/60">shutdown_delay_seconds</code> pro Gerät in den Geräte-Einstellungen.
+        <code class="text-amber-400/60">shutdown_delay_seconds</code> in den Geräte-Einstellungen.
       </p>
     </div>
   {/if}

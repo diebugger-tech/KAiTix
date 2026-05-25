@@ -323,7 +323,7 @@ class ShutdownSimulationResponse(BaseModel):
 
 
 class ShutdownSimulationRequest(BaseModel):
-    rack_id: int = Field(..., description="Rack ID to simulate shutdown for")
+    rack_id: Optional[int] = None
     battery_type: str = "vrla"
     series_blocks: int = Field(4, gt=0)
     parallel_strings: int = Field(1, gt=0)
@@ -338,16 +338,20 @@ class ShutdownSimulationRequest(BaseModel):
 async def simulate_shutdown(
     req: ShutdownSimulationRequest, db: AsyncSession = Depends(get_db)
 ):
-    """Simulates controlled shutdown cascade with Peukert battery discharge."""
-    result = await db.execute(
-        select(DeviceModel).where(DeviceModel.rack_id == req.rack_id)
-    )
+    if req.rack_id is not None:
+        result = await db.execute(
+            select(DeviceModel).where(DeviceModel.rack_id == req.rack_id)
+        )
+    else:
+        result = await db.execute(
+            select(DeviceModel)
+        )
     devices = result.scalars().all()
 
     if not devices:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Keine Geräte im Rack {req.rack_id} gefunden",
+            detail="Keine Geräte gefunden" if req.rack_id is None else f"Keine Geräte im Rack {req.rack_id} gefunden",
         )
 
     device_dicts = [
