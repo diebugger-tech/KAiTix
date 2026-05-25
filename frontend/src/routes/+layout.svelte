@@ -88,90 +88,107 @@
         </div>
         <div>
           <h1 class="text-lg font-bold font-outfit tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">KAiTix</h1>
-          <span class="text-[10px] text-slate-500 font-mono tracking-widest uppercase">ServerFlow Calc</span>
+          <span class="text-[10px] text-slate-500 font-mono tracking-widest uppercase">Serverraum Management</span>
         </div>
       </div>
 
       <!-- Navigation -->
       <nav class="p-4 space-y-1">
+        <!-- Dashboard -->
         <a 
           href="/" 
-          class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 {page.url.pathname === '/' ? 'bg-blue-600/20 text-blue-400 border-l-2 border-blue-500 pl-3.5' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}"
+          class="flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 {page.url.pathname === '/' ? 'bg-blue-600/20 text-blue-400 border-l-2 border-blue-500 pl-3.5' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}"
         >
-          <LayoutDashboard class="w-4 h-4" />
+          <LayoutDashboard class="w-4.5 h-4.5" />
           <span>Dashboard</span>
         </a>
 
+        <!-- Group: Infrastruktur -->
+        <div class="pt-3 pb-1 px-4">
+          <span class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block">Infrastruktur</span>
+        </div>
         <a
           href="/racks"
-          class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 {page.url.pathname === '/racks' ? 'bg-blue-600/20 text-blue-400 border-l-2 border-blue-500 pl-3.5' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}"
+          class="flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 {page.url.pathname === '/racks' ? 'bg-blue-600/20 text-blue-400 border-l-2 border-blue-500 pl-3.5' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}"
         >
-          <Layers class="w-4 h-4" />
+          <Layers class="w-4.5 h-4.5" />
           <span>Racks</span>
         </a>
-
-        <a
-          href="/usv" 
-          class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 {page.url.pathname === '/usv' ? 'bg-orange-500/20 text-orange-400 border-l-2 border-orange-500 pl-3.5' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}"
+        <a 
+          href="/hardware" 
+          class="flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 {page.url.pathname === '/hardware' ? 'bg-purple-500/20 text-purple-400 border-l-2 border-purple-500 pl-3.5' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}"
         >
-          <Zap class="w-4 h-4" />
-          <span>USV-Auslegung</span>
+          <Cpu class="w-4.5 h-4.5" />
+          <span>Hardware</span>
         </a>
-
+        <a 
+          href="/cables" 
+          class="flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 {page.url.pathname === '/cables' ? 'bg-emerald-500/20 text-emerald-400 border-l-2 border-emerald-500 pl-3.5' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}"
+        >
+          <Cable class="w-4.5 h-4.5" />
+          <span>Kabelliste</span>
+        </a>
         <a
           href="/topology"
-          class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 {(page.url.pathname as string) === '/topology' ? 'bg-violet-500/20 text-violet-400 border-l-2 border-violet-500 pl-3.5' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}"
+          class="flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 {(page.url.pathname as string) === '/topology' ? 'bg-violet-500/20 text-violet-400 border-l-2 border-violet-500 pl-3.5' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}"
         >
-          <Network class="w-4 h-4" />
+          <Network class="w-4.5 h-4.5" />
           <span>Topologie</span>
         </a>
 
+        <!-- Group: Stromversorgung -->
+        <div class="pt-3 pb-1 px-4 border-t border-slate-800/60 mt-3">
+          <span class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block">Stromversorgung</span>
+        </div>
+        <a
+          href="/usv" 
+          class="flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 {page.url.pathname === '/usv' ? 'bg-orange-500/20 text-orange-400 border-l-2 border-orange-500 pl-3.5' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}"
+        >
+          <Zap class="w-4.5 h-4.5" />
+          <span>USV-Auslegung</span>
+        </a>
         <a
           href="/eplan"
-          class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 {(page.url.pathname as string) === '/eplan' ? 'bg-rose-500/20 text-rose-400 border-l-2 border-rose-500 pl-3.5' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}"
+          class="flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 {(page.url.pathname as string) === '/eplan' ? 'bg-rose-500/20 text-rose-400 border-l-2 border-rose-500 pl-3.5' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}"
         >
-          <Zap class="w-4 h-4" />
+          <Zap class="w-4.5 h-4.5" />
           <span>E-Plan</span>
         </a>
 
-        <a
-          href="/import"
-          class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 {(page.url.pathname as string) === '/import' ? 'bg-cyan-500/20 text-cyan-400 border-l-2 border-cyan-500 pl-3.5' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}"
-        >
-          <FileUp class="w-4 h-4" />
-          <span>Import</span>
-        </a>
-
-        <a 
-          href="/cables" 
-          class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 {page.url.pathname === '/cables' ? 'bg-emerald-500/20 text-emerald-400 border-l-2 border-emerald-500 pl-3.5' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}"
-        >
-          <Cable class="w-4 h-4" />
-          <span>Kabelliste</span>
-        </a>
-
-        <a 
-          href="/hardware" 
-          class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 {page.url.pathname === '/hardware' ? 'bg-purple-500/20 text-purple-400 border-l-2 border-purple-500 pl-3.5' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}"
-        >
-          <Cpu class="w-4 h-4" />
-          <span>Hardware</span>
-        </a>
-
+        <!-- Group: Virtualisierung -->
+        <div class="pt-3 pb-1 px-4 border-t border-slate-800/60 mt-3">
+          <span class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block">Virtualisierung</span>
+        </div>
         <a 
           href="/virtual-machines" 
-          class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 {page.url.pathname === '/virtual-machines' ? 'bg-pink-500/20 text-pink-400 border-l-2 border-pink-500 pl-3.5' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}"
+          class="flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 {page.url.pathname === '/virtual-machines' ? 'bg-pink-500/20 text-pink-400 border-l-2 border-pink-500 pl-3.5' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}"
         >
-          <Monitor class="w-4 h-4" />
+          <Monitor class="w-4.5 h-4.5" />
           <span>Virtuelle Maschinen</span>
         </a>
 
+        <!-- Group: Betrieb -->
+        <div class="pt-3 pb-1 px-4 border-t border-slate-800/60 mt-3">
+          <span class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block">Betrieb</span>
+        </div>
         <a 
           href="/runbook-orchestrator" 
-          class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 {page.url.pathname.startsWith('/runbook-orchestrator') ? 'bg-yellow-500/20 text-yellow-400 border-l-2 border-yellow-500 pl-3.5' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}"
+          class="flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 {page.url.pathname.startsWith('/runbook-orchestrator') ? 'bg-yellow-500/20 text-yellow-400 border-l-2 border-yellow-500 pl-3.5' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}"
         >
-          <BookOpen class="w-4 h-4" />
+          <BookOpen class="w-4.5 h-4.5" />
           <span>Runbook Orchestrator</span>
+        </a>
+
+        <!-- Group: Tools -->
+        <div class="pt-3 pb-1 px-4 border-t border-slate-800/60 mt-3">
+          <span class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block">Tools</span>
+        </div>
+        <a
+          href="/import"
+          class="flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 {(page.url.pathname as string) === '/import' ? 'bg-cyan-500/20 text-cyan-400 border-l-2 border-cyan-500 pl-3.5' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}"
+        >
+          <FileUp class="w-4.5 h-4.5" />
+          <span>Import</span>
         </a>
       </nav>
 
