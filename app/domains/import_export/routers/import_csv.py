@@ -182,12 +182,14 @@ async def commit_devices(
             ip_adresse=row.ip_adresse,
             bemerkung=row.bemerkung,
         )
-        db.add(dev)
+        # Use savepoint so IntegrityError only rolls back this one row,
+        # not the entire session (BUG-03 fix)
         try:
-            await db.flush()
+            async with db.begin_nested():
+                db.add(dev)
+                await db.flush()
             created += 1
         except IntegrityError:
-            await db.rollback()
             skipped += 1
     await db.commit()
     return {"created": created, "updated": updated, "skipped": skipped}
@@ -321,7 +323,14 @@ async def commit_cables(
             farbe=row.farbe,
             bemerkung=row.bemerkung,
         )
-        db.add(cable)
-        created += 1
+        # Use savepoint so a duplicate kabel_nr only skips this one cable,
+        # not the entire batch (BUG-04 fix)
+        try:
+            async with db.begin_nested():
+                db.add(cable)
+                await db.flush()
+            created += 1
+        except IntegrityError:
+            skipped += 1
     await db.commit()
-    return {"created": created, "updated": updated}
+    return {"created": created, "updated": updated, "skipped": skipped}
