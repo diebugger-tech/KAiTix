@@ -438,7 +438,7 @@ export const api = {
   createDevice: (device: Partial<Device>): Promise<Device> => request('devices/', { method: 'POST', body: JSON.stringify(device) }),
   updateDevice: (id: number, device: Partial<Device>): Promise<Device> => request(`devices/${id}`, { method: 'PUT', body: JSON.stringify(device) }),
   deleteDevice: (id: number): Promise<null> => request(`devices/${id}`, { method: 'DELETE' }),
-  getDevicePorts: (deviceId: number): Promise<DevicePort[]> => request(`devices/${deviceId}/ports`),
+  getDevicePorts: (deviceId: number): Promise<DevicePort[]> => request(`devices/${deviceId}/interfaces`),
   addDeviceInterface: (deviceId: number, data: { port_name: string; typ?: string; mac_adresse?: string | null }): Promise<{ id: number; port_name: string; typ: string }> =>
     request(`devices/${deviceId}/interfaces`, { method: 'POST', body: JSON.stringify(data) }),
 
