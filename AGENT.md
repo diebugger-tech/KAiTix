@@ -48,11 +48,11 @@ virtuelle Maschinen und Shutdown/Startup-Runbooks.
 
 ## Stack
 
-- **Backend:** FastAPI + SQLAlchemy 2.x sync + PyMySQL + aiomysql
+- **Backend:** FastAPI + SQLAlchemy 2.x async + aiomysql
 - **Frontend:** Svelte 5 — kein TypeScript, plain JavaScript
 - **DB:** MySQL 8+ (nur MySQL — kein PostgreSQL, kein SQLite)
 - **Migrations:** Alembic (immer via `python3 -m alembic`)
-- **Tests:** pytest (20 Tests, alle grün)
+- **Tests:** pytest
 - **Linting:** ruff + mypy
 - **Port:** Backend 8003
 

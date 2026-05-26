@@ -42,22 +42,31 @@ KAiTix ist ein hochspezialisiertes Planungs-, Simulations- und Dokumentationswer
 * **U-genaue Positionierung:** Geräte (Server, Switches, Firewalls, Kentix-Komponenten) mit präzisen U-Höhen, TDP-Werten und Seriennummern dokumentieren.
 * **0U-PDU-Validierung:** Maximale PDU-Höhen- und Positionskontrolle (z. B. Ausschluss von 47HE-PDUs in 42HE-Racks; nur eine vertikale PDU pro Seite).
 
-### 2. USV-Simulation & Phasenlast-Berechnung
+### 2. VM-Landschaft
+* **Abhängigkeiten & Zuordnung:** Virtuelle Maschinen mit Host-Server-Zuordnung, Hypervisor-Typ und Abhängigkeitsgraph (`depends_on`).
+* **Visualisierung:** Interaktives Graphen-Diagramm mit Bezier-Kurven. Hover-Effekt hebt direkte Vorgänger und Nachfolger hervor.
+
+### 3. Runbook Orchestrator
+* **Drag & Drop Planer:** Shutdown- und Startup-Sequenzen komfortabel via Weboberfläche in Layer einteilen.
+* **Interaktives Protokoll:** Schritt-für-Schritt-Ausführung mit namentlichem Audit-Trail (Wer hat wann welchen Schritt abgehakt/zurückgenommen).
+* **Startup auto-generiert:** Automatische Umkehrung eines Shutdown-Runbooks auf Knopfdruck.
+
+### 4. USV-Simulation & Phasenlast-Berechnung
 * **N+1 Dimensionierung:** Berechnung der minimalen Anzahl an USV- und Batteriemodulen, die für eine Autonomiezeit bei Phasenungleichgewicht (L1/L2/L3) erforderlich sind.
 * **Phasenlasten:** Berechnung und Warnung bei Asymmetrie der Stromlasten über die drei Phasen.
 
-### 3. Predictive Analytics: Blast Radius (Ausfall-Simulation)
+### 5. Predictive Analytics: Blast Radius (Ausfall-Simulation)
 * **Kaskadierende Ausfälle:** Was passiert, wenn ein Core-Switch oder eine PDU ausfällt?
 * **Redundanz-Check:** Erkennung isolierter oder stromloser Server sowie mitgerissener VMs und betroffener Runbook-Sequenzen.
 
-### 4. EPLAN CSV Import & Kabeltyp-Mapping
+### 6. EPLAN CSV Import & Kabeltyp-Mapping
 * **Kabelimport:** EPLAN-Kabelverbindungslisten komfortabel per CSV hochladen.
 * **Spaltenzuordnung:** Flexibler Parser mit dynamischem Spaltenmapping und automatischer Normierung freier Kabeltypen (z. B. `LWL-LC` zu standardisierten Enum-Werten wie `LC-LC`).
 
-### 5. Kabellisten-Export
+### 7. Kabellisten-Export
 * **Multi-Format-Export:** Download der Verkabelungsliste als CSV, XLSX (via `openpyxl`) oder ODS (via `odfpy`).
 
-### 6. Stromlaufplan & Topologie
+### 8. Stromlaufplan & Topologie
 * **Grafische Darstellung:** Interaktiver D3.js/Cytoscape.js Topologie-Graph zur rack-übergreifenden Visualisierung.
 * **Allpoliger Stromlaufplan:** Darstellung der PDU- und USV-Verbindungspfade als SVG mit direktem PDF-Export.
 
