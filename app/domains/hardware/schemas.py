@@ -15,6 +15,8 @@ class RackBase(BaseModel):
     hersteller: Optional[str] = None
     modell: Optional[str] = None
     hardware_type_id: Optional[int] = None
+    max_watt: Optional[Decimal] = None
+    usv_n1_redundant: bool = False
 
 
 class RackCreate(RackBase):
@@ -31,6 +33,8 @@ class RackUpdate(BaseModel):
     hersteller: Optional[str] = None
     modell: Optional[str] = None
     hardware_type_id: Optional[int] = None
+    max_watt: Optional[Decimal] = None
+    usv_n1_redundant: Optional[bool] = None
 
 
 class Rack(RackBase):

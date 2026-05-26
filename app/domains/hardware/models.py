@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import List, Optional, TYPE_CHECKING
-from sqlalchemy import Integer, String, DateTime, Enum, DECIMAL, ForeignKey
+from sqlalchemy import Boolean, Integer, String, DateTime, Enum, DECIMAL, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 
@@ -22,6 +22,8 @@ class Rack(Base):
     hersteller: Mapped[Optional[str]] = mapped_column(String(100))
     modell: Mapped[Optional[str]] = mapped_column(String(100))
     hardware_type_id: Mapped[Optional[int]] = mapped_column(Integer)
+    max_watt: Mapped[Optional[float]] = mapped_column(DECIMAL(10, 2), nullable=True)  # Max. Gesamtleistung für Overload-Check
+    usv_n1_redundant: Mapped[bool] = mapped_column(Boolean, default=False)  # USV N+1-Redundanz aktiviert
     geaendert_von: Mapped[Optional[str]] = mapped_column(String(100))
     geaendert_am: Mapped[Optional[datetime]] = mapped_column(DateTime)
 
