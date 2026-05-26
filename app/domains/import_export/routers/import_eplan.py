@@ -100,6 +100,9 @@ async def commit_eplan(
         device_ports_cache[d.hostname.lower()] = list(d.interfaces)
 
     for conn in payload.connections:
+        # Reset per-iteration variables to prevent stale scope from previous iteration (BUG-02)
+        s_dev_key: str | None = None
+        t_dev_key: str | None = None
         # Determine source and target devices, racks, ports
         # 1. Resolve source rack
         s_rack = None
