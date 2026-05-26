@@ -22,12 +22,47 @@
     [...new Set(racks.map(r => r.standort).filter(Boolean))].sort()
   );
 
+  // Extract unique sorted rackreihe names for all standort/reihe combinations
+  let allCombinations = $derived.by(() => {
+    const list: Array<{ standort: string; rackreihe: string; label: string; value: string }> = [];
+    const seen = new Set<string>();
+    for (const r of racks) {
+      if (r.standort && r.rackreihe) {
+        const key = `${r.standort} || ${r.rackreihe}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          list.push({
+            standort: r.standort,
+            rackreihe: r.rackreihe,
+            label: `${r.standort} / ${r.rackreihe}`,
+            value: key
+          });
+        }
+      }
+    }
+    return list.sort((a, b) => a.label.localeCompare(b.label));
+  });
+
   // Extract unique sorted rackreihe names for the selected standort
-  let rackreihen = $derived(
+  let singleStandortRows = $derived(
     selectedStandort !== 'Alle'
       ? [...new Set(racks.filter(r => r.standort === selectedStandort && r.rackreihe).map(r => r.rackreihe))].sort()
       : []
   );
+
+  // Determine row list based on standort selection
+  let reiheList = $derived.by(() => {
+    if (selectedStandort === 'Alle') {
+      return allCombinations;
+    } else {
+      return singleStandortRows.map(r => ({
+        standort: selectedStandort,
+        rackreihe: r,
+        label: r,
+        value: r
+      }));
+    }
+  });
 
   // Filtered list of racks based on chosen location and row
   let filteredRacks = $derived.by(() => {
@@ -44,11 +79,12 @@
   // Cascade reset logic via $effects to handle changes dynamically
   $effect(() => {
     if (selectedStandort === 'Alle') {
-      if (selectedRackreihe !== 'Alle') {
+      if (selectedRackreihe !== 'Alle' && !selectedRackreihe.includes(' || ')) {
         selectedRackreihe = 'Alle';
       }
     } else {
-      if (selectedRackreihe !== 'Alle' && !rackreihen.includes(selectedRackreihe)) {
+      const validRows = singleStandortRows;
+      if (selectedRackreihe !== 'Alle' && !validRows.includes(selectedRackreihe)) {
         selectedRackreihe = 'Alle';
       }
     }
@@ -68,7 +104,17 @@
     selectedRack = 'Alle';
   }
 
-  function handleReiheChange() {
+  function handleReiheChange(e: Event) {
+    const val = (e.target as HTMLSelectElement).value;
+    if (val === 'Alle') {
+      selectedRackreihe = 'Alle';
+    } else if (val.includes(' || ')) {
+      const [standort, reihe] = val.split(' || ');
+      selectedStandort = standort;
+      selectedRackreihe = reihe;
+    } else {
+      selectedRackreihe = val;
+    }
     selectedRack = 'Alle';
   }
 </script>
@@ -81,7 +127,7 @@
       <select
         bind:value={selectedStandort}
         onchange={handleStandortChange}
-        class="w-full bg-[#182030] border border-slate-700 hover:border-slate-600 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500 transition"
+        class="w-full bg-[#182030] border border-slate-700 hover:border-slate-600 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500 disabled:opacity-50 transition"
       >
         <option value="Alle">Alle Standorte</option>
         {#each standorte as s}
@@ -90,29 +136,29 @@
       </select>
     </div>
 
-    <!-- Rackreihe (only if Standort is selected and rows exist) -->
-    {#if selectedStandort !== 'Alle' && rackreihen.length > 0}
-      <div>
-        <label class="block text-[9px] uppercase font-bold tracking-wider text-slate-500 mb-1">Reihe</label>
-        <select
-          bind:value={selectedRackreihe}
-          onchange={handleReiheChange}
-          class="w-full bg-[#182030] border border-slate-700 hover:border-slate-600 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500 transition"
-        >
-          <option value="Alle">Alle Reihen</option>
-          {#each rackreihen as r}
-            <option value={r}>{r}</option>
-          {/each}
-        </select>
-      </div>
-    {/if}
+    <!-- Reihe -->
+    <div>
+      <label class="block text-[9px] uppercase font-bold tracking-wider text-slate-500 mb-1">Reihe</label>
+      <select
+        value={selectedRackreihe}
+        onchange={handleReiheChange}
+        disabled={reiheList.length === 0}
+        class="w-full bg-[#182030] border border-slate-700 hover:border-slate-600 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500 disabled:opacity-50 transition"
+      >
+        <option value="Alle">Alle Reihen</option>
+        {#each reiheList as r}
+          <option value={r.value}>{r.label}</option>
+        {/each}
+      </select>
+    </div>
 
     <!-- Rack -->
     <div>
       <label class="block text-[9px] uppercase font-bold tracking-wider text-slate-500 mb-1">Rack</label>
       <select
         bind:value={selectedRack}
-        class="w-full bg-[#182030] border border-slate-700 hover:border-slate-600 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500 transition"
+        disabled={filteredRacks.length === 0}
+        class="w-full bg-[#182030] border border-slate-700 hover:border-slate-600 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500 disabled:opacity-50 transition"
       >
         <option value="Alle">Alle Racks</option>
         {#each filteredRacks as rack}
@@ -130,7 +176,7 @@
       <select
         bind:value={selectedStandort}
         onchange={handleStandortChange}
-        class="bg-[#182030] border border-slate-700 hover:border-slate-600 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-blue-500 transition"
+        class="bg-[#182030] border border-slate-700 hover:border-slate-600 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-blue-500 disabled:opacity-50 transition"
       >
         <option value="Alle">Alle</option>
         {#each standorte as s}
@@ -139,29 +185,29 @@
       </select>
     </div>
 
-    <!-- Rackreihe (only if Standort is selected and rows exist) -->
-    {#if selectedStandort !== 'Alle' && rackreihen.length > 0}
-      <div class="flex items-center gap-2 border-l border-slate-800 pl-3">
-        <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500 shrink-0">Reihe</span>
-        <select
-          bind:value={selectedRackreihe}
-          onchange={handleReiheChange}
-          class="bg-[#182030] border border-slate-700 hover:border-slate-600 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-blue-500 transition"
-        >
-          <option value="Alle">Alle</option>
-          {#each rackreihen as r}
-            <option value={r}>{r}</option>
-          {/each}
-        </select>
-      </div>
-    {/if}
+    <!-- Reihe -->
+    <div class="flex items-center gap-2 border-l border-slate-800 pl-3">
+      <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500 shrink-0">Reihe</span>
+      <select
+        value={selectedRackreihe}
+        onchange={handleReiheChange}
+        disabled={reiheList.length === 0}
+        class="bg-[#182030] border border-slate-700 hover:border-slate-600 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-blue-500 disabled:opacity-50 transition"
+      >
+        <option value="Alle">Alle</option>
+        {#each reiheList as r}
+          <option value={r.value}>{r.label}</option>
+        {/each}
+      </select>
+    </div>
 
     <!-- Rack -->
     <div class="flex items-center gap-2 border-l border-slate-800 pl-3">
       <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500 shrink-0">Rack</span>
       <select
         bind:value={selectedRack}
-        class="bg-[#182030] border border-slate-700 hover:border-slate-600 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-blue-500 transition"
+        disabled={filteredRacks.length === 0}
+        class="bg-[#182030] border border-slate-700 hover:border-slate-600 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-blue-500 disabled:opacity-50 transition"
       >
         <option value="Alle">Alle</option>
         {#each filteredRacks as rack}
