@@ -100,10 +100,10 @@ cp .env.example .env
 
 # 3. Docker Compose Stack starten
 docker compose up    # oder
-podman compose up    # rootless, empfohlen für Produktion
+podman compose up    # Empfohlen bei KI-assistierter Entwicklung — läuft rootless ohne privilegierten Daemon
 ```
 
-*Hinweis:* Podman läuft rootless (kein Root-Daemon), empfohlen für Linux-Server und sicherheitskritische Umgebungen.
+*Hinweis:* Podman läuft rootless (kein Root-Daemon) und ist die empfohlene Option für KI-assistierte Entwicklung sowie sicherheitskritische Umgebungen.
 
 Danach ist die Anwendung im Browser erreichbar unter: **http://localhost**
 
