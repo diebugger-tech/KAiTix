@@ -99,8 +99,11 @@ cd KAiTix
 cp .env.example .env
 
 # 3. Docker Compose Stack starten
-docker compose up
+docker compose up    # oder
+podman compose up    # rootless, empfohlen für Produktion
 ```
+
+*Hinweis:* Podman läuft rootless (kein Root-Daemon), empfohlen für Linux-Server und sicherheitskritische Umgebungen.
 
 Danach ist die Anwendung im Browser erreichbar unter: **http://localhost**
 
