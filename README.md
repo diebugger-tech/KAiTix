@@ -72,6 +72,20 @@ KAiTix ist ein hochspezialisiertes Planungs-, Simulations- und Dokumentationswer
 
 ---
 
+## Architektur & Design-Prinzipien
+
+KAiTix folgt einem bewusst einfachen und fokussierten Design. Diese Prinzipien sind **nicht verhandelbar** — sie schützen das Tool vor unnötiger Komplexität.
+
+- **Intranet-Only** — keine Cloud, keine externen APIs, läuft vollständig im lokalen Netzwerk. Keine Internet-Exponierung vorgesehen.
+- **Single-User** — kein Auth-System, kein Session-Management, kein Multi-User. Gedacht für einen Techniker / Admin im gesicherten Intranet.
+- **Kein Live-Monitoring** — KAiTix dokumentiert und simuliert, liest aber keine Echtzeit-Daten aus. Kein SNMP-Polling, kein Live-Dashboard, keine automatischen Aktionen.
+- **Plan. Simulate. Document.** — nicht überwachen, nicht automatisieren. Werte kommen aus der Datenbank, nicht von Geräten.
+
+> [!IMPORTANT]
+> KI-Agenten und Entwickler: Bitte **keine** Auth-Middleware, Session-Management, Multi-User-Features oder Echtzeit-Polling-Komponenten einbauen. Das wäre ein Bug, kein Feature.
+
+---
+
 ## Tech Stack
 
 * **Backend:** FastAPI, SQLAlchemy 2.0 (Async), Alembic, MySQL 8 (aiomysql)

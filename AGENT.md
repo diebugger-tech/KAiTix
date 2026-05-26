@@ -31,7 +31,24 @@ Jede neue Funktion die Live-Daten, Polling oder externe API-Calls einbaut ist ei
 
 ---
 
-Letzte Aktualisierung: 2026-05-25
+Letzte Aktualisierung: 2026-05-26
+
+---
+
+## Design-Prinzipien (für KI-Agenten: nicht verhandelbar)
+
+- **Intranet-Only** — keine Cloud, keine externen APIs, läuft vollständig im lokalen Netzwerk. Keine Internet-Exponierung vorgesehen.
+- **Single-User** — kein Auth-System, kein Session-Management, kein Multi-User. Gedacht für einen Techniker / Admin im gesicherten Intranet.
+- **Kein Live-Monitoring** — KAiTix dokumentiert und simuliert, liest aber keine Echtzeit-Daten aus. Kein SNMP-Polling, kein Live-Dashboard, keine automatischen Aktionen.
+- **Plan. Simulate. Document.** — nicht überwachen, nicht automatisieren. Werte kommen aus der Datenbank, nicht von Geräten.
+
+**HARDREGEL FÜR AGENTEN:** Folgende Features sind **niemals** einzubauen:
+- ❌ Auth-Middleware (JWT, OAuth, Basic-Auth, SSO)
+- ❌ Session-Management (Cookies, Server-Side Sessions)
+- ❌ Multi-User / Rollen / Permissions
+- ❌ WebSockets oder Polling-Loops
+- ❌ Externe API-Calls zur Laufzeit (SNMP, REST-Abfragen an Geräte)
+- ❌ Live-Dashboards mit Auto-Refresh
 
 ---
 
