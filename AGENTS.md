@@ -5,12 +5,12 @@
 
 ## Grundprinzip
 
-- **KAiTix ist ein Predictive Analytics, Hardwaredokumentations- und Showroom-Tool** für Rechenzentrumsinfrastruktur
+- **KAiTix ist ein "Plan. Simulate. Document." Hardwaredokumentations- und Showroom-Tool** für Rechenzentrumsinfrastruktur
 - **Produktziel**: Single Source of Truth für MSP-Techniker zur Planung, Ausfall-Simulation (Blast Radius) und visuellen Dokumentation.
 - **Kein Multi-Tenant, kein Kunden-Login** — eine Instanz, ein Team, maximale Einfachheit
 - **Kein Monitoring, keine Live-Daten** — keine SNMP-, API- oder Netzwerkanbindung an PDUs, Server oder Switches
 - **Keine Echtzeitwerte** — KAiTix glänzt durch *Vorhersage und Simulation* (Was-wäre-wenn-Szenarien), nicht durch Polling-Loops oder Sensordaten.
-- **Zweck**: Predictive Analytics, Dokumentation + visuelle Präsentation von Racks, Geräten, Kabeln, PDU-Steckdosen, USV-Dimensionierung
+- **Zweck**: Infrastruktur-Planung, Simulation, Dokumentation + visuelle Präsentation von Racks, Geräten, Kabeln, PDU-Steckdosen, USV-Dimensionierung
 - **Kentix/Geräte**: Nur physische Installation dokumentieren (Modell, Seriennummer, Position, Anschlusswerte)
 - **Simulationen**: Reine Berechnung auf Basis dokumentierter Daten (z.B. N+1 USV-Redundanz, kaskadierende Ausfälle), keine Live-Lastdaten
 
@@ -83,7 +83,7 @@ Vor jedem Agenten-Task:
 ❌ make install außerhalb nix-shell aufrufen
 ❌ Bestehende Migrations-Dateien ändern (Alembic: einmal generiert = immutable)
 ❌ Frontend-Dateien direkt auf Prod deployen ohne Build-Check
-❌ Bilder bleiben unangetastet auf GitHub (Agenten dürfen keine existierenden Bilder/Screenshots in `docs/screenshots/` modifizieren oder löschen)
+❌ Beim Updaten der README.md oder anderer Dokumentationen bleiben bestehende Bilder und Screenshot-Links zwingend unangetastet auf GitHub. (Agenten dürfen keine existierenden Bilder/Screenshots in `docs/screenshots/` modifizieren oder deren Referenzen ungefragt löschen)
 ❌ `git reset --hard` ohne vorheriges Backup
 ❌ Große Binary-Dateien (>1MB) ins Repo committen
 ❌ .env oder .key-Dateien committen

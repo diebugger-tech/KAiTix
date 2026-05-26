@@ -8,6 +8,7 @@
     Building, Wifi
   } from '@lucide/svelte';
   import RackModal from '$lib/components/RackModal.svelte';
+  import RackFilterBar from '$lib/components/RackFilterBar.svelte';
   import { locationStore, type LocationType } from '$lib/locations.svelte';
 
   // ── State ─────────────────────────────────────────────────
@@ -20,6 +21,46 @@
   let devicePorts = $state<DevicePort[]>([]);
   let loading     = $state(true);
   let errorMsg    = $state('');
+
+  // Filtering and search state
+  let filterStandort = $state('Alle');
+  let filterReihe = $state('Alle');
+  let searchRackName = $state('');
+  let showManageLocations = $state(false);
+  let dropdownSelectedRackId = $state<string | number>('Alle');
+
+  let filteredRacks = $derived(
+    racks.filter(r => {
+      if (filterStandort && filterStandort !== 'Alle' && r.standort !== filterStandort) return false;
+      if (filterReihe && filterReihe !== 'Alle' && r.rackreihe !== filterReihe) return false;
+      if (searchRackName && !r.name.toLowerCase().includes(searchRackName.toLowerCase())) return false;
+      return true;
+    }).sort((a, b) => a.name.localeCompare(b.name))
+  );
+
+  // Sync dropdown selected rack to main selectedRack object
+  $effect(() => {
+    if (dropdownSelectedRackId !== 'Alle' && selectedRack?.id !== dropdownSelectedRackId) {
+      const found = racks.find(r => r.id == dropdownSelectedRackId);
+      if (found) {
+        selectedRack = found;
+        selectedDevice = null;
+      }
+    }
+  });
+
+  // Sync main selectedRack object back to dropdown selection
+  $effect(() => {
+    if (selectedRack) {
+      if (dropdownSelectedRackId !== selectedRack.id) {
+        dropdownSelectedRackId = selectedRack.id;
+      }
+    } else {
+      if (dropdownSelectedRackId !== 'Alle') {
+        dropdownSelectedRackId = 'Alle';
+      }
+    }
+  });
 
   // Standort Management State
   let showAddLocation = $state(false);
@@ -961,10 +1002,42 @@
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
 
       <!-- Rack-Auswahl (links, schmal) -->
-      <div class="space-y-2">
-        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Racks ({racks.length})</h3>
-        <div class="space-y-1.5 max-h-[calc(100vh-380px)] overflow-y-auto pr-1">
-          {#each racks as rack}
+      <div class="space-y-3">
+        <!-- Dreistufiger Filter -->
+        <div class="bg-[#101622] border border-slate-800 rounded-xl p-3.5 space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2 text-slate-400 font-bold text-[10px] uppercase tracking-wider">
+              <Building class="w-3.5 h-3.5 text-blue-400 shrink-0" />
+              <span>Filter</span>
+            </div>
+            {#if (filterStandort && filterStandort !== 'Alle') || (filterReihe && filterReihe !== 'Alle') || searchRackName}
+              <button onclick={() => { filterStandort = 'Alle'; filterReihe = 'Alle'; dropdownSelectedRackId = 'Alle'; searchRackName = ''; }}
+                class="text-[10px] text-red-400 hover:text-red-300 font-semibold transition">
+                Reset
+              </button>
+            {/if}
+          </div>
+
+          <div class="space-y-2">
+            <RackFilterBar
+              racks={racks}
+              bind:selectedStandort={filterStandort}
+              bind:selectedRackreihe={filterReihe}
+              bind:selectedRack={dropdownSelectedRackId}
+              layout="vertical"
+            />
+
+            <div>
+              <label class="block text-[9px] uppercase font-bold tracking-wider text-slate-500 mb-1">Suche</label>
+              <input type="text" bind:value={searchRackName} placeholder="Rack Name..."
+                class="w-full bg-[#182030] border border-slate-700 hover:border-slate-600 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500 transition" />
+            </div>
+          </div>
+        </div>
+
+        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Racks ({filteredRacks.length})</h3>
+        <div class="space-y-1.5 max-h-[calc(100vh-530px)] overflow-y-auto pr-1">
+          {#each filteredRacks as rack}
             {@const active = selectedRack?.id === rack.id}
             <button onclick={() => { selectedRack = rack; selectedDevice = null; }}
               class="w-full text-left p-3 rounded-xl border transition {active ? 'bg-blue-600/10 border-blue-500/50' : 'bg-[#101622] border-slate-800 hover:border-slate-700'}">
@@ -972,8 +1045,11 @@
                 <div class="flex items-center space-x-2 min-w-0">
                   <Layers class="w-3.5 h-3.5 shrink-0 {active ? 'text-blue-400' : 'text-slate-500'}" />
                   <div class="min-w-0">
-                    <div class="font-bold text-xs truncate {active ? 'text-white' : 'text-slate-300'}">{rack.name}</div>
-                    <div class="text-[10px] text-slate-500 truncate">{rack.standort || '–'}</div>
+                    <div class="font-bold text-xs truncate {active ? 'text-white' : 'text-slate-300'}">{rack.name}{rack.rackreihe ? ` (${rack.rackreihe})` : ''}</div>
+                    <div class="text-[10px] text-slate-500 truncate">
+                      {rack.standort || '–'}
+                      {#if rack.rackreihe} <span class="opacity-50">·</span> {rack.rackreihe}{/if}
+                    </div>
                   </div>
                 </div>
                 <ChevronRight class="w-3 h-3 text-slate-600 shrink-0" />
@@ -1055,6 +1131,8 @@
             {/each}
           </div>
         </div>
+
+
       </div>
 
       <!-- Rack-Visualisierung (mitte) -->
@@ -1066,7 +1144,7 @@
             <!-- Rack Header -->
             <div class="px-4 py-3 border-b border-slate-800 flex items-center justify-between">
               <div>
-                <div class="font-bold text-white text-sm">{selectedRack.name}</div>
+                <div class="font-bold text-white text-sm">{selectedRack.name}{selectedRack.rackreihe ? ` (${selectedRack.rackreihe})` : ''}</div>
                 <div class="text-[10px] text-slate-500">{occupiedU}/{selectedRack.hoehe_u} HE{selectedRack.breite_mm ? ' · ' + selectedRack.breite_mm + 'mm' : ''} · {(phaseLoads().L1/1000 + phaseLoads().L2/1000 + phaseLoads().L3/1000).toFixed(1)} kW</div>
               </div>
               <div class="flex items-center space-x-2">
@@ -1637,6 +1715,8 @@
 <RackModal
   bind:show={showAddRack}
   onSave={handleAddRack}
+  defaultStandort={filterStandort}
+  defaultRackreihe={filterReihe}
   hardwareTypes={hardware.filter(h => h.kategorie === 'rack')}
 />
 
@@ -1866,7 +1946,7 @@
           {#each racks as rack}
             {@const rackTargets = filteredTargetDevices().filter(d => d.rack_id === rack.id)}
             {#if rackTargets.length > 0}
-            <optgroup label="{rack.name} — {rack.standort}">
+            <optgroup label="{rack.name}{rack.rackreihe ? ` (${rack.rackreihe})` : ''} — {rack.standort}">
               {#each rackTargets as d}
                 <option value={d.id}>{d.hostname} ({d.typ})</option>
               {/each}
@@ -1950,7 +2030,7 @@
           {#each racks as rack}
             {@const rackTargets = editFilteredTargetDevices().filter(d => d.rack_id === rack.id)}
             {#if rackTargets.length > 0}
-            <optgroup label="{rack.name} — {rack.standort}">
+            <optgroup label="{rack.name}{rack.rackreihe ? ` (${rack.rackreihe})` : ''} — {rack.standort}">
               {#each rackTargets as d}
                 <option value={d.id}>{d.hostname} ({d.typ})</option>
               {/each}

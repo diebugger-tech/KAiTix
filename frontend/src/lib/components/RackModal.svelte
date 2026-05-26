@@ -9,12 +9,15 @@
     initialData = null,
     hardwareTypes = [],
     showRemark = false,
+    defaultStandort = '',
+    defaultRackreihe = '',
   } = $props();
 
   // Internal form state
   let selectedRackHWId = $state(null);
   let name = $state('');
-  let standort = $state(locationStore.locations[0]?.name ?? 'Serverraum 1');
+  let standort = $state(defaultStandort || locationStore.locations[0]?.name || 'Serverraum 1');
+  let rackreihe = $state(defaultRackreihe || '');
   let hoehe_u = $state(42); // will be overridden by defaultHeight in $effect
   let breite_mm = $state(600);
   let bemerkung = $state('');
@@ -26,6 +29,7 @@
       if (initialData) {
         name = initialData.name || '';
         standort = initialData.standort || locationStore.locations[0]?.name || 'Serverraum 1';
+        rackreihe = initialData.rackreihe || '';
         hoehe_u = initialData.hoehe_u || defaultHeight;
         breite_mm = initialData.breite_mm || 600;
         bemerkung = initialData.bemerkung || '';
@@ -33,7 +37,8 @@
       } else {
         // Reset for addition
         name = '';
-        standort = locationStore.locations[0]?.name ?? 'Serverraum 1';
+        standort = defaultStandort || locationStore.locations[0]?.name || 'Serverraum 1';
+        rackreihe = defaultRackreihe || '';
         hoehe_u = defaultHeight;
         breite_mm = 600;
         bemerkung = '';
@@ -73,6 +78,7 @@
     const data = {
       name: name.trim(),
       standort: standort.trim(),
+      rackreihe: rackreihe.trim() || null,
       hoehe_u: Number(hoehe_u),
       breite_mm: Number(breite_mm),
       bemerkung: bemerkung.trim() || null,
@@ -133,6 +139,11 @@
             <option value={loc.name}>{loc.name}</option>
           {/each}
         </select>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-400 mb-1">Rackreihe (Optional)</label>
+        <input type="text" bind:value={rackreihe} placeholder="z.B. Kaltgang 1"
+          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
       </div>
       {#if selectedRackHWId !== null}
       <div>

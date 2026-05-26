@@ -281,7 +281,7 @@
                   <a href="/racks?rack={rack.id}" class="block bg-[#101622] border border-slate-800 hover:border-blue-500/40 rounded-xl p-5 space-y-4 transition-colors">
                     <div class="flex items-start justify-between">
                       <div>
-                        <h4 class="font-bold text-white font-outfit">{rack.name}</h4>
+                        <h4 class="font-bold text-white font-outfit">{rack.name}{rack.rackreihe ? ` (${rack.rackreihe})` : ''}</h4>
                         <p class="text-[10px] text-slate-500 mt-0.5">{rack.breite_mm ? rack.breite_mm + 'mm · ' : ''}{rackKw.toFixed(2)} kW · {rackDevices.length} Geräte</p>
                       </div>
                       <span class="text-xs font-semibold px-2 py-1 rounded bg-slate-800 border border-slate-700 text-slate-300">
@@ -407,7 +407,7 @@
                   <a href="/racks?rack={rack.id}" class="block bg-[#101622] border border-amber-500/20 hover:border-amber-500/40 rounded-xl p-5 space-y-4 transition-colors">
                     <div class="flex items-start justify-between">
                       <div>
-                        <h4 class="font-bold text-white font-outfit">{rack.name}</h4>
+                        <h4 class="font-bold text-white font-outfit">{rack.name}{rack.rackreihe ? ` (${rack.rackreihe})` : ''}</h4>
                         <p class="text-[10px] text-amber-400/60 mt-0.5">{rack.breite_mm ? rack.breite_mm + 'mm · ' : ''}{rackKw.toFixed(2)} kW · {rackDevices.length} Geräte</p>
                       </div>
                       <span class="text-xs font-semibold px-2 py-1 rounded bg-slate-800 border border-slate-700 text-slate-300">

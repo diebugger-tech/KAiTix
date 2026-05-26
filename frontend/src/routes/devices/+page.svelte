@@ -173,7 +173,7 @@
       <select bind:value={filterRack} class="bg-[#182030] border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
         <option value="all">Alle Racks</option>
         <option value="kein_rack">Kein Rack</option>
-        {#each racks as rack}<option value={rack.id.toString()}>{rack.name}</option>{/each}
+        {#each racks as rack}<option value={rack.id.toString()}>{rack.name}{rack.rackreihe ? ` (${rack.rackreihe})` : ''}</option>{/each}
       </select>
       <select bind:value={filterType} class="bg-[#182030] border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
         <option value="all">Alle Typen</option>
@@ -195,7 +195,8 @@
       <!-- Device List -->
       <div class="lg:col-span-1 space-y-2">
         {#each filteredDevices as device}
-          {@const rackName = racks.find(r => r.id === device.rack_id)?.name}
+          {@const rackObj = racks.find(r => r.id === device.rack_id)}
+          {@const rackName = rackObj ? `${rackObj.name}${rackObj.rackreihe ? ` (${rackObj.rackreihe})` : ''}` : ''}
           {@const noRack = !device.rack_id}
           <button onclick={() => selectDevice(device)}
             class="w-full text-left bg-[#101622] border rounded-xl p-4 hover:border-blue-500/40 transition
@@ -231,7 +232,7 @@
                 <h3 class="text-lg font-bold text-white font-outfit">{selectedDevice.hostname}</h3>
                 <div class="flex flex-wrap gap-4 text-xs text-slate-500 mt-1">
                   <span class="flex items-center capitalize"><Cpu class="w-3.5 h-3.5 mr-1" /> {selectedDevice.typ}</span>
-                  <span>{selectedDeviceRack?.name || 'Kein Rack'} (HE {selectedDevice.u_position ?? '?'})</span>
+                  <span>{selectedDeviceRack ? `${selectedDeviceRack.name}${selectedDeviceRack.rackreihe ? ` (${selectedDeviceRack.rackreihe})` : ''}` : 'Kein Rack'} (HE {selectedDevice.u_position ?? '?'})</span>
                 </div>
               </div>
               <div class="flex space-x-2">
@@ -302,7 +303,7 @@
         <label class="block text-xs font-semibold text-slate-400 mb-1">Rack *</label>
         <select bind:value={rack_id} required
           class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
-          {#each racks as rack}<option value={rack.id}>{rack.name}</option>{/each}
+          {#each racks as rack}<option value={rack.id}>{rack.name}{rack.rackreihe ? ` (${rack.rackreihe})` : ''}</option>{/each}
         </select>
       </div>
       <div class="grid grid-cols-2 gap-4">
@@ -369,7 +370,7 @@
         <label class="block text-xs font-semibold text-slate-400 mb-1">Rack *</label>
         <select bind:value={rack_id} required
           class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
-          {#each racks as rack}<option value={rack.id}>{rack.name}</option>{/each}
+          {#each racks as rack}<option value={rack.id}>{rack.name}{rack.rackreihe ? ` (${rack.rackreihe})` : ''}</option>{/each}
         </select>
       </div>
       <div class="grid grid-cols-2 gap-4">

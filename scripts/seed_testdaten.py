@@ -11,8 +11,8 @@ from app.models import Rack, Device, Cable, PduOutlet
 async def main():
     async with AsyncSessionLocal() as db:
         racks = [
-            Rack(name="Rack-A", standort="DC1 Reihe 1", hoehe_u=42),
-            Rack(name="Rack-B", standort="DC1 Reihe 2", hoehe_u=42),
+            Rack(name="Rack-A", standort="DC1", rackreihe="Reihe 1", hoehe_u=42),
+            Rack(name="Rack-B", standort="DC1", rackreihe="Reihe 2", hoehe_u=42),
         ]
         db.add_all(racks)
         await db.flush()

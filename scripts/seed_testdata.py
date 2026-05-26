@@ -26,10 +26,10 @@ async def main():
 
     async with AsyncSessionLocal() as db:
         # 2. Racks (4 Racks for different purposes)
-        rack_netzwerk = Rack(name="RACK-NET-01", standort="RZ1-ReiheA", hoehe_u=42, breite_mm=800, hersteller="Rittal", bemerkung="Core Netzwerk & Routing")
-        rack_app = Rack(name="RACK-APP-01", standort="RZ1-ReiheA", hoehe_u=47, breite_mm=600, hersteller="Rittal", bemerkung="Compute Nodes")
-        rack_db = Rack(name="RACK-DB-01", standort="RZ1-ReiheA", hoehe_u=47, breite_mm=600, hersteller="Rittal", bemerkung="High-Density Database")
-        rack_storage = Rack(name="RACK-SAN-01", standort="RZ1-ReiheB", hoehe_u=42, breite_mm=800, hersteller="Rittal", bemerkung="Storage & Backup")
+        rack_netzwerk = Rack(name="RACK-NET-01", standort="Rechenzentrum 1", rackreihe="Reihe A", hoehe_u=42, breite_mm=800, hersteller="Rittal", bemerkung="Core Netzwerk & Routing")
+        rack_app = Rack(name="RACK-APP-01", standort="Rechenzentrum 1", rackreihe="Reihe A", hoehe_u=47, breite_mm=600, hersteller="Rittal", bemerkung="Compute Nodes")
+        rack_db = Rack(name="RACK-DB-01", standort="Rechenzentrum 1", rackreihe="Reihe A", hoehe_u=47, breite_mm=600, hersteller="Rittal", bemerkung="High-Density Database")
+        rack_storage = Rack(name="RACK-SAN-01", standort="Rechenzentrum 1", rackreihe="Reihe B", hoehe_u=42, breite_mm=800, hersteller="Rittal", bemerkung="Storage & Backup")
         
         db.add_all([rack_netzwerk, rack_app, rack_db, rack_storage])
         await db.flush()

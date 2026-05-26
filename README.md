@@ -1,6 +1,6 @@
 # KAiTix
 
-**Predictive Analytics, Dokumentation & Runbook Orchestrator für IT-Infrastruktur**
+**Plan. Simulate. Document. – Infrastruktur-Dokumentation & Runbook Orchestrator**
 
 [![License: AGPL-v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![Python: 3.12](https://img.shields.io/badge/Python-3.12+-green.svg)](https://www.python.org/)

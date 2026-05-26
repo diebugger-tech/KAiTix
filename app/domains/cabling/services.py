@@ -305,7 +305,13 @@ class CablingService:
     @staticmethod
     def build_racks_out(raw: TopologyRaw) -> list[dict]:
         return [
-            {"id": r.id, "name": r.name, "standort": r.standort, "hoehe_u": r.hoehe_u}
+            {
+                "id": r.id,
+                "name": r.name,
+                "standort": r.standort,
+                "rackreihe": r.rackreihe,
+                "hoehe_u": r.hoehe_u,
+            }
             for r in raw.racks
         ]
 

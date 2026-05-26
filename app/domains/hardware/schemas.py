@@ -8,6 +8,7 @@ from decimal import Decimal
 class RackBase(BaseModel):
     name: str
     standort: str
+    rackreihe: Optional[str] = None
     hoehe_u: int = Field(42, ge=1)
     breite_mm: Optional[int] = 600
     bemerkung: Optional[str] = None
@@ -23,6 +24,7 @@ class RackCreate(RackBase):
 class RackUpdate(BaseModel):
     name: Optional[str] = None
     standort: Optional[str] = None
+    rackreihe: Optional[str] = None
     hoehe_u: Optional[int] = Field(None, ge=1)
     breite_mm: Optional[int] = 600
     bemerkung: Optional[str] = None

@@ -87,7 +87,9 @@
 
   function getRackName(id?: number | null): string {
     if (!id) return '—';
-    return racks.find(r => r.id === id)?.name || `#${id}`;
+    const rack = racks.find(r => r.id === id);
+    if (!rack) return `#${id}`;
+    return `${rack.name}${rack.rackreihe ? ` (${rack.rackreihe})` : ''}`;
   }
 
   async function loadPdus() {
@@ -325,7 +327,7 @@
         <select id="filter-rack" bind:value={filterRack}
           class="flex-1 bg-[#182030] border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
           <option value="all">Alle</option>
-          {#each racks as rack}<option value={rack.id.toString()}>{rack.name}</option>{/each}
+          {#each racks as rack}<option value={rack.id.toString()}>{rack.name}{rack.rackreihe ? ` (${rack.rackreihe})` : ''}</option>{/each}
         </select>
       </div>
     </div>
@@ -547,7 +549,7 @@
           <label class="block text-xs font-semibold text-slate-400 mb-1">Rack *</label>
           <select bind:value={rack_id} required
             class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
-            {#each racks as rack}<option value={rack.id}>{rack.name}</option>{/each}
+            {#each racks as rack}<option value={rack.id}>{rack.name}{rack.rackreihe ? ` (${rack.rackreihe})` : ''}</option>{/each}
           </select>
         </div>
       </div>
@@ -639,7 +641,7 @@
           <label class="block text-xs font-semibold text-slate-400 mb-1">Rack *</label>
           <select bind:value={rack_id} required
             class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
-            {#each racks as rack}<option value={rack.id}>{rack.name}</option>{/each}
+            {#each racks as rack}<option value={rack.id}>{rack.name}{rack.rackreihe ? ` (${rack.rackreihe})` : ''}</option>{/each}
           </select>
         </div>
       </div>

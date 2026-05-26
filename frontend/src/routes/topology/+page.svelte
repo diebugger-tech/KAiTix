@@ -4,6 +4,7 @@
   import { goto } from '$app/navigation';
   import { FileText, Network, List, Search, X, Zap, Building, Wifi } from '@lucide/svelte';
   import { locationStore } from '$lib/locations.svelte';
+  import RackFilterBar from '$lib/components/RackFilterBar.svelte';
 
   type TopoData = Awaited<ReturnType<typeof api.getTopology>>;
   type Node = TopoData['nodes'][number];
@@ -153,8 +154,11 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
 
     // Sort by standort for geographic grouping
     let sortedRacks = [...data.racks].sort((a, b) => (a.standort ?? '').localeCompare(b.standort ?? ''));
-    if (topologieStandort) {
+    if (topologieStandort && topologieStandort !== 'Alle') {
       sortedRacks = sortedRacks.filter(r => r.standort === topologieStandort);
+    }
+    if (topologieReihe && topologieReihe !== 'Alle') {
+      sortedRacks = sortedRacks.filter(r => r.rackreihe === topologieReihe);
     }
 
     let x = 20;
@@ -379,11 +383,14 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
     }
   }
 
-  let rackFilter = $state<number | null>(null);
-  let topologieStandort = $state('');
+  let rackFilter = $state<string | number | null>('Alle');
+  let topologieStandort = $state('Alle');
+  let topologieReihe = $state('Alle');
 
   // ── Netzplan filters ─────────────────────────────────────────────────────────
-  let netzplanStandort = $state('');
+  let netzplanStandort = $state('Alle');
+  let netzplanReihe = $state('Alle');
+  let netzplanRack = $state<string | number | null>('Alle');
   let netzplanCableFilter = $state(new Set([
     'cat', 'lwl', 'sfp', 'dac', 'breakout', 'sonstige-netz',
     'strom-l1', 'strom-l2', 'strom-l3', 'strom-other'
@@ -464,15 +471,15 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
   const visibleNodeIds = $derived.by(() => {
     if (!data) return new Set<number>();
     let ids = new Set(data.nodes.filter(n => showDeviceTypes.has(n.typ)).map(n => n.id));
-    if (topologieStandort) {
+    if (topologieStandort && topologieStandort !== 'Alle') {
       const rIds = new Set(data.racks.filter(r => r.standort === topologieStandort).map(r => r.id));
       ids = new Set([...ids].filter(id => {
         const n = data!.nodes.find(node => node.id === id);
         return n && (rIds.has(n.rack_id!) || !n.rack_id);
       }));
     }
-    if (rackFilter !== null) {
-      const rIds = new Set(data.nodes.filter(n => n.rack_id === rackFilter).map(n => n.id));
+    if (rackFilter && rackFilter !== 'Alle') {
+      const rIds = new Set(data.nodes.filter(n => String(n.rack_id) === String(rackFilter)).map(n => n.id));
       ids = new Set([...ids].filter(id => rIds.has(id)));
     }
     return ids;
@@ -511,11 +518,20 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
 
   const filteredNetzplanData = $derived.by(() => {
     let items = netzplanData;
-    if (netzplanStandort) {
+    if (netzplanStandort && netzplanStandort !== 'Alle') {
       items = items.filter(item => {
         const rack = data?.racks.find(r => r.id === item.node.rack_id);
         return rack?.standort === netzplanStandort;
       });
+    }
+    if (netzplanReihe && netzplanReihe !== 'Alle') {
+      items = items.filter(item => {
+        const rack = data?.racks.find(r => r.id === item.node.rack_id);
+        return rack?.rackreihe === netzplanReihe;
+      });
+    }
+    if (netzplanRack && netzplanRack !== 'Alle') {
+      items = items.filter(item => String(item.node.rack_id) === String(netzplanRack));
     }
     return items
       .map(item => ({ ...item, connections: item.connections.filter(c => netzplanCableFilter.has(cableCategory(c.edge))) }))
@@ -591,21 +607,14 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
 
         <!-- Rack filter -->
         {#if data}
-          <div class="flex items-center gap-2 border-l border-slate-800 pl-3">
-            <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500">Standort</span>
-            <select bind:value={topologieStandort} class="bg-[#182030] border border-slate-700 hover:border-slate-600 rounded-lg px-2 py-1 text-xs text-white focus:outline-none">
-              <option value="">Alle</option>
-              {#each [...new Set(data.racks.map(r => r.standort).filter(Boolean))] as s}
-                <option value={s}>{s}</option>
-              {/each}
-            </select>
-          </div>
-          <div class="flex items-center gap-2 border-l border-slate-800 pl-3">
-            <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500">Rack</span>
-            <select bind:value={rackFilter} class="bg-[#182030] border border-slate-700 hover:border-slate-600 rounded-lg px-2 py-1 text-xs text-white focus:outline-none">
-              <option value={null}>Alle</option>
-              {#each data.racks as rack}<option value={rack.id}>{rack.name}</option>{/each}
-            </select>
+          <div class="flex items-center border-l border-slate-800 pl-3">
+            <RackFilterBar
+              racks={data.racks}
+              bind:selectedStandort={topologieStandort}
+              bind:selectedRackreihe={topologieReihe}
+              bind:selectedRack={rackFilter}
+              layout="horizontal"
+            />
           </div>
           <!-- Heatmap Toggle -->
           <button onclick={toggleHeatmap}
@@ -641,16 +650,13 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
     {#if viewMode === 'netzplan' && data}
       <div class="flex items-center gap-3 flex-wrap bg-[#101622] border border-slate-800 rounded-xl px-4 py-2">
         <!-- Standort-Filter -->
-        <div class="flex items-center gap-2">
-          <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500 shrink-0">Standort</span>
-          <select bind:value={netzplanStandort}
-            class="bg-[#182030] border border-slate-700 rounded-lg px-2 py-1 text-xs text-white focus:outline-none">
-            <option value="">Alle</option>
-            {#each [...new Set(data.racks.map(r => r.standort).filter(Boolean))] as s}
-              <option value={s}>{s}</option>
-            {/each}
-          </select>
-        </div>
+        <RackFilterBar
+          racks={data.racks}
+          bind:selectedStandort={netzplanStandort}
+          bind:selectedRackreihe={netzplanReihe}
+          bind:selectedRack={netzplanRack}
+          layout="horizontal"
+        />
 
         <!-- Netzwerkkabel-Filter -->
         <div class="flex items-center gap-2 border-l border-slate-800 pl-3">
@@ -791,7 +797,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
                     onmouseleave={() => hoveredScoreId = null} />
                 {/if}
               {/if}
-              <text x={rb.x+rb.w/2} y={rb.y+17} text-anchor="middle" font-size="10" font-weight="bold" fill="#64748b" class="select-none">{rb.rack.name}</text>
+              <text x={rb.x+rb.w/2} y={rb.y+17} text-anchor="middle" font-size="10" font-weight="bold" fill="#64748b" class="select-none">{rb.rack.name}{rb.rack.rackreihe ? ` (${rb.rack.rackreihe})` : ''}</text>
               <text x={rb.x+rb.w/2} y={rb.y+27} text-anchor="middle" font-size="8" fill="#334155" class="select-none">{rb.rack.standort}</text>
               {#each Array.from({ length: rb.rack.hoehe_u }, (_, i) => i) as u}
                 <line x1={rb.x+2} y1={rb.y+LABEL_H+u*U_HEIGHT} x2={rb.x+7} y2={rb.y+LABEL_H+u*U_HEIGHT} stroke="#1e293b" stroke-width="0.5" />
@@ -1019,7 +1025,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
             {@const rack = data.racks.find(r => r.id === item.node.rack_id)}
             {@const prevItem = filteredNetzplanData[idx - 1]}
             {@const prevRack = prevItem ? data.racks.find(r => r.id === prevItem.node.rack_id) : null}
-            {@const standortChanged = netzplanStandort === '' && rack?.standort !== prevRack?.standort}
+            {@const standortChanged = netzplanStandort === 'Alle' && rack?.standort !== prevRack?.standort}
 
             {#if standortChanged && rack?.standort}
               {@const locTyp = locationStore.getTyp(rack.standort)}
@@ -1045,7 +1051,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
                   {/if}
                 </div>
                 <div class="ml-auto flex items-center gap-2">
-                  {#if rack}<span class="text-[10px] text-slate-600 bg-slate-800/60 px-1.5 py-0.5 rounded">{rack.name}{rack.standort ? ' · '+rack.standort : ''}</span>{/if}
+                  {#if rack}<span class="text-[10px] text-slate-600 bg-slate-800/60 px-1.5 py-0.5 rounded">{rack.name}{rack.standort ? ' · '+rack.standort : ''}{rack.rackreihe ? ` (${rack.rackreihe})` : ''}</span>{/if}
                   {#if item.node.u_position}<span class="text-[10px] text-slate-600 bg-slate-800/60 px-1.5 py-0.5 rounded">HE {item.node.u_position}</span>{/if}
                   {#if item.node.ip_adresse}<span class="text-[10px] font-mono text-blue-400">{item.node.ip_adresse}</span>{/if}
                 </div>

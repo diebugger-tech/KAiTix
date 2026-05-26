@@ -15,6 +15,7 @@ class Rack(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
     standort: Mapped[str] = mapped_column(String(100), nullable=False)
+    rackreihe: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     hoehe_u: Mapped[int] = mapped_column(Integer, nullable=False, default=42)
     breite_mm: Mapped[Optional[int]] = mapped_column(Integer, default=600)
     bemerkung: Mapped[Optional[str]] = mapped_column(String(255))

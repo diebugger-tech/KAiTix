@@ -39,6 +39,7 @@ export interface Rack {
   id: number;
   name: string;
   standort: string;
+  rackreihe?: string;
   hoehe_u: number;
   breite_mm?: number;
   bemerkung?: string;
