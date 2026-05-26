@@ -154,11 +154,11 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
 
     // Sort by standort for geographic grouping
     let sortedRacks = [...data.racks].sort((a, b) => (a.standort ?? '').localeCompare(b.standort ?? ''));
-    if (topologieStandort && topologieStandort !== 'Alle') {
-      sortedRacks = sortedRacks.filter(r => r.standort === topologieStandort);
+    if (selectedStandort && selectedStandort !== 'Alle') {
+      sortedRacks = sortedRacks.filter(r => r.standort === selectedStandort);
     }
-    if (topologieReihe && topologieReihe !== 'Alle') {
-      sortedRacks = sortedRacks.filter(r => r.rackreihe === topologieReihe);
+    if (selectedRackreihe && selectedRackreihe !== 'Alle') {
+      sortedRacks = sortedRacks.filter(r => r.rackreihe === selectedRackreihe);
     }
 
     let x = 20;
@@ -383,14 +383,9 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
     }
   }
 
-  let rackFilter = $state<string | number | null>('Alle');
-  let topologieStandort = $state('Alle');
-  let topologieReihe = $state('Alle');
-
-  // ── Netzplan filters ─────────────────────────────────────────────────────────
-  let netzplanStandort = $state('Alle');
-  let netzplanReihe = $state('Alle');
-  let netzplanRack = $state<string | number | null>('Alle');
+  let selectedStandort = $state('Alle');
+  let selectedRackreihe = $state('Alle');
+  let selectedRack = $state<string | number | null>('Alle');
   let netzplanCableFilter = $state(new Set([
     'cat', 'lwl', 'sfp', 'dac', 'breakout', 'sonstige-netz',
     'strom-l1', 'strom-l2', 'strom-l3', 'strom-other'
@@ -471,15 +466,15 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
   const visibleNodeIds = $derived.by(() => {
     if (!data) return new Set<number>();
     let ids = new Set(data.nodes.filter(n => showDeviceTypes.has(n.typ)).map(n => n.id));
-    if (topologieStandort && topologieStandort !== 'Alle') {
-      const rIds = new Set(data.racks.filter(r => r.standort === topologieStandort).map(r => r.id));
+    if (selectedStandort && selectedStandort !== 'Alle') {
+      const rIds = new Set(data.racks.filter(r => r.standort === selectedStandort).map(r => r.id));
       ids = new Set([...ids].filter(id => {
         const n = data!.nodes.find(node => node.id === id);
         return n && (rIds.has(n.rack_id!) || !n.rack_id);
       }));
     }
-    if (rackFilter && rackFilter !== 'Alle') {
-      const rIds = new Set(data.nodes.filter(n => String(n.rack_id) === String(rackFilter)).map(n => n.id));
+    if (selectedRack && selectedRack !== 'Alle') {
+      const rIds = new Set(data.nodes.filter(n => String(n.rack_id) === String(selectedRack)).map(n => n.id));
       ids = new Set([...ids].filter(id => rIds.has(id)));
     }
     return ids;
@@ -518,20 +513,20 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
 
   const filteredNetzplanData = $derived.by(() => {
     let items = netzplanData;
-    if (netzplanStandort && netzplanStandort !== 'Alle') {
+    if (selectedStandort && selectedStandort !== 'Alle') {
       items = items.filter(item => {
         const rack = data?.racks.find(r => r.id === item.node.rack_id);
-        return rack?.standort === netzplanStandort;
+        return rack?.standort === selectedStandort;
       });
     }
-    if (netzplanReihe && netzplanReihe !== 'Alle') {
+    if (selectedRackreihe && selectedRackreihe !== 'Alle') {
       items = items.filter(item => {
         const rack = data?.racks.find(r => r.id === item.node.rack_id);
-        return rack?.rackreihe === netzplanReihe;
+        return rack?.rackreihe === selectedRackreihe;
       });
     }
-    if (netzplanRack && netzplanRack !== 'Alle') {
-      items = items.filter(item => String(item.node.rack_id) === String(netzplanRack));
+    if (selectedRack && selectedRack !== 'Alle') {
+      items = items.filter(item => String(item.node.rack_id) === String(selectedRack));
     }
     return items
       .map(item => ({ ...item, connections: item.connections.filter(c => netzplanCableFilter.has(cableCategory(c.edge))) }))
@@ -610,9 +605,9 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
           <div class="flex items-center border-l border-slate-800 pl-3">
             <RackFilterBar
               racks={data.racks}
-              bind:selectedStandort={topologieStandort}
-              bind:selectedRackreihe={topologieReihe}
-              bind:selectedRack={rackFilter}
+              bind:selectedStandort={selectedStandort}
+              bind:selectedRackreihe={selectedRackreihe}
+              bind:selectedRack={selectedRack}
               layout="horizontal"
             />
           </div>
@@ -652,9 +647,9 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
         <!-- Standort-Filter -->
         <RackFilterBar
           racks={data.racks}
-          bind:selectedStandort={netzplanStandort}
-          bind:selectedRackreihe={netzplanReihe}
-          bind:selectedRack={netzplanRack}
+          bind:selectedStandort={selectedStandort}
+          bind:selectedRackreihe={selectedRackreihe}
+          bind:selectedRack={selectedRack}
           layout="horizontal"
         />
 
@@ -1025,7 +1020,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
             {@const rack = data.racks.find(r => r.id === item.node.rack_id)}
             {@const prevItem = filteredNetzplanData[idx - 1]}
             {@const prevRack = prevItem ? data.racks.find(r => r.id === prevItem.node.rack_id) : null}
-            {@const standortChanged = netzplanStandort === 'Alle' && rack?.standort !== prevRack?.standort}
+            {@const standortChanged = selectedStandort === 'Alle' && rack?.standort !== prevRack?.standort}
 
             {#if standortChanged && rack?.standort}
               {@const locTyp = locationStore.getTyp(rack.standort)}
