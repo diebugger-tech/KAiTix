@@ -1,15 +1,19 @@
-# KAiTix
+# KAiTix — Plan. Simulate. Document.
 
-**Plan. Simulate. Document. – Infrastruktur-Dokumentation & Runbook Orchestrator**
+**Infrastruktur-Dokumentation & Showroom-Tool für Rechenzentrumsinfrastruktur**
 
 [![License: AGPL-v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-[![Python: 3.12](https://img.shields.io/badge/Python-3.12+-green.svg)](https://www.python.org/)
+[![Python: 3.11+](https://img.shields.io/badge/Python-3.11+-green.svg)](https://www.python.org/)
+[![Node: 20+](https://img.shields.io/badge/Node-20+-brightgreen.svg)](https://nodejs.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.136%2B-009688.svg)](https://fastapi.tiangolo.com/)
 [![Svelte 5](https://img.shields.io/badge/Svelte-5.0-ff3e00.svg)](https://svelte.dev/)
+[![MySQL 8](https://img.shields.io/badge/MySQL-8.0-blue.svg)](https://www.mysql.com/)
 
-KAiTix dokumentiert physische RZ-Infrastruktur — Racks, Server, PDUs, Kabel, USV — und orchestriert Shutdown- und Startup-Sequenzen als Runbooks. Kein Monitoring, keine Live-Daten, keine Komplexität. Eintragen, planen, ausführen.
+KAiTix ist ein hochspezialisiertes Planungs-, Simulations- und Dokumentationswerkzeug für MSP-Techniker und IT-Teams. Es dient als Single Source of Truth für die visuelle Darstellung von Racks, PDU-Steckdosenbelegungen, Kabelverbindungen und USV-Dimensionierungen sowie für die Simulation von Ausfallszenarien (Blast Radius).
 
-> **Typischer Workflow:** Techniker pflegt Infrastruktur ein → plant Wartungs-Shutdown als Runbook → führt Schritt für Schritt ab → Protokoll bleibt erhalten.
+> [!NOTE]
+> **Plan. Simulate. Document.**  
+> KAiTix verzichtet bewusst auf Live-Monitoring (keine SNMP/API-Abfragen) oder Echtzeitdaten. Die Stärke von KAiTix liegt in der präzisen Modellierung und der Vorhersage von Was-wäre-wenn-Szenarien (z. B. kaskadierende Strom-/Netzwerkausfälle, Phasen-Ungleichgewicht oder USV-Redundanz).
 
 ---
 
@@ -32,141 +36,139 @@ KAiTix dokumentiert physische RZ-Infrastruktur — Racks, Server, PDUs, Kabel, U
 
 ---
 
-## Was KAiTix kann
+## Features & Funktionalitäten
 
-### Rack-Dokumentation
-Geräte (Server, Switches, Firewalls, PDUs, Storage) mit U-Position, Hersteller, Modell, Seriennummer und TDP erfassen. Kentix SmartPDU-Steckdosenbelegung pro Phase (L1/L2/L3) dokumentieren. Validierung ob PDU in Rack passt (min. Rack-Höhe).
+### 1. Rack- & Geräte-Dokumentation
+* **U-genaue Positionierung:** Geräte (Server, Switches, Firewalls, Kentix-Komponenten) mit präzisen U-Höhen, TDP-Werten und Seriennummern dokumentieren.
+* **0U-PDU-Validierung:** Maximale PDU-Höhen- und Positionskontrolle (z. B. Ausschluss von 47HE-PDUs in 42HE-Racks; nur eine vertikale PDU pro Seite).
 
-### VM-Landschaft
-Virtuelle Maschinen mit Host-Server-Zuordnung, Hypervisor-Typ und Abhängigkeitsgraph (`depends_on`). Visualisierung als interaktives Graphen-Diagramm — Hover zeigt Vorgänger und Nachfolger.
+### 2. USV-Simulation & Phasenlast-Berechnung
+* **N+1 Dimensionierung:** Berechnung der minimalen Anzahl an USV- und Batteriemodulen, die für eine Autonomiezeit bei Phasenungleichgewicht (L1/L2/L3) erforderlich sind.
+* **Phasenlasten:** Berechnung und Warnung bei Asymmetrie der Stromlasten über die drei Phasen.
 
-### Runbook Orchestrator
-Shutdown- und Startup-Sequenzen als Runbooks planen und ausführen:
-- **Drag & Drop Planer** — VMs und Geräte per Maus in Layer einteilen
-- **Ausführungs-Protokoll** — Schritt für Schritt abhaken, wer hat wann abgehakt
-- **Startup auto-generiert** — Umkehrung eines Shutdown-Runbooks auf Knopfdruck
-- **Flexible Layer** — beliebig viele Ebenen, Reihenfolge frei wählbar
+### 3. Predictive Analytics: Blast Radius (Ausfall-Simulation)
+* **Kaskadierende Ausfälle:** Was passiert, wenn ein Core-Switch oder eine PDU ausfällt?
+* **Redundanz-Check:** Erkennung isolierter oder stromloser Server sowie mitgerissener VMs und betroffener Runbook-Sequenzen.
 
-### Kabelmanagement & EPLAN-Import
-Kabelliste mit Typ, Länge, Farbe und Quelle/Ziel. EPLAN CSV-Import mit Live-Vorschau. Export als XLSX, ODS oder CSV.
+### 4. EPLAN CSV Import & Kabeltyp-Mapping
+* **Kabelimport:** EPLAN-Kabelverbindungslisten komfortabel per CSV hochladen.
+* **Spaltenzuordnung:** Flexibler Parser mit dynamischem Spaltenmapping und automatischer Normierung freier Kabeltypen (z. B. `LWL-LC` zu standardisierten Enum-Werten wie `LC-LC`).
 
-### Stromlaufplan & Topologie
-Allpoliger Stromlaufplan (DIN EN 61082-1) als SVG. Topologie-Graph mit Geräten und Kabelverbindungen (filterbar nach **Standort** und Kabeltyp). **PDF-Export** direkt aus der Oberfläche.
+### 5. Kabellisten-Export
+* **Multi-Format-Export:** Download der Verkabelungsliste als CSV, XLSX (via `openpyxl`) oder ODS (via `odfpy`).
 
-### Predictive Analytics: Blast Radius (Ausfall-Simulation)
-Simuliere den Ausfall von Core-Switches oder PDUs und berechne kaskadierende Effekte:
-- **Redundanz-Check:** Welche Server werden isoliert (Netzwerk) oder stromlos?
-- **VM-Kaskaden:** Welche VMs stürzen mit ihrem Host ab? Welche abhängigen VMs (z.B. App-Server ohne DB) sind ebenfalls betroffen?
-- **Runbook-Impact:** Welche geplanten Runbooks enthalten betroffene Systeme?
-
-### USV-Simulation
-N+1 Redundanz-Kalkulation auf Basis dokumentierter Nennleistungen. Phasen-Imbalance-Anzeige (L1/L2/L3). MBS-Bypass-Simulation: welche Server werden bei Phasenausfall stromlos?
+### 6. Stromlaufplan & Topologie
+* **Grafische Darstellung:** Interaktiver D3.js/Cytoscape.js Topologie-Graph zur rack-übergreifenden Visualisierung.
+* **Allpoliger Stromlaufplan:** Darstellung der PDU- und USV-Verbindungspfade als SVG mit direktem PDF-Export.
 
 ---
 
-## Schnellstart (Docker — empfohlen)
+## Tech Stack
 
-Läuft auf **Windows, macOS und Linux** ohne weitere Abhängigkeiten.
+* **Backend:** FastAPI, SQLAlchemy 2.0 (Async), Alembic, MySQL 8 (aiomysql)
+* **Frontend:** Svelte 5, Vite, Vanilla JS (kein TypeScript), CSS
+* **Deployment:** Docker, Docker Compose, Nginx
 
+---
+
+## Installationsanleitung
+
+### VARIANTE A — Docker (Empfohlen)
+
+Mit Docker und Docker Compose müssen Sie Python, Node und MySQL nicht lokal installieren. Alles läuft in isolierten Containern.
+
+#### Voraussetzungen
+* Docker + Docker Compose installiert (z. B. über Docker Desktop)
+
+#### Starten in 3 Befehlen
 ```bash
+# 1. Repository klonen
 git clone https://github.com/diebugger-tech/KAiTix.git
 cd KAiTix
+
+# 2. Umgebungsvariablen kopieren (ggf. anpassen)
 cp .env.example .env
+
+# 3. Docker Compose Stack starten
 docker compose up
 ```
 
-Danach im Browser: **http://localhost**
-
-### Voraussetzung: Docker Desktop
-
-| Betriebssystem | Download |
-|---|---|
-| Windows 10/11 | [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/) |
-| macOS | [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/) |
-| Ubuntu / Debian | `sudo apt install docker.io docker-compose-plugin` |
-| NixOS | Deklarativ via `virtualisation.docker.enable = true` |
+Danach ist die Anwendung im Browser erreichbar unter: **http://localhost**
 
 ---
 
-## Kein Docker — Entwicklung lokal
+### VARIANTE B — Manuelle Installation (Linux/Mac/Windows)
 
-### Linux & NixOS (mit Nix Shell)
-```bash
-# Nix-Shell aktiviert Python 3.12 + Node 22 automatisch via direnv:
-cd KAiTix
-direnv allow             # einmalig — danach automatisch beim cd
+Falls Sie die Anwendung direkt auf Ihrem System installieren und ausführen möchten.
 
-# Alternativ ohne direnv:
-nix-shell
+#### Voraussetzungen
+* **Python 3.11+**
+* **Node 20+**
+* **MySQL 8+** (lokal installiert und konfiguriert)
 
-# Setup:
-python3 -m venv .venv && source .venv/bin/activate
-make install             # Python-Abhängigkeiten
-make migrate-apply       # Datenbank einrichten
-cd frontend && npm install && cd ..
-make dev-all             # Backend :8003 + Frontend :5175
-```
+#### Installationsschritte
 
-### Linux ohne Nix
-```bash
-python3 -m venv .venv && source .venv/bin/activate
-make install && make migrate-apply
-cd frontend && npm install && cd ..
-make dev-all
-```
+1. **Umgebungsvariablen anlegen**
+   ```bash
+   cp .env.example .env
+   ```
+   *Wichtig:* Passen Sie `DATABASE_URL` in der `.env`-Datei an Ihre lokale MySQL-Datenbankverbindung an (z. B. `DATABASE_URL=mysql+aiomysql://user:password@localhost:3306/kaitix`).
 
-### macOS
-```bash
-brew install python@3.12 node mysql pkg-config openssl
-python3 -m venv .venv && source .venv/bin/activate
-make install && make migrate-apply
-cd frontend && npm install && cd ..
-make dev-all
-```
+2. **Python-Abhängigkeiten installieren**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-### Windows
-Ohne Docker empfehlen wir **WSL2 + Ubuntu**, dann wie Linux oben.  
-Alternativ: Docker Desktop (siehe Schnellstart).
+3. **Datenbank-Migrationen ausführen (Alembic)**
+   ```bash
+   alembic upgrade head
+   ```
+
+4. **Frontend einrichten & starten**
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
+   *(Das Svelte5-Frontend läuft standardmäßig unter http://localhost:5175)*
+
+5. **Backend starten (in einem separaten Terminal)**
+   ```bash
+   # Zurück im Hauptverzeichnis
+   uvicorn app.main:app --reload
+   ```
+   *(Das FastAPI-Backend läuft standardmäßig unter http://localhost:8003)*
 
 ---
 
-## Demo-Daten laden
+## Demo-Daten laden (Seeding)
+
+Um KAiTix mit Beispieldaten zu testen (2 Racks, 8 Geräte, 6 VMs, 2 Runbooks), führen Sie folgendes Skript aus:
 
 ```bash
-# Mit aktivem .venv und laufender Datenbank:
+# Mit aktivem venv und konfigurierten Datenbank-Zugangsdaten in .env:
 PYTHONPATH=. python3 scripts/seed_testdata.py
-# → 2 Racks, 8 Geräte, 6 VMs, 2 Runbooks (Shutdown + Startup)
 ```
 
 ---
 
-## Makefile-Referenz
+## Makefile-Referenz (Lokale Entwicklung)
 
 | Befehl | Beschreibung |
 |---|---|
 | `make dev` | Backend starten (Port 8003) |
 | `make dev-frontend` | Frontend starten (Port 5175) |
-| `make dev-all` | Backend + Frontend parallel |
-| `make install` | Python-Abhängigkeiten installieren |
-| `make test` | pytest ausführen |
-| `make lint` | ruff + mypy |
-| `make format` | ruff fix + format |
-| `make migrate-create message="..."` | Alembic-Migration erstellen |
-| `make migrate-apply` | Migrationen anwenden |
-| `make clean` | Temporäre Dateien löschen |
-
----
-
-## Stack
-
-- **Backend:** FastAPI 0.136+, SQLAlchemy 2.0 async, Alembic, MySQL 8, aiomysql
-- **Frontend:** Svelte 5, Vite, Vanilla JS (kein TypeScript), Lucide Icons
-- **Dev-Umgebung:** Nix Shell (`shell.nix`), direnv, Python venv
-- **Export:** openpyxl (XLSX), odfpy (ODS), SVG → PDF via Browser-Print
-- **Deployment:** Docker Compose + nginx reverse proxy
+| `make dev-all` | Backend + Frontend parallel starten |
+| `make install` | Python-Abhängigkeiten installieren (in nix-shell) |
+| `make test` | `pytest` ausführen |
+| `make lint` | Code mit `ruff` und `mypy` prüfen |
+| `make format` | Code mit `ruff` formatieren |
+| `make migrate-create message="..."` | Neue Alembic-Datenbankmigration erstellen |
+| `make migrate-apply` | Alembic-Migrationen auf Datenbank anwenden |
+| `make clean` | Temporäre Dateien (Cache, Backups) entfernen |
 
 ---
 
 ## Lizenz
 
-[AGPL-3.0](LICENSE) — freie Nutzung im eigenen Unternehmen. Modifikationen die als SaaS betrieben werden müssen unter gleicher Lizenz veröffentlicht werden.
+[AGPL-3.0](LICENSE) — Freie Nutzung im eigenen Unternehmen. Modifikationen, die als SaaS betrieben werden, müssen unter der gleichen Lizenz veröffentlicht werden.
