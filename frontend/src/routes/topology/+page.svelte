@@ -797,7 +797,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
                     onmouseleave={() => hoveredScoreId = null} />
                 {/if}
               {/if}
-              <text x={rb.x+rb.w/2} y={rb.y+17} text-anchor="middle" font-size="10" font-weight="bold" fill="#64748b" class="select-none">{rb.rack.name}{rb.rack.rackreihe ? ` (${rb.rack.rackreihe})` : ''}</text>
+              <text x={rb.x+rb.w/2} y={rb.y+17} text-anchor="middle" font-size="10" font-weight="bold" fill="#64748b" class="select-none">{rb.rack.name}</text>
               <text x={rb.x+rb.w/2} y={rb.y+27} text-anchor="middle" font-size="8" fill="#334155" class="select-none">{rb.rack.standort}</text>
               {#each Array.from({ length: rb.rack.hoehe_u }, (_, i) => i) as u}
                 <line x1={rb.x+2} y1={rb.y+LABEL_H+u*U_HEIGHT} x2={rb.x+7} y2={rb.y+LABEL_H+u*U_HEIGHT} stroke="#1e293b" stroke-width="0.5" />
@@ -1051,7 +1051,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
                   {/if}
                 </div>
                 <div class="ml-auto flex items-center gap-2">
-                  {#if rack}<span class="text-[10px] text-slate-600 bg-slate-800/60 px-1.5 py-0.5 rounded">{rack.name}{rack.standort ? ' · '+rack.standort : ''}{rack.rackreihe ? ` (${rack.rackreihe})` : ''}</span>{/if}
+                  {#if rack}<span class="text-[10px] text-slate-600 bg-slate-800/60 px-1.5 py-0.5 rounded">{rack.name}{rack.standort ? ' · '+rack.standort : ''}</span>{/if}
                   {#if item.node.u_position}<span class="text-[10px] text-slate-600 bg-slate-800/60 px-1.5 py-0.5 rounded">HE {item.node.u_position}</span>{/if}
                   {#if item.node.ip_adresse}<span class="text-[10px] font-mono text-blue-400">{item.node.ip_adresse}</span>{/if}
                 </div>

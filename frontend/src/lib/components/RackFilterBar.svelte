@@ -116,7 +116,7 @@
       >
         <option value="Alle">Alle Racks</option>
         {#each filteredRacks as rack}
-          <option value={rack.id}>{rack.name}{rack.rackreihe ? ` (${rack.rackreihe})` : ''}</option>
+          <option value={rack.id}>{rack.name}</option>
         {/each}
       </select>
     </div>
@@ -165,7 +165,7 @@
       >
         <option value="Alle">Alle</option>
         {#each filteredRacks as rack}
-          <option value={rack.id}>{rack.name}{rack.rackreihe ? ` (${rack.rackreihe})` : ''}</option>
+          <option value={rack.id}>{rack.name}</option>
         {/each}
       </select>
     </div>

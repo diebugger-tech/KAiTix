@@ -1045,7 +1045,7 @@
                 <div class="flex items-center space-x-2 min-w-0">
                   <Layers class="w-3.5 h-3.5 shrink-0 {active ? 'text-blue-400' : 'text-slate-500'}" />
                   <div class="min-w-0">
-                    <div class="font-bold text-xs truncate {active ? 'text-white' : 'text-slate-300'}">{rack.name}{rack.rackreihe ? ` (${rack.rackreihe})` : ''}</div>
+                    <div class="font-bold text-xs truncate {active ? 'text-white' : 'text-slate-300'}">{rack.name}</div>
                     <div class="text-[10px] text-slate-500 truncate">
                       {rack.standort || '–'}
                       {#if rack.rackreihe} <span class="opacity-50">·</span> {rack.rackreihe}{/if}
@@ -1144,7 +1144,7 @@
             <!-- Rack Header -->
             <div class="px-4 py-3 border-b border-slate-800 flex items-center justify-between">
               <div>
-                <div class="font-bold text-white text-sm">{selectedRack.name}{selectedRack.rackreihe ? ` (${selectedRack.rackreihe})` : ''}</div>
+                <div class="font-bold text-white text-sm">{selectedRack.name}</div>
                 <div class="text-[10px] text-slate-500">{occupiedU}/{selectedRack.hoehe_u} HE{selectedRack.breite_mm ? ' · ' + selectedRack.breite_mm + 'mm' : ''} · {(phaseLoads().L1/1000 + phaseLoads().L2/1000 + phaseLoads().L3/1000).toFixed(1)} kW</div>
               </div>
               <div class="flex items-center space-x-2">
@@ -1946,7 +1946,7 @@
           {#each racks as rack}
             {@const rackTargets = filteredTargetDevices().filter(d => d.rack_id === rack.id)}
             {#if rackTargets.length > 0}
-            <optgroup label="{rack.name}{rack.rackreihe ? ` (${rack.rackreihe})` : ''} — {rack.standort}">
+            <optgroup label="{rack.name} — {rack.standort}">
               {#each rackTargets as d}
                 <option value={d.id}>{d.hostname} ({d.typ})</option>
               {/each}
@@ -2030,7 +2030,7 @@
           {#each racks as rack}
             {@const rackTargets = editFilteredTargetDevices().filter(d => d.rack_id === rack.id)}
             {#if rackTargets.length > 0}
-            <optgroup label="{rack.name}{rack.rackreihe ? ` (${rack.rackreihe})` : ''} — {rack.standort}">
+            <optgroup label="{rack.name} — {rack.standort}">
               {#each rackTargets as d}
                 <option value={d.id}>{d.hostname} ({d.typ})</option>
               {/each}
