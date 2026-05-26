@@ -542,7 +542,7 @@ export const api = {
 
   // Topology
   getTopology: (): Promise<{
-    racks: Array<{ id: number; name: string; standort: string; hoehe_u: number }>;
+    racks: Array<{ id: number; name: string; standort: string; hoehe_u: number; rackreihe?: string | null }>;
     nodes: Array<{
       id: number; hostname: string; typ: string; rack_id: number | null;
       rack_name: string | null; u_position: number | null; u_hoehe: number;
