@@ -14,6 +14,21 @@
 - **Kentix/Geräte**: Nur physische Installation dokumentieren (Modell, Seriennummer, Position, Anschlusswerte)
 - **Simulationen**: Reine Berechnung auf Basis dokumentierter Daten (z.B. N+1 USV-Redundanz, kaskadierende Ausfälle), keine Live-Lastdaten
 
+### Design-Prinzipien (nicht verhandelbar)
+
+- **Intranet-Only** — keine Cloud, keine externen APIs, läuft vollständig im lokalen Netzwerk. Keine Internet-Exponierung vorgesehen.
+- **Single-User** — kein Auth-System, kein Session-Management, kein Multi-User. Gedacht für einen Techniker / Admin im gesicherten Intranet.
+- **Kein Live-Monitoring** — KAiTix dokumentiert und simuliert, liest aber keine Echtzeit-Daten aus. Kein SNMP-Polling, kein Live-Dashboard, keine automatischen Aktionen.
+- **Plan. Simulate. Document.** — nicht überwachen, nicht automatisieren. Werte kommen aus der Datenbank, nicht von Geräten.
+
+**HARDREGEL FÜR AGENTEN:** Folgende Features sind **niemals** einzubauen:
+- ❌ Auth-Middleware (JWT, OAuth, Basic-Auth, SSO)
+- ❌ Session-Management (Cookies, Server-Side Sessions)
+- ❌ Multi-User / Rollen / Permissions
+- ❌ WebSockets oder Polling-Loops
+- ❌ Externe API-Calls zur Laufzeit (SNMP, REST-Abfragen an Geräte)
+- ❌ Live-Dashboards mit Auto-Refresh
+
 **Showroom-Workflow:**
 1. Techniker pflegt Kundendaten in KAiTix
 2. Rack-Diagramm + Topologie-Graph beim Kunden-Meeting öffnen
