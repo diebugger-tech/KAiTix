@@ -28,7 +28,17 @@
       stats.loading = false;
     }
   });
+
+  let isLightboxOpen = $state(false);
+
+  function handleKeyDown(event: KeyboardEvent) {
+    if (event.key === 'Escape') {
+      isLightboxOpen = false;
+    }
+  }
 </script>
+
+<svelte:window onkeydown={handleKeyDown} />
 
 <svelte:head>
   <title>KAiTix — Serverraum-Dokumentation</title>
@@ -54,9 +64,19 @@
   </nav>
 
   <section class="hero">
-    <div class="hero-bg"></div>
-    <div class="hero-overlay"></div>
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div class="hero-bg" onclick={() => isLightboxOpen = true}></div>
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div class="hero-overlay" onclick={() => isLightboxOpen = true}></div>
     <div class="hero-scanline"></div>
+    <button class="hero-camera-btn" onclick={() => isLightboxOpen = true} aria-label="Bild vergrößern">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+        <circle cx="12" cy="13" r="4"/>
+      </svg>
+    </button>
     <div class="hero-content">
       <div class="hero-left">
         <div class="hero-eyebrow">Intranet · Single-User · Dokumentation</div>
@@ -258,6 +278,15 @@
   </footer>
 </div>
 
+{#if isLightboxOpen}
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div class="lightbox" onclick={() => isLightboxOpen = false}>
+    <img src="/assets/hero-serverraum.jpg" alt="Serverraum Großansicht" class="lightbox-img" onclick={(e) => e.stopPropagation()} />
+    <button class="lightbox-close" onclick={() => isLightboxOpen = false}>&times;</button>
+  </div>
+{/if}
+
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -360,17 +389,21 @@
     background-size: cover;
     background-position: center 30%;
     background-image: url('/assets/hero-serverraum.jpg');
-    filter: brightness(0.22) contrast(1.1) saturate(1.15);
+    filter: brightness(0.45) contrast(1.05) saturate(1.2);
     z-index: 1;
+    cursor: zoom-in;
+    pointer-events: auto;
   }
   .hero-overlay {
     position: absolute; inset: 0;
     background: linear-gradient(
       105deg,
-      rgba(13,15,14,0.96) 0%,
-      rgba(13,15,14,0.3) 100%
+      rgba(13,15,14,0.75) 0%,
+      rgba(13,15,14,0.15) 100%
     );
     z-index: 2;
+    cursor: zoom-in;
+    pointer-events: auto;
   }
   .hero-scanline {
     position: absolute; inset: 0;
@@ -608,5 +641,71 @@
     .feat-grid { grid-template-columns: 1fr; }
     .section { padding: 3rem 1.5rem; }
     .hero-content { padding: 0 1.5rem; }
+  }
+
+  /* ─── HERO CAMERA BUTTON ─── */
+  .hero-camera-btn {
+    position: absolute;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 5;
+    background: rgba(16, 22, 34, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--text2);
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(4px);
+  }
+  .hero-camera-btn:hover {
+    background: var(--teal);
+    color: #fff;
+    border-color: var(--teal);
+    box-shadow: 0 0 12px var(--teal-border);
+    transform: scale(1.05);
+  }
+  .hero-camera-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* ─── LIGHTBOX ─── */
+  .lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.92);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: zoom-out;
+  }
+  .lightbox-img {
+    max-width: 90vw;
+    max-height: 90vh;
+    object-fit: contain;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .lightbox-close {
+    position: absolute;
+    top: 1.5rem;
+    right: 2rem;
+    background: none;
+    border: none;
+    color: var(--text);
+    font-size: 2.5rem;
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.15s;
+  }
+  .lightbox-close:hover {
+    color: var(--teal);
   }
 </style>
