@@ -186,30 +186,30 @@ virtuelle Maschinen und Shutdown/Startup-Runbooks.
 ---
 
 ## Test-Status
-
-- pytest: 20 Tests grün ✅
+ 
+- pytest: 24 Tests grün ✅
 - npm run build: grün ✅
-
+ 
 ---
-
+ 
 ## Offene TODOs
-
+ 
 - [x] Phasen-Imbalance beheben (12-17 kW unausgeglichen, L1/L2/L3)
 - [ ] Protokoll-Tab: historische Ausführungen anzeigen
-- [ ] PDF-Export Runbook
-- [ ] Markdown-Export Runbook
+- [x] PDF-Export Runbook (Client-seitig via window.print)
+- [x] Markdown-Export Runbook (Client-seitig serialisiert)
 - [ ] Management-URL / Deep-Link (statischer Link) pro Gerät im Runbook (KEIN Live-Polling!)
-
+ 
 ---
-
+ 
 ## Bekannte Bugs / Issues
-
+ 
 - Phasen-Imbalance ~12-17 kW (dokumentiert, noch nicht behoben)
-
+ 
 ---
-
+ 
 ## Verbotene Änderungen
-
+ 
 - ❌ TypeScript einführen (Svelte 5 plain JS)
 - ❌ PostgreSQL oder SQLite (nur MySQL)
 - ❌ VMs in `devices` eintragen
@@ -217,11 +217,11 @@ virtuelle Maschinen und Shutdown/Startup-Runbooks.
 - ❌ Neue pip-Pakete ohne Rückfrage
 - ❌ Bestehende Router-Struktur brechen
 - ❌ Landingpage-Route in App-Layout einbetten (muss sidebar-frei bleiben)
-
+ 
 ---
-
+ 
 ## Konventionen
-
+ 
 - Alembic immer: `python3 -m alembic upgrade head`
 - Router-Struktur: `app/domains/<domain>/router.py`
 - Schemas: `app/schemas/<domain>.py`
@@ -229,25 +229,24 @@ virtuelle Maschinen und Shutdown/Startup-Runbooks.
 - Seed-Scripts: Bestehende Seed-Scripts in `scripts/` (z.B. `seed_testdata.py`) immer komplett überschreiben (Clean Slate mit `drop_all`) oder sinnvoll ergänzen. Keine neuen, redundanten Seed-Skripte anlegen.
 - **Zero-U PDUs:** PDUs, die vertikal an der Seite im Rack montiert werden (Zero-U), MÜSSEN die Attribute `side="left"` oder `side="right"` sowie `u_position=0` besitzen. Zudem sollten korrekte Kentix-Modellbezeichnungen für vertikale PDUs (z.B. `SmartPDU Vertikal 40HE 3P-32A`) verwendet werden.
 ---
-
+ 
 ## Referenzen
-
+ 
 - Gemini-Prompt Runbook Orchestrator: `gemini_prompt_runbook_orchestrator.md`
 - Globale Umgebung: `~/Projekte/AGENT.md`
 - nixubuntu Repo: github.com/diebugger-tech/nixubuntu
-
+ 
 ---
-
+ 
 **Letzte Session**
 **Datum:** 2026-05-27
-**Was gemacht (Sprint 2):**
-- Backend: `UsvCalculationResponse`, `VdeAuditResult` und `PowerAuditResponse` Schemas in `app/domains/power/schemas.py` hinzugefügt.
-- Backend: VDE Audit-Logik `audit_vde_compliance()` extrahiert nach `app/domains/power/services/usv_calc.py`.
-- Backend: Endpoint `GET /api/v1/power/audit/{usv_unit_id}` implementiert (idempotent, berechnet On-The-Fly).
-- Frontend: Types und Fetch-Methoden für PowerAudit in `api.ts` integriert.
-- Frontend: Geräte-Details in `racks/+page.svelte` in ein Modal mit Tabs umgebaut, inklusive "VDE Protokoll"-Tab für USV-Geräte.
+**Was gemacht (Runbook Print & Export Sprint):**
+- Client-seitiger Print-Layout-Support für A4 Portrait ([RunbookPrint.svelte](file:///home/andreas/Projekte/aktiv/KAiTix/frontend/src/lib/components/RunbookPrint.svelte)) mit globalen Print-Media-CSS-Regeln in [layout.css](file:///home/andreas/Projekte/aktiv/KAiTix/frontend/src/routes/layout.css).
+- Client-seitige Markdown-Generierung und lokaler Datei-Download in [+page.svelte](file:///home/andreas/Projekte/aktiv/KAiTix/frontend/src/routes/(app)/runbook-orchestrator/[id]/+page.svelte).
+- Ersetzung des PDF-Buttons durch einen "Drucken"-Button mit Printer-Icon.
+- Validierung, dass `npm run build` und `pytest` weiterhin erfolgreich durchlaufen.
 
 **Nächste Schritte:**
 - Phasen-Imbalance beheben (12-17 kW unausgeglichen)
-- PDF-Export für Runbook
 - Healthcheck-URL pro Gerät im Runbook integrieren
+- Protokoll-Tab: historische Ausführungen anzeigen
