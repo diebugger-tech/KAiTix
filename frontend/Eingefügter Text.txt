@@ -1,0 +1,1 @@
+cp ~/Downloads/kaitix_landingpage.html ~/Projekte/aktiv/KAiTix/frontend/public/index.html
