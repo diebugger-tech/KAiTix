@@ -14,6 +14,10 @@ from app.models import (
     UsvModule as UsvModuleModel,
     UsvSimulationEvent,
 )
+from app.domains.power.models import (
+    DistributionPanel,
+    UsvCalculation,
+)
 from app.domains.power.schemas import (
     UsvUnit,
     UsvUnitCreate,
@@ -21,6 +25,7 @@ from app.domains.power.schemas import (
     UsvModuleCreate,
     UsvModuleUpdate,
     UsvSimulationEventResponse,
+    PowerAuditResponse,
 )
 from app.domains.power.services.usv_calc import (
     UsvCalculator,
@@ -28,6 +33,7 @@ from app.domains.power.services.usv_calc import (
     BatteryCabinetEngine,
     ShutdownSimulationEngine,
     PhaseBalancer,
+    audit_vde_compliance,
 )
 
 router = APIRouter()
@@ -168,6 +174,50 @@ async def get_usv_status(usv_unit_id: int, db: AsyncSession = Depends(get_db)):
     if "error" in res:
         raise HTTPException(status_code=404, detail=res["error"])
     return res
+
+
+@router.get("/audit/{usv_unit_id}", response_model=PowerAuditResponse)
+async def get_power_audit(usv_unit_id: int, db: AsyncSession = Depends(get_db)):
+    # 1. USV Unit laden + N+1 Status berechnen
+    status_res = await UsvCalculator.get_usv_load_and_status(usv_unit_id, db)
+    if "error" in status_res:
+        raise HTTPException(status_code=404, detail=status_res["error"])
+
+    usv_query = await db.execute(
+        select(UsvUnitModel).where(UsvUnitModel.id == usv_unit_id)
+    )
+    usv_unit = usv_query.scalar_one_or_none()
+    if not usv_unit:
+        raise HTTPException(status_code=404, detail="USV unit not found")
+
+    panel_query = await db.execute(
+        select(DistributionPanel).where(DistributionPanel.usv_unit_id == usv_unit_id)
+    )
+    panel = panel_query.scalar_one_or_none()
+
+    # 2. VDE Audit durchführen (on the fly)
+    payload = {
+        "n1_safe": status_res.get("n1_safe", False),
+        "battery_redundant": usv_unit.battery_strings >= 2,
+        "epo_configured": panel.has_epo_contact if panel else False,
+        "mbs_configured": usv_unit.has_bypass_switch,
+    }
+    audit_results = audit_vde_compliance(payload)
+
+    # 3. Berechnungen laden
+    calc_query = await db.execute(
+        select(UsvCalculation)
+        .where(UsvCalculation.usv_unit_id == usv_unit_id)
+        .order_by(UsvCalculation.berechnet_am.desc())
+        .limit(50)
+    )
+    calculations = calc_query.scalars().all()
+
+    return PowerAuditResponse(
+        usv_unit_id=usv_unit_id,
+        audit_results=audit_results,
+        calculations=calculations,
+    )
 
 
 @router.post("/simulate")
