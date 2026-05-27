@@ -175,6 +175,31 @@ export interface UsvStatus {
   devices: Array<Record<string, unknown>>;
 }
 
+export interface UsvCalculation {
+  id: number;
+  berechnet_am: string;
+  usv_unit_id: number;
+  last_kw: number;
+  peak_kw: number;
+  installiert_kw: number;
+  reserve_kw: number;
+  n1_kw: number;
+  kaltstart_ok: boolean;
+  bemerkung?: string;
+}
+
+export interface VdeAuditResult {
+  rule: string;
+  status: 'ok' | 'warning' | 'error';
+  message: string;
+}
+
+export interface PowerAuditResponse {
+  usv_unit_id: number;
+  audit_results: VdeAuditResult[];
+  calculations: UsvCalculation[];
+}
+
 export interface SystemState {
   status: 'stable' | 'degraded' | 'critical';
   grid_online: boolean;
@@ -455,6 +480,7 @@ export const api = {
   // USV
   getUsvUnits: (): Promise<UsvUnit[]> => request('usv/'),
   getUsvStatus: (usvUnitId: number): Promise<UsvStatus> => request(`usv/${usvUnitId}/status`),
+  getPowerAudit: (usvUnitId: number): Promise<PowerAuditResponse> => request(`power/audit/${usvUnitId}`),
   simulateUsv: (data: {
     l1_kw: number;
     l2_kw: number;
