@@ -153,3 +153,48 @@ tr:hover {
   background: rgba(29,158,117,0.5);
 }
 
+@media print {
+  /* Globale UI-Elemente ausblenden */
+  aside,
+  nav,
+  header,
+  .screen-only,
+  button:not(.print-show) {
+    display: none !important;
+  }
+
+  /* Layout-Reset für Druck */
+  body, main, #app, .flex {
+    display: block !important;
+    overflow: visible !important;
+    height: auto !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  /* Hintergrund-Gradienten/Pattern ausblenden */
+  body::before {
+    display: none !important;
+  }
+
+  /* Scrollbars weg */
+  * {
+    overflow: visible !important;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 20mm 15mm 25mm 15mm;
+  }
+
+  /* Seitenumbruch-Kontrolle */
+  .page-break-before { page-break-before: always; }
+  .page-break-avoid  { page-break-inside: avoid; }
+}
+
+.print-only { display: none; }
+@media print { .print-only { display: block; } }
+.screen-only { display: block; }
+@media print { .screen-only { display: none !important; } }
+
+
