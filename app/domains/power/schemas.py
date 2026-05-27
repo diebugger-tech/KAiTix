@@ -66,3 +66,29 @@ class UsvSimulationEventResponse(BaseModel):
     snapshot_json: Optional[str] = None
     model_config = ConfigDict(from_attributes=True)
 
+
+# === POWER AUDIT SCHEMAS ===
+class UsvCalculationResponse(BaseModel):
+    id: int
+    berechnet_am: datetime
+    usv_unit_id: int
+    last_kw: Decimal
+    peak_kw: Decimal
+    installiert_kw: Decimal
+    reserve_kw: Decimal
+    n1_kw: Decimal
+    kaltstart_ok: bool
+    bemerkung: Optional[str] = None
+    model_config = ConfigDict(from_attributes=True)
+
+
+class VdeAuditResult(BaseModel):
+    rule: str
+    status: str  # "ok" | "warning" | "error"
+    message: str
+
+
+class PowerAuditResponse(BaseModel):
+    usv_unit_id: int
+    audit_results: List[VdeAuditResult]
+    calculations: List[UsvCalculationResponse]
