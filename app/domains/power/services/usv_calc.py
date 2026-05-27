@@ -8,6 +8,24 @@ from app.models import (
     UsvUnit,
     Device,
 )
+from app.domains.power.schemas import VdeAuditResult
+
+
+def audit_vde_compliance(payload: dict) -> list[VdeAuditResult]:
+    results = []
+    if not payload.get("n1_safe"):
+        results.append(VdeAuditResult(rule="N1_IMPOSSIBLE", status="error",
+            message="Kein N+1 möglich"))
+    if not payload.get("battery_redundant"):
+        results.append(VdeAuditResult(rule="BATTERY_SPOF", status="error",
+            message="SPOF Batteriesystem"))
+    if not payload.get("epo_configured"):
+        results.append(VdeAuditResult(rule="EPO_MISSING", status="error",
+            message="Kein EPO-Kreis — VDE 0108-100 Verstoß"))
+    if not payload.get("mbs_configured"):
+        results.append(VdeAuditResult(rule="MBS_MISSING", status="warning",
+            message="Fehlender MBS — Wartung erfordert Downtime"))
+    return results
 
 
 class UsvCalculator:
