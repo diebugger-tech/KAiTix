@@ -1,5 +1,5 @@
 <script lang="ts">
-  import './layout.css';
+  import '../layout.css';
   import { appState } from '$lib/state.svelte';
   import { api } from '$lib/api';
   import { page } from '$app/state';
