@@ -16,3 +16,5 @@ mypy>=1.9.0
 alembic>=1.13.1
 reportlab>=4.0.0
 python-dotenv>=1.0.0
+typer>=0.12.0
+
