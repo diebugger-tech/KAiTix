@@ -70,7 +70,7 @@
   function priorityColor(p: number): string {
     switch (p) {
       case 1: return 'text-red-400 bg-red-500/10 border-red-500/30';
-      case 2: return 'text-blue-400 bg-blue-500/10 border-blue-500/30';
+      case 2: return 'text-[#5DCAA5] bg-[rgba(29,158,117,0.15)] border-[rgba(29,158,117,0.3)]';
       case 3: return 'text-amber-400 bg-amber-500/10 border-amber-500/30';
       case 4: return 'text-slate-400 bg-slate-500/10 border-slate-500/30';
       default: return 'text-slate-400 bg-slate-500/10 border-slate-500/30';
@@ -219,7 +219,7 @@
   <div class="bg-[#111827] border border-slate-700/50 rounded-xl p-4">
     <div class="flex flex-wrap items-center justify-between gap-4">
       <div class="flex items-center space-x-2">
-        <Server class="w-5 h-5 text-blue-400" />
+        <Server class="w-5 h-5 text-[#5DCAA5]" />
         <h3 class="text-sm font-semibold text-slate-200">RZ-weiter Shutdown-Plan</h3>
         <span class="text-xs text-slate-500 ml-2">Basierend auf Server-Priorität</span>
       </div>
@@ -297,7 +297,7 @@
       </div>
       <div class="bg-[#111827] border border-slate-700/50 rounded-xl p-4">
         <div class="text-xs text-slate-500 mb-1">Gesamtdauer</div>
-        <div class="text-lg font-bold text-blue-400">{formatSeconds(totalDuration)}</div>
+        <div class="text-lg font-bold text-[#5DCAA5]">{formatSeconds(totalDuration)}</div>
         <div class="text-xs text-slate-500">{simResult.timeline.length} Datenpunkte</div>
       </div>
       <div class="bg-[#111827] border border-slate-700/50 rounded-xl p-4">
@@ -404,7 +404,7 @@
             <span class="text-slate-300">{currentSnapshot.load_kw.toFixed(2)} kW Last</span>
           </div>
           <div class="flex items-center space-x-1.5">
-            <Server class="w-3.5 h-3.5 text-blue-400" />
+            <Server class="w-3.5 h-3.5 text-[#5DCAA5]" />
             <span class="text-slate-300">{currentSnapshot.active_device_ids.length} aktiv</span>
           </div>
           <div class="flex items-center space-x-1.5">
@@ -453,7 +453,7 @@
                   <span>Sicher aus</span>
                 </span>
               {:else}
-                <span class="text-blue-400">Läuft</span>
+                <span class="text-[#5DCAA5]">Läuft</span>
               {/if}
             </div>
           </div>

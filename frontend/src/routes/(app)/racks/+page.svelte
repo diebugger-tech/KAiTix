@@ -1911,7 +1911,7 @@
             <button onclick={() => selectHW(hw)}
               disabled={incompatible}
               title={incompatible ? 'Benötigt mind. ' + hw.min_rack_hoehe + 'HE-Rack (dieses Rack hat ' + selectedRack?.hoehe_u + 'HE)' : ''}
-              class="w-full text-left px-3 py-2 rounded-lg text-xs transition {selectedHW?.id === hw.id ? 'bg-blue-600/20 border border-[#1D9E75]/40 text-white' : incompatible ? 'text-slate-600 cursor-not-allowed' : 'text-slate-400 hover:bg-slate-800/60'}">
+              class="w-full text-left px-3 py-2 rounded-lg text-xs transition {selectedHW?.id === hw.id ? 'bg-[#1D9E75]/20 border border-[#1D9E75]/40 text-white' : incompatible ? 'text-slate-600 cursor-not-allowed' : 'text-slate-400 hover:bg-slate-800/60'}">
               <div class="font-semibold truncate">{incompatible ? '⚠ ' : ''}{hw.name}</div>
               <div class="text-[10px] text-slate-500">{hw.kategorie} · {hw.u_hoehe === 0 ? '0U' : hw.u_hoehe + ' HE'}{incompatible ? ' · benötigt ' + hw.min_rack_hoehe + 'HE' : ''}{!pduOnlyMode && hw.tdp_watt ? ' · '+hw.tdp_watt+'W' : ''}{!pduOnlyMode && hw.psu_count ? ' · '+hw.psu_count+'× PSU' : ''}</div>
             </button>

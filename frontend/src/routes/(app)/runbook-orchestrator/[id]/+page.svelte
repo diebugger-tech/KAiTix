@@ -740,7 +740,7 @@
               {:else}
                 <button 
                   onclick={() => { showInlineLayerForm = true; selectedLayerTemplate = 'Web-Tier'; }}
-                  class="w-full flex items-center justify-center gap-2 py-4 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-600/20 rounded-xl text-sm font-medium transition"
+                  class="w-full flex items-center justify-center gap-2 py-4 bg-[#1D9E75]/10 hover:bg-[#1D9E75]/20 text-blue-400 border border-blue-600/20 rounded-xl text-sm font-medium transition"
                 >
                   <Plus class="w-4 h-4" /> Neue Ebene hinzufügen
                 </button>
@@ -783,7 +783,7 @@
             <div 
               draggable="true"
               ondragstart={handleDragStartFreitext}
-              class="mb-3 p-2 bg-blue-500/10 border border-dashed border-[#1D9E75]/30 rounded-lg flex items-center justify-center gap-2 cursor-grab hover:bg-blue-500/20 text-xs text-blue-400 font-semibold select-none shrink-0"
+              class="mb-3 p-2 bg-blue-500/10 border border-dashed border-[#1D9E75]/30 rounded-lg flex items-center justify-center gap-2 cursor-grab hover:bg-[#0F6E56]/20 text-xs text-blue-400 font-semibold select-none shrink-0"
             >
               <Plus class="w-3.5 h-3.5" />
               Freitext-Gerät (ziehen)

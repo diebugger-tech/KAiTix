@@ -103,7 +103,7 @@
 
 {#if show}
 <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-  <div class="bg-[#101622] border border-slate-800 rounded-xl p-6 max-w-sm w-full shadow-2xl">
+  <div class="bg-[#131615] border border-slate-800 rounded-xl p-6 max-w-sm w-full shadow-2xl">
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-lg font-bold text-white font-outfit">
         {initialData ? 'Rack bearbeiten' : 'Rack hinzufügen'}
@@ -116,7 +116,7 @@
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Rack-Modell (Vorlage)</label>
         <select bind:value={selectedRackHWId}
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]">
           <option value={null}>Manuelle Eingabe</option>
           {#each hardwareTypes as hwItem}
             <option value={hwItem.id}>{hwItem.hersteller} {hwItem.modell} ({hwItem.u_hoehe}HE)</option>
@@ -126,12 +126,12 @@
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Bezeichnung *</label>
         <input type="text" bind:value={name} required placeholder={namePlaceholder}
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
       </div>
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Standort</label>
         <select bind:value={standort}
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]">
           {#if standort && !locationStore.locations.some(l => l.name === standort)}
             <option value={standort}>{standort}</option>
           {/if}
@@ -143,7 +143,7 @@
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Rackreihe (Optional)</label>
         <input type="text" bind:value={rackreihe} placeholder="z.B. Kaltgang 1"
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
       </div>
       {#if selectedRackHWId !== null}
       <div>
@@ -158,7 +158,7 @@
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Höheneinheiten</label>
         <select bind:value={hoehe_u}
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]">
           {#each rackHeights as h}
             <option value={h}>{h} HE</option>
           {/each}
@@ -167,7 +167,7 @@
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Breite (mm)</label>
         <select bind:value={breite_mm}
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]">
           <option value={600}>600 mm (Standard)</option>
           <option value={800}>800 mm (Breit)</option>
         </select>
@@ -176,11 +176,11 @@
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Bemerkung</label>
         <textarea bind:value={bemerkung} rows="2"
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500 resize-none"></textarea>
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75] resize-none"></textarea>
       </div>
       <div class="flex justify-end space-x-3 pt-2">
         <button type="button" onclick={handleClose} class="px-4 py-2 text-sm text-slate-400 hover:bg-slate-800 rounded-lg transition">Abbrechen</button>
-        <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold transition">Speichern</button>
+        <button type="submit" class="px-4 py-2 bg-[#1D9E75] hover:bg-[#0F6E56] text-white rounded-lg text-sm font-semibold transition">Speichern</button>
       </div>
     </form>
   </div>

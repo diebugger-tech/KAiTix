@@ -188,7 +188,7 @@
     {#each [['devices', 'Geräte CSV'], ['cables', 'Kabel CSV'], ['eplan', 'EPLAN']] as [tab, label]}
       <button
         onclick={() => activeTab = tab as Tab}
-        class="px-5 py-2 rounded-lg text-sm font-medium transition-all {activeTab === tab ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-slate-400 hover:text-slate-200'}"
+        class="px-5 py-2 rounded-lg text-sm font-medium transition-all {activeTab === tab ? 'bg-[#1D9E75] text-white shadow-lg shadow-blue-600/20' : 'text-slate-400 hover:text-slate-200'}"
       >
         {label}
       </button>

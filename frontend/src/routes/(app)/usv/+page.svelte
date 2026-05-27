@@ -305,7 +305,7 @@
     <button
       onclick={() => activeTab = 'simulation'}
       class="px-4 py-2 rounded-md text-sm font-medium transition flex items-center space-x-2
-        {activeTab === 'simulation' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}"
+        {activeTab === 'simulation' ? 'bg-[#1D9E75] text-white shadow' : 'text-slate-400 hover:text-slate-200'}"
     >
       <Zap class="w-3.5 h-3.5" /><span>USV N+1 Simulator</span>
     </button>

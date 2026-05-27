@@ -127,7 +127,7 @@
       <select
         bind:value={selectedStandort}
         onchange={handleStandortChange}
-        class="w-full bg-[#182030] border border-slate-700 hover:border-slate-600 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500 disabled:opacity-50 transition"
+        class="w-full bg-[#181C1A] border border-slate-700 hover:border-slate-600 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] disabled:opacity-50 transition"
       >
         <option value="Alle">Alle Standorte</option>
         {#each standorte as s}
@@ -143,7 +143,7 @@
         value={selectedRackreihe}
         onchange={handleReiheChange}
         disabled={reiheList.length === 0}
-        class="w-full bg-[#182030] border border-slate-700 hover:border-slate-600 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500 disabled:opacity-50 transition"
+        class="w-full bg-[#181C1A] border border-slate-700 hover:border-slate-600 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] disabled:opacity-50 transition"
       >
         <option value="Alle">Alle Reihen</option>
         {#each reiheList as r}
@@ -158,7 +158,7 @@
       <select
         bind:value={selectedRack}
         disabled={filteredRacks.length === 0}
-        class="w-full bg-[#182030] border border-slate-700 hover:border-slate-600 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500 disabled:opacity-50 transition"
+        class="w-full bg-[#181C1A] border border-slate-700 hover:border-slate-600 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] disabled:opacity-50 transition"
       >
         <option value="Alle">Alle Racks</option>
         {#each filteredRacks as rack}
@@ -176,7 +176,7 @@
       <select
         bind:value={selectedStandort}
         onchange={handleStandortChange}
-        class="bg-[#182030] border border-slate-700 hover:border-slate-600 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-blue-500 disabled:opacity-50 transition"
+        class="bg-[#181C1A] border border-slate-700 hover:border-slate-600 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-[#1D9E75] disabled:opacity-50 transition"
       >
         <option value="Alle">Alle</option>
         {#each standorte as s}
@@ -192,7 +192,7 @@
         value={selectedRackreihe}
         onchange={handleReiheChange}
         disabled={reiheList.length === 0}
-        class="bg-[#182030] border border-slate-700 hover:border-slate-600 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-blue-500 disabled:opacity-50 transition"
+        class="bg-[#181C1A] border border-slate-700 hover:border-slate-600 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-[#1D9E75] disabled:opacity-50 transition"
       >
         <option value="Alle">Alle</option>
         {#each reiheList as r}
@@ -207,7 +207,7 @@
       <select
         bind:value={selectedRack}
         disabled={filteredRacks.length === 0}
-        class="bg-[#182030] border border-slate-700 hover:border-slate-600 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-blue-500 disabled:opacity-50 transition"
+        class="bg-[#181C1A] border border-slate-700 hover:border-slate-600 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-[#1D9E75] disabled:opacity-50 transition"
       >
         <option value="Alle">Alle</option>
         {#each filteredRacks as rack}

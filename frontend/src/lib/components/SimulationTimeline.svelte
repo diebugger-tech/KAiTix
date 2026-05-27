@@ -25,8 +25,8 @@
     <!-- Header -->
     <div class="flex items-center justify-between px-6 py-4 border-b border-slate-800/80 bg-[#0d1425]">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
-          <Activity class="w-5 h-5 text-blue-400" />
+        <div class="w-10 h-10 rounded-xl bg-[rgba(29,158,117,0.15)] flex items-center justify-center border border-[rgba(29,158,117,0.25)]">
+          <Activity class="w-5 h-5 text-[#5DCAA5]" />
         </div>
         <div>
           <h2 class="text-xl font-bold text-white font-outfit">Ausfall- & Boot-Simulation</h2>
@@ -40,15 +40,15 @@
 
     <!-- Tabs -->
     <div class="flex px-6 border-b border-slate-800/80 bg-[#10172a]/50">
-      <button class="px-6 py-3 text-sm font-semibold transition border-b-2 {activeTab === 'overview' ? 'text-blue-400 border-blue-500' : 'text-slate-400 border-transparent hover:text-slate-200'}"
+      <button class="px-6 py-3 text-sm font-semibold transition border-b-2 {activeTab === 'overview' ? 'text-[#5DCAA5] border-[#1D9E75]' : 'text-slate-400 border-transparent hover:text-slate-200'}"
         onclick={() => activeTab = 'overview'}>
         Übersicht & Auswirkungen ({result.affected_devices.length})
       </button>
-      <button class="px-6 py-3 text-sm font-semibold transition border-b-2 {activeTab === 'shutdown' ? 'text-blue-400 border-blue-500' : 'text-slate-400 border-transparent hover:text-slate-200'}"
+      <button class="px-6 py-3 text-sm font-semibold transition border-b-2 {activeTab === 'shutdown' ? 'text-[#5DCAA5] border-[#1D9E75]' : 'text-slate-400 border-transparent hover:text-slate-200'}"
         onclick={() => activeTab = 'shutdown'}>
         Shutdown-Sequenz ({result.shutdown_timeline.length})
       </button>
-      <button class="px-6 py-3 text-sm font-semibold transition border-b-2 {activeTab === 'boot' ? 'text-blue-400 border-blue-500' : 'text-slate-400 border-transparent hover:text-slate-200'}"
+      <button class="px-6 py-3 text-sm font-semibold transition border-b-2 {activeTab === 'boot' ? 'text-[#5DCAA5] border-[#1D9E75]' : 'text-slate-400 border-transparent hover:text-slate-200'}"
         onclick={() => activeTab = 'boot'}>
         Boot-Sequenz ({result.boot_timeline.length})
       </button>
@@ -59,9 +59,9 @@
       {#if activeTab === 'overview'}
         <div class="space-y-6">
           {#if result.messages.length > 0}
-            <div class="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
-              <h4 class="text-sm font-bold text-blue-400 mb-2 flex items-center gap-2"><Info class="w-4 h-4"/> Szenario-Log</h4>
-              <ul class="list-disc list-inside text-xs text-blue-200/80 space-y-1">
+            <div class="bg-[rgba(29,158,117,0.15)] border border-[rgba(29,158,117,0.25)] rounded-xl p-4">
+              <h4 class="text-sm font-bold text-[#5DCAA5] mb-2 flex items-center gap-2"><Info class="w-4 h-4"/> Szenario-Log</h4>
+              <ul class="list-disc list-inside text-xs text-[#86EFCB]/80 space-y-1">
                 {#each result.messages as msg}<li>{msg}</li>{/each}
               </ul>
             </div>
@@ -111,7 +111,7 @@
             {#each timeline as ev, i}
               <div class="relative flex flex-col items-center min-w-[200px] snap-center group">
                 <!-- Timeline Dot -->
-                <div class="w-4 h-4 rounded-full border-4 border-[#0b1120] {ev.warning ? 'bg-red-500' : 'bg-blue-500'} z-10 relative shadow-[0_0_15px_rgba(59,130,246,0.5)] group-hover:scale-125 transition-transform duration-300"></div>
+                <div class="w-4 h-4 rounded-full border-4 border-[#0b1120] {ev.warning ? 'bg-red-500' : 'bg-[#1D9E75]'} z-10 relative shadow-[0_0_15px_rgba(29,158,117,0.5)] group-hover:scale-125 transition-transform duration-300"></div>
                 
                 <!-- Time Label -->
                 <div class="absolute -top-10 text-xs font-mono font-bold text-slate-300 bg-slate-800/80 px-2.5 py-1 rounded-md border border-slate-700">
@@ -119,7 +119,7 @@
                 </div>
 
                 <!-- Event Card -->
-                <div class="absolute top-10 w-full bg-slate-900/80 border border-slate-700/50 p-4 rounded-xl shadow-lg backdrop-blur-sm group-hover:border-blue-500/50 transition-colors">
+                <div class="absolute top-10 w-full bg-slate-900/80 border border-slate-700/50 p-4 rounded-xl shadow-lg backdrop-blur-sm group-hover:border-[#1D9E75]/50 transition-colors">
                   <div class="text-[10px] uppercase text-slate-500 font-bold tracking-wider mb-1 flex items-center gap-1">
                     <Clock class="w-3 h-3" />
                     {ev.method}

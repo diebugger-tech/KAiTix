@@ -544,11 +544,11 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
       <!-- View mode toggle -->
       <div class="flex items-center rounded-lg border border-slate-700 overflow-hidden shrink-0">
         <button onclick={() => viewMode = 'rack'}
-          class="flex items-center gap-1.5 px-3 py-1.5 text-xs transition {viewMode === 'rack' ? 'bg-blue-600 text-white' : 'bg-[#181C1A] text-slate-400 hover:text-white'}">
+          class="flex items-center gap-1.5 px-3 py-1.5 text-xs transition {viewMode === 'rack' ? 'bg-[#1D9E75] text-white' : 'bg-[#181C1A] text-slate-400 hover:text-white'}">
           <Network size={12} /> Topologie
         </button>
         <button onclick={() => viewMode = 'netzplan'}
-          class="flex items-center gap-1.5 px-3 py-1.5 text-xs transition {viewMode === 'netzplan' ? 'bg-blue-600 text-white' : 'bg-[#181C1A] text-slate-400 hover:text-white'}">
+          class="flex items-center gap-1.5 px-3 py-1.5 text-xs transition {viewMode === 'netzplan' ? 'bg-[#1D9E75] text-white' : 'bg-[#181C1A] text-slate-400 hover:text-white'}">
           <List size={12} /> Netzplan
         </button>
       </div>
@@ -990,7 +990,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
             {/if}
             {#if selectedNode.rack_id}
               <button onclick={() => goto(`/racks?rack=${selectedNode!.rack_id}`)}
-                class="mt-3 w-full px-3 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-600/30 rounded-lg text-xs font-medium transition">
+                class="mt-3 w-full px-3 py-2 bg-[#1D9E75]/20 hover:bg-[#1D9E75]/30 text-blue-400 border border-blue-600/30 rounded-lg text-xs font-medium transition">
                 Im Rack ansehen ↗
               </button>
             {/if}
