@@ -65,6 +65,21 @@ Wir binden die Test-Sessions an eine explizit geöffnete Verbindung des Engines,
 - ✅ Keine manuelle Datenbankbereinigung oder Tabellen-Drops zwischen Testläufen erforderlich.
 - ❌ Komplexere Session-Erzeugung im `db`-Fixture von Pytest.
 
+### ADR-004: Frontend Modal-Pattern für Entity-Details
+
+**Status:** Accepted  
+**Context:**  
+Die Navigation zu separaten Detail-Seiten (z.B. für Racks oder Geräte) unterbrach den Workflow. Benutzer mussten die Kontext-Übersicht (Topologie oder Rack-Layout) verlassen, um Details oder das VDE-Protokoll einzusehen, was den "Plan. Simulate. Document." Flow störte.
+
+**Decision:**  
+Geräte- und Rack-Details werden als zentrierte Overlays (Modals) mit Tab-Navigation (z.B. Geräte-Details, Ports & Kabel, VDE Protokoll) umgesetzt. 
+
+**Consequences:**  
+- ✅ Der Benutzer behält den visuellen Kontext (Dashboard/Rack-Ansicht) im Hintergrund.
+- ✅ Schnellerer Wechsel zwischen verschiedenen Geräten ohne Page-Reloads.
+- ❌ Erfordert sauberes State-Management (Svelte 5 `$state`), um das Modal an verschiedenen Stellen aufrufen zu können.
+- ❌ URL-Routing für tiefe Links (Deep-Linking zu einem spezifischen Modal-Tab) ist aufwändiger.
+
 ## Open Questions
 
 1. **Caching-Strategie**: Redis für Session-Storage vs. API-Response-Caching — noch nicht entschieden

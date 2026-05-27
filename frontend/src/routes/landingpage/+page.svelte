@@ -81,7 +81,7 @@
       <div class="hero-left">
         <div class="hero-eyebrow">Intranet · Single-User · Dokumentation</div>
         <h1>Serverraum-Infrastruktur.<br><em>Dokumentiert.</em></h1>
-        <p class="hero-sub">KAiTix bündelt Rack-Verwaltung, Kabelliste, IPAM, USV-Berechnung und Runbook-Orchestrierung in einer einzigen, schlanken Oberfläche — keine Automatisierung, nur saubere Dokumentation.</p>
+        <p class="hero-sub">KAiTix bündelt Rack-Verwaltung, Kabelliste, IPAM, USV-Berechnung und Runbook-Orchestrierung in einer einzigen, schlanken Oberfläche — Runbook-Orchestrierung, USV-Berechnung und strukturierte Infrastruktur-Dokumentation — kein Live-Monitoring von RZ-Daten.</p>
         <div class="hero-actions">
           <a href="/" class="btn-hero-primary">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>

@@ -55,6 +55,9 @@ KAiTix ist ein hochspezialisiertes Planungs-, Simulations- und Dokumentationswer
 * **N+1 Dimensionierung:** Berechnung der minimalen Anzahl an USV- und Batteriemodulen, die für eine Autonomiezeit bei Phasenungleichgewicht (L1/L2/L3) erforderlich sind.
 * **VDE Protokoll-Tab:** On-the-Fly Audit und Visualisierung von USV-Compliance-Status und Berechnungs-Historien direkt im Modal der Geräteansicht.
 * **Phasenlasten:** Berechnung und Warnung bei Asymmetrie der Stromlasten über die drei Phasen (inklusive Phasen-Imbalance Widget).
+* **Phase Optimizer Sprint:** `phase_optimizer.py` als Wrapper über `PhaseBalancer`
+* **Neue Endpoints:** `POST /api/v1/power/phase/optimize/{rack_id}` und `/apply`
+* **Frontend:** Imbalance-Badge, Optimizer-Button, Dropdown-Warn-Icon
 
 ### 5. Predictive Analytics: Blast Radius (Ausfall-Simulation)
 * **Kaskadierende Ausfälle:** Was passiert, wenn ein Core-Switch oder eine PDU ausfällt?
