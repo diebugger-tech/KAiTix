@@ -101,6 +101,12 @@ virtuelle Maschinen und Shutdown/Startup-Runbooks.
 - Kein Proxmox — hypervisor_typ: vmware, hyper-v, kvm, xcpng, sonstige
 - `depends_on_vm_id` FK self für Abhängigkeitsgraph
 
+### Power-Domain (Strom & USV)
+- **Konzept**: Phasenversorgung (B→C→A) und strikte Überwachung von Leistungsgrenzen.
+- **SPOF-Antithesen**: Single-Point-of-Failure Vermeidung ist essenziell. 
+  - VDE-Audit Validierungsregeln im Generator-Skript setzen hart `N1_IMPOSSIBLE` (Kein N+1 bei <2 Modulen), `BATTERY_SPOF` (bei <2 Strings) und `EPO_MISSING` (Fehlender Not-Aus, VDE-Verstoß) auf ERROR. Fehlender Maintenance-Bypass (`MBS_MISSING`) erzeugt eine WARNING.
+- **Redundancy Path**: Nutzung des Feldes `redundancy_path` (A/B) als explizite Weichenstellung zur Sicherstellung der Tier-III Kompatibilität (Dual-Path Versorgung bis zum Endgerät).
+
 ### Runbooks
 - Flexible Ebenen (`runbook_layers`) — nicht hardcodiert
 - Startup auto-generierbar aus Shutdown (umgekehrte Reihenfolge)
