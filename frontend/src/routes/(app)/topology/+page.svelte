@@ -539,23 +539,23 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
 <div class="flex flex-col h-[calc(100vh-8rem)] gap-3">
   <!-- ── Toolbar ──────────────────────────────────────────────────────────────── -->
   <div class="flex flex-col gap-2 shrink-0">
-    <div class="flex items-center gap-3 flex-wrap bg-[#101622] border border-slate-800 rounded-xl px-4 py-2.5">
+    <div class="flex items-center gap-3 flex-wrap bg-[#131615] border border-slate-800 rounded-xl px-4 py-2.5">
 
       <!-- View mode toggle -->
       <div class="flex items-center rounded-lg border border-slate-700 overflow-hidden shrink-0">
         <button onclick={() => viewMode = 'rack'}
-          class="flex items-center gap-1.5 px-3 py-1.5 text-xs transition {viewMode === 'rack' ? 'bg-blue-600 text-white' : 'bg-[#182030] text-slate-400 hover:text-white'}">
+          class="flex items-center gap-1.5 px-3 py-1.5 text-xs transition {viewMode === 'rack' ? 'bg-blue-600 text-white' : 'bg-[#181C1A] text-slate-400 hover:text-white'}">
           <Network size={12} /> Topologie
         </button>
         <button onclick={() => viewMode = 'netzplan'}
-          class="flex items-center gap-1.5 px-3 py-1.5 text-xs transition {viewMode === 'netzplan' ? 'bg-blue-600 text-white' : 'bg-[#182030] text-slate-400 hover:text-white'}">
+          class="flex items-center gap-1.5 px-3 py-1.5 text-xs transition {viewMode === 'netzplan' ? 'bg-blue-600 text-white' : 'bg-[#181C1A] text-slate-400 hover:text-white'}">
           <List size={12} /> Netzplan
         </button>
       </div>
 
       {#if viewMode === 'rack'}
         <!-- Search -->
-        <div class="flex items-center gap-1.5 bg-[#182030] border border-slate-700 rounded-lg px-2 py-1 shrink-0">
+        <div class="flex items-center gap-1.5 bg-[#181C1A] border border-slate-700 rounded-lg px-2 py-1 shrink-0">
           <Search size={11} class="text-slate-500 shrink-0" />
           <input bind:value={searchQuery} placeholder="Suche…"
             class="bg-transparent text-xs text-white placeholder-slate-600 outline-none w-28" />
@@ -643,7 +643,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
 
     <!-- Netzplan Filterleiste -->
     {#if viewMode === 'netzplan' && data}
-      <div class="flex items-center gap-3 flex-wrap bg-[#101622] border border-slate-800 rounded-xl px-4 py-2">
+      <div class="flex items-center gap-3 flex-wrap bg-[#131615] border border-slate-800 rounded-xl px-4 py-2">
         <!-- Standort-Filter -->
         <RackFilterBar
           racks={data.racks}
@@ -656,7 +656,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
         <!-- Netzwerkkabel-Filter -->
         <div class="flex items-center gap-2 border-l border-slate-800 pl-3">
           <button onclick={() => setCableGroup('netz', true)}
-            class="text-[9px] text-blue-400 hover:text-blue-300 font-semibold">Netz</button>
+            class="text-[9px] text-[#5DCAA5] hover:text-[#86EFCB] font-semibold">Netz</button>
           <button onclick={() => setCableGroup('netz', false)}
             class="text-[9px] text-slate-600 hover:text-slate-400">✕</button>
           {#each [['cat','Cat/RJ45','#3b82f6'],['lwl','LWL/Glasfaser','#d946ef'],['sfp','SFP+','#06b6d4'],['dac','DAC','#6b7280'],['breakout','Breakout','#8b5cf6'],['sonstige-netz','Sonstige','#475569']] as [key,label,col]}
@@ -849,9 +849,9 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
 
           <!-- Zoom buttons -->
           <div class="absolute top-3 right-3 flex flex-col gap-0.5 z-10">
-            <button onclick={zoomIn}  class="w-7 h-7 bg-[#182030] hover:bg-slate-700 border border-slate-700 rounded-t-lg text-xs text-white flex items-center justify-center transition">+</button>
-            <button onclick={zoomOut} class="w-7 h-7 bg-[#182030] hover:bg-slate-700 border-x border-slate-700 text-xs text-white flex items-center justify-center transition">−</button>
-            <button onclick={resetView} class="w-7 h-7 bg-[#182030] hover:bg-slate-700 border border-slate-700 rounded-b-lg text-xs text-white flex items-center justify-center transition">⊙</button>
+            <button onclick={zoomIn}  class="w-7 h-7 bg-[#181C1A] hover:bg-slate-700 border border-slate-700 rounded-t-lg text-xs text-white flex items-center justify-center transition">+</button>
+            <button onclick={zoomOut} class="w-7 h-7 bg-[#181C1A] hover:bg-slate-700 border-x border-slate-700 text-xs text-white flex items-center justify-center transition">−</button>
+            <button onclick={resetView} class="w-7 h-7 bg-[#181C1A] hover:bg-slate-700 border border-slate-700 rounded-b-lg text-xs text-white flex items-center justify-center transition">⊙</button>
           </div>
 
           <!-- Heatmap Tooltip -->
@@ -883,7 +883,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
 
       <!-- Detail Panel -->
       <div class="w-72 shrink-0 flex flex-col gap-3">
-        <div class="bg-[#101622] border border-slate-800 rounded-xl p-4">
+        <div class="bg-[#131615] border border-slate-800 rounded-xl p-4">
           <p class="text-[10px] uppercase font-bold tracking-wider text-slate-500 mb-3">Legende</p>
           <div class="grid grid-cols-2 gap-1.5 text-[10px]">
             {#each deviceTypes as dt}
@@ -940,7 +940,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
         </div>
 
         {#if selectedNode}
-          <div class="bg-[#101622] border border-violet-800/40 rounded-xl p-4 flex-1 overflow-y-auto">
+          <div class="bg-[#131615] border border-violet-800/40 rounded-xl p-4 flex-1 overflow-y-auto">
             <div class="flex items-start justify-between mb-3">
               <div>
                 <p class="text-xs font-bold text-white font-mono">{selectedNode.hostname}</p>
@@ -964,7 +964,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
                   {@const otherId = connectedNodeId(edge)}
                   {@const other = data?.nodes.find(n => n.id === otherId)}
                   {@const isPow = (edge as any).edge_type === 'power'}
-                  <div class="bg-slate-900/60 rounded-lg p-2 text-xs border-l-2 {isPow ? 'border-orange-500/50' : 'border-blue-500/30'}">
+                  <div class="bg-slate-900/60 rounded-lg p-2 text-xs border-l-2 {isPow ? 'border-orange-500/50' : 'border-[#1D9E75]/30'}">
                     <div class="flex items-center justify-between">
                       <span class="font-mono text-slate-300 truncate">{other?.hostname ?? `#${otherId}`}</span>
                       <div class="flex items-center gap-1 shrink-0 ml-1">
@@ -996,7 +996,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
             {/if}
           </div>
         {:else}
-          <div class="bg-[#101622] border border-slate-800 rounded-xl p-4 text-center flex-1 flex items-center justify-center">
+          <div class="bg-[#131615] border border-slate-800 rounded-xl p-4 text-center flex-1 flex items-center justify-center">
             <p class="text-xs text-slate-600">Gerät anklicken für Details</p>
           </div>
         {/if}
@@ -1008,11 +1008,11 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
     <div class="flex-1 overflow-y-auto">
       {#if loading}
         <div class="flex items-center justify-center p-12">
-          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1D9E75]"></div>
         </div>
       {:else if data}
         <div class="space-y-3 pb-6">
-          <div class="bg-[#101622] border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-500 flex items-center justify-between">
+          <div class="bg-[#131615] border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-500 flex items-center justify-between">
             <span>Port-Routing · Verbindungen nach Kabeltyp und Standort filterbar.</span>
             <span class="text-slate-600">{filteredNetzplanData.length} / {netzplanData.length} Geräte</span>
           </div>
@@ -1036,7 +1036,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
               </div>
             {/if}
 
-            <div class="bg-[#101622] border border-slate-800 rounded-xl overflow-hidden">
+            <div class="bg-[#131615] border border-slate-800 rounded-xl overflow-hidden">
               <div class="flex items-center gap-3 px-4 py-2.5 border-b border-slate-800/60" style="border-left: 3px solid {nodeStroke(item.node.typ)}">
                 <div>
                   <span class="text-sm font-bold text-white font-mono">{item.node.hostname}</span>

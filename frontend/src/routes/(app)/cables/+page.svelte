@@ -82,9 +82,9 @@
 
   // Type badge colors
   const typeBadges: Record<string, { bg: string; text: string; border: string }> = {
-    'Cat6':        { bg: 'bg-blue-500/10',     text: 'text-blue-400',     border: 'border-blue-500/30' },
-    'Cat6A':       { bg: 'bg-blue-500/10',     text: 'text-blue-400',     border: 'border-blue-500/30' },
-    'Cat7':        { bg: 'bg-blue-500/10',     text: 'text-blue-400',     border: 'border-blue-500/30' },
+    'Cat6':        { bg: 'bg-blue-500/10',     text: 'text-blue-400',     border: 'border-[#1D9E75]/30' },
+    'Cat6A':       { bg: 'bg-blue-500/10',     text: 'text-blue-400',     border: 'border-[#1D9E75]/30' },
+    'Cat7':        { bg: 'bg-blue-500/10',     text: 'text-blue-400',     border: 'border-[#1D9E75]/30' },
     'DAC':         { bg: 'bg-slate-500/10',    text: 'text-slate-400',    border: 'border-slate-500/30' },
     'LC-LC':       { bg: 'bg-fuchsia-500/10',  text: 'text-fuchsia-400',  border: 'border-fuchsia-500/30' },
     'SC-SC':       { bg: 'bg-fuchsia-500/10',  text: 'text-fuchsia-400',  border: 'border-fuchsia-500/30' },
@@ -305,7 +305,7 @@
       </a>
       <button
         onclick={() => { resetForm(); showAddCable = true; }}
-        class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold transition"
+        class="flex items-center gap-2 px-4 py-2 bg-[#1D9E75] hover:bg-[#0F6E56] text-white rounded-lg text-xs font-semibold transition"
       >
         <Plus class="w-4 h-4" />
         <span>Kabel hinzufügen</span>
@@ -314,27 +314,27 @@
   </div>
 
   {#if loading}
-    <div class="flex items-center justify-center p-12 bg-[#101622] border border-slate-800 rounded-xl">
-      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+    <div class="flex items-center justify-center p-12 bg-[#131615] border border-slate-800 rounded-xl">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1D9E75]"></div>
     </div>
   {:else if errorMsg}
     <div class="p-4 bg-red-950/40 border border-red-800 rounded-xl text-red-400 text-sm">{errorMsg}</div>
   {:else}
     <!-- Filters -->
-    <div class="bg-[#101622] border border-slate-800 rounded-xl p-4 grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
+    <div class="bg-[#131615] border border-slate-800 rounded-xl p-4 grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
       <div class="relative">
         <Search class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
         <input
           type="text"
           bind:value={searchQuery}
           placeholder="Kabel-Nr, Port, Gerät suchen..."
-          class="w-full bg-[#182030] border border-slate-800 rounded-lg pl-9 pr-4 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+          class="w-full bg-[#181C1A] border border-slate-800 rounded-lg pl-9 pr-4 py-2 text-xs text-white focus:outline-none focus:border-[#1D9E75]"
         />
       </div>
       <div class="flex items-center gap-2">
         <label for="filter-typ" class="text-[10px] uppercase font-bold tracking-wider text-slate-500 font-mono">Typ</label>
         <select id="filter-typ" bind:value={filterTyp}
-          class="flex-1 bg-[#182030] border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+          class="flex-1 bg-[#181C1A] border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#1D9E75]">
           <option value="all">Alle</option>
           {#each cableTypes as t}<option value={t}>{t}</option>{/each}
         </select>
@@ -342,7 +342,7 @@
       <div class="flex items-center gap-2">
         <label for="filter-farbe" class="text-[10px] uppercase font-bold tracking-wider text-slate-500 font-mono">Farbe</label>
         <select id="filter-farbe" bind:value={filterFarbe}
-          class="flex-1 bg-[#182030] border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+          class="flex-1 bg-[#181C1A] border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#1D9E75]">
           <option value="all">Alle</option>
           {#each farben as f}<option value={f}>{f}</option>{/each}
         </select>
@@ -354,7 +354,7 @@
       {#each [{k:'all',l:'Alle'},{k:'lwl',l:'LWL'},{k:'copper',l:'Kupfer'},{k:'power',l:'Strom'},{k:'dac',l:'DAC'},{k:'sonstige',l:'Sonstige'}] as item}
         <button
           onclick={() => { filterCategory = item.k; filterTyp = 'all'; }}
-          class="px-3 py-1.5 rounded-lg text-xs font-medium border transition {filterCategory === item.k ? 'bg-emerald-600/20 text-emerald-400 border-emerald-600/40' : 'bg-[#101622] text-slate-400 border-slate-700 hover:bg-slate-800 hover:text-slate-200'}"
+          class="px-3 py-1.5 rounded-lg text-xs font-medium border transition {filterCategory === item.k ? 'bg-emerald-600/20 text-emerald-400 border-emerald-600/40' : 'bg-[#131615] text-slate-400 border-slate-700 hover:bg-slate-800 hover:text-slate-200'}"
         >
           {item.l}
         </button>
@@ -373,8 +373,8 @@
               onclick={() => { selectedCable = cable; traceResult = null; traceError = ''; }}
               class="w-full text-left p-3 rounded-xl border transition flex items-center gap-3 {
                 active
-                  ? 'bg-blue-600/10 border-blue-500/50 text-white'
-                  : 'bg-[#101622] border-slate-800/80 text-slate-400 hover:border-slate-700'
+                  ? 'bg-[#1D9E75]/10 border-[#1D9E75]/50 text-white'
+                  : 'bg-[#131615] border-slate-800/80 text-slate-400 hover:border-slate-700'
               }"
             >
               <div class="p-2 rounded-lg {
@@ -413,11 +413,11 @@
       <!-- Detail View -->
       <div class="lg:col-span-2">
         {#if !selectedCable}
-          <div class="p-12 text-center bg-[#101622] border border-slate-800 rounded-xl text-slate-500">
+          <div class="p-12 text-center bg-[#131615] border border-slate-800 rounded-xl text-slate-500">
             Bitte wählen Sie ein Kabel aus der Liste aus.
           </div>
         {:else}
-          <div class="bg-[#101622] border border-slate-800 rounded-xl p-6 space-y-6">
+          <div class="bg-[#131615] border border-slate-800 rounded-xl p-6 space-y-6">
             <!-- Header -->
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-800">
               <div>
@@ -551,7 +551,7 @@
 <!-- Modal: Kabel hinzufügen -->
 {#if showAddCable}
 <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-  <div class="bg-[#101622] border border-slate-800 rounded-xl p-6 max-w-lg w-full shadow-2xl overflow-y-auto max-h-[90vh]">
+  <div class="bg-[#131615] border border-slate-800 rounded-xl p-6 max-w-lg w-full shadow-2xl overflow-y-auto max-h-[90vh]">
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-lg font-bold text-white font-outfit">Kabel hinzufügen</h3>
       <button onclick={() => showAddCable = false} class="text-slate-400 hover:text-white transition"><X class="w-5 h-5" /></button>
@@ -560,23 +560,23 @@
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Kabel-Nr *</label>
         <input type="text" bind:value={kabel_nr} required placeholder="z.B. KAB-0031"
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
       </div>
       <div class="grid grid-cols-3 gap-4">
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Typ *</label>
-          <select bind:value={typ} onchange={() => suggestColorForTyp(typ)} class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+          <select bind:value={typ} onchange={() => suggestColorForTyp(typ)} class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]">
             {#each cableTypes as t}<option value={t}>{t}</option>{/each}
           </select>
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Länge (m) *</label>
           <input type="number" step="0.01" min="0.1" bind:value={laenge_m} required
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Farbe</label>
-          <select bind:value={farbe} class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+          <select bind:value={farbe} class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]">
             <option value="">—</option>
             {#each farben as f}<option value={f}>{f}</option>{/each}
           </select>
@@ -585,7 +585,7 @@
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Von Gerät</label>
-          <select bind:value={von_device_id} class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+          <select bind:value={von_device_id} class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]">
             <option value={null}>—</option>
             {#each devices as d}<option value={d.id}>{d.hostname}</option>{/each}
           </select>
@@ -593,13 +593,13 @@
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Von Port</label>
           <input type="text" bind:value={von_port} placeholder="z.B. Eth0"
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
         </div>
       </div>
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Nach Gerät</label>
-          <select bind:value={nach_device_id} class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+          <select bind:value={nach_device_id} class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]">
             <option value={null}>—</option>
             {#each devices as d}<option value={d.id}>{d.hostname}</option>{/each}
           </select>
@@ -607,17 +607,17 @@
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Nach Port</label>
           <input type="text" bind:value={nach_port} placeholder="z.B. Port 1"
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
         </div>
       </div>
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Bemerkung</label>
         <input type="text" bind:value={bemerkung} placeholder="Optional"
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
       </div>
       <div class="flex justify-end gap-3 pt-2">
         <button type="button" onclick={() => showAddCable = false} class="px-4 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 transition">Abbrechen</button>
-        <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold transition">Speichern</button>
+        <button type="submit" class="px-4 py-2 bg-[#1D9E75] hover:bg-[#0F6E56] text-white rounded-lg text-sm font-semibold transition">Speichern</button>
       </div>
     </form>
   </div>
@@ -627,7 +627,7 @@
 <!-- Modal: Kabel bearbeiten -->
 {#if showEditCable}
 <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-  <div class="bg-[#101622] border border-slate-800 rounded-xl p-6 max-w-lg w-full shadow-2xl overflow-y-auto max-h-[90vh]">
+  <div class="bg-[#131615] border border-slate-800 rounded-xl p-6 max-w-lg w-full shadow-2xl overflow-y-auto max-h-[90vh]">
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-lg font-bold text-white font-outfit">Kabel bearbeiten</h3>
       <button onclick={() => showEditCable = false} class="text-slate-400 hover:text-white transition"><X class="w-5 h-5" /></button>
@@ -636,23 +636,23 @@
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Kabel-Nr *</label>
         <input type="text" bind:value={kabel_nr} required
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
       </div>
       <div class="grid grid-cols-3 gap-4">
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Typ *</label>
-          <select bind:value={typ} onchange={() => suggestColorForTyp(typ)} class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+          <select bind:value={typ} onchange={() => suggestColorForTyp(typ)} class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]">
             {#each cableTypes as t}<option value={t}>{t}</option>{/each}
           </select>
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Länge (m) *</label>
           <input type="number" step="0.01" min="0.1" bind:value={laenge_m} required
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Farbe</label>
-          <select bind:value={farbe} class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+          <select bind:value={farbe} class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]">
             <option value="">—</option>
             {#each farben as f}<option value={f}>{f}</option>{/each}
           </select>
@@ -661,7 +661,7 @@
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Von Gerät</label>
-          <select bind:value={von_device_id} class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+          <select bind:value={von_device_id} class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]">
             <option value={null}>—</option>
             {#each devices as d}<option value={d.id}>{d.hostname}</option>{/each}
           </select>
@@ -669,13 +669,13 @@
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Von Port</label>
           <input type="text" bind:value={von_port}
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
         </div>
       </div>
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Nach Gerät</label>
-          <select bind:value={nach_device_id} class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+          <select bind:value={nach_device_id} class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]">
             <option value={null}>—</option>
             {#each devices as d}<option value={d.id}>{d.hostname}</option>{/each}
           </select>
@@ -683,17 +683,17 @@
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Nach Port</label>
           <input type="text" bind:value={nach_port}
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
         </div>
       </div>
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Bemerkung</label>
         <input type="text" bind:value={bemerkung}
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
       </div>
       <div class="flex justify-end gap-3 pt-2">
         <button type="button" onclick={() => showEditCable = false} class="px-4 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 transition">Abbrechen</button>
-        <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold transition">Speichern</button>
+        <button type="submit" class="px-4 py-2 bg-[#1D9E75] hover:bg-[#0F6E56] text-white rounded-lg text-sm font-semibold transition">Speichern</button>
       </div>
     </form>
   </div>
@@ -716,7 +716,7 @@
     {/if}
   </button>
   {#if showAdmin}
-    <div class="mt-3 bg-[#101622] border border-slate-800 rounded-xl overflow-hidden">
+    <div class="mt-3 bg-[#131615] border border-slate-800 rounded-xl overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-xs">
           <thead>

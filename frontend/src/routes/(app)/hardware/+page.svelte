@@ -34,7 +34,7 @@
 
   const categories = [
     { value: 'rack', label: 'Rack', icon: Layers, color: 'text-stone-400 bg-stone-500/10 border-stone-500/30' },
-    { value: 'server', label: 'Server', icon: Server, color: 'text-blue-400 bg-blue-500/10 border-blue-500/30' },
+    { value: 'server', label: 'Server', icon: Server, color: 'text-blue-400 bg-blue-500/10 border-[#1D9E75]/30' },
     { value: 'switch', label: 'Netzwerk', icon: Zap, color: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/30' },
     { value: 'firewall', label: 'Firewall', icon: Shield, color: 'text-red-400 bg-red-500/10 border-red-500/30' },
     { value: 'storage', label: 'Storage', icon: Database, color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' },
@@ -189,7 +189,7 @@
   <div class="relative max-w-md">
     <Search class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
     <input type="text" bind:value={searchQuery} placeholder="Hardware suchen..."
-      class="w-full bg-[#182030] border border-slate-800 rounded-lg pl-9 pr-4 py-2 text-sm text-white focus:outline-none focus:border-purple-500" />
+      class="w-full bg-[#181C1A] border border-slate-800 rounded-lg pl-9 pr-4 py-2 text-sm text-white focus:outline-none focus:border-purple-500" />
   </div>
 
   {#if loading}
@@ -203,7 +203,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {#each filteredItems as item}
         {@const cat = getCategoryInfo(item.kategorie)}
-        <div class="bg-[#101622] border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition group">
+        <div class="bg-[#131615] border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition group">
           <div class="flex items-start justify-between mb-3">
             <div class="flex items-center gap-2">
               <div class="p-2 rounded-lg {cat.color}">
@@ -344,13 +344,13 @@
 <!-- Modal -->
 {#if showModal}
 <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-  <div class="bg-[#101622] border border-slate-800 rounded-xl p-6 max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto">
+  <div class="bg-[#131615] border border-slate-800 rounded-xl p-6 max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto">
     <h3 class="text-lg font-bold text-white mb-4 font-outfit">{editMode ? 'Hardware bearbeiten' : 'Hardware hinzufügen'}</h3>
     <form onsubmit={handleSave} class="space-y-4">
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Bezeichnung *</label>
         <input type="text" bind:value={name} required
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-purple-500"
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-purple-500"
           placeholder="z.B. Dell PowerEdge R740" />
       </div>
 
@@ -358,14 +358,14 @@
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Kategorie</label>
           <select bind:value={kategorie}
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-purple-500">
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-purple-500">
             {#each categories as cat}<option value={cat.value}>{cat.label}</option>{/each}
           </select>
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Höhe (HE) <span class="text-slate-600 font-normal">{u_hoehe === 0 ? '· 0U/seitlich' : ''}</span></label>
           <input type="number" bind:value={u_hoehe} min="0" max="20"
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-purple-500" />
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-purple-500" />
         </div>
       </div>
 
@@ -373,12 +373,12 @@
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Hersteller</label>
           <input type="text" bind:value={hersteller}
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-purple-500" />
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-purple-500" />
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Modell</label>
           <input type="text" bind:value={modell}
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-purple-500" />
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-purple-500" />
         </div>
       </div>
 
@@ -387,12 +387,12 @@
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Breite (mm)</label>
           <input type="number" bind:value={breite_mm} min="0"
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-purple-500" />
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-purple-500" />
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Tiefe (mm)</label>
           <input type="number" bind:value={tiefe_mm} min="0"
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-purple-500" />
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-purple-500" />
         </div>
       </div>
       {:else}
@@ -400,7 +400,7 @@
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">TDP (W)</label>
         <input type="number" bind:value={tdp_watt}
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-purple-500" />
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-purple-500" />
       </div>
       {/if}
 
@@ -409,12 +409,12 @@
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">PSU Anzahl</label>
           <input type="number" bind:value={psu_count} min="0"
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-purple-500" />
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-purple-500" />
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">PSU Nennleistung (W)</label>
           <input type="number" bind:value={psu_nennwatt} min="0"
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-purple-500" />
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-purple-500" />
         </div>
       </div>
       {/if}
@@ -424,12 +424,12 @@
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">{kategorie === 'usv' ? 'Gesamtleistung' : 'Leistung'} (kW)</label>
         <input type="number" bind:value={leistung_kw} min="0" step="0.1"
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-purple-500" />
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-purple-500" />
       </div>
       {#if kategorie === 'usv_modul'}
       <div class="flex items-center space-x-2">
         <input type="checkbox" id="n1_faehig" bind:checked={n1_faehig}
-          class="rounded bg-[#182030] border-slate-700 text-purple-600 focus:ring-0 focus:ring-offset-0" />
+          class="rounded bg-[#181C1A] border-slate-700 text-purple-600 focus:ring-0 focus:ring-offset-0" />
         <label for="n1_faehig" class="text-xs font-semibold text-slate-300 select-none cursor-pointer">N+1 fähig (Hot-Swap)</label>
       </div>
       {/if}
@@ -442,17 +442,17 @@
           <div>
             <label class="block text-[10px] text-slate-500 mb-1">RJ45</label>
             <input type="number" bind:value={port_count_rj45} min="0"
-              class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-purple-500" />
+              class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-purple-500" />
           </div>
           <div>
             <label class="block text-[10px] text-slate-500 mb-1">LWL</label>
             <input type="number" bind:value={port_count_lwl} min="0"
-              class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-purple-500" />
+              class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-purple-500" />
           </div>
           <div>
             <label class="block text-[10px] text-slate-500 mb-1">SFP+</label>
             <input type="number" bind:value={port_count_sfp} min="0"
-              class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-purple-500" />
+              class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-purple-500" />
           </div>
         </div>
       </div>
@@ -461,7 +461,7 @@
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Bemerkung</label>
         <textarea bind:value={bemerkung} rows="2"
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-purple-500 resize-none"
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-purple-500 resize-none"
           placeholder="Optionale Beschreibung..."></textarea>
       </div>
 

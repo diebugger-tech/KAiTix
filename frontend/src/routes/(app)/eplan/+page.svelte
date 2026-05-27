@@ -56,7 +56,7 @@
   }
 </script>
 
-<div class="bg-[#101622] border border-slate-800 rounded-xl p-6 min-h-[85vh] flex flex-col">
+<div class="bg-[#131615] border border-slate-800 rounded-xl p-6 min-h-[85vh] flex flex-col">
   <div class="flex items-center justify-between mb-6">
     <div>
       <h3 class="text-xl font-bold text-white mb-1">Stromlaufplan & Topologie</h3>
@@ -70,7 +70,7 @@
       <button
         onclick={printEplan}
         disabled={pdfLoading}
-        class="flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white transition-colors"
+        class="flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium bg-[#1D9E75] hover:bg-[#0F6E56] disabled:opacity-50 text-white transition-colors"
       >
         <Download class="w-4 h-4" />
         <span>{pdfLoading ? 'Wird geladen…' : 'PDF Export'}</span>
@@ -188,7 +188,7 @@
         </div>
 
         <div class="space-y-4">
-          <div class="bg-[#182030] border border-slate-700/50 rounded-xl p-4">
+          <div class="bg-[#181C1A] border border-slate-700/50 rounded-xl p-4">
             <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-3">Legende & Kabel</h4>
             <div class="space-y-3 text-xs">
               <div class="flex items-center space-x-2">
@@ -205,7 +205,7 @@
               </div>
             </div>
           </div>
-          <div class="bg-[#182030] border border-slate-700/50 rounded-xl p-4 text-xs text-slate-400 leading-relaxed space-y-2">
+          <div class="bg-[#181C1A] border border-slate-700/50 rounded-xl p-4 text-xs text-slate-400 leading-relaxed space-y-2">
             <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Information</h4>
             <p>
               Dieses Blockschaltbild zeigt die logische Topologie. Die Sicherungen (NH) sind nun korrekt innerhalb der UV-RZ-01 dargestellt. Wechsle auf den Reiter "CAD E-Plan", um den allpoligen Stromlaufplan zu sehen.

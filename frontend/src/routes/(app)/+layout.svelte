@@ -77,20 +77,20 @@
   });
 </script>
 
-<div class="flex h-screen overflow-hidden bg-[#080c14]">
+<div class="flex h-screen overflow-hidden bg-[#0D0F0E]">
   <!-- Left Sidebar -->
-  <aside class="w-64 bg-[#101622] border-r border-slate-800 flex flex-col justify-between z-30">
+  <aside class="w-64 bg-[#131615] border-r border-slate-800 flex flex-col justify-between z-30">
     <div>
       <!-- Brand Logo -->
       <a 
         href="/landingpage" 
         class="h-16 flex items-center px-6 border-b border-slate-800 space-x-3 hover:opacity-80 transition-opacity no-underline block"
       >
-        <div class="w-8 h-8 rounded bg-gradient-to-tr from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
+        <div class="w-8 h-8 rounded bg-gradient-to-tr from-[#1D9E75] to-[#5DCAA5] flex items-center justify-center shadow-lg shadow-[#1D9E75]/20">
           <Server class="w-5 h-5 text-white" />
         </div>
         <div>
-          <h1 class="text-lg font-bold font-outfit tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">KAiTix</h1>
+          <h1 class="text-lg font-bold font-outfit tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-[#5DCAA5] to-[#86EFCB]">KAiTix</h1>
           <span class="text-[10px] text-slate-500 font-mono tracking-widest uppercase">Plan. Simulate. Document.</span>
         </div>
       </a>
@@ -100,7 +100,7 @@
         <!-- Dashboard -->
         <a 
           href="/" 
-          class="flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 {page.url.pathname === '/' ? 'bg-blue-600/20 text-blue-400 border-l-2 border-blue-500 pl-3.5' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}"
+          class="flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 {page.url.pathname === '/' ? 'bg-[rgba(29,158,117,0.18)] text-[#5DCAA5] border-l-2 border-[#1D9E75] pl-3.5' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}"
         >
           <LayoutDashboard class="w-4.5 h-4.5" />
           <span>Dashboard</span>
@@ -112,7 +112,7 @@
         </div>
         <a
           href="/racks"
-          class="flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 {page.url.pathname === '/racks' ? 'bg-blue-600/20 text-blue-400 border-l-2 border-blue-500 pl-3.5' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}"
+          class="flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 {page.url.pathname === '/racks' ? 'bg-[rgba(29,158,117,0.18)] text-[#5DCAA5] border-l-2 border-[#1D9E75] pl-3.5' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}"
         >
           <Layers class="w-4.5 h-4.5" />
           <span>Racks</span>
@@ -212,7 +212,7 @@
               <FileText class="w-3 h-3" />
               <span>ZIP</span>
             </a>
-            <a href="/api/v1/export/ods" class="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-blue-600/10 text-blue-400 border border-blue-600/20 rounded text-[10px] font-medium hover:bg-blue-600/20 transition">
+            <a href="/api/v1/export/ods" class="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-[rgba(29,158,117,0.15)] text-[#5DCAA5] border border-[rgba(29,158,117,0.25)] rounded text-[10px] font-medium hover:bg-[rgba(29,158,117,0.25)] transition">
               <FileText class="w-3 h-3" />
               <span>ODS</span>
             </a>
@@ -248,7 +248,7 @@
       <div class="bg-slate-900/60 border border-slate-800 rounded-lg p-3 relative group">
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-2">
-            <User class="w-4 h-4 text-blue-400" />
+            <User class="w-4 h-4 text-[#5DCAA5]" />
             <div class="text-xs">
               <div class="text-[10px] text-slate-500 uppercase tracking-wider font-mono">Bearbeiter</div>
               <div class="font-medium text-slate-200 truncate max-w-[120px]">{appState.bearbeiter}</div>
@@ -256,7 +256,7 @@
           </div>
           <button 
             onclick={() => { editName = appState.bearbeiter; showEditName = true; }} 
-            class="text-[10px] text-blue-400 hover:text-blue-300 font-semibold"
+            class="text-[10px] text-[#5DCAA5] hover:text-[#86EFCB] font-semibold"
           >
             Ändern
           </button>
@@ -279,7 +279,7 @@
   <!-- Main Content Wrapper -->
   <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
     <!-- Top Header -->
-    <header class="h-16 border-b border-slate-800 bg-[#101622] flex items-center justify-between px-8 z-20 shrink-0 relative">
+    <header class="h-16 border-b border-slate-800 bg-[#131615] flex items-center justify-between px-8 z-20 shrink-0 relative">
       <div class="flex items-center space-x-3">
         <div>
           <h2 class="text-xl font-bold tracking-tight text-white font-outfit">{pageTitle()}</h2>
@@ -298,17 +298,17 @@
           oninput={onSearchInput}
           onblur={() => setTimeout(closeSearch, 150)}
           placeholder="Suche Gerät, Kabel, Rack…"
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg pl-9 pr-4 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg pl-9 pr-4 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#1D9E75]"
         />
         {#if searchOpen && searchResults}
           {@const total = searchResults.devices.length + searchResults.cables.length + searchResults.racks.length}
           {#if total > 0}
-            <div class="absolute top-full mt-1 w-full bg-[#101622] border border-slate-700 rounded-xl shadow-2xl overflow-hidden z-50">
+            <div class="absolute top-full mt-1 w-full bg-[#131615] border border-slate-700 rounded-xl shadow-2xl overflow-hidden z-50">
               {#if searchResults.racks.length > 0}
                 <div class="px-3 pt-2 pb-1 text-[9px] uppercase font-bold text-slate-500 tracking-wider">Racks</div>
                 {#each searchResults.racks as r}
                   <button onclick={() => gotoRack(r.id)} class="w-full text-left px-3 py-1.5 hover:bg-slate-800/60 flex items-center gap-2">
-                    <Layers class="w-3 h-3 shrink-0 text-blue-400" />
+                    <Layers class="w-3 h-3 shrink-0 text-[#5DCAA5]" />
                     <span class="text-xs text-slate-200 truncate">{r.name}</span>
                     <span class="text-[10px] text-slate-500 ml-auto shrink-0">{r.standort}</span>
                   </button>
@@ -337,7 +337,7 @@
               <div class="px-3 py-1.5 border-t border-slate-800 text-[9px] text-slate-600">{total} Treffer</div>
             </div>
           {:else}
-            <div class="absolute top-full mt-1 w-full bg-[#101622] border border-slate-700 rounded-xl shadow-2xl p-3 z-50 text-xs text-slate-500 text-center">Keine Treffer</div>
+            <div class="absolute top-full mt-1 w-full bg-[#131615] border border-slate-700 rounded-xl shadow-2xl p-3 z-50 text-xs text-slate-500 text-center">Keine Treffer</div>
           {/if}
         {/if}
       </div>
@@ -345,7 +345,7 @@
       <div class="flex items-center space-x-4">
         <!-- Bearbeiter quick display -->
         <span class="text-xs bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-full text-slate-300 flex items-center space-x-1">
-          <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+          <span class="w-1.5 h-1.5 rounded-full bg-[#1D9E75]"></span>
           <span>Sitzung: <strong>{appState.bearbeiter}</strong></span>
         </span>
       </div>
@@ -361,7 +361,7 @@
 <!-- Modal Bearbeiter ändern -->
 {#if showEditName}
 <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-  <div class="bg-[#101622] border border-slate-800 rounded-xl p-6 max-w-sm w-full shadow-2xl">
+  <div class="bg-[#131615] border border-slate-800 rounded-xl p-6 max-w-sm w-full shadow-2xl">
     <h3 class="text-lg font-bold text-white mb-2">Bearbeiter festlegen</h3>
     <p class="text-xs text-slate-400 mb-4">
       Geben Sie Ihren Namen ein. Alle Änderungen, die Sie vornehmen, werden unter diesem Kürzel erfasst.
@@ -369,7 +369,7 @@
     <input 
       type="text" 
       bind:value={editName}
-      class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 mb-4"
+      class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#1D9E75] mb-4"
       placeholder="z.B. Andreas"
     />
     <div class="flex justify-end space-x-3">
@@ -381,7 +381,7 @@
       </button>
       <button 
         onclick={saveBearbeiter} 
-        class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold transition"
+        class="px-4 py-2 bg-[#1D9E75] hover:bg-[#0F6E56] text-white rounded-lg text-sm font-semibold transition"
       >
         Speichern
       </button>

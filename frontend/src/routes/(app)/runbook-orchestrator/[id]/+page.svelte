@@ -496,7 +496,7 @@
     <div class="text-slate-500 py-12 text-center">Lade Runbook...</div>
   {:else if runbook}
     <!-- Header -->
-    <div class="flex items-center justify-between bg-[#101622] border border-slate-800 rounded-xl p-4 shrink-0">
+    <div class="flex items-center justify-between bg-[#131615] border border-slate-800 rounded-xl p-4 shrink-0">
       <div class="flex items-center gap-4">
         <button onclick={() => goto('/runbook-orchestrator')} class="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition">
           <ArrowLeft class="w-5 h-5" />
@@ -539,7 +539,7 @@
       {#each ['PLANER', 'AUSFÜHRUNG', 'PROTOKOLL'] as tab}
         <button
           onclick={() => activeTab = tab as any}
-          class={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === tab ? 'border-blue-500 text-blue-400' : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-600'}`}
+          class={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === tab ? 'border-[#1D9E75] text-blue-400' : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-600'}`}
         >
           {tab}
         </button>
@@ -562,7 +562,7 @@
           <div class="flex-1 space-y-6">
             {#each [...(runbook.layers || [])].sort((a,b) => a.position - b.position) as layer, i}
               <div 
-                class={`bg-[#101622] border rounded-xl overflow-hidden transition ${draggedOverLayerId === layer.id ? 'border-blue-500 bg-blue-950/5' : 'border-slate-800'}`}
+                class={`bg-[#131615] border rounded-xl overflow-hidden transition ${draggedOverLayerId === layer.id ? 'border-[#1D9E75] bg-blue-950/5' : 'border-slate-800'}`}
                 ondragover={(e) => { if (!currentExecution) handleDragOverLayer(e, layer.id); }}
                 ondragleave={() => { if (!currentExecution) handleDragLeaveLayer(); }}
                 ondrop={(e) => { if (!currentExecution) handleDropLayer(e, layer.id); }}
@@ -582,7 +582,7 @@
                           if (e.key === 'Enter') saveLayerName(layer.id);
                           if (e.key === 'Escape') editingLayerId = null;
                         }}
-                        class="bg-[#182030] text-sm font-bold text-white px-2 py-1 border border-blue-500 rounded outline-none w-64"
+                        class="bg-[#181C1A] text-sm font-bold text-white px-2 py-1 border border-[#1D9E75] rounded outline-none w-64"
                         autofocus
                       />
                     {:else}
@@ -610,7 +610,7 @@
                 <div class="p-4">
                   <textarea 
                     disabled={!!currentExecution}
-                    class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-300 focus:border-blue-500 resize-none mb-4 disabled:opacity-50"
+                    class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-300 focus:border-[#1D9E75] resize-none mb-4 disabled:opacity-50"
                     rows="2"
                     placeholder="Notizen / Instruktionen (Markdown unterstützt) ..."
                     value={layer.markdown_note || ''}
@@ -626,7 +626,7 @@
                         ondragover={(e) => { if (!currentExecution) { e.preventDefault(); draggedOverDeviceId = dev.id; } }}
                         ondragleave={() => { if (!currentExecution) draggedOverDeviceId = null; }}
                         ondrop={(e) => { if (!currentExecution) { draggedOverDeviceId = null; handleDropDevice(e, layer.id, dIdx); } }}
-                        class={`flex items-center justify-between bg-slate-900/50 border rounded-lg p-2.5 group hover:border-slate-600 transition ${draggedOverDeviceId === dev.id ? 'border-blue-500 bg-blue-950/20' : 'border-slate-800/80'}`}
+                        class={`flex items-center justify-between bg-slate-900/50 border rounded-lg p-2.5 group hover:border-slate-600 transition ${draggedOverDeviceId === dev.id ? 'border-[#1D9E75] bg-blue-950/20' : 'border-slate-800/80'}`}
                       >
                         <div class="flex items-center gap-3">
                           {#if !currentExecution}
@@ -645,7 +645,7 @@
                             {#if dev.device && dev.device.connected_pdu_outlets && dev.device.connected_pdu_outlets.length > 0}
                               <div class="flex flex-wrap gap-1 mt-1">
                                 {#each dev.device.connected_pdu_outlets as outlet}
-                                  <span class="inline-flex items-center text-[9px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-1.5 py-0.5 rounded font-mono">
+                                  <span class="inline-flex items-center text-[9px] bg-blue-500/10 text-blue-400 border border-[#1D9E75]/20 px-1.5 py-0.5 rounded font-mono">
                                     {outlet.pdu_name || `PDU-${outlet.pdu_id}`} · {outlet.outlet_name}
                                   </span>
                                 {/each}
@@ -664,7 +664,7 @@
                         </div>
                         {#if !currentExecution}
                           <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
-                            <button onclick={() => openEditDevice(dev)} class="p-1.5 text-blue-400 hover:bg-blue-500/10 rounded"><Edit class="w-4 h-4" /></button>
+                            <button onclick={() => openEditDevice(dev)} class="p-1.5 text-blue-400 hover:bg-[#1D9E75]/10 rounded"><Edit class="w-4 h-4" /></button>
                             <button onclick={() => deleteDevice(dev.id)} class="p-1.5 text-red-400 hover:bg-red-500/10 rounded"><Trash2 class="w-4 h-4" /></button>
                           </div>
                         {/if}
@@ -677,7 +677,7 @@
                         ondragover={(e) => { e.preventDefault(); draggedOverAddButtonLayerId = layer.id; }}
                         ondragleave={() => draggedOverAddButtonLayerId = null}
                         ondrop={(e) => { draggedOverAddButtonLayerId = null; handleDropLayer(e, layer.id); }}
-                        class={`w-full flex items-center justify-center gap-2 py-2 border-2 border-dashed rounded-lg text-xs transition ${draggedOverAddButtonLayerId === layer.id ? 'border-blue-500 bg-blue-950/20 text-blue-300' : 'border-slate-800 hover:border-slate-600 text-slate-400 hover:text-slate-200'}`}
+                        class={`w-full flex items-center justify-center gap-2 py-2 border-2 border-dashed rounded-lg text-xs transition ${draggedOverAddButtonLayerId === layer.id ? 'border-[#1D9E75] bg-blue-950/20 text-blue-300' : 'border-slate-800 hover:border-slate-600 text-slate-400 hover:text-slate-200'}`}
                       >
                         <Plus class="w-3.5 h-3.5" /> Gerät hinzufügen (oder hierher ziehen)
                       </button>
@@ -689,14 +689,14 @@
 
             {#if !currentExecution}
               {#if showInlineLayerForm}
-                <div class="bg-[#101622] border border-slate-800 rounded-xl p-4 space-y-4">
+                <div class="bg-[#131615] border border-slate-800 rounded-xl p-4 space-y-4">
                   <h4 class="text-sm font-bold text-white">Neue Ebene hinzufügen</h4>
                   <div class="flex flex-wrap gap-4 items-end">
                     <div class="flex-1 min-w-[200px]">
                       <label class="block text-xs font-semibold text-slate-400 mb-1">Ebenen-Typ / Template</label>
                       <select 
                         bind:value={selectedLayerTemplate} 
-                        class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                        class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
                       >
                         <option value="Web-Tier">Web-Tier</option>
                         <option value="App-Tier">App-Tier</option>
@@ -715,7 +715,7 @@
                           type="text" 
                           bind:value={inlineLayerFreitext} 
                           placeholder="z.B. Cache-Tier" 
-                          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
                         />
                       </div>
                     {/if}
@@ -730,7 +730,7 @@
                       <button 
                         onclick={addLayer} 
                         disabled={selectedLayerTemplate === 'freitext' && !inlineLayerFreitext.trim()} 
-                        class="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg text-sm font-semibold transition"
+                        class="px-4 py-2 bg-[#1D9E75] hover:bg-[#0F6E56] disabled:opacity-50 text-white rounded-lg text-sm font-semibold transition"
                       >
                         Hinzufügen
                       </button>
@@ -749,7 +749,7 @@
           </div>
 
           <!-- Right Column: Sidebar (1/3 width, sticky) -->
-          <div class={`w-80 bg-[#101622] border border-slate-800 rounded-xl p-4 sticky top-4 shrink-0 flex flex-col max-h-[85vh] transition ${currentExecution ? 'opacity-40 pointer-events-none' : ''}`}>
+          <div class={`w-80 bg-[#131615] border border-slate-800 rounded-xl p-4 sticky top-4 shrink-0 flex flex-col max-h-[85vh] transition ${currentExecution ? 'opacity-40 pointer-events-none' : ''}`}>
             <h3 class="text-sm font-bold text-white mb-1">Ressourcen-Katalog</h3>
             <p class="text-[10px] text-slate-400 mb-3">Ziehe Elemente per Drag & Drop in eine beliebige Ebene, um sie hinzuzufügen.</p>
 
@@ -763,7 +763,7 @@
               </button>
               <button 
                 onclick={() => sidebarTab = 'devices'}
-                class={`flex-1 pb-2 text-xs font-semibold border-b-2 transition ${sidebarTab === 'devices' ? 'border-blue-500 text-blue-400' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
+                class={`flex-1 pb-2 text-xs font-semibold border-b-2 transition ${sidebarTab === 'devices' ? 'border-[#1D9E75] text-blue-400' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
               >
                 Geräte ({allDevices.length})
               </button>
@@ -775,7 +775,7 @@
                 type="text" 
                 bind:value={searchQuery} 
                 placeholder="Suchen..." 
-                class="w-full bg-[#182030] border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500"
+                class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75]"
               />
             </div>
 
@@ -783,7 +783,7 @@
             <div 
               draggable="true"
               ondragstart={handleDragStartFreitext}
-              class="mb-3 p-2 bg-blue-500/10 border border-dashed border-blue-500/30 rounded-lg flex items-center justify-center gap-2 cursor-grab hover:bg-blue-500/20 text-xs text-blue-400 font-semibold select-none shrink-0"
+              class="mb-3 p-2 bg-blue-500/10 border border-dashed border-[#1D9E75]/30 rounded-lg flex items-center justify-center gap-2 cursor-grab hover:bg-blue-500/20 text-xs text-blue-400 font-semibold select-none shrink-0"
             >
               <Plus class="w-3.5 h-3.5" />
               Freitext-Gerät (ziehen)
@@ -819,7 +819,7 @@
                   <div 
                     draggable="true"
                     ondragstart={(e) => handleDragStartResource(e, 'device', dev.id, dev.hostname)}
-                    class={`p-2 bg-slate-900/40 border rounded-lg cursor-grab hover:border-blue-500/60 transition select-none flex items-center justify-between ${added ? 'border-emerald-500/30 opacity-70 bg-emerald-950/5' : 'border-slate-800'}`}
+                    class={`p-2 bg-slate-900/40 border rounded-lg cursor-grab hover:border-[#1D9E75]/60 transition select-none flex items-center justify-between ${added ? 'border-emerald-500/30 opacity-70 bg-emerald-950/5' : 'border-slate-800'}`}
                   >
                     <div class="flex items-center gap-2 min-w-0">
                       <Server class="w-3.5 h-3.5 text-slate-400 shrink-0" />
@@ -843,14 +843,14 @@
 
       {#if activeTab === 'AUSFÜHRUNG'}
         {#if !currentExecution}
-          <div class="bg-[#101622] border border-slate-800 rounded-xl p-8 max-w-lg mx-auto mt-12 text-center">
+          <div class="bg-[#131615] border border-slate-800 rounded-xl p-8 max-w-lg mx-auto mt-12 text-center">
             <Play class="w-12 h-12 text-emerald-400 mx-auto mb-4" />
             <h2 class="text-xl font-bold text-white mb-2">Neue Ausführung starten</h2>
             <p class="text-sm text-slate-400 mb-6">Sie sind im Begriff, die Sequenz live zu protokollieren. Alle Schritte werden revisionssicher erfasst.</p>
             
             <div class="mb-6 text-left">
               <label class="block text-xs font-semibold text-slate-400 mb-2">Modus</label>
-              <select bind:value={execMode} class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+              <select bind:value={execMode} class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
                 <option value="shutdown">Shutdown (Herunterfahren)</option>
                 <option value="startup">Startup (Hochfahren)</option>
               </select>
@@ -878,7 +878,7 @@
             </div>
 
             {#each executionLayers as layer}
-              <div class="bg-[#101622] border border-slate-800 rounded-xl overflow-hidden">
+              <div class="bg-[#131615] border border-slate-800 rounded-xl overflow-hidden">
                 <div class="bg-slate-800/50 p-3 border-b border-slate-800 flex items-center gap-3">
                   <div class="w-5 h-5 rounded bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-400 border border-slate-700">{layer.position}</div>
                   <h3 class="text-sm font-bold text-white">{layer.name}</h3>
@@ -894,7 +894,7 @@
                       <button 
                         onclick={() => toggleStep(dev.id, '')}
                         disabled={currentExecution.status !== 'offen'}
-                        class={`mt-1 shrink-0 w-6 h-6 rounded flex items-center justify-center border transition ${checked ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-[#182030] border-slate-600 text-transparent hover:border-emerald-400 disabled:opacity-50'}`}
+                        class={`mt-1 shrink-0 w-6 h-6 rounded flex items-center justify-center border transition ${checked ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-[#181C1A] border-slate-600 text-transparent hover:border-emerald-400 disabled:opacity-50'}`}
                       >
                         <CheckCircle2 class="w-4 h-4" />
                       </button>
@@ -905,7 +905,7 @@
                             {#if dev.device && dev.device.connected_pdu_outlets && dev.device.connected_pdu_outlets.length > 0}
                               <div class="flex flex-wrap gap-1 mt-1">
                                 {#each dev.device.connected_pdu_outlets as outlet}
-                                  <span class="inline-flex items-center text-[9px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-1.5 py-0.5 rounded font-mono">
+                                  <span class="inline-flex items-center text-[9px] bg-blue-500/10 text-blue-400 border border-[#1D9E75]/20 px-1.5 py-0.5 rounded font-mono">
                                     {outlet.pdu_name || `PDU-${outlet.pdu_id}`} · {outlet.outlet_name}
                                   </span>
                                 {/each}
@@ -936,7 +936,7 @@
                               type="text" 
                               placeholder="Optionale Notiz zur Ausführung..." 
                               onkeydown={(e) => { if (e.key === 'Enter') toggleStep(dev.id, e.currentTarget.value); }}
-                              class="w-full bg-[#182030] border border-slate-700 rounded text-xs px-2 py-1 focus:border-emerald-500 outline-none text-slate-300"
+                              class="w-full bg-[#181C1A] border border-slate-700 rounded text-xs px-2 py-1 focus:border-emerald-500 outline-none text-slate-300"
                             />
                           </div>
                         {/if}
@@ -958,12 +958,12 @@
       {#if activeTab === 'PROTOKOLL'}
         <div class="space-y-4">
           {#if executions.length === 0}
-            <div class="text-slate-500 py-12 text-center border border-dashed border-slate-800 rounded-xl bg-[#101622]">
+            <div class="text-slate-500 py-12 text-center border border-dashed border-slate-800 rounded-xl bg-[#131615]">
               <FileText class="w-8 h-8 mx-auto mb-2 opacity-50 text-slate-400" />
               Bisher keine Protokolle vorhanden.
             </div>
           {:else}
-            <div class="bg-[#101622] border border-slate-800 rounded-xl overflow-hidden shadow-2xl">
+            <div class="bg-[#131615] border border-slate-800 rounded-xl overflow-hidden shadow-2xl">
               <table class="w-full text-left text-sm text-slate-300">
                 <thead class="text-xs uppercase bg-slate-800/50 text-slate-400 border-b border-slate-800">
                   <tr>
@@ -994,7 +994,7 @@
                         </span>
                       </td>
                       <td class="px-4 py-3 text-right">
-                        <button onclick={() => openExecutionDetails(exec)} class="text-blue-400 hover:text-blue-300 text-xs font-semibold">
+                        <button onclick={() => openExecutionDetails(exec)} class="text-[#5DCAA5] hover:text-[#86EFCB] text-xs font-semibold">
                           Details anzeigen
                         </button>
                       </td>
@@ -1013,7 +1013,7 @@
 <!-- Modal for Execution Details (Protocol View) -->
 {#if showExecutionDetailsModal && selectedExecutionDetails}
 <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-  <div class="bg-[#101622] border border-slate-800 rounded-xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+  <div class="bg-[#131615] border border-slate-800 rounded-xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
     <div class="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/50">
       <div>
         <h3 class="text-lg font-bold text-white">Protokoll: {runbook.name}</h3>
@@ -1044,7 +1044,7 @@
                   {#if dev.device && dev.device.connected_pdu_outlets && dev.device.connected_pdu_outlets.length > 0}
                     <div class="flex flex-wrap gap-1 mt-1">
                       {#each dev.device.connected_pdu_outlets as outlet}
-                        <span class="inline-flex items-center text-[9px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-1.5 py-0.5 rounded font-mono">
+                        <span class="inline-flex items-center text-[9px] bg-blue-500/10 text-blue-400 border border-[#1D9E75]/20 px-1.5 py-0.5 rounded font-mono">
                           {outlet.pdu_name || `PDU-${outlet.pdu_id}`} · {outlet.outlet_name}
                         </span>
                       {/each}
@@ -1092,7 +1092,7 @@
 <!-- Modal Device Add -->
 {#if showDeviceModal}
 <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-  <div class="bg-[#101622] border border-slate-800 rounded-xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+  <div class="bg-[#131615] border border-slate-800 rounded-xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
     <div class="p-4 border-b border-slate-800 flex items-center justify-between">
       <h3 class="text-lg font-bold text-white">Gerät hinzufügen</h3>
       <button onclick={() => showDeviceModal = false} class="text-slate-400 hover:text-white">✕</button>
@@ -1101,7 +1101,7 @@
     <div class="p-6 space-y-4 overflow-y-auto">
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Typ</label>
-        <select bind:value={deviceType} class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+        <select bind:value={deviceType} class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]">
           <option value="vm">Virtuelle Maschine (VM)</option>
           <option value="device">Physisches Gerät (Server/Switch)</option>
           <option value="freitext">Freitext (Extern, Cloud etc.)</option>
@@ -1111,7 +1111,7 @@
       {#if deviceType === 'vm'}
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">VM wählen</label>
-          <select bind:value={selectedVmId} class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+          <select bind:value={selectedVmId} class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]">
             <option value={null}>-- Bitte wählen --</option>
             {#each allVms as v}
               <option value={v.id}>{v.name}</option>
@@ -1121,7 +1121,7 @@
       {:else if deviceType === 'device'}
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Gerät wählen</label>
-          <select bind:value={selectedDeviceId} class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+          <select bind:value={selectedDeviceId} class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]">
             <option value={null}>-- Bitte wählen --</option>
             {#each allDevices as d}
               <option value={d.id}>{d.hostname} ({d.typ})</option>
@@ -1131,30 +1131,30 @@
       {:else}
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Bezeichnung</label>
-          <input type="text" bind:value={freitext} placeholder="z.B. AWS RDS MySQL" class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+          <input type="text" bind:value={freitext} placeholder="z.B. AWS RDS MySQL" class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
         </div>
       {/if}
 
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Verzögerung (Sek)</label>
-          <input type="number" bind:value={delay} min="0" class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+          <input type="number" bind:value={delay} min="0" class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Verantwortlich</label>
-          <input type="text" bind:value={responsible} placeholder="z.B. Andreas" class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+          <input type="text" bind:value={responsible} placeholder="z.B. Andreas" class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
         </div>
       </div>
 
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Spezielle Notiz (z.B. Command)</label>
-        <textarea bind:value={deviceNote} rows="2" class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 resize-none"></textarea>
+        <textarea bind:value={deviceNote} rows="2" class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75] resize-none"></textarea>
       </div>
     </div>
 
     <div class="p-4 border-t border-slate-800 flex justify-end gap-3 shrink-0">
       <button onclick={() => showDeviceModal = false} class="px-4 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800">Abbrechen</button>
-      <button onclick={addDevice} class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold">Hinzufügen</button>
+      <button onclick={addDevice} class="px-4 py-2 bg-[#1D9E75] hover:bg-[#0F6E56] text-white rounded-lg text-sm font-semibold">Hinzufügen</button>
     </div>
   </div>
 </div>
@@ -1163,25 +1163,25 @@
 <!-- Edit Device Modal -->
 {#if showEditDeviceModal && editingDevice}
 <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-  <div class="bg-[#101622] border border-slate-800 rounded-xl w-full max-w-sm shadow-2xl p-6">
+  <div class="bg-[#131615] border border-slate-800 rounded-xl w-full max-w-sm shadow-2xl p-6">
     <h3 class="text-lg font-bold text-white mb-4">Gerät bearbeiten</h3>
     <div class="space-y-4">
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Verzögerung (Sek)</label>
-        <input type="number" bind:value={editingDevice.delay_seconds} class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-blue-500" />
+        <input type="number" bind:value={editingDevice.delay_seconds} class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-[#1D9E75]" />
       </div>
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Verantwortlicher</label>
-        <input type="text" bind:value={editingDevice.responsible} class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-blue-500" />
+        <input type="text" bind:value={editingDevice.responsible} class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-[#1D9E75]" />
       </div>
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Notiz</label>
-        <textarea bind:value={editingDevice.note} class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-blue-500"></textarea>
+        <textarea bind:value={editingDevice.note} class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-[#1D9E75]"></textarea>
       </div>
     </div>
     <div class="mt-6 flex justify-end gap-3">
       <button onclick={() => showEditDeviceModal = false} class="px-4 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800">Abbrechen</button>
-      <button onclick={saveEditDevice} class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold">Speichern</button>
+      <button onclick={saveEditDevice} class="px-4 py-2 bg-[#1D9E75] hover:bg-[#0F6E56] text-white rounded-lg text-sm font-semibold">Speichern</button>
     </div>
   </div>
 </div>

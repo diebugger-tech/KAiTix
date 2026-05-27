@@ -96,8 +96,8 @@
 <div class="space-y-8">
   <!-- Stats Header Grid -->
   <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-    <div class="bg-[#101622] border border-slate-800 rounded-xl p-5 flex items-center space-x-4">
-      <div class="p-3 bg-blue-500/10 text-blue-400 rounded-lg">
+    <div class="bg-[#131615] border border-slate-800 rounded-xl p-5 flex items-center space-x-4">
+      <div class="p-3 bg-[rgba(29,158,117,0.15)] text-[#5DCAA5] rounded-lg">
         <Layers class="w-6 h-6" />
       </div>
       <div>
@@ -106,7 +106,7 @@
       </div>
     </div>
 
-    <div class="bg-[#101622] border border-slate-800 rounded-xl p-5 flex items-center space-x-4">
+    <div class="bg-[#131615] border border-slate-800 rounded-xl p-5 flex items-center space-x-4">
       <div class="p-3 bg-cyan-500/10 text-cyan-400 rounded-lg">
         <Server class="w-6 h-6" />
       </div>
@@ -116,7 +116,7 @@
       </div>
     </div>
 
-    <div class="bg-[#101622] border border-slate-800 rounded-xl p-5 flex items-center space-x-4">
+    <div class="bg-[#131615] border border-slate-800 rounded-xl p-5 flex items-center space-x-4">
       <div class="p-3 bg-orange-500/10 text-orange-400 rounded-lg">
         <Zap class="w-6 h-6" />
       </div>
@@ -126,7 +126,7 @@
       </div>
     </div>
 
-    <a href="/cables" class="bg-[#101622] border border-slate-800 rounded-xl p-5 flex items-center space-x-4 hover:border-emerald-500/30 transition">
+    <a href="/cables" class="bg-[#131615] border border-slate-800 rounded-xl p-5 flex items-center space-x-4 hover:border-emerald-500/30 transition">
       <div class="p-3 bg-emerald-500/10 text-emerald-400 rounded-lg">
         <CableIcon class="w-6 h-6" />
       </div>
@@ -140,7 +140,7 @@
   <!-- Phase Power Cards -->
   {#if pduDevices.length > 0}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div class="bg-[#101622] border border-blue-500/20 rounded-xl p-5 flex items-center space-x-4">
+      <div class="bg-[#131615] border border-[#1D9E75]/20 rounded-xl p-5 flex items-center space-x-4">
         <div class="p-3 bg-blue-500/10 text-blue-400 rounded-lg">
           <Zap class="w-6 h-6" />
         </div>
@@ -149,7 +149,7 @@
           <div class="text-2xl font-bold text-white mt-0.5">{totalL1Kw.toFixed(2)} kW</div>
         </div>
       </div>
-      <div class="bg-[#101622] border border-cyan-500/20 rounded-xl p-5 flex items-center space-x-4">
+      <div class="bg-[#131615] border border-cyan-500/20 rounded-xl p-5 flex items-center space-x-4">
         <div class="p-3 bg-cyan-500/10 text-cyan-400 rounded-lg">
           <Zap class="w-6 h-6" />
         </div>
@@ -158,7 +158,7 @@
           <div class="text-2xl font-bold text-white mt-0.5">{totalL2Kw.toFixed(2)} kW</div>
         </div>
       </div>
-      <div class="bg-[#101622] border border-orange-500/20 rounded-xl p-5 flex items-center space-x-4">
+      <div class="bg-[#131615] border border-orange-500/20 rounded-xl p-5 flex items-center space-x-4">
         <div class="p-3 bg-orange-500/10 text-orange-400 rounded-lg">
           <Zap class="w-6 h-6" />
         </div>
@@ -172,8 +172,8 @@
 
   <!-- Loading / Error Alert -->
   {#if loading}
-    <div class="flex items-center justify-center p-12 bg-[#101622] border border-slate-800 rounded-xl">
-      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+    <div class="flex items-center justify-center p-12 bg-[#131615] border border-slate-800 rounded-xl">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1D9E75]"></div>
     </div>
   {:else if errorMsg}
     <div class="p-4 bg-red-950/40 border border-red-800 rounded-xl text-red-400 text-sm flex items-center space-x-3">
@@ -191,7 +191,7 @@
           </div>
           <button
             onclick={() => showAddRack = true}
-            class="flex items-center space-x-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold transition"
+            class="flex items-center space-x-2 px-3 py-1.5 bg-[#1D9E75] hover:bg-[#0F6E56] text-white rounded-lg text-xs font-semibold transition"
           >
             <Plus class="w-3.5 h-3.5" />
             <span>Rack hinzufügen</span>
@@ -199,7 +199,7 @@
         </div>
 
         {#if racks.length === 0}
-          <div class="p-12 text-center bg-[#101622] border border-slate-800 border-dashed rounded-xl text-slate-500">
+          <div class="p-12 text-center bg-[#131615] border border-slate-800 border-dashed rounded-xl text-slate-500">
             <Info class="w-8 h-8 mx-auto mb-2 text-slate-600" />
             Keine Racks vorhanden. Erstellen Sie ein neues Rack, um zu starten.
           </div>
@@ -223,7 +223,7 @@
                 <div>
                   <div class="flex items-center gap-2">
                     <h4 class="font-bold text-white font-outfit text-sm">{room}</h4>
-                    <span class="text-[9px] px-1.5 py-0.5 rounded-full font-semibold {locTyp === 'dienstaußenstelle' ? 'bg-violet-900/40 text-violet-400 border border-violet-700/40' : 'bg-blue-900/40 text-blue-400 border border-blue-700/40'}">
+                    <span class="text-[9px] px-1.5 py-0.5 rounded-full font-semibold {locTyp === 'dienstaußenstelle' ? 'bg-violet-900/40 text-violet-400 border border-violet-700/40' : 'bg-[rgba(29,158,117,0.18)] text-[#5DCAA5] border border-[rgba(29,158,117,0.4)]'}">
                       {locTyp === 'dienstaußenstelle' ? 'Außenstelle' : 'RZ'}
                     </span>
                   </div>
@@ -233,7 +233,7 @@
 
               <!-- Room Phase Bars -->
               <div class="grid grid-cols-3 gap-3">
-                <div class="bg-[#101622] border border-blue-500/15 rounded-lg px-3 py-2">
+                <div class="bg-[#131615] border border-[#1D9E75]/15 rounded-lg px-3 py-2">
                   <div class="flex items-center justify-between mb-1">
                     <span class="text-[10px] text-slate-500 font-medium">L1</span>
                     <span class="text-xs font-bold text-blue-400">{ph.l1.toFixed(2)} kW</span>
@@ -242,7 +242,7 @@
                     <div class="h-full bg-blue-500 rounded-full transition-all" style="width: {roomTotalKw > 0 ? Math.round(ph.l1 / roomTotalKw * 100) : 0}%"></div>
                   </div>
                 </div>
-                <div class="bg-[#101622] border border-cyan-500/15 rounded-lg px-3 py-2">
+                <div class="bg-[#131615] border border-cyan-500/15 rounded-lg px-3 py-2">
                   <div class="flex items-center justify-between mb-1">
                     <span class="text-[10px] text-slate-500 font-medium">L2</span>
                     <span class="text-xs font-bold text-cyan-400">{ph.l2.toFixed(2)} kW</span>
@@ -251,7 +251,7 @@
                     <div class="h-full bg-cyan-500 rounded-full transition-all" style="width: {roomTotalKw > 0 ? Math.round(ph.l2 / roomTotalKw * 100) : 0}%"></div>
                   </div>
                 </div>
-                <div class="bg-[#101622] border border-orange-500/15 rounded-lg px-3 py-2">
+                <div class="bg-[#131615] border border-orange-500/15 rounded-lg px-3 py-2">
                   <div class="flex items-center justify-between mb-1">
                     <span class="text-[10px] text-slate-500 font-medium">L3</span>
                     <span class="text-xs font-bold text-orange-400">{ph.l3.toFixed(2)} kW</span>
@@ -278,7 +278,7 @@
                   {@const hasPhased = rackDevices.some(d => d.phase)}
                   {@const rackPdus = rackDevices.filter(d => d.typ === 'pdu')}
 
-                  <a href="/racks?rack={rack.id}" class="block bg-[#101622] border border-slate-800 hover:border-blue-500/40 rounded-xl p-5 space-y-4 transition-colors">
+                  <a href="/racks?rack={rack.id}" class="block bg-[#131615] border border-slate-800 hover:border-[#1D9E75]/40 rounded-xl p-5 space-y-4 transition-colors">
                     <div class="flex items-start justify-between">
                       <div>
                         <h4 class="font-bold text-white font-outfit">{rack.name}{rack.rackreihe ? ` (${rack.rackreihe})` : ''}</h4>
@@ -297,7 +297,7 @@
                       </div>
                       <div class="w-full h-2 bg-slate-950 rounded-full overflow-hidden">
                         <div 
-                          class="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full" 
+                          class="h-full bg-gradient-to-r from-[#1D9E75] to-[#5DCAA5] rounded-full" 
                           style="width: {percent}%"
                         ></div>
                       </div>
@@ -404,7 +404,7 @@
                   {@const hasPhased = rackDevices.some(d => d.phase)}
                   {@const rackPdus = rackDevices.filter(d => d.typ === 'pdu')}
 
-                  <a href="/racks?rack={rack.id}" class="block bg-[#101622] border border-amber-500/20 hover:border-amber-500/40 rounded-xl p-5 space-y-4 transition-colors">
+                  <a href="/racks?rack={rack.id}" class="block bg-[#131615] border border-amber-500/20 hover:border-amber-500/40 rounded-xl p-5 space-y-4 transition-colors">
                     <div class="flex items-start justify-between">
                       <div>
                         <h4 class="font-bold text-white font-outfit">{rack.name}{rack.rackreihe ? ` (${rack.rackreihe})` : ''}</h4>

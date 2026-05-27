@@ -210,7 +210,7 @@
     </button>
   </div>
 
-  <div class="bg-[#101622] border border-slate-800 rounded-xl flex-1 overflow-hidden flex flex-col shadow-2xl">
+  <div class="bg-[#131615] border border-slate-800 rounded-xl flex-1 overflow-hidden flex flex-col shadow-2xl">
     <!-- Tabs Header -->
     <div class="flex border-b border-slate-800 bg-slate-900/40 px-4 py-2 justify-between items-center shrink-0 select-none">
       <div class="flex space-x-2">
@@ -277,7 +277,7 @@
                   </td>
                   <td class="px-4 py-3 text-slate-400 text-xs">{vm.responsible || '—'}</td>
                   <td class="px-4 py-3 text-right space-x-2">
-                    <button onclick={() => openEdit(vm)} class="text-blue-400 hover:text-blue-300 text-xs font-medium">Bearbeiten</button>
+                    <button onclick={() => openEdit(vm)} class="text-[#5DCAA5] hover:text-[#86EFCB] text-xs font-medium">Bearbeiten</button>
                     <button onclick={() => deleteVm(vm.id)} class="text-red-400 hover:text-red-300 text-xs font-medium">Löschen</button>
                   </td>
                 </tr>
@@ -378,7 +378,7 @@
                   <div class="absolute -top-2 -right-2 hidden group-hover:flex items-center gap-1 bg-slate-900 border border-slate-700 rounded-md p-1 shadow-lg z-20">
                     <button
                       onclick={(e) => { e.stopPropagation(); openEdit(vm); }}
-                      class="p-0.5 text-blue-400 hover:text-blue-300 hover:bg-slate-800 rounded"
+                      class="p-0.5 text-[#5DCAA5] hover:text-[#86EFCB] hover:bg-slate-800 rounded"
                       title="Bearbeiten"
                     >
                       <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -410,7 +410,7 @@
 
 {#if showModal}
 <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-  <div class="bg-[#101622] border border-slate-800 rounded-xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+  <div class="bg-[#131615] border border-slate-800 rounded-xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
     <div class="p-4 border-b border-slate-800 flex items-center justify-between">
       <h3 class="text-lg font-bold text-white">{editMode ? 'VM bearbeiten' : 'Neue VM anlegen'}</h3>
       <button onclick={() => showModal = false} class="text-slate-400 hover:text-white">✕</button>
@@ -420,11 +420,11 @@
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Name <span class="text-red-400">*</span></label>
-          <input type="text" bind:value={currentVm.name} class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500" />
+          <input type="text" bind:value={currentVm.name} class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500" />
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Hypervisor-Typ</label>
-          <select bind:value={currentVm.hypervisor_typ} class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500">
+          <select bind:value={currentVm.hypervisor_typ} class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500">
             <option value="vmware">VMware ESXi</option>
             <option value="hyper-v">Microsoft Hyper-V</option>
             <option value="kvm">KVM (Linux)</option>
@@ -436,7 +436,7 @@
 
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Läuft auf (Host-System) <span class="text-red-400">*</span></label>
-        <select bind:value={currentVm.host_device_id} class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500">
+        <select bind:value={currentVm.host_device_id} class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500">
           <option value={null}>-- Physischen Server wählen --</option>
           {#each devices as dev}
             <option value={dev.id}>{dev.hostname} ({dev.typ})</option>
@@ -447,23 +447,23 @@
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Betriebssystem</label>
-          <input type="text" bind:value={currentVm.betriebssystem} placeholder="z.B. Ubuntu 24.04" class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500" />
+          <input type="text" bind:value={currentVm.betriebssystem} placeholder="z.B. Ubuntu 24.04" class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500" />
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">IP-Adresse</label>
-          <input type="text" bind:value={currentVm.ip_adresse} placeholder="192.168.x.x" class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-pink-500" />
+          <input type="text" bind:value={currentVm.ip_adresse} placeholder="192.168.x.x" class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-pink-500" />
         </div>
       </div>
 
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Dienst / Anwendung</label>
-        <input type="text" bind:value={currentVm.dienst} placeholder="z.B. Primary Database Server" class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500" />
+        <input type="text" bind:value={currentVm.dienst} placeholder="z.B. Primary Database Server" class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500" />
       </div>
 
       <div class="grid grid-cols-3 gap-4">
         <div class="col-span-2">
           <label class="block text-xs font-semibold text-slate-400 mb-1">Abhängig von (VM)</label>
-          <select bind:value={currentVm.depends_on_vm_id} class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500">
+          <select bind:value={currentVm.depends_on_vm_id} class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500">
             <option value={null}>-- Keine Abhängigkeit --</option>
             {#each vms.filter(v => v.id !== currentVm.id) as v}
               <option value={v.id}>{v.name}</option>
@@ -472,20 +472,20 @@
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Shutdown-Prio</label>
-          <input type="number" bind:value={currentVm.shutdown_priority} min="1" max="99" class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500" />
+          <input type="number" bind:value={currentVm.shutdown_priority} min="1" max="99" class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500" />
         </div>
       </div>
 
       <div class="grid grid-cols-2 gap-4">
         <div class="col-span-2">
           <label class="block text-xs font-semibold text-slate-400 mb-1">Verantwortlicher (Team/Person)</label>
-          <input type="text" bind:value={currentVm.responsible} placeholder="z.B. Andreas / DBA Team" class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500" />
+          <input type="text" bind:value={currentVm.responsible} placeholder="z.B. Andreas / DBA Team" class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500" />
         </div>
       </div>
 
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Bemerkung</label>
-        <textarea bind:value={currentVm.bemerkung} rows="2" class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500 resize-none"></textarea>
+        <textarea bind:value={currentVm.bemerkung} rows="2" class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500 resize-none"></textarea>
       </div>
     </div>
 

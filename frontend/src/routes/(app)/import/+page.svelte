@@ -199,7 +199,7 @@
   {#if activeTab === 'devices'}
     <div class="space-y-4">
       <!-- Header Card -->
-      <div class="bg-[#101622] border border-slate-800 rounded-xl p-6">
+      <div class="bg-[#131615] border border-slate-800 rounded-xl p-6">
         <div class="flex items-start justify-between">
           <div>
             <h2 class="text-lg font-bold text-white mb-1">Geräte importieren</h2>
@@ -240,7 +240,7 @@
             <button
               onclick={previewDevices}
               disabled={!deviceFile || deviceLoading}
-              class="px-5 py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white rounded-xl text-sm font-semibold transition shrink-0"
+              class="px-5 py-3 bg-[#1D9E75] hover:bg-[#0F6E56] disabled:opacity-40 text-white rounded-xl text-sm font-semibold transition shrink-0"
             >
               {deviceLoading ? 'Prüfe…' : 'Vorschau'}
             </button>
@@ -271,7 +271,7 @@
 
       <!-- Preview Table -->
       {#if devicePreview}
-        <div class="bg-[#101622] border border-slate-800 rounded-xl overflow-hidden">
+        <div class="bg-[#131615] border border-slate-800 rounded-xl overflow-hidden">
           <!-- Summary Bar -->
           <div class="flex items-center gap-6 px-6 py-4 border-b border-slate-800">
             <span class="text-sm text-slate-400">{devicePreview.total} Zeilen</span>
@@ -347,7 +347,7 @@
   <!-- ── Kabel CSV Tab ────────────────────────────────────────────────────── -->
   {:else if activeTab === 'cables'}
     <div class="space-y-4">
-      <div class="bg-[#101622] border border-slate-800 rounded-xl p-6">
+      <div class="bg-[#131615] border border-slate-800 rounded-xl p-6">
         <div class="flex items-start justify-between">
           <div>
             <h2 class="text-lg font-bold text-white mb-1">Kabel importieren</h2>
@@ -387,7 +387,7 @@
             <button
               onclick={previewCables}
               disabled={!cableFile || cableLoading}
-              class="px-5 py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white rounded-xl text-sm font-semibold transition shrink-0"
+              class="px-5 py-3 bg-[#1D9E75] hover:bg-[#0F6E56] disabled:opacity-40 text-white rounded-xl text-sm font-semibold transition shrink-0"
             >
               {cableLoading ? 'Prüfe…' : 'Vorschau'}
             </button>
@@ -415,7 +415,7 @@
       {/if}
 
       {#if cablePreview}
-        <div class="bg-[#101622] border border-slate-800 rounded-xl overflow-hidden">
+        <div class="bg-[#131615] border border-slate-800 rounded-xl overflow-hidden">
           <div class="flex items-center gap-6 px-6 py-4 border-b border-slate-800">
             <span class="text-sm text-slate-400">{cablePreview.total} Zeilen</span>
             <span class="text-sm text-emerald-400">{cablePreview.new} neu</span>
@@ -494,7 +494,7 @@
   <!-- ── EPLAN Tab ────────────────────────────────────────────────────────── -->
   {:else}
     <div class="space-y-4">
-      <div class="bg-[#101622] border border-slate-800 rounded-xl p-6">
+      <div class="bg-[#131615] border border-slate-800 rounded-xl p-6">
         <div class="mb-4">
           <h2 class="text-lg font-bold text-white mb-1">EPLAN Import</h2>
           <p class="text-sm text-slate-400">
@@ -522,7 +522,7 @@
             <button
               onclick={previewEplan}
               disabled={!eplanFile || eplanLoading}
-              class="px-5 py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white rounded-xl text-sm font-semibold transition shrink-0"
+              class="px-5 py-3 bg-[#1D9E75] hover:bg-[#0F6E56] disabled:opacity-40 text-white rounded-xl text-sm font-semibold transition shrink-0"
             >
               {eplanLoading ? 'Prüfe…' : 'Vorschau'}
             </button>
@@ -547,7 +547,7 @@
       {/if}
 
       {#if eplanPreview}
-        <div class="bg-[#101622] border border-slate-800 rounded-xl overflow-hidden">
+        <div class="bg-[#131615] border border-slate-800 rounded-xl overflow-hidden">
           <div class="flex items-center gap-6 px-6 py-4 border-b border-slate-800">
             <span class="text-sm text-slate-400">{eplanPreview.connections?.length ?? 0} Verbindungen</span>
             <div class="ml-auto flex gap-2">
@@ -568,7 +568,7 @@
           </div>
           <div class="overflow-x-auto max-h-[60vh] overflow-y-auto">
             <table class="w-full text-xs">
-              <thead class="sticky top-0 bg-[#101622]">
+              <thead class="sticky top-0 bg-[#131615]">
                 <tr class="border-b border-slate-800 text-slate-500 uppercase tracking-wider">
                   <th class="px-4 py-2.5 text-left font-medium">Quelle</th>
                   <th class="px-4 py-2.5 text-left font-medium">Anschluss</th>

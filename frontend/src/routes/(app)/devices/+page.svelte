@@ -151,38 +151,38 @@
       <p class="text-xs text-slate-500">Server, Switches, PDUs und weitere Hardware verwalten</p>
     </div>
     <button onclick={() => { resetForm(); showAddDevice = true; }}
-      class="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold transition">
+      class="flex items-center space-x-2 px-4 py-2 bg-[#1D9E75] hover:bg-[#0F6E56] text-white rounded-lg text-xs font-semibold transition">
       <Plus class="w-4 h-4" /><span>Gerät hinzufügen</span>
     </button>
   </div>
 
   {#if loading}
     <div class="flex items-center justify-center p-12">
-      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1D9E75]"></div>
     </div>
   {:else if errorMsg}
     <div class="p-4 bg-red-950/40 border border-red-800 rounded-xl text-red-400 text-sm">{errorMsg}</div>
   {:else}
     <!-- Filters -->
-    <div class="bg-[#101622] border border-slate-800 rounded-xl p-4 grid grid-cols-1 sm:grid-cols-4 gap-4 items-center">
+    <div class="bg-[#131615] border border-slate-800 rounded-xl p-4 grid grid-cols-1 sm:grid-cols-4 gap-4 items-center">
       <div class="relative">
         <Search class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
         <input type="text" bind:value={searchQuery} placeholder="Gerätename suchen..."
-          class="w-full bg-[#182030] border border-slate-800 rounded-lg pl-9 pr-4 py-2 text-xs text-white focus:outline-none focus:border-blue-500" />
+          class="w-full bg-[#181C1A] border border-slate-800 rounded-lg pl-9 pr-4 py-2 text-xs text-white focus:outline-none focus:border-[#1D9E75]" />
       </div>
-      <select bind:value={filterRack} class="bg-[#182030] border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+      <select bind:value={filterRack} class="bg-[#181C1A] border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#1D9E75]">
         <option value="all">Alle Racks</option>
         <option value="kein_rack">Kein Rack</option>
         {#each racks as rack}<option value={rack.id.toString()}>{rack.name}{rack.rackreihe ? ` (${rack.rackreihe})` : ''}</option>{/each}
       </select>
-      <select bind:value={filterType} class="bg-[#182030] border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+      <select bind:value={filterType} class="bg-[#181C1A] border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#1D9E75]">
         <option value="all">Alle Typen</option>
         <option value="server">Server</option>
         <option value="switch">Switch</option>
         <option value="pdu">PDU</option>
         <option value="sonstige">Sonstige</option>
       </select>
-      <select bind:value={filterPhase} class="bg-[#182030] border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+      <select bind:value={filterPhase} class="bg-[#181C1A] border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#1D9E75]">
         <option value="all">Alle Phasen</option>
         <option value="L1">L1</option>
         <option value="L2">L2</option>
@@ -199,8 +199,8 @@
           {@const rackName = rackObj ? `${rackObj.name}${rackObj.rackreihe ? ` (${rackObj.rackreihe})` : ''}` : ''}
           {@const noRack = !device.rack_id}
           <button onclick={() => selectDevice(device)}
-            class="w-full text-left bg-[#101622] border rounded-xl p-4 hover:border-blue-500/40 transition
-              {selectedDevice?.id === device.id ? 'border-blue-500/60 bg-blue-500/5' : noRack ? 'border-amber-800/50' : 'border-slate-800'}">
+            class="w-full text-left bg-[#131615] border rounded-xl p-4 hover:border-[#1D9E75]/40 transition
+              {selectedDevice?.id === device.id ? 'border-[#1D9E75]/60 bg-[#1D9E75]/5' : noRack ? 'border-amber-800/50' : 'border-slate-800'}">
             <div class="flex items-center space-x-3">
               <div class="p-2 rounded-lg {device.typ === 'server' ? 'bg-blue-500/10 text-blue-400' : device.typ === 'switch' ? 'bg-cyan-500/10 text-cyan-400' : 'bg-orange-500/10 text-orange-400'}">
                 <Server class="w-4 h-4" />
@@ -226,7 +226,7 @@
       <!-- Detail Panel -->
       <div class="lg:col-span-2">
         {#if selectedDevice}
-          <div class="bg-[#101622] border border-slate-800 rounded-xl p-6 space-y-6">
+          <div class="bg-[#131615] border border-slate-800 rounded-xl p-6 space-y-6">
             <div class="flex items-start justify-between">
               <div>
                 <h3 class="text-lg font-bold text-white font-outfit">{selectedDevice.hostname}</h3>
@@ -291,18 +291,18 @@
 <!-- Add Modal -->
 {#if showAddDevice}
 <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-  <div class="bg-[#101622] border border-slate-800 rounded-xl p-6 max-w-sm w-full shadow-2xl">
+  <div class="bg-[#131615] border border-slate-800 rounded-xl p-6 max-w-sm w-full shadow-2xl">
     <h3 class="text-lg font-bold text-white mb-4 font-outfit">Gerät hinzufügen</h3>
     <form onsubmit={handleAddDevice} class="space-y-4">
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Hostname *</label>
         <input type="text" bind:value={hostname} required
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
       </div>
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Rack *</label>
         <select bind:value={rack_id} required
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]">
           {#each racks as rack}<option value={rack.id}>{rack.name}{rack.rackreihe ? ` (${rack.rackreihe})` : ''}</option>{/each}
         </select>
       </div>
@@ -310,7 +310,7 @@
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Typ</label>
           <select bind:value={typ}
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]">
             <option value="server">Server</option>
             <option value="switch">Switch</option>
             <option value="pdu">PDU</option>
@@ -320,7 +320,7 @@
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Phase</label>
           <select bind:value={phase}
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]">
             <option value="L1">L1</option>
             <option value="L2">L2</option>
             <option value="L3">L3</option>
@@ -331,24 +331,24 @@
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Position (HE) *</label>
           <input type="number" bind:value={u_position} min="1" max="60" required
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Höhe (HE) *</label>
           <input type="number" bind:value={u_hoehe} min="1" max="10" required
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
         </div>
       </div>
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Anschluss W</label>
         <input type="number" bind:value={tdp_watt}
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
       </div>
       <div class="flex justify-end space-x-3 pt-2">
         <button type="button" onclick={() => showAddDevice = false}
           class="px-4 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 transition">Abbrechen</button>
         <button type="submit"
-          class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold transition">Speichern</button>
+          class="px-4 py-2 bg-[#1D9E75] hover:bg-[#0F6E56] text-white rounded-lg text-sm font-semibold transition">Speichern</button>
       </div>
     </form>
   </div>
@@ -358,18 +358,18 @@
 <!-- Edit Modal -->
 {#if showEditDevice}
 <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-  <div class="bg-[#101622] border border-slate-800 rounded-xl p-6 max-w-sm w-full shadow-2xl">
+  <div class="bg-[#131615] border border-slate-800 rounded-xl p-6 max-w-sm w-full shadow-2xl">
     <h3 class="text-lg font-bold text-white mb-4 font-outfit">Gerät bearbeiten</h3>
     <form onsubmit={handleEditDevice} class="space-y-4">
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Hostname *</label>
         <input type="text" bind:value={hostname} required
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
       </div>
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Rack *</label>
         <select bind:value={rack_id} required
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]">
           {#each racks as rack}<option value={rack.id}>{rack.name}{rack.rackreihe ? ` (${rack.rackreihe})` : ''}</option>{/each}
         </select>
       </div>
@@ -377,7 +377,7 @@
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Typ</label>
           <select bind:value={typ}
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]">
             <option value="server">Server</option>
             <option value="switch">Switch</option>
             <option value="pdu">PDU</option>
@@ -387,7 +387,7 @@
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Phase</label>
           <select bind:value={phase}
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]">
             <option value="L1">L1</option>
             <option value="L2">L2</option>
             <option value="L3">L3</option>
@@ -398,24 +398,24 @@
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Position (HE) *</label>
           <input type="number" bind:value={u_position} min="1" max="60" required
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Höhe (HE) *</label>
           <input type="number" bind:value={u_hoehe} min="1" max="10" required
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
         </div>
       </div>
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Anschluss W</label>
         <input type="number" bind:value={tdp_watt}
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
       </div>
       <div class="flex justify-end space-x-3 pt-2">
         <button type="button" onclick={() => showEditDevice = false}
           class="px-4 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 transition">Abbrechen</button>
         <button type="submit"
-          class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold transition">Speichern</button>
+          class="px-4 py-2 bg-[#1D9E75] hover:bg-[#0F6E56] text-white rounded-lg text-sm font-semibold transition">Speichern</button>
       </div>
     </form>
   </div>

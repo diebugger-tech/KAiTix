@@ -44,7 +44,7 @@
   function getTypeColor(typ: string) {
     if (typ === 'shutdown') return 'bg-red-500/10 text-red-400 border-red-500/20';
     if (typ === 'startup') return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
-    return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+    return 'bg-blue-500/10 text-blue-400 border-[#1D9E75]/20';
   }
 </script>
 
@@ -78,7 +78,7 @@
   {#if loading}
     <div class="text-center text-slate-500 py-12">Lade Runbooks...</div>
   {:else if runbooks.length === 0}
-    <div class="text-center py-16 bg-[#101622] border border-slate-800 rounded-xl">
+    <div class="text-center py-16 bg-[#131615] border border-slate-800 rounded-xl">
       <BookOpen class="w-12 h-12 text-slate-600 mx-auto mb-4" />
       <h3 class="text-lg font-semibold text-slate-300">Keine Runbooks gefunden</h3>
       <p class="text-sm text-slate-500 mt-2 max-w-md mx-auto">
@@ -100,7 +100,7 @@
           tabindex="0"
           onkeydown={(e) => e.key === 'Enter' && goto(`/runbook-orchestrator/${runbook.id}`)}
           onclick={() => goto(`/runbook-orchestrator/${runbook.id}`)}
-          class="bg-[#101622] border border-slate-800 hover:border-slate-600 rounded-xl p-5 flex flex-col transition cursor-pointer group"
+          class="bg-[#131615] border border-slate-800 hover:border-slate-600 rounded-xl p-5 flex flex-col transition cursor-pointer group"
         >
           <div class="flex items-start justify-between mb-3">
             <span class={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded border ${getTypeColor(runbook.typ)}`}>
@@ -140,7 +140,7 @@
 
 {#if showCreateModal}
 <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-  <div class="bg-[#101622] border border-slate-800 rounded-xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+  <div class="bg-[#131615] border border-slate-800 rounded-xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
     <div class="p-4 border-b border-slate-800 flex items-center justify-between">
       <h3 class="text-lg font-bold text-white">Neues Runbook anlegen</h3>
       <button onclick={() => showCreateModal = false} class="text-slate-400 hover:text-white">✕</button>
@@ -153,7 +153,7 @@
           type="text" 
           bind:value={newRunbook.name}
           placeholder="z.B. Data Center Shutdown Notfall"
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-yellow-500"
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-yellow-500"
         />
       </div>
 
@@ -161,7 +161,7 @@
         <label class="block text-xs font-semibold text-slate-400 mb-1">Typ <span class="text-red-400">*</span></label>
         <select
           bind:value={newRunbook.typ}
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-yellow-500"
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-yellow-500"
         >
           <option value="shutdown">Shutdown (Herunterfahren)</option>
           <option value="startup">Startup (Hochfahren)</option>
@@ -177,7 +177,7 @@
           bind:value={newRunbook.beschreibung}
           rows="3"
           placeholder="Zweck und Kontext dieses Runbooks..."
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-yellow-500 resize-none"
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-yellow-500 resize-none"
         ></textarea>
       </div>
     </div>

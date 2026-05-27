@@ -1021,10 +1021,10 @@
   );
 
   const cableDefs: Record<string, { desc: string; use: string; connector: string; badgeClass: string; dotColor: string }> = {
-    'Cat5e':          { desc: 'Netzwerk-Patch',          use: 'Switch ↔ Server, Switch ↔ Switch',          connector: 'RJ-45 · bis 1 Gbps',       badgeClass: 'bg-blue-500/10 text-blue-400 border-blue-500/30',       dotColor: 'bg-blue-400' },
-    'Cat6':           { desc: 'Netzwerk-Patch',          use: 'Switch ↔ Server, Switch ↔ Switch',          connector: 'RJ-45 · bis 1 Gbps',       badgeClass: 'bg-blue-500/10 text-blue-400 border-blue-500/30',       dotColor: 'bg-blue-400' },
-    'Cat6A':          { desc: 'Netzwerk-Patch',          use: 'Switch ↔ Server, Switch ↔ Switch',          connector: 'RJ-45 · bis 10 Gbps',      badgeClass: 'bg-blue-500/10 text-blue-400 border-blue-500/30',       dotColor: 'bg-blue-400' },
-    'Cat7':           { desc: 'Netzwerk-Patch',          use: 'Switch ↔ Server, Switch ↔ Switch',          connector: 'RJ-45 · bis 10 Gbps',      badgeClass: 'bg-blue-500/10 text-blue-400 border-blue-500/30',       dotColor: 'bg-blue-400' },
+    'Cat5e':          { desc: 'Netzwerk-Patch',          use: 'Switch ↔ Server, Switch ↔ Switch',          connector: 'RJ-45 · bis 1 Gbps',       badgeClass: 'bg-blue-500/10 text-blue-400 border-[#1D9E75]/30',       dotColor: 'bg-blue-400' },
+    'Cat6':           { desc: 'Netzwerk-Patch',          use: 'Switch ↔ Server, Switch ↔ Switch',          connector: 'RJ-45 · bis 1 Gbps',       badgeClass: 'bg-blue-500/10 text-blue-400 border-[#1D9E75]/30',       dotColor: 'bg-blue-400' },
+    'Cat6A':          { desc: 'Netzwerk-Patch',          use: 'Switch ↔ Server, Switch ↔ Switch',          connector: 'RJ-45 · bis 10 Gbps',      badgeClass: 'bg-blue-500/10 text-blue-400 border-[#1D9E75]/30',       dotColor: 'bg-blue-400' },
+    'Cat7':           { desc: 'Netzwerk-Patch',          use: 'Switch ↔ Server, Switch ↔ Switch',          connector: 'RJ-45 · bis 10 Gbps',      badgeClass: 'bg-blue-500/10 text-blue-400 border-[#1D9E75]/30',       dotColor: 'bg-blue-400' },
     'DAC':            { desc: 'Direct-Attach-Kabel',     use: 'Switch ↔ Server, Uplink Switch ↔ Switch',   connector: 'SFP+ / QSFP · 10–100 Gbps',badgeClass: 'bg-slate-500/10 text-slate-400 border-slate-500/30',     dotColor: 'bg-slate-400' },
     'SFP+':           { desc: 'SFP+ Transceiver-Kabel',  use: 'Switch ↔ Server, Uplink',                  connector: 'SFP+ · 10 Gbps',           badgeClass: 'bg-slate-500/10 text-slate-400 border-slate-500/30',     dotColor: 'bg-slate-400' },
     'LC-LC':          { desc: 'Glasfaser LWL',           use: 'Langstrecke, RZ-übergreifend, Backbone',    connector: 'LC Duplex · OM3/OM4',      badgeClass: 'bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/30', dotColor: 'bg-fuchsia-400' },
@@ -1043,7 +1043,7 @@
   function getCableDef(typ: string) {
     if (cableDefs[typ]) return cableDefs[typ];
     if (typ.startsWith('Strom')) return { desc: 'Stromkabel', use: 'Stromversorgung', connector: typ, badgeClass: 'bg-red-500/10 text-red-400 border-red-500/30', dotColor: 'bg-red-400' };
-    if (typ.startsWith('Cat'))   return { desc: 'Netzwerk-Patch', use: 'Switch ↔ Gerät', connector: 'RJ-45', badgeClass: 'bg-blue-500/10 text-blue-400 border-blue-500/30', dotColor: 'bg-blue-400' };
+    if (typ.startsWith('Cat'))   return { desc: 'Netzwerk-Patch', use: 'Switch ↔ Gerät', connector: 'RJ-45', badgeClass: 'bg-blue-500/10 text-blue-400 border-[#1D9E75]/30', dotColor: 'bg-blue-400' };
     return { desc: 'Kabelverbindung', use: '–', connector: typ, badgeClass: 'bg-amber-500/10 text-amber-400 border-amber-500/30', dotColor: 'bg-amber-400' };
   }
 </script>
@@ -1065,7 +1065,7 @@
         <FileText class="w-3.5 h-3.5" /><span>{pdfLoading ? '…' : 'PDF Alle'}</span>
       </button>
       <button onclick={() => { showAddRack = true; }}
-        class="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold transition">
+        class="flex items-center space-x-2 px-4 py-2 bg-[#1D9E75] hover:bg-[#0F6E56] text-white rounded-lg text-xs font-semibold transition">
         <Plus class="w-4 h-4" /><span>Rack hinzufügen</span>
       </button>
     </div>
@@ -1073,7 +1073,7 @@
 
   {#if loading}
     <div class="flex items-center justify-center p-12">
-      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1D9E75]"></div>
     </div>
   {:else if errorMsg}
     <div class="p-4 bg-red-950/40 border border-red-800 rounded-xl text-red-400 text-sm">{errorMsg}</div>
@@ -1083,10 +1083,10 @@
       <!-- Rack-Auswahl (links, schmal) -->
       <div class="space-y-3">
         <!-- Dreistufiger Filter -->
-        <div class="bg-[#101622] border border-slate-800 rounded-xl p-3.5 space-y-3">
+        <div class="bg-[#131615] border border-slate-800 rounded-xl p-3.5 space-y-3">
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-2 text-slate-400 font-bold text-[10px] uppercase tracking-wider">
-              <Building class="w-3.5 h-3.5 text-blue-400 shrink-0" />
+              <Building class="w-3.5 h-3.5 text-[#5DCAA5] shrink-0" />
               <span>Filter</span>
             </div>
             {#if (filterStandort && filterStandort !== 'Alle') || (filterReihe && filterReihe !== 'Alle') || searchRackName}
@@ -1109,7 +1109,7 @@
             <div>
               <label class="block text-[9px] uppercase font-bold tracking-wider text-slate-500 mb-1">Suche</label>
               <input type="text" bind:value={searchRackName} placeholder="Rack Name..."
-                class="w-full bg-[#182030] border border-slate-700 hover:border-slate-600 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500 transition" />
+                class="w-full bg-[#181C1A] border border-slate-700 hover:border-slate-600 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] transition" />
             </div>
           </div>
         </div>
@@ -1119,10 +1119,10 @@
           {#each filteredRacks as rack}
             {@const active = selectedRack?.id === rack.id}
             <button onclick={() => { selectedRack = rack; selectedDevice = null; }}
-              class="w-full text-left p-3 rounded-xl border transition {active ? 'bg-blue-600/10 border-blue-500/50' : 'bg-[#101622] border-slate-800 hover:border-slate-700'}">
+              class="w-full text-left p-3 rounded-xl border transition {active ? 'bg-[#1D9E75]/10 border-[#1D9E75]/50' : 'bg-[#131615] border-slate-800 hover:border-slate-700'}">
               <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-2 min-w-0">
-                  <Layers class="w-3.5 h-3.5 shrink-0 {active ? 'text-blue-400' : 'text-slate-500'}" />
+                  <Layers class="w-3.5 h-3.5 shrink-0 {active ? 'text-[#5DCAA5]' : 'text-slate-500'}" />
                   <div class="min-w-0">
                     <div class="font-bold text-xs truncate {active ? 'text-white' : 'text-slate-300'}">{rack.name}</div>
                     <div class="text-[10px] text-slate-500 truncate">
@@ -1138,14 +1138,14 @@
         </div>
 
         <!-- Standorte verwalten -->
-        <div class="bg-[#101622] border border-slate-800 rounded-xl p-3.5 space-y-2.5 mt-3">
+        <div class="bg-[#131615] border border-slate-800 rounded-xl p-3.5 space-y-2.5 mt-3">
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-2 text-slate-400 font-bold text-[10px] uppercase tracking-wider">
-              <Building class="w-3.5 h-3.5 text-blue-400 shrink-0" />
+              <Building class="w-3.5 h-3.5 text-[#5DCAA5] shrink-0" />
               <span>Standorte</span>
             </div>
             <button onclick={() => { showAddLocation = !showAddLocation; newLocationName = ''; newLocationType = 'rechenzentrum'; }}
-              class="text-[10px] text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-1">
+              class="text-[10px] text-blue-400 hover:text-[#86EFCB] font-semibold flex items-center gap-1">
               <Plus class="w-3 h-3" /> Neu
             </button>
           </div>
@@ -1153,15 +1153,15 @@
           {#if showAddLocation}
             <div class="bg-slate-900/60 rounded-lg p-2 space-y-1.5 border border-slate-700/50">
               <input type="text" bind:value={newLocationName} placeholder="Standortname"
-                class="w-full bg-[#182030] border border-slate-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500" />
+                class="w-full bg-[#181C1A] border border-slate-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-[#1D9E75]" />
               <select bind:value={newLocationType}
-                class="w-full bg-[#182030] border border-slate-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500">
+                class="w-full bg-[#181C1A] border border-slate-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-[#1D9E75]">
                 <option value="rechenzentrum">Rechenzentrum</option>
                 <option value="dienstaußenstelle">Dienstaußenstelle</option>
               </select>
               <div class="flex gap-1.5">
                 <button onclick={addLocation}
-                  class="flex-1 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-[10px] font-semibold transition">Hinzufügen</button>
+                  class="flex-1 py-1 bg-[#1D9E75] hover:bg-[#0F6E56] text-white rounded text-[10px] font-semibold transition">Hinzufügen</button>
                 <button onclick={() => showAddLocation = false}
                   class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded text-[10px] transition">Abbruch</button>
               </div>
@@ -1173,15 +1173,15 @@
               {#if editingLocation === loc.name}
                 <div class="bg-slate-900/60 rounded-lg p-2 space-y-1.5 border border-blue-700/40">
                   <input type="text" bind:value={editLocationName}
-                    class="w-full bg-[#182030] border border-slate-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500" />
+                    class="w-full bg-[#181C1A] border border-slate-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-[#1D9E75]" />
                   <select bind:value={editLocationType}
-                    class="w-full bg-[#182030] border border-slate-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500">
+                    class="w-full bg-[#181C1A] border border-slate-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-[#1D9E75]">
                     <option value="rechenzentrum">Rechenzentrum</option>
                     <option value="dienstaußenstelle">Dienstaußenstelle</option>
                   </select>
                   <div class="flex gap-1.5">
                     <button onclick={saveEditLocation}
-                      class="flex-1 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-[10px] font-semibold transition">Speichern</button>
+                      class="flex-1 py-1 bg-[#1D9E75] hover:bg-[#0F6E56] text-white rounded text-[10px] font-semibold transition">Speichern</button>
                     <button onclick={() => editingLocation = null}
                       class="px-2 py-1 bg-slate-800 text-slate-400 rounded text-[10px] transition">Abbruch</button>
                   </div>
@@ -1189,7 +1189,7 @@
               {:else}
                 <div class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-800/40 group">
                   {#if loc.typ === 'rechenzentrum'}
-                    <Building class="w-3 h-3 text-blue-400 shrink-0" />
+                    <Building class="w-3 h-3 text-[#5DCAA5] shrink-0" />
                   {:else}
                     <Wifi class="w-3 h-3 text-violet-400 shrink-0" />
                   {/if}
@@ -1198,7 +1198,7 @@
                     <div class="text-[9px] text-slate-600">{loc.typ === 'rechenzentrum' ? 'Rechenzentrum' : 'Dienstaußenstelle'}</div>
                   </div>
                   <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                    <button onclick={() => startEditLocation(loc.name)} class="text-slate-500 hover:text-blue-400">
+                    <button onclick={() => startEditLocation(loc.name)} class="text-slate-500 hover:text-[#5DCAA5]">
                       <Edit2 class="w-3 h-3" />
                     </button>
                     <button onclick={() => removeLocation(loc.name)} class="text-slate-500 hover:text-red-400">
@@ -1217,9 +1217,9 @@
       <!-- Rack-Visualisierung (mitte) -->
       <div class="lg:col-span-3">
         {#if !selectedRack}
-          <div class="p-8 text-center text-slate-500 text-sm bg-[#101622] border border-slate-800 rounded-xl">Rack auswählen</div>
+          <div class="p-8 text-center text-slate-500 text-sm bg-[#131615] border border-slate-800 rounded-xl">Rack auswählen</div>
         {:else}
-          <div class="bg-[#101622] border border-slate-800 rounded-xl overflow-hidden">
+          <div class="bg-[#131615] border border-slate-800 rounded-xl overflow-hidden">
             <!-- Rack Header -->
             <div class="px-4 py-3 border-b border-slate-800 flex items-center justify-between">
               <div>
@@ -1254,7 +1254,7 @@
                     <span class="text-xs font-bold {imbalanceInfo.pct <= 10 ? 'text-green-400' : imbalanceInfo.pct <= 25 ? 'text-yellow-400' : 'text-red-400'}">Imbalance: {imbalanceInfo.pct.toFixed(1)}%</span>
                   </div>
                   {#if imbalanceInfo.pct > 10}
-                    <button onclick={optimizePhases} disabled={optimizeLoading} class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded shadow transition flex items-center space-x-1 disabled:opacity-50">
+                    <button onclick={optimizePhases} disabled={optimizeLoading} class="px-3 py-1 bg-[#1D9E75] hover:bg-[#0F6E56] text-white text-xs font-medium rounded shadow transition flex items-center space-x-1 disabled:opacity-50">
                       <Zap class="w-3 h-3" />
                       <span>{optimizeLoading ? 'Lade...' : 'Phasen optimieren'}</span>
                     </button>
@@ -1318,7 +1318,7 @@
                   </button>
                 {/each}
                 {#if !occupiedSides.left}
-                <button onclick={() => { openAddDevice(null); devSide = 'left'; }} class="w-full aspect-square mt-auto border border-dashed border-slate-800 rounded flex items-center justify-center text-slate-600 hover:text-blue-500 hover:border-blue-500/50 hover:bg-blue-500/10 transition shrink-0">
+                <button onclick={() => { openAddDevice(null); devSide = 'left'; }} class="w-full aspect-square mt-auto border border-dashed border-slate-800 rounded flex items-center justify-center text-slate-600 hover:text-blue-500 hover:border-[#1D9E75]/50 hover:bg-[#1D9E75]/10 transition shrink-0">
                   <Plus class="w-4 h-4" />
                 </button>
                 {:else}
@@ -1329,8 +1329,8 @@
               </div>
 
               <!-- Main HE Slots -->
-              <div class="flex-1 p-2 font-mono text-[9px] overflow-y-auto relative bg-[#101622]">
-                <div class="text-center text-[8px] text-slate-600 pb-1 mb-1 border-b border-slate-900 sticky top-0 bg-[#101622] z-10">FRONTANSICHT</div>
+              <div class="flex-1 p-2 font-mono text-[9px] overflow-y-auto relative bg-[#131615]">
+                <div class="text-center text-[8px] text-slate-600 pb-1 mb-1 border-b border-slate-900 sticky top-0 bg-[#131615] z-10">FRONTANSICHT</div>
                 {#each Array.from({ length: selectedRack.hoehe_u }, (_, i) => selectedRack!.hoehe_u - i) as u}
                   {@const dev = devAt(u)}
                   {#if dev}
@@ -1351,7 +1351,7 @@
                   {:else}
                     <button
                       onclick={() => openAddDevice(u)}
-                      class="w-full px-2 py-1 mb-0.5 text-slate-700 border border-dashed border-slate-800/50 rounded flex justify-between items-center hover:border-blue-500/40 hover:text-blue-500/60 hover:bg-blue-500/5 transition group"
+                      class="w-full px-2 py-1 mb-0.5 text-slate-700 border border-dashed border-slate-800/50 rounded flex justify-between items-center hover:border-[#1D9E75]/40 hover:text-[#1D9E75]/60 hover:bg-[#1D9E75]/5 transition group"
                     >
                       <span>HE {u}</span>
                       <Plus class="w-3 h-3 opacity-0 group-hover:opacity-100 transition" />
@@ -1377,7 +1377,7 @@
                   </button>
                 {/each}
                 {#if !occupiedSides.right}
-                <button onclick={() => { openAddDevice(null); devSide = 'right'; }} class="w-full aspect-square mt-auto border border-dashed border-slate-800 rounded flex items-center justify-center text-slate-600 hover:text-blue-500 hover:border-blue-500/50 hover:bg-blue-500/10 transition shrink-0">
+                <button onclick={() => { openAddDevice(null); devSide = 'right'; }} class="w-full aspect-square mt-auto border border-dashed border-slate-800 rounded flex items-center justify-center text-slate-600 hover:text-blue-500 hover:border-[#1D9E75]/50 hover:bg-[#1D9E75]/10 transition shrink-0">
                   <Plus class="w-4 h-4" />
                 </button>
                 {:else}
@@ -1398,7 +1398,7 @@
         <!-- Overlay -->
         <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 flex justify-center items-start pt-10 pb-10 overflow-y-auto" onclick={closeModal} role="dialog" tabindex="-1">
           <!-- Modal Container -->
-          <div class="bg-[#101622] border border-slate-800 rounded-xl w-full max-w-4xl shadow-2xl relative flex flex-col min-h-[50vh] max-h-full" onclick={(e) => e.stopPropagation()} role="document" tabindex="0">
+          <div class="bg-[#131615] border border-slate-800 rounded-xl w-full max-w-4xl shadow-2xl relative flex flex-col min-h-[50vh] max-h-full" onclick={(e) => e.stopPropagation()} role="document" tabindex="0">
             
             <!-- Modal Header -->
             <div class="px-5 py-4 border-b border-slate-800 shrink-0" style="border-top-left-radius: 0.75rem; border-top-right-radius: 0.75rem; border-left: 3px solid {c.border}">
@@ -1422,8 +1422,8 @@
 
               <!-- Tabs -->
               <div class="flex space-x-4 mt-4 -mb-4">
-                <button class="px-3 py-3 text-xs font-semibold border-b-2 {activeModalTab === 'details' ? 'text-blue-400 border-blue-400' : 'text-slate-500 hover:text-slate-300 border-transparent'}" onclick={() => activeModalTab = 'details'}>Geräte-Details</button>
-                <button class="px-3 py-3 text-xs font-semibold border-b-2 {activeModalTab === 'interfaces' ? 'text-blue-400 border-blue-400' : 'text-slate-500 hover:text-slate-300 border-transparent'}" onclick={() => activeModalTab = 'interfaces'}>Ports & Kabel</button>
+                <button class="px-3 py-3 text-xs font-semibold border-b-2 {activeModalTab === 'details' ? 'text-[#5DCAA5] border-[#1D9E75]' : 'text-slate-500 hover:text-slate-300 border-transparent'}" onclick={() => activeModalTab = 'details'}>Geräte-Details</button>
+                <button class="px-3 py-3 text-xs font-semibold border-b-2 {activeModalTab === 'interfaces' ? 'text-[#5DCAA5] border-[#1D9E75]' : 'text-slate-500 hover:text-slate-300 border-transparent'}" onclick={() => activeModalTab = 'interfaces'}>Ports & Kabel</button>
                 {#if selectedDevice.typ === 'usv'}
                   <button class="px-3 py-3 text-xs font-semibold border-b-2 {activeModalTab === 'protokoll' ? 'text-emerald-400 border-emerald-400' : 'text-slate-500 hover:text-slate-300 border-transparent'}" onclick={() => activeModalTab = 'protokoll'}>VDE Protokoll</button>
                 {/if}
@@ -1502,7 +1502,7 @@
                   <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider font-mono">PDU Steckdosen</h4>
                   <div class="flex items-center space-x-1">
                     <button onclick={openPduAutoOutletModal}
-                      class="flex items-center space-x-1 text-[10px] px-2 py-1 bg-blue-900/50 hover:bg-blue-800/50 text-blue-300 border border-blue-800/80 rounded-lg transition">
+                      class="flex items-center space-x-1 text-[10px] px-2 py-1 bg-[#0F6E56]/50 hover:bg-[#0F6E56]/70 text-[#86EFCB] border border-[#0F6E56]/80 rounded-lg transition">
                       <Zap class="w-3 h-3" /><span>Auto-Generieren</span>
                     </button>
                     <button onclick={openAddOutlet}
@@ -1526,7 +1526,7 @@
                         <span class="font-mono text-slate-200 w-16 truncate shrink-0">{outlet.outlet_name}</span>
                         <span class="text-[10px] text-slate-500 w-8 shrink-0">{outlet.steckdosentyp ?? '–'}</span>
                         <select
-                          class="flex-1 min-w-0 bg-slate-800 border border-slate-700 rounded px-2 py-1 text-[10px] text-white focus:outline-none focus:border-blue-500"
+                          class="flex-1 min-w-0 bg-slate-800 border border-slate-700 rounded px-2 py-1 text-[10px] text-white focus:outline-none focus:border-[#1D9E75]"
                           value={outlet.connected_device_id ?? ''}
                           onchange={(e) => {
                             const v = (e.target as HTMLSelectElement).value;
@@ -1661,13 +1661,13 @@
                       </div>
                       {#if !cable}
                         <button onclick={() => openAddCable(selectedDevice!, iface.port_name)}
-                          class="shrink-0 flex items-center space-x-1 px-2 py-1 bg-slate-800 hover:bg-blue-700 text-slate-400 hover:text-white rounded transition text-[10px]">
+                          class="shrink-0 flex items-center space-x-1 px-2 py-1 bg-slate-800 hover:bg-[#0F6E56] text-slate-400 hover:text-white rounded transition text-[10px]">
                           <CableIcon class="w-3 h-3" /><span>Kabel</span>
                         </button>
                       {:else}
                         <div class="flex items-center space-x-1.5 shrink-0">
                           <button onclick={() => openEditCable(cable)}
-                            class="p-1 text-slate-400 hover:text-blue-400 transition" title="Kabel bearbeiten">
+                            class="p-1 text-slate-400 hover:text-[#5DCAA5] transition" title="Kabel bearbeiten">
                             <Edit2 class="w-3 h-3" />
                           </button>
                           <button onclick={() => api.deleteCable(cable!.id).then(loadAll)}
@@ -1704,13 +1704,13 @@
                       </div>
                       {#if !cable}
                         <button onclick={() => openAddCable(selectedDevice!, port.port_name)}
-                          class="shrink-0 flex items-center space-x-1 px-2 py-1 bg-slate-800 hover:bg-blue-700 text-slate-400 hover:text-white rounded transition text-[10px]">
+                          class="shrink-0 flex items-center space-x-1 px-2 py-1 bg-slate-800 hover:bg-[#0F6E56] text-slate-400 hover:text-white rounded transition text-[10px]">
                           <CableIcon class="w-3 h-3" /><span>Kabel</span>
                         </button>
                       {:else}
                         <div class="flex items-center space-x-1.5 shrink-0">
                           <button onclick={() => openEditCable(cable)}
-                            class="p-1 text-slate-400 hover:text-blue-400 transition" title="Kabel bearbeiten">
+                            class="p-1 text-slate-400 hover:text-[#5DCAA5] transition" title="Kabel bearbeiten">
                             <Edit2 class="w-3 h-3" />
                           </button>
                           <button onclick={() => api.deleteCable(cable!.id).then(loadAll)}
@@ -1752,7 +1752,7 @@
                       </div>
                       <div class="flex items-center space-x-1.5 shrink-0">
                         <button onclick={() => openEditCable(cable)}
-                          class="p-1 text-slate-400 hover:text-blue-400 transition" title="Kabel bearbeiten">
+                          class="p-1 text-slate-400 hover:text-[#5DCAA5] transition" title="Kabel bearbeiten">
                           <Edit2 class="w-2.5 h-2.5" />
                         </button>
                         <button onclick={() => api.deleteCable(cable.id).then(loadAll)}
@@ -1767,7 +1767,7 @@
 
               <!-- Kabel ohne Port anlegen -->
               <button onclick={() => openAddCable(selectedDevice!, '')}
-                class="w-full flex items-center justify-center space-x-2 py-2 border border-dashed border-slate-700 hover:border-blue-500/50 rounded-lg text-xs text-slate-500 hover:text-blue-400 transition">
+                class="w-full flex items-center justify-center space-x-2 py-2 border border-dashed border-slate-700 hover:border-[#1D9E75]/50 rounded-lg text-xs text-slate-500 hover:text-[#5DCAA5] transition">
                 <CableIcon class="w-3.5 h-3.5" /><span>Kabelverbindung anlegen</span>
               </button>
             </div>
@@ -1826,7 +1826,7 @@
 
   <!-- ═══ Kabeltyp-Referenz für Techniker ═══════════════════════ -->
   {#if legendCableTypes.length > 0}
-    <div class="bg-[#101622] border border-slate-800 rounded-xl p-5">
+    <div class="bg-[#131615] border border-slate-800 rounded-xl p-5">
       <div class="flex items-center justify-between mb-4">
         <div>
           <h3 class="text-sm font-bold text-white font-outfit flex items-center gap-2">
@@ -1835,7 +1835,7 @@
           </h3>
           <p class="text-[10px] text-slate-500 mt-0.5">Verwendungszweck und Steckverbinder · Hilfe für den Einbau</p>
         </div>
-        <a href="/cables" class="text-[10px] text-blue-400 hover:text-blue-300 transition">
+        <a href="/cables" class="text-[10px] text-blue-400 hover:text-[#86EFCB] transition">
           Kabelliste ({cables.length}) →
         </a>
       </div>
@@ -1889,7 +1889,7 @@
 <!-- ═══ MODAL: Gerät einbauen ════════════════════════════ -->
 {#if showAddDevice}
 <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-  <div class="bg-[#101622] border border-slate-800 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+  <div class="bg-[#131615] border border-slate-800 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
     <div class="flex items-center justify-between px-6 py-4 border-b border-slate-800 shrink-0">
       <div>
         <h3 class="text-lg font-bold text-white font-outfit">{pduOnlyMode ? 'PDU einbauen' : 'Hardware einbauen'}</h3>
@@ -1903,7 +1903,7 @@
       <div class="w-56 border-r border-slate-800 flex flex-col shrink-0">
         <div class="p-3 border-b border-slate-800">
           <input type="text" bind:value={hwFilter} placeholder="Suchen…"
-            class="w-full bg-[#182030] border border-slate-700 rounded px-3 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500" />
+            class="w-full bg-[#181C1A] border border-slate-700 rounded px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75]" />
         </div>
         <div class="overflow-y-auto flex-1 p-2 space-y-1">
           {#each filteredHW as hw}
@@ -1911,7 +1911,7 @@
             <button onclick={() => selectHW(hw)}
               disabled={incompatible}
               title={incompatible ? 'Benötigt mind. ' + hw.min_rack_hoehe + 'HE-Rack (dieses Rack hat ' + selectedRack?.hoehe_u + 'HE)' : ''}
-              class="w-full text-left px-3 py-2 rounded-lg text-xs transition {selectedHW?.id === hw.id ? 'bg-blue-600/20 border border-blue-500/40 text-white' : incompatible ? 'text-slate-600 cursor-not-allowed' : 'text-slate-400 hover:bg-slate-800/60'}">
+              class="w-full text-left px-3 py-2 rounded-lg text-xs transition {selectedHW?.id === hw.id ? 'bg-blue-600/20 border border-[#1D9E75]/40 text-white' : incompatible ? 'text-slate-600 cursor-not-allowed' : 'text-slate-400 hover:bg-slate-800/60'}">
               <div class="font-semibold truncate">{incompatible ? '⚠ ' : ''}{hw.name}</div>
               <div class="text-[10px] text-slate-500">{hw.kategorie} · {hw.u_hoehe === 0 ? '0U' : hw.u_hoehe + ' HE'}{incompatible ? ' · benötigt ' + hw.min_rack_hoehe + 'HE' : ''}{!pduOnlyMode && hw.tdp_watt ? ' · '+hw.tdp_watt+'W' : ''}{!pduOnlyMode && hw.psu_count ? ' · '+hw.psu_count+'× PSU' : ''}</div>
             </button>
@@ -1928,8 +1928,8 @@
       <!-- Formular rechts -->
       <form onsubmit={submitAddDevice} class="flex-1 overflow-y-auto p-5 space-y-4">
         {#if selectedHW}
-          <div class="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 text-xs">
-            <div class="font-bold text-blue-300">{selectedHW.name}</div>
+          <div class="bg-[rgba(29,158,117,0.15)] border border-[rgba(29,158,117,0.3)] rounded-lg p-3 text-xs">
+            <div class="font-bold text-[#5DCAA5]">{selectedHW.name}</div>
             <div class="text-slate-400 mt-0.5">{selectedHW.hersteller} {selectedHW.modell} · {selectedHW.u_hoehe === 0 ? '0U · Seitlich' : selectedHW.u_hoehe + ' HE'}{!pduOnlyMode && selectedHW.tdp_watt ? ' · ' + selectedHW.tdp_watt + ' W' : ''}{selectedHW.psu_count ? ' · ' + selectedHW.psu_count + '× PSU' : ''}</div>
             {#if selectedHW.bemerkung}<div class="text-slate-500 mt-1">{selectedHW.bemerkung}</div>{/if}
           </div>
@@ -1948,7 +1948,7 @@
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Hostname *</label>
           <input type="text" bind:value={devHostname} required
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
             placeholder="z.B. srv-prod-01" />
         </div>
 
@@ -1958,12 +1958,12 @@
           <div class="grid grid-cols-2 gap-2">
             <button type="button" onclick={() => devSide = 'left'}
               disabled={occupiedSides.left}
-              class="px-3 py-2 rounded-lg text-sm transition border {devSide === 'left' ? 'bg-blue-600/20 border-blue-500/40 text-white' : 'text-slate-400 hover:bg-slate-800/60 border-slate-700'} disabled:opacity-40 disabled:cursor-not-allowed">
+              class="px-3 py-2 rounded-lg text-sm transition border {devSide === 'left' ? 'bg-[#1D9E75]/20 border-[#1D9E75]/40 text-white' : 'text-slate-400 hover:bg-slate-800/60 border-slate-700'} disabled:opacity-40 disabled:cursor-not-allowed">
               Links (0UL)
             </button>
             <button type="button" onclick={() => devSide = 'right'}
               disabled={occupiedSides.right}
-              class="px-3 py-2 rounded-lg text-sm transition border {devSide === 'right' ? 'bg-blue-600/20 border-blue-500/40 text-white' : 'text-slate-400 hover:bg-slate-800/60 border-slate-700'} disabled:opacity-40 disabled:cursor-not-allowed">
+              class="px-3 py-2 rounded-lg text-sm transition border {devSide === 'right' ? 'bg-[#1D9E75]/20 border-[#1D9E75]/40 text-white' : 'text-slate-400 hover:bg-slate-800/60 border-slate-700'} disabled:opacity-40 disabled:cursor-not-allowed">
               Rechts (0UR)
             </button>
           </div>
@@ -1978,12 +1978,12 @@
           <div>
             <label class="block text-xs font-semibold text-slate-400 mb-1">U-Position</label>
             <input type="number" bind:value={targetSlot} min="1" max={selectedRack?.hoehe_u ?? 42}
-              class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+              class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-400 mb-1">Höhe (HE)</label>
             <input type="number" bind:value={devUHoehe} min="0" max="20" readonly={selectedHW !== null}
-              class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500 {selectedHW !== null ? 'opacity-60 cursor-not-allowed' : ''}" />
+              class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75] {selectedHW !== null ? 'opacity-60 cursor-not-allowed' : ''}" />
           </div>
         </div>
         {/if}
@@ -1994,7 +1994,7 @@
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">TDP (W)</label>
           <input type="number" bind:value={devTdpWatt} min="0" placeholder="z.B. 400"
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
           <p class="text-[10px] text-slate-600 mt-1">Richtwert aus Datenblatt — bitte anpassen</p>
         </div>
         {/if}
@@ -2003,12 +2003,12 @@
           <div>
             <label class="block text-xs font-semibold text-slate-400 mb-1">PSU Anzahl</label>
             <input type="number" bind:value={devPsuCount} min="0"
-              class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+              class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-400 mb-1">PSU Nennleistung (W)</label>
             <input type="number" bind:value={devPsuNennwatt} min="0"
-              class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+              class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
           </div>
         </div>
         <p class="text-[10px] text-slate-600 -mt-2">Richtwert aus Datenblatt — bitte anpassen</p>
@@ -2016,7 +2016,7 @@
         <div class="mb-4">
           <label class="block text-xs font-semibold text-slate-400 mb-1">Anschlussleistung (W)</label>
           <input type="number" bind:value={devAnschlussleistung} min="0" placeholder="z.B. 350"
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
           <p class="text-[10px] text-slate-600 mt-1">Netzteileingabe laut Typenschild — nicht CPU-TDP</p>
         </div>
         {/if}
@@ -2024,19 +2024,19 @@
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">IP-Adresse</label>
           <input type="text" bind:value={devIp} placeholder="192.168.1.10"
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
         </div>
 
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-xs font-semibold text-slate-400 mb-1">Hersteller</label>
             <input type="text" bind:value={devHersteller}
-              class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+              class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-400 mb-1">Modell</label>
             <input type="text" bind:value={devModell}
-              class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+              class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
           </div>
         </div>
 
@@ -2044,12 +2044,12 @@
           <div>
             <label class="block text-xs font-semibold text-slate-400 mb-1">Seriennummer</label>
             <input type="text" bind:value={devSeriennummer}
-              class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+              class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-400 mb-1">Inventarnummer</label>
             <input type="text" bind:value={devInventarnummer} placeholder="z.B. INV-2024-0042"
-              class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+              class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
           </div>
         </div>
 
@@ -2057,7 +2057,7 @@
           <button type="button" onclick={() => { showAddDevice=false; pduOnlyMode=false; }} class="px-4 py-2 text-sm text-slate-400 hover:bg-slate-800 rounded-lg transition">Abbrechen</button>
           <button type="submit" 
             disabled={selectedHW && selectedHW.min_rack_hoehe && selectedRack && selectedRack.hoehe_u < selectedHW.min_rack_hoehe}
-            class="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded-lg text-sm font-semibold transition"
+            class="px-4 py-2 bg-[#1D9E75] hover:bg-[#0F6E56] disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded-lg text-sm font-semibold transition"
           >
             Einbauen
           </button>
@@ -2071,7 +2071,7 @@
 <!-- ═══ MODAL: Kabel anlegen ═════════════════════════════ -->
 {#if showAddCable}
 <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-  <div class="bg-[#101622] border border-slate-800 rounded-xl p-6 max-w-md w-full shadow-2xl">
+  <div class="bg-[#131615] border border-slate-800 rounded-xl p-6 max-w-md w-full shadow-2xl">
     <div class="flex items-center justify-between mb-4">
       <div>
         <h3 class="text-lg font-bold text-white font-outfit">Kabelverbindung anlegen</h3>
@@ -2084,13 +2084,13 @@
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Von Port</label>
           <input type="text" bind:value={cableVonPort} placeholder="z.B. eth0"
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Kabel-Typ *</label>
           <select bind:value={cableTyp} required
             onchange={() => { cableNachDevId = null; cableNachPort = ''; }}
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]">
             {#each CABLE_TYPES as ct}<option value={ct}>{ct}</option>{/each}
           </select>
         </div>
@@ -2099,7 +2099,7 @@
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Ziel-Gerät *</label>
         <select bind:value={cableNachDevId} required
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]">
           <option value={null}>— Gerät auswählen —</option>
           {#each racks as rack}
             {@const rackTargets = filteredTargetDevices().filter(d => d.rack_id === rack.id)}
@@ -2118,7 +2118,7 @@
         <label class="block text-xs font-semibold text-slate-400 mb-1">Ziel-Port</label>
         <input type="text" bind:value={cableNachPort} placeholder="z.B. Gi0/1"
           list="target-ports-list"
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
         <datalist id="target-ports-list">
           {#each targetDevPorts() as p}<option value={p} />{/each}
         </datalist>
@@ -2128,12 +2128,12 @@
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Länge (m) *</label>
           <input type="number" bind:value={cableLaenge} min="0.1" step="0.1" required
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Farbe</label>
           <input type="text" bind:value={cableFarbe} placeholder="z.B. blau"
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
         </div>
       </div>
 
@@ -2145,7 +2145,7 @@
 
       <div class="flex justify-end space-x-3 pt-2">
         <button type="button" onclick={() => showAddCable=false} class="px-4 py-2 text-sm text-slate-400 hover:bg-slate-800 rounded-lg transition">Abbrechen</button>
-        <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold transition">Kabel anlegen</button>
+        <button type="submit" class="px-4 py-2 bg-[#1D9E75] hover:bg-[#0F6E56] text-white rounded-lg text-sm font-semibold transition">Kabel anlegen</button>
       </div>
     </form>
   </div>
@@ -2155,7 +2155,7 @@
 <!-- ═══ MODAL: Kabel bearbeiten ═══════════════════════════ -->
 {#if showEditCable}
 <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-  <div class="bg-[#101622] border border-slate-800 rounded-xl p-6 max-w-md w-full shadow-2xl">
+  <div class="bg-[#131615] border border-slate-800 rounded-xl p-6 max-w-md w-full shadow-2xl">
     <div class="flex items-center justify-between mb-4">
       <div>
         <h3 class="text-lg font-bold text-white font-outfit">Kabelverbindung bearbeiten</h3>
@@ -2168,13 +2168,13 @@
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Von Port</label>
           <input type="text" bind:value={editCableVonPort} readonly disabled
-            class="w-full bg-[#182030]/50 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-500 focus:outline-none" />
+            class="w-full bg-[#181C1A]/50 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-500 focus:outline-none" />
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Kabel-Typ *</label>
           <select bind:value={editCableTyp} required
             onchange={() => { editCableNachDevId = null; editCableNachPort = ''; }}
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]">
             {#each CABLE_TYPES as ct}<option value={ct}>{ct}</option>{/each}
           </select>
         </div>
@@ -2183,7 +2183,7 @@
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Ziel-Gerät *</label>
         <select bind:value={editCableNachDevId} required
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]">
           <option value={null}>— Gerät auswählen —</option>
           {#each racks as rack}
             {@const rackTargets = editFilteredTargetDevices().filter(d => d.rack_id === rack.id)}
@@ -2202,7 +2202,7 @@
         <label class="block text-xs font-semibold text-slate-400 mb-1">Ziel-Port</label>
         <input type="text" bind:value={editCableNachPort} placeholder="z.B. Gi0/1"
           list="edit-target-ports-list"
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
         <datalist id="edit-target-ports-list">
           {#each editTargetDevPorts() as p}<option value={p} />{/each}
         </datalist>
@@ -2212,12 +2212,12 @@
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Länge (m) *</label>
           <input type="number" bind:value={editCableLaenge} min="0.1" step="0.1" required
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Farbe</label>
           <input type="text" bind:value={editCableFarbe} placeholder="z.B. blau"
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
         </div>
       </div>
 
@@ -2229,7 +2229,7 @@
 
       <div class="flex justify-end space-x-3 pt-2">
         <button type="button" onclick={() => showEditCable=false} class="px-4 py-2 text-sm text-slate-400 hover:bg-slate-800 rounded-lg transition">Abbrechen</button>
-        <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold transition">Speichern</button>
+        <button type="submit" class="px-4 py-2 bg-[#1D9E75] hover:bg-[#0F6E56] text-white rounded-lg text-sm font-semibold transition">Speichern</button>
       </div>
     </form>
   </div>
@@ -2239,7 +2239,7 @@
 <!-- ═══ MODAL: PDU Outlet anlegen ════════════════════════ -->
 {#if showAddOutlet && selectedDevice}
 <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-  <div class="bg-[#101622] border border-slate-800 rounded-xl p-6 max-w-sm w-full shadow-2xl">
+  <div class="bg-[#131615] border border-slate-800 rounded-xl p-6 max-w-sm w-full shadow-2xl">
     <div class="flex items-center justify-between mb-4">
       <div>
         <h3 class="text-lg font-bold text-white font-outfit">Steckdose anlegen</h3>
@@ -2252,12 +2252,12 @@
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Outlet-Name *</label>
           <input type="text" bind:value={outletName} required placeholder="z.B. Out-1"
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Phase</label>
           <select bind:value={outletPhase}
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]">
             <option value="L1">L1</option><option value="L2">L2</option><option value="L3">L3</option>
           </select>
         </div>
@@ -2266,20 +2266,20 @@
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Stecker-Typ</label>
           <select bind:value={outletTyp}
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]">
             {#each OUTLET_TYPES as t}<option value={t}>{t}</option>{/each}
           </select>
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Max. Watt</label>
           <input type="number" bind:value={outletMaxWatt} min="0" placeholder="z.B. 2300"
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
         </div>
       </div>
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Verbundenes Gerät</label>
         <select bind:value={outletDevId}
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]">
           <option value={null}>— frei —</option>
           {#each devices.filter(d => d.typ !== 'pdu' && d.id !== selectedDevice!.id) as d}
             <option value={d.id}>{d.hostname} ({d.typ})</option>
@@ -2288,7 +2288,7 @@
       </div>
       <div class="flex justify-end space-x-3 pt-2">
         <button type="button" onclick={() => showAddOutlet=false} class="px-4 py-2 text-sm text-slate-400 hover:bg-slate-800 rounded-lg transition">Abbrechen</button>
-        <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold transition">Speichern</button>
+        <button type="submit" class="px-4 py-2 bg-[#1D9E75] hover:bg-[#0F6E56] text-white rounded-lg text-sm font-semibold transition">Speichern</button>
       </div>
     </form>
   </div>
@@ -2298,7 +2298,7 @@
 <!-- ═══ MODAL: Gerät bearbeiten ═════════════════════════ -->
 {#if showEditDevice && selectedDevice}
 <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-  <div class="bg-[#101622] border border-slate-800 rounded-xl shadow-2xl w-full max-w-lg">
+  <div class="bg-[#131615] border border-slate-800 rounded-xl shadow-2xl w-full max-w-lg">
     <div class="flex items-center justify-between px-6 py-4 border-b border-slate-800">
       <div>
         <h3 class="text-lg font-bold text-white font-outfit">Gerät bearbeiten</h3>
@@ -2310,20 +2310,20 @@
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Hostname *</label>
         <input type="text" bind:value={editHostname} required
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
       </div>
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">U-Position</label>
           <input type="number" bind:value={editUPos} min="1" max={selectedRack?.hoehe_u ?? 42}
             disabled={editUHoehe === 0}
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500 disabled:opacity-50" />
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75] disabled:opacity-50" />
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Höhe (HE)</label>
           <input type="number" bind:value={editUHoehe} min="0"
             oninput={() => { if (editUHoehe === 0) editUPos = null; }}
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
         </div>
       </div>
       {#if editUHoehe === 0}
@@ -2331,11 +2331,11 @@
         <label class="block text-xs font-semibold text-slate-400 mb-1">Seite</label>
         <div class="grid grid-cols-2 gap-2">
           <button type="button" onclick={() => editSide = 'left'}
-            class="px-3 py-2 rounded-lg text-sm transition border {editSide === 'left' ? 'bg-blue-600/20 border-blue-500/40 text-white' : 'text-slate-400 hover:bg-slate-800/60 border-slate-700'}">
+            class="px-3 py-2 rounded-lg text-sm transition border {editSide === 'left' ? 'bg-[#1D9E75]/20 border-[#1D9E75]/40 text-white' : 'text-slate-400 hover:bg-slate-800/60 border-slate-700'}">
             Links (0UL)
           </button>
           <button type="button" onclick={() => editSide = 'right'}
-            class="px-3 py-2 rounded-lg text-sm transition border {editSide === 'right' ? 'bg-blue-600/20 border-blue-500/40 text-white' : 'text-slate-400 hover:bg-slate-800/60 border-slate-700'}">
+            class="px-3 py-2 rounded-lg text-sm transition border {editSide === 'right' ? 'bg-[#1D9E75]/20 border-[#1D9E75]/40 text-white' : 'text-slate-400 hover:bg-slate-800/60 border-slate-700'}">
             Rechts (0UR)
           </button>
         </div>
@@ -2345,42 +2345,42 @@
       <div class="mb-4">
         <label class="block text-xs font-semibold text-slate-400 mb-1">Anschlussleistung (W)</label>
         <input type="number" bind:value={editAnschluss} min="0"
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
       </div>
       {/if}
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">IP-Adresse</label>
         <input type="text" bind:value={editIp} placeholder="192.168.1.10"
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
       </div>
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Hersteller</label>
           <input type="text" bind:value={editHersteller}
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Modell</label>
           <input type="text" bind:value={editModell}
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
         </div>
       </div>
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Seriennummer</label>
           <input type="text" bind:value={editSeriennummer}
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Inventarnummer</label>
           <input type="text" bind:value={editInventarnummer}
-            class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
         </div>
       </div>
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Bemerkung</label>
         <textarea bind:value={editBemerkung} rows="2"
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500 resize-none"></textarea>
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75] resize-none"></textarea>
       </div>
 
       <div class="border-t border-slate-800 pt-4 mt-2">
@@ -2389,17 +2389,17 @@
           <div>
             <label class="block text-xs font-semibold text-slate-400 mb-1">Priorität (1=Höchste)</label>
             <input type="number" bind:value={editShutdownPriority} min="1" max="4"
-              class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+              class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-400 mb-1">Delay (Sekunden)</label>
             <input type="number" bind:value={editShutdownDelay} min="0"
-              class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+              class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-400 mb-1">Methode</label>
             <select bind:value={editShutdownMethod}
-              class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+              class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]">
               <option value="ACPI_Graceful">ACPI Graceful</option>
               <option value="SSH_Script">SSH Script</option>
               <option value="Hard_Power_Cut">Hard Power Cut</option>
@@ -2412,27 +2412,27 @@
         
         {#each editDependencies as dep, i}
           <div class="flex items-center space-x-2 mb-2 bg-slate-900/50 p-2 rounded border border-slate-800">
-            <select bind:value={dep.depends_on_device_id} class="flex-1 bg-[#182030] border border-slate-700 rounded px-2 py-1 text-xs text-white">
+            <select bind:value={dep.depends_on_device_id} class="flex-1 bg-[#181C1A] border border-slate-700 rounded px-2 py-1 text-xs text-white">
               {#each devices.filter(d => d.id !== selectedDevice!.id) as d}
                 <option value={d.id}>{d.hostname} ({d.typ})</option>
               {/each}
             </select>
-            <select bind:value={dep.dependency_type} class="w-24 bg-[#182030] border border-slate-700 rounded px-2 py-1 text-xs text-white">
+            <select bind:value={dep.dependency_type} class="w-24 bg-[#181C1A] border border-slate-700 rounded px-2 py-1 text-xs text-white">
               <option value="power">Power</option>
               <option value="network">Network</option>
             </select>
-            <input type="text" bind:value={dep.dependency_group} placeholder="HA-Cluster (opt)" class="w-28 bg-[#182030] border border-slate-700 rounded px-2 py-1 text-xs text-white" />
+            <input type="text" bind:value={dep.dependency_group} placeholder="HA-Cluster (opt)" class="w-28 bg-[#181C1A] border border-slate-700 rounded px-2 py-1 text-xs text-white" />
             <button type="button" onclick={() => editDependencies = editDependencies.filter((_, idx) => idx !== i)} class="p-1 text-red-500/50 hover:text-red-400"><X class="w-3 h-3"/></button>
           </div>
         {/each}
         <button type="button" onclick={() => editDependencies = [...editDependencies, {depends_on_device_id: devices.find(d=>d.id!==selectedDevice!.id)?.id, dependency_type: 'power', dependency_group: ''}]}
-          class="text-xs text-blue-400 hover:text-blue-300 mt-1 flex items-center gap-1">+ Abhängigkeit hinzufügen</button>
+          class="text-xs text-blue-400 hover:text-[#86EFCB] mt-1 flex items-center gap-1">+ Abhängigkeit hinzufügen</button>
       </div>
       <div class="flex justify-end space-x-3 pt-2">
         <button type="button" onclick={() => showEditDevice=false}
           class="px-4 py-2 text-sm text-slate-400 hover:bg-slate-800 rounded-lg transition">Abbrechen</button>
         <button type="submit"
-          class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold transition">Speichern</button>
+          class="px-4 py-2 bg-[#1D9E75] hover:bg-[#0F6E56] text-white rounded-lg text-sm font-semibold transition">Speichern</button>
       </div>
     </form>
   </div>
@@ -2441,7 +2441,7 @@
 <!-- ═══ MODAL: Interface anlegen ════════════════════════ -->
 {#if showAddInterface && selectedDevice}
 <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-  <div class="bg-[#101622] border border-slate-800 rounded-xl p-6 max-w-sm w-full shadow-2xl">
+  <div class="bg-[#131615] border border-slate-800 rounded-xl p-6 max-w-sm w-full shadow-2xl">
     <div class="flex items-center justify-between mb-4">
       <div>
         <h3 class="text-lg font-bold text-white font-outfit">Port / Interface anlegen</h3>
@@ -2453,25 +2453,25 @@
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Port-Name *</label>
         <input type="text" bind:value={ifacePort} placeholder="z.B. eth0, ens3f0, IPMI"
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
       </div>
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Typ</label>
         <select bind:value={ifaceTyp}
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]">
           {#each IF_TYPES as t}<option value={t}>{t}</option>{/each}
         </select>
       </div>
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">MAC-Adresse</label>
         <input type="text" bind:value={ifaceMac} placeholder="aa:bb:cc:dd:ee:ff"
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
       </div>
       <div class="flex justify-end space-x-3 pt-2">
         <button onclick={() => showAddInterface=false} class="px-4 py-2 text-sm text-slate-400 hover:bg-slate-800 rounded-lg transition">Abbrechen</button>
         <button
           onclick={submitAddInterface}
-          class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold transition">
+          class="px-4 py-2 bg-[#1D9E75] hover:bg-[#0F6E56] text-white rounded-lg text-sm font-semibold transition">
           Speichern
         </button>
       </div>
@@ -2483,7 +2483,7 @@
 <!-- ═══ MODAL: PDU Outlets automatisch generieren ════════════ -->
 {#if showPduAutoOutlet && pduAutoDevice}
 <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-  <div class="bg-[#101622] border border-slate-800 rounded-xl p-6 max-w-md w-full shadow-2xl">
+  <div class="bg-[#131615] border border-slate-800 rounded-xl p-6 max-w-md w-full shadow-2xl">
     <div class="flex items-center justify-between mb-4">
       <div>
         <h3 class="text-lg font-bold text-white font-outfit">Steckdosen generieren</h3>
@@ -2495,7 +2495,7 @@
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Muster (z.B. 18x C13 + 18x Cx) *</label>
         <input type="text" bind:value={pduAutoPattern} required
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
         <p class="text-[10px] text-slate-500 mt-1">Cx wird automatisch auf C19 gemappt. C13, C19, Schuko, CEE-16A sind unterstützt.</p>
       </div>
 
@@ -2517,7 +2517,7 @@
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Phasen-Verteilung</label>
         <select bind:value={pduAutoPhaseMode}
-          class="w-full bg-[#182030] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]">
           <option value="alternate">Abwechselnd L1 / L2 / L3</option>
           <option value="L1">L1 fest</option>
           <option value="L2">L2 fest</option>
@@ -2527,7 +2527,7 @@
 
       <div class="flex items-center space-x-2 pt-1">
         <input type="checkbox" id="deleteExisting" bind:checked={deleteExistingOutlets}
-          class="rounded bg-[#182030] border-slate-700 text-blue-600 focus:ring-0 focus:ring-offset-0" />
+          class="rounded bg-[#181C1A] border-slate-700 text-blue-600 focus:ring-0 focus:ring-offset-0" />
         <label for="deleteExisting" class="text-xs font-semibold text-slate-300 select-none cursor-pointer">
           Bestehende Steckdosen vorher löschen
         </label>
@@ -2535,7 +2535,7 @@
 
       <div class="flex justify-end space-x-3 pt-2">
         <button type="button" onclick={() => showPduAutoOutlet=false} class="px-4 py-2 text-sm text-slate-400 hover:bg-slate-800 rounded-lg transition">Abbrechen</button>
-        <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold transition">Generieren</button>
+        <button type="submit" class="px-4 py-2 bg-[#1D9E75] hover:bg-[#0F6E56] text-white rounded-lg text-sm font-semibold transition">Generieren</button>
       </div>
     </form>
   </div>
@@ -2545,7 +2545,7 @@
 
 {#if showConfirmModal}
 <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-  <div class="bg-[#101622] border border-slate-800 rounded-xl p-6 max-w-sm w-full shadow-2xl">
+  <div class="bg-[#131615] border border-slate-800 rounded-xl p-6 max-w-sm w-full shadow-2xl">
     <div class="flex items-center space-x-3 mb-4">
       <div class="p-2 bg-red-950/50 border border-red-500/30 rounded-lg text-red-500">
         <Trash2 class="w-6 h-6" />

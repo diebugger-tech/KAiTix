@@ -175,7 +175,7 @@
   <section class="section">
     <div class="section-label">// module</div>
     <h2>Alles an einem Ort</h2>
-    <p class="section-sub">Sechs Module, eine Oberfläche — kein Overhead, kein Monitoring, keine Automatisierung.</p>
+    <p class="section-sub">Sechs Module, eine Oberfläche — Runbook-Orchestrierung, USV-Berechnung und strukturierte Infrastruktur-Dokumentation — kein Live-Monitoring von RZ-Daten.</p>
 
     <div class="feat-grid">
       <div class="feat-cell">
