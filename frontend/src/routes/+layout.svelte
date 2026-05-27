@@ -63,7 +63,8 @@
   // Get dynamic title based on path
   const pageTitle = $derived(() => {
     const route = page.url.pathname as string;
-    if (route === '/') return 'Dashboard';
+    if (route === '/') return 'Willkommen';
+    if (route === '/dashboard') return 'Dashboard';
     if (route === '/racks') return 'Rechenzentrum Racks';
     if (route === '/usv') return 'USV-Auslegungsplanung';
     if (route === '/import') return 'Import';
@@ -82,7 +83,10 @@
   <aside class="w-64 bg-[#101622] border-r border-slate-800 flex flex-col justify-between z-30">
     <div>
       <!-- Brand Logo -->
-      <div class="h-16 flex items-center px-6 border-b border-slate-800 space-x-3">
+      <a 
+        href="/" 
+        class="h-16 flex items-center px-6 border-b border-slate-800 space-x-3 hover:opacity-80 transition-opacity no-underline block"
+      >
         <div class="w-8 h-8 rounded bg-gradient-to-tr from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
           <Server class="w-5 h-5 text-white" />
         </div>
@@ -90,14 +94,14 @@
           <h1 class="text-lg font-bold font-outfit tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">KAiTix</h1>
           <span class="text-[10px] text-slate-500 font-mono tracking-widest uppercase">Plan. Simulate. Document.</span>
         </div>
-      </div>
+      </a>
 
       <!-- Navigation -->
       <nav class="p-4 space-y-1">
         <!-- Dashboard -->
         <a 
-          href="/" 
-          class="flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 {page.url.pathname === '/' ? 'bg-blue-600/20 text-blue-400 border-l-2 border-blue-500 pl-3.5' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}"
+          href="/dashboard" 
+          class="flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 {page.url.pathname === '/dashboard' ? 'bg-blue-600/20 text-blue-400 border-l-2 border-blue-500 pl-3.5' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}"
         >
           <LayoutDashboard class="w-4.5 h-4.5" />
           <span>Dashboard</span>

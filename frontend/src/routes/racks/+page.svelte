@@ -1415,7 +1415,6 @@
                   </div>
                 </div>
               {/if}
-            </div>
 
             <!-- PDU Steckdosen (nur für PDU-Geräte) -->
             {#if selectedDevice.typ === 'pdu'}
@@ -2463,6 +2462,7 @@
   </div>
 </div>
 {/if}
+{/if}
 
 {#if showConfirmModal}
 <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
@@ -2487,3 +2487,4 @@
   </div>
 </div>
 {/if}
+</div>

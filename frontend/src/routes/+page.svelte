@@ -1,481 +1,607 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { api, type Rack, type Device, type Cable, type HardwareType } from '$lib/api';
   import {
     Server,
     Layers,
-    Plus,
-    HardDrive,
     Zap,
-    MapPin,
-    Building,
-    AlertTriangle,
-    Info,
-    Cable as CableIcon,
-    Wifi
+    Cable,
+    BookOpen,
+    Activity,
+    ArrowRight,
+    Network,
+    Thermometer
   } from '@lucide/svelte';
-  import RackModal from '$lib/components/RackModal.svelte';
-  import { locationStore } from '$lib/locations.svelte';
 
-  let racks = $state<Rack[]>([]);
-  let devices = $state<Device[]>([]);
-  let cables = $state<Cable[]>([]);
-  let loading = $state(true);
-  let errorMsg = $state('');
-
-  // Add Rack form state
-  let showAddRack = $state(false);
-  let hardwareTypes = $state<HardwareType[]>([]);
-
-  async function loadData() {
-    loading = true;
-    errorMsg = '';
-    try {
-      const [racksData, devicesData, cablesData, hwData] = await Promise.all([
-        api.getRacks(),
-        api.getDevices(),
-        api.getCables().catch(() => [] as Cable[]),
-        api.getHardware('rack').catch(() => [] as HardwareType[])
-      ]);
-      racks = racksData;
-      devices = devicesData;
-      cables = cablesData;
-      hardwareTypes = hwData;
-    } catch (err: any) {
-      errorMsg = err.message || 'Fehler beim Laden der Daten.';
-    } finally {
-      loading = false;
-    }
-  }
-
-  async function handleAddRack(rackData) {
-    try {
-      await api.createRack(rackData);
-      await loadData();
-    } catch (err: any) {
-      alert('Fehler beim Erstellen des Racks: ' + err.message);
-    }
-  }
-
-  onMount(() => {
-    loadData();
+  let stats = $state({
+    racks: 0,
+    devices: 0,
+    totalPowerKw: 0.0,
+    online: false,
+    loading: true
   });
 
-  // Reactive Derived Values
-  const totalRacks = $derived(racks.length);
-  const totalDevices = $derived(devices.length);
-  const totalPowerWatt = $derived(devices.reduce((sum, d) => sum + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0));
-  const totalCables = $derived(cables.length);
-  const totalL1Kw = $derived(devices.filter(d => d.phase === 'L1').reduce((s, d) => s + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0) / 1000);
-  const totalL2Kw = $derived(devices.filter(d => d.phase === 'L2').reduce((s, d) => s + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0) / 1000);
-  const totalL3Kw = $derived(devices.filter(d => d.phase === 'L3').reduce((s, d) => s + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0) / 1000);
-  const pduDevices = $derived(devices.filter(d => d.phase));
+  onMount(async () => {
+    try {
+      const [racksRes, devicesRes, statsRes, healthRes] = await Promise.all([
+        fetch('/api/v1/racks').then(r => r.json()),
+        fetch('/api/v1/devices').then(r => r.json()),
+        fetch('/api/v1/dashboard/stats').then(r => r.json()),
+        fetch('/api/v1/health').then(r => r.json()).catch(() => ({ status: 'offline' }))
+      ]);
 
-  // Room grouping
-  const rooms = $derived(
-    [...new Set(racks.map(r => r.standort).filter(Boolean))].sort() as string[]
-  );
-  const racksWithoutRoom = $derived(racks.filter(r => !r.standort));
-
-  function computeRoomPhaseLoads(roomRacks: Rack[]) {
-    const rackIds = new Set(roomRacks.map(r => r.id));
-    const roomDevices = devices.filter(d => rackIds.has(d.rack_id));
-    return {
-      l1: roomDevices.filter(d => d.phase === 'L1').reduce((s, d) => s + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0) / 1000,
-      l2: roomDevices.filter(d => d.phase === 'L2').reduce((s, d) => s + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0) / 1000,
-      l3: roomDevices.filter(d => d.phase === 'L3').reduce((s, d) => s + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0) / 1000,
-    };
-  }
+      stats.racks = racksRes.length;
+      stats.devices = devicesRes.length;
+      stats.totalPowerKw = statsRes.total_power_kw || 0.0;
+      stats.online = healthRes.status === 'healthy';
+    } catch (err) {
+      console.error('Error fetching landing page stats:', err);
+    } finally {
+      stats.loading = false;
+    }
+  });
 </script>
 
 <svelte:head>
-  <title>KAiTix Dashboard</title>
-  <meta name="description" content="Übersicht über die Server- und Strominfrastruktur im Rechenzentrum" />
+  <title>KAiTix — Serverraum-Dokumentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 </svelte:head>
 
-<div class="space-y-8">
-  <!-- Stats Header Grid -->
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-    <div class="bg-[#101622] border border-slate-800 rounded-xl p-5 flex items-center space-x-4">
-      <div class="p-3 bg-blue-500/10 text-blue-400 rounded-lg">
-        <Layers class="w-6 h-6" />
-      </div>
-      <div>
-        <div class="text-xs text-slate-500 font-medium">Serverracks</div>
-        <div class="text-2xl font-bold text-white mt-0.5">{totalRacks}</div>
-      </div>
-    </div>
-
-    <div class="bg-[#101622] border border-slate-800 rounded-xl p-5 flex items-center space-x-4">
-      <div class="p-3 bg-cyan-500/10 text-cyan-400 rounded-lg">
-        <Server class="w-6 h-6" />
-      </div>
-      <div>
-        <div class="text-xs text-slate-500 font-medium">Aktive Geräte</div>
-        <div class="text-2xl font-bold text-white mt-0.5">{totalDevices}</div>
-      </div>
-    </div>
-
-    <div class="bg-[#101622] border border-slate-800 rounded-xl p-5 flex items-center space-x-4">
-      <div class="p-3 bg-orange-500/10 text-orange-400 rounded-lg">
-        <Zap class="w-6 h-6" />
-      </div>
-      <div>
-        <div class="text-xs text-slate-500 font-medium">Gesamtleistung (Nenn)</div>
-        <div class="text-2xl font-bold text-white mt-0.5">{(totalPowerWatt / 1000).toFixed(2)} kW</div>
-      </div>
-    </div>
-
-    <a href="/cables" class="bg-[#101622] border border-slate-800 rounded-xl p-5 flex items-center space-x-4 hover:border-emerald-500/30 transition">
-      <div class="p-3 bg-emerald-500/10 text-emerald-400 rounded-lg">
-        <CableIcon class="w-6 h-6" />
-      </div>
-      <div>
-        <div class="text-xs text-slate-500 font-medium">Kabel dokumentiert</div>
-        <div class="text-2xl font-bold text-white mt-0.5">{totalCables}</div>
-      </div>
-    </a>
-  </div>
-
-  <!-- Phase Power Cards -->
-  {#if pduDevices.length > 0}
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div class="bg-[#101622] border border-blue-500/20 rounded-xl p-5 flex items-center space-x-4">
-        <div class="p-3 bg-blue-500/10 text-blue-400 rounded-lg">
-          <Zap class="w-6 h-6" />
-        </div>
-        <div>
-          <div class="text-xs text-slate-500 font-medium">Phase L1</div>
-          <div class="text-2xl font-bold text-white mt-0.5">{totalL1Kw.toFixed(2)} kW</div>
+<div class="landing-page-container">
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-scanline"></div>
+    
+    <div class="hero-content">
+      <div class="hero-left">
+        <div class="hero-eyebrow">Intranet · Single-User · Dokumentation</div>
+        
+        <h1>Serverraum-Infrastruktur.<br><em>Dokumentiert.</em></h1>
+        
+        <p class="hero-sub">
+          KAiTix bündelt Rack-Verwaltung, Kabelliste, IPAM, USV-Berechnung und Runbook-Orchestrierung in einer einzigen, schlanken Oberfläche — keine Automatisierung, nur saubere Dokumentation.
+        </p>
+        
+        <div class="hero-actions">
+          <a href="/dashboard" class="btn-hero-primary">
+            <span>Zur App</span>
+            <ArrowRight class="w-4 h-4" />
+          </a>
+          <a href="/racks" class="btn-hero-ghost">
+            <Layers class="w-4 h-4" />
+            <span>Rack-Übersicht</span>
+          </a>
+          <a href="/runbook-orchestrator" class="btn-hero-ghost">
+            <BookOpen class="w-4 h-4" />
+            <span>Runbooks</span>
+          </a>
         </div>
       </div>
-      <div class="bg-[#101622] border border-cyan-500/20 rounded-xl p-5 flex items-center space-x-4">
-        <div class="p-3 bg-cyan-500/10 text-cyan-400 rounded-lg">
-          <Zap class="w-6 h-6" />
-        </div>
-        <div>
-          <div class="text-xs text-slate-500 font-medium">Phase L2</div>
-          <div class="text-2xl font-bold text-white mt-0.5">{totalL2Kw.toFixed(2)} kW</div>
-        </div>
-      </div>
-      <div class="bg-[#101622] border border-orange-500/20 rounded-xl p-5 flex items-center space-x-4">
-        <div class="p-3 bg-orange-500/10 text-orange-400 rounded-lg">
-          <Zap class="w-6 h-6" />
-        </div>
-        <div>
-          <div class="text-xs text-slate-500 font-medium">Phase L3</div>
-          <div class="text-2xl font-bold text-white mt-0.5">{totalL3Kw.toFixed(2)} kW</div>
-        </div>
-      </div>
-    </div>
-  {/if}
-
-  <!-- Loading / Error Alert -->
-  {#if loading}
-    <div class="flex items-center justify-center p-12 bg-[#101622] border border-slate-800 rounded-xl">
-      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-    </div>
-  {:else if errorMsg}
-    <div class="p-4 bg-red-950/40 border border-red-800 rounded-xl text-red-400 text-sm flex items-center space-x-3">
-      <AlertTriangle class="w-5 h-5 shrink-0" />
-      <span>{errorMsg}</span>
-    </div>
-  {:else}
-    <div class="grid grid-cols-1 gap-8">
-      <!-- Racks Visualization Area -->
-      <div class="space-y-6">
-        <div class="flex items-center justify-between">
-          <div>
-            <h3 class="text-lg font-bold text-white font-outfit">Rechenzentrum Racks</h3>
-            <p class="text-xs text-slate-500 mt-0.5">Racks, Hardware und Verkabelung verwalten</p>
-          </div>
-          <button
-            onclick={() => showAddRack = true}
-            class="flex items-center space-x-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold transition"
-          >
-            <Plus class="w-3.5 h-3.5" />
-            <span>Rack hinzufügen</span>
-          </button>
-        </div>
-
-        {#if racks.length === 0}
-          <div class="p-12 text-center bg-[#101622] border border-slate-800 border-dashed rounded-xl text-slate-500">
-            <Info class="w-8 h-8 mx-auto mb-2 text-slate-600" />
-            Keine Racks vorhanden. Erstellen Sie ein neues Rack, um zu starten.
-          </div>
-        {:else}
-          <!-- Room-grouped sections -->
-          {#each rooms as room}
-            {@const roomRacks = racks.filter(r => r.standort === room)}
-            {@const ph = computeRoomPhaseLoads(roomRacks)}
-            {@const roomTotalKw = ph.l1 + ph.l2 + ph.l3}
-            {@const locTyp = locationStore.getTyp(room)}
-            <div class="space-y-4">
-              <!-- Room Header -->
-              <div class="flex items-center gap-3">
-                <div class="p-2 {locTyp === 'dienstaußenstelle' ? 'bg-violet-900/30' : 'bg-slate-800'} rounded-lg">
-                  {#if locTyp === 'dienstaußenstelle'}
-                    <Wifi class="w-4 h-4 text-violet-400" />
-                  {:else}
-                    <Building class="w-4 h-4 text-slate-400" />
-                  {/if}
-                </div>
-                <div>
-                  <div class="flex items-center gap-2">
-                    <h4 class="font-bold text-white font-outfit text-sm">{room}</h4>
-                    <span class="text-[9px] px-1.5 py-0.5 rounded-full font-semibold {locTyp === 'dienstaußenstelle' ? 'bg-violet-900/40 text-violet-400 border border-violet-700/40' : 'bg-blue-900/40 text-blue-400 border border-blue-700/40'}">
-                      {locTyp === 'dienstaußenstelle' ? 'Außenstelle' : 'RZ'}
-                    </span>
-                  </div>
-                  <span class="text-[10px] text-slate-500">{roomRacks.length} Rack{roomRacks.length !== 1 ? 's' : ''} · {roomTotalKw.toFixed(2)} kW gesamt</span>
-                </div>
-              </div>
-
-              <!-- Room Phase Bars -->
-              <div class="grid grid-cols-3 gap-3">
-                <div class="bg-[#101622] border border-blue-500/15 rounded-lg px-3 py-2">
-                  <div class="flex items-center justify-between mb-1">
-                    <span class="text-[10px] text-slate-500 font-medium">L1</span>
-                    <span class="text-xs font-bold text-blue-400">{ph.l1.toFixed(2)} kW</span>
-                  </div>
-                  <div class="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden">
-                    <div class="h-full bg-blue-500 rounded-full transition-all" style="width: {roomTotalKw > 0 ? Math.round(ph.l1 / roomTotalKw * 100) : 0}%"></div>
-                  </div>
-                </div>
-                <div class="bg-[#101622] border border-cyan-500/15 rounded-lg px-3 py-2">
-                  <div class="flex items-center justify-between mb-1">
-                    <span class="text-[10px] text-slate-500 font-medium">L2</span>
-                    <span class="text-xs font-bold text-cyan-400">{ph.l2.toFixed(2)} kW</span>
-                  </div>
-                  <div class="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden">
-                    <div class="h-full bg-cyan-500 rounded-full transition-all" style="width: {roomTotalKw > 0 ? Math.round(ph.l2 / roomTotalKw * 100) : 0}%"></div>
-                  </div>
-                </div>
-                <div class="bg-[#101622] border border-orange-500/15 rounded-lg px-3 py-2">
-                  <div class="flex items-center justify-between mb-1">
-                    <span class="text-[10px] text-slate-500 font-medium">L3</span>
-                    <span class="text-xs font-bold text-orange-400">{ph.l3.toFixed(2)} kW</span>
-                  </div>
-                  <div class="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden">
-                    <div class="h-full bg-orange-500 rounded-full transition-all" style="width: {roomTotalKw > 0 ? Math.round(ph.l3 / roomTotalKw * 100) : 0}%"></div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Room Rack Cards -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {#each roomRacks as rack}
-                  {@const rackDevices = devices.filter(d => d.rack_id === rack.id)}
-                  {@const occupiedU = rackDevices.reduce((sum, d) => sum + d.u_hoehe, 0)}
-                  {@const percent = Math.round((occupiedU / rack.hoehe_u) * 100)}
-                  {@const rackKw = rackDevices.reduce((s, d) => s + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0) / 1000}
-                  {@const rL1kw = rackDevices.filter(d => d.phase === 'L1').reduce((s, d) => s + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0) / 1000}
-                  {@const rL2kw = rackDevices.filter(d => d.phase === 'L2').reduce((s, d) => s + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0) / 1000}
-                  {@const rL3kw = rackDevices.filter(d => d.phase === 'L3').reduce((s, d) => s + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0) / 1000}
-                  {@const rPhTotal = rL1kw + rL2kw + rL3kw}
-                  {@const rPhIdeal = rPhTotal / 3}
-                  {@const rPhImb = rPhTotal > 0 ? (Math.max(Math.abs(rL1kw - rPhIdeal), Math.abs(rL2kw - rPhIdeal), Math.abs(rL3kw - rPhIdeal)) / rPhIdeal) * 100 : 0}
-                  {@const hasPhased = rackDevices.some(d => d.phase)}
-                  {@const rackPdus = rackDevices.filter(d => d.typ === 'pdu')}
-
-                  <a href="/racks?rack={rack.id}" class="block bg-[#101622] border border-slate-800 hover:border-blue-500/40 rounded-xl p-5 space-y-4 transition-colors">
-                    <div class="flex items-start justify-between">
-                      <div>
-                        <h4 class="font-bold text-white font-outfit">{rack.name}{rack.rackreihe ? ` (${rack.rackreihe})` : ''}</h4>
-                        <p class="text-[10px] text-slate-500 mt-0.5">{rack.breite_mm ? rack.breite_mm + 'mm · ' : ''}{rackKw.toFixed(2)} kW · {rackDevices.length} Geräte</p>
-                      </div>
-                      <span class="text-xs font-semibold px-2 py-1 rounded bg-slate-800 border border-slate-700 text-slate-300">
-                        {occupiedU} / {rack.hoehe_u} HE
-                      </span>
-                    </div>
-
-                    <!-- Progress bar -->
-                    <div class="space-y-1">
-                      <div class="flex justify-between text-[10px] text-slate-400 font-mono">
-                        <span>Auslastung</span>
-                        <span>{percent}%</span>
-                      </div>
-                      <div class="w-full h-2 bg-slate-950 rounded-full overflow-hidden">
-                        <div 
-                          class="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full" 
-                          style="width: {percent}%"
-                        ></div>
-                      </div>
-                    </div>
-
-                    <!-- Per-rack phase loads -->
-                    {#if hasPhased}
-                      <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-mono">
-                        <span class="text-blue-400">L1 {rL1kw.toFixed(2)} kW</span>
-                        <span class="text-cyan-400">L2 {rL2kw.toFixed(2)} kW</span>
-                        <span class="text-orange-400">L3 {rL3kw.toFixed(2)} kW</span>
-                        {#if rPhImb > 10}
-                          <span class="ml-auto flex items-center gap-1 {rPhImb > 25 ? 'text-red-400' : 'text-amber-400'}">
-                            ⚠ Phasen unausgeglichen — {rPhImb.toFixed(1)}%
-                          </span>
-                        {/if}
-                      </div>
-                    {/if}
-
-                    <!-- PDU indicators -->
-                    {#if rackPdus.length > 0}
-                      <div class="flex flex-wrap gap-1.5">
-                        {#each rackPdus as pdu}
-                          {@const outlets = pdu.pdu_outlets ?? []}
-                          {@const oL1 = outlets.filter(o => o.phase === 'L1').length}
-                          {@const oL2 = outlets.filter(o => o.phase === 'L2').length}
-                          {@const oL3 = outlets.filter(o => o.phase === 'L3').length}
-                          <div class="flex items-center gap-1.5 bg-slate-900/80 border border-slate-700/50 rounded-md px-2 py-1">
-                            <Zap class="w-2.5 h-2.5 text-yellow-500 shrink-0" />
-                            <span class="text-[9px] text-slate-300 font-medium truncate max-w-[80px]">{pdu.hostname}</span>
-                            <div class="flex gap-1">
-                              {#if oL1 > 0}<span class="text-[8px] bg-blue-500/15 text-blue-400 px-1 rounded">{oL1}×L1</span>{/if}
-                              {#if oL2 > 0}<span class="text-[8px] bg-cyan-500/15 text-cyan-400 px-1 rounded">{oL2}×L2</span>{/if}
-                              {#if oL3 > 0}<span class="text-[8px] bg-orange-500/15 text-orange-400 px-1 rounded">{oL3}×L3</span>{/if}
-                              {#if oL1 === 0 && oL2 === 0 && oL3 === 0}
-                                <span class="text-[8px] text-slate-600">{outlets.length ? outlets.length + ' Steckdosen' : 'keine Outlets'}</span>
-                              {/if}
-                            </div>
-                          </div>
-                        {/each}
-                      </div>
-                    {/if}
-
-                    <!-- Vertical Rack View representation -->
-                    <div class="border border-slate-950 bg-slate-950/60 rounded p-1 font-mono text-[9px] select-none">
-                      <div class="text-center text-[8px] text-slate-600 border-b border-slate-900 pb-1 mb-1">FRONTANSICHT</div>
-                      <div class="space-y-0.5">
-                        {#each Array.from({ length: Math.min(10, rack.hoehe_u) }).map((_, i) => rack.hoehe_u - i) as u}
-                          {@const dev = rackDevices.find(d => u >= (d.u_position ?? 0) && u < (d.u_position ?? 0) + d.u_hoehe)}
-                          {#if dev}
-                            {#if u === (dev.u_position ?? 0) + dev.u_hoehe - 1}
-                              <div 
-                                class="px-2 py-1 rounded flex justify-between items-center text-white border border-blue-900/60"
-                                style="background-color: {dev.typ === 'server' ? 'rgba(59, 130, 246, 0.2)' : dev.typ === 'switch' ? 'rgba(6, 182, 212, 0.2)' : 'rgba(249, 115, 22, 0.2)'}; grid-row: span {dev.u_hoehe}"
-                              >
-                                <span class="truncate font-semibold">{dev.hostname}</span>
-                                <span class="text-[8px] opacity-65">{dev.typ.toUpperCase()} ({dev.u_hoehe}U)</span>
-                              </div>
-                            {/if}
-                          {:else}
-                            <div class="px-2 py-0.5 text-slate-700 border border-dashed border-slate-800/40 flex justify-between items-center">
-                              <span>HE {u}</span>
-                              <span class="text-[7px] text-slate-800">LEER</span>
-                            </div>
-                          {/if}
-                        {/each}
-                        {#if rack.hoehe_u > 10}
-                          <div class="text-center text-[8px] py-1 text-slate-600 border-t border-slate-900">
-                            + {rack.hoehe_u - 10} weitere Höheneinheiten...
-                          </div>
-                        {/if}
-                      </div>
-                    </div>
-                  </a>
-                {/each}
+      
+      <div class="hero-right">
+        <div class="hero-stats">
+          <div class="stat-card">
+            <div class="stat-card-icon">
+              <Layers class="w-5 h-5 text-teal" />
+            </div>
+            <div>
+              <div class="stat-card-label">Racks & Standorte</div>
+              <div class="stat-card-val">
+                {#if stats.loading}
+                  <span class="opacity-50">Lade...</span>
+                {:else}
+                  {stats.racks} Rack{stats.racks !== 1 ? 's' : ''}
+                {/if}
               </div>
             </div>
-          {/each}
-
-          <!-- Racks without standort -->
-          {#if racksWithoutRoom.length > 0}
-            <div class="space-y-4">
-              <div class="flex items-center gap-3">
-                <div class="p-2 bg-slate-800 rounded-lg">
-                  <AlertTriangle class="w-4 h-4 text-amber-400" />
-                </div>
-                <div>
-                  <h4 class="font-bold text-white font-outfit text-sm">Ohne Standort</h4>
-                  <span class="text-[10px] text-slate-500">{racksWithoutRoom.length} Rack{racksWithoutRoom.length !== 1 ? 's' : ''} ohne Raum-Zuordnung</span>
-                </div>
-              </div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {#each racksWithoutRoom as rack}
-                  {@const rackDevices = devices.filter(d => d.rack_id === rack.id)}
-                  {@const occupiedU = rackDevices.reduce((sum, d) => sum + d.u_hoehe, 0)}
-                  {@const percent = Math.round((occupiedU / rack.hoehe_u) * 100)}
-                  {@const rackKw = rackDevices.reduce((s, d) => s + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0) / 1000}
-                  {@const rL1kw = rackDevices.filter(d => d.phase === 'L1').reduce((s, d) => s + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0) / 1000}
-                  {@const rL2kw = rackDevices.filter(d => d.phase === 'L2').reduce((s, d) => s + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0) / 1000}
-                  {@const rL3kw = rackDevices.filter(d => d.phase === 'L3').reduce((s, d) => s + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0) / 1000}
-                  {@const rPhTotal = rL1kw + rL2kw + rL3kw}
-                  {@const rPhIdeal = rPhTotal / 3}
-                  {@const rPhImb = rPhTotal > 0 ? (Math.max(Math.abs(rL1kw - rPhIdeal), Math.abs(rL2kw - rPhIdeal), Math.abs(rL3kw - rPhIdeal)) / rPhIdeal) * 100 : 0}
-                  {@const hasPhased = rackDevices.some(d => d.phase)}
-                  {@const rackPdus = rackDevices.filter(d => d.typ === 'pdu')}
-
-                  <a href="/racks?rack={rack.id}" class="block bg-[#101622] border border-amber-500/20 hover:border-amber-500/40 rounded-xl p-5 space-y-4 transition-colors">
-                    <div class="flex items-start justify-between">
-                      <div>
-                        <h4 class="font-bold text-white font-outfit">{rack.name}{rack.rackreihe ? ` (${rack.rackreihe})` : ''}</h4>
-                        <p class="text-[10px] text-amber-400/60 mt-0.5">{rack.breite_mm ? rack.breite_mm + 'mm · ' : ''}{rackKw.toFixed(2)} kW · {rackDevices.length} Geräte</p>
-                      </div>
-                      <span class="text-xs font-semibold px-2 py-1 rounded bg-slate-800 border border-slate-700 text-slate-300">
-                        {occupiedU} / {rack.hoehe_u} HE
-                      </span>
-                    </div>
-                    <div class="space-y-1">
-                      <div class="flex justify-between text-[10px] text-slate-400 font-mono">
-                        <span>Auslastung</span>
-                        <span>{percent}%</span>
-                      </div>
-                      <div class="w-full h-2 bg-slate-950 rounded-full overflow-hidden">
-                        <div class="h-full bg-gradient-to-r from-amber-500 to-orange-400 rounded-full" style="width: {percent}%"></div>
-                      </div>
-                    </div>
-
-                    <!-- Per-rack phase loads -->
-                    {#if hasPhased}
-                      <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-mono">
-                        <span class="text-blue-400">L1 {rL1kw.toFixed(2)} kW</span>
-                        <span class="text-cyan-400">L2 {rL2kw.toFixed(2)} kW</span>
-                        <span class="text-orange-400">L3 {rL3kw.toFixed(2)} kW</span>
-                        {#if rPhImb > 10}
-                          <span class="ml-auto flex items-center gap-1 {rPhImb > 25 ? 'text-red-400' : 'text-amber-400'}">
-                            ⚠ Phasen unausgeglichen — {rPhImb.toFixed(1)}%
-                          </span>
-                        {/if}
-                      </div>
-                    {/if}
-
-                    <!-- PDU indicators -->
-                    {#if rackPdus.length > 0}
-                      <div class="flex flex-wrap gap-1.5">
-                        {#each rackPdus as pdu}
-                          {@const outlets = pdu.pdu_outlets ?? []}
-                          {@const oL1 = outlets.filter(o => o.phase === 'L1').length}
-                          {@const oL2 = outlets.filter(o => o.phase === 'L2').length}
-                          {@const oL3 = outlets.filter(o => o.phase === 'L3').length}
-                          <div class="flex items-center gap-1.5 bg-slate-900/80 border border-slate-700/50 rounded-md px-2 py-1">
-                            <Zap class="w-2.5 h-2.5 text-yellow-500 shrink-0" />
-                            <span class="text-[9px] text-slate-300 font-medium truncate max-w-[80px]">{pdu.hostname}</span>
-                            <div class="flex gap-1">
-                              {#if oL1 > 0}<span class="text-[8px] bg-blue-500/15 text-blue-400 px-1 rounded">{oL1}×L1</span>{/if}
-                              {#if oL2 > 0}<span class="text-[8px] bg-cyan-500/15 text-cyan-400 px-1 rounded">{oL2}×L2</span>{/if}
-                              {#if oL3 > 0}<span class="text-[8px] bg-orange-500/15 text-orange-400 px-1 rounded">{oL3}×L3</span>{/if}
-                              {#if oL1 === 0 && oL2 === 0 && oL3 === 0}
-                                <span class="text-[8px] text-slate-600">{outlets.length ? outlets.length + ' Steckdosen' : 'keine Outlets'}</span>
-                              {/if}
-                            </div>
-                          </div>
-                        {/each}
-                      </div>
-                    {/if}
-                  </a>
-                {/each}
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-card-icon">
+              <Server class="w-5 h-5 text-teal" />
+            </div>
+            <div>
+              <div class="stat-card-label">Aktive Geräte</div>
+              <div class="stat-card-val">
+                {#if stats.loading}
+                  <span class="opacity-50">Lade...</span>
+                {:else}
+                  {stats.devices} Gerät{stats.devices !== 1 ? 'e' : ''}
+                {/if}
               </div>
             </div>
-          {/if}
-        {/if}
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-card-icon">
+              <Zap class="w-5 h-5 text-teal" />
+            </div>
+            <div>
+              <div class="stat-card-label">Gesamtleistung (TDP)</div>
+              <div class="stat-card-val font-mono">
+                {#if stats.loading}
+                  <span class="opacity-50 text-xs">Lade...</span>
+                {:else}
+                  {stats.totalPowerKw.toFixed(2)} kW
+                {/if}
+              </div>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-card-icon">
+              <Activity class="w-5 h-5 text-teal" />
+            </div>
+            <div>
+              <div class="stat-card-label">Health-Status</div>
+              <div class="stat-card-val flex items-center gap-2">
+                {#if stats.loading}
+                  <span class="opacity-50">Lade...</span>
+                {:else}
+                  <span class="w-2.5 h-2.5 rounded-full {stats.online ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}"></span>
+                  <span class={stats.online ? 'text-emerald-400' : 'text-red-400'}>
+                    {stats.online ? 'System online' : 'System offline'}
+                  </span>
+                {/if}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-
     </div>
-  {/if}
+  </section>
+
+  <section class="section" id="module">
+    <div class="section-label">// module</div>
+    <h2>Alles an einem Ort</h2>
+    <p class="section-sub">Sechs Module, eine Oberfläche — kein Overhead, kein Monitoring, keine Automatisierung.</p>
+
+    <div class="feat-grid">
+      <div class="feat-cell">
+        <div class="feat-cell-icon">
+          <Layers class="w-5 h-5 text-teal" />
+        </div>
+        <h3>Rack-Verwaltung</h3>
+        <p>Standorte, Rackreihen und Racks mit dreistufigem Filter. Topology-View mit Gerätebelegung pro U-Position.</p>
+        <span class="feat-cell-tag">racks · topology</span>
+      </div>
+      
+      <div class="feat-cell">
+        <div class="feat-cell-icon">
+          <Network class="w-5 h-5 text-teal" />
+        </div>
+        <h3>IPAM</h3>
+        <p>VLAN- und Subnet-Verwaltung mit IP-Kollisionserkennung und Netzplan-Ansicht. Seed-Daten inklusive.</p>
+        <span class="feat-cell-tag">vlans · subnets · netzplan</span>
+      </div>
+      
+      <div class="feat-cell">
+        <div class="feat-cell-icon">
+          <Cable class="w-5 h-5 text-teal" />
+        </div>
+        <h3>Kabelliste</h3>
+        <p>Vollständige Kabeldokumentation mit automatischer Nummerierung, Port-Zuordnung und Verbindungsmatrix.</p>
+        <span class="feat-cell-tag">cables · ports · interfaces</span>
+      </div>
+      
+      <div class="feat-cell">
+        <div class="feat-cell-icon">
+          <Zap class="w-5 h-5 text-teal" />
+        </div>
+        <h3>USV &amp; Phasen</h3>
+        <p>N+1-Berechnung, Kaltstart-Check mit Einschaltstromfaktor. Phasen-Imbalance L1/L2/L3 Dokumentation.</p>
+        <span class="feat-cell-tag">usv · n+1 · phasen</span>
+      </div>
+      
+      <div class="feat-cell">
+        <div class="feat-cell-icon">
+          <BookOpen class="w-5 h-5 text-teal" />
+        </div>
+        <h3>Runbook-Orchestrator</h3>
+        <p>Techniker-Checklisten mit Drag &amp; Drop, VM-Abhängigkeitsgraph, Ausführungsprotokoll und 20 Tests.</p>
+        <span class="feat-cell-tag">runbooks · vm-graph · protokoll</span>
+      </div>
+      
+      <div class="feat-cell">
+        <div class="feat-cell-icon">
+          <Thermometer class="w-5 h-5 text-teal" />
+        </div>
+        <h3>Kentix &amp; PDUs</h3>
+        <p>Gerätedokumentation für Umgebungssensoren und PDUs — welcher Socket, welches Rack, welche Phase.</p>
+        <span class="feat-cell-tag">kentix · pdu · sockets</span>
+      </div>
+    </div>
+
+    <div class="stack-bar">
+      <span class="stack-item">FastAPI</span>
+      <span class="stack-item">async SQLAlchemy</span>
+      <span class="stack-item">aiomysql</span>
+      <span class="stack-item">MySQL 8</span>
+      <span class="stack-item">Alembic</span>
+      <span class="stack-item">Svelte 5</span>
+      <span class="stack-item">Podman</span>
+      <span class="stack-item">Python 3.11+</span>
+    </div>
+  </section>
 </div>
 
-<!-- Modal Rack hinzufügen -->
-<RackModal
-  bind:show={showAddRack}
-  onSave={handleAddRack}
-  hardwareTypes={hardwareTypes}
-/>
+<style>
+  .landing-page-container {
+    --teal: #1D9E75;
+    --teal-light: #5DCAA5;
+    --teal-dim: rgba(29, 158, 117, 0.18);
+    --teal-border: rgba(29, 158, 117, 0.4);
+    --bg: #0D0F0E;
+    --bg2: #131615;
+    --bg3: #181C1A;
+    --border: rgba(255, 255, 255, 0.07);
+    --border2: rgba(255, 255, 255, 0.13);
+    --text: #E8EDE9;
+    --text2: #8A9A8D;
+    --text3: #556059;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+    --radius: 10px;
+    --radius-lg: 16px;
+
+    font-family: var(--sans);
+    color: var(--text);
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-bottom: 4rem;
+  }
+
+  .landing-page-container::before {
+    content: '';
+    position: absolute;
+    inset: -32px;
+    background-image:
+      linear-gradient(rgba(29, 158, 117, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(29, 158, 117, 0.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  /* HERO */
+  .hero {
+    position: relative;
+    min-height: 480px;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    padding: 3rem;
+    background: var(--bg2);
+    display: flex;
+    align-items: center;
+    margin-bottom: 3rem;
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center 30%;
+    background-image: url('/assets/hero-serverraum.jpg');
+    filter: brightness(0.22) contrast(1.1) saturate(1.15);
+    z-index: 1;
+  }
+
+  .hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      105deg,
+      rgba(13, 15, 14, 0.96) 0%,
+      rgba(13, 15, 14, 0.3) 100%
+    );
+    z-index: 2;
+  }
+
+  .hero-scanline {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      rgba(0, 0, 0, 0.08) 3px,
+      rgba(0, 0, 0, 0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 3;
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 4;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 3rem;
+    align-items: center;
+  }
+
+  .hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--teal-light);
+    background: var(--teal-dim);
+    border: 1px solid var(--teal-border);
+    padding: 5px 14px;
+    border-radius: 20px;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-eyebrow::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: var(--teal-light);
+    border-radius: 50%;
+    animation: pulse 2s ease infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.7); }
+  }
+
+  .hero-left h1 {
+    font-size: clamp(32px, 4.5vw, 54px);
+    font-weight: 300;
+    line-height: 1.1;
+    color: var(--text);
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-left h1 em {
+    font-style: normal;
+    color: var(--teal-light);
+    font-weight: 400;
+  }
+
+  .hero-sub {
+    font-size: 15px;
+    font-weight: 300;
+    color: var(--text2);
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    max-width: 560px;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .btn-hero-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #fff;
+    background: var(--teal);
+    padding: 10px 20px;
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: background 0.15s, transform 0.1s;
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-hero-primary:hover {
+    background: #0F6E56;
+    transform: translateY(-1px);
+  }
+
+  .btn-hero-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text2);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border2);
+    padding: 10px 20px;
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: color 0.15s, background 0.15s, transform 0.1s;
+  }
+
+  .btn-hero-ghost:hover {
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.09);
+    transform: translateY(-1px);
+  }
+
+  /* STAT CARDS */
+  .hero-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .stat-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(13, 15, 14, 0.75);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    min-width: 220px;
+  }
+
+  .stat-card-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--teal-dim);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .stat-card-icon :global(svg) {
+    stroke: var(--teal-light);
+    stroke-width: 1.5;
+  }
+
+  .stat-card-label {
+    font-size: 10px;
+    color: var(--text3);
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+  }
+
+  .stat-card-val {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    margin-top: 2px;
+  }
+
+  /* SECTIONS */
+  .section {
+    padding: 2rem 0;
+  }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 0.75rem;
+  }
+
+  .section h2 {
+    font-size: 24px;
+    font-weight: 400;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+  }
+
+  .section-sub {
+    font-size: 14px;
+    color: var(--text2);
+    margin-bottom: 2rem;
+  }
+
+  /* FEATURE GRID */
+  .feat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: 2.5rem;
+  }
+
+  .feat-cell {
+    background: var(--bg2);
+    padding: 2rem;
+    transition: background 0.15s;
+  }
+
+  .feat-cell:hover {
+    background: var(--bg3);
+  }
+
+  .feat-cell-icon {
+    width: 36px;
+    height: 36px;
+    background: var(--teal-dim);
+    border: 1px solid var(--teal-border);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+
+  .feat-cell-icon :global(svg) {
+    stroke: var(--teal-light);
+    stroke-width: 1.5;
+  }
+
+  .feat-cell h3 {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .feat-cell p {
+    font-size: 12.5px;
+    color: var(--text2);
+    line-height: 1.6;
+  }
+
+  .feat-cell-tag {
+    display: inline-block;
+    margin-top: 12px;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--teal-light);
+    background: var(--teal-dim);
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+
+  /* STACK BAR */
+  .stack-bar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .stack-item {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text2);
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: var(--bg2);
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 960px) {
+    .hero-content {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+    .feat-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .hero {
+      padding: 2rem;
+    }
+    .feat-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
