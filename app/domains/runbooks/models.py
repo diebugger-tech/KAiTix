@@ -4,6 +4,7 @@ from sqlalchemy import Integer, String, DateTime, Enum, ForeignKey, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 
+
 class Runbook(Base):
     __tablename__ = "runbooks"
 
@@ -13,7 +14,9 @@ class Runbook(Base):
         Enum("shutdown", "startup", "wartung", "notfall", "custom"), nullable=False
     )
     beschreibung: Mapped[Optional[str]] = mapped_column(Text)
-    erstellt_am: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    erstellt_am: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None)
+    )
     erstellt_von: Mapped[Optional[str]] = mapped_column(String(100))
     generated_from_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("runbooks.id", ondelete="SET NULL")
@@ -21,17 +24,23 @@ class Runbook(Base):
 
     # Relationships
     layers: Mapped[List["RunbookLayer"]] = relationship(
-        back_populates="runbook", cascade="all, delete-orphan", passive_deletes=True, order_by="RunbookLayer.position", lazy="selectin"
+        back_populates="runbook",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        order_by="RunbookLayer.position",
+        lazy="selectin",
     )
     devices: Mapped[List["RunbookDevice"]] = relationship(
         back_populates="runbook", cascade="all, delete-orphan", passive_deletes=True
     )
     executions: Mapped[List["RunbookExecution"]] = relationship(
-        back_populates="runbook", cascade="all, delete-orphan", passive_deletes=True, lazy="selectin"
+        back_populates="runbook",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        lazy="selectin",
     )
-    generated_from: Mapped[Optional["Runbook"]] = relationship(
-        remote_side=[id]
-    )
+    generated_from: Mapped[Optional["Runbook"]] = relationship(remote_side=[id])
+
 
 class RunbookLayer(Base):
     __tablename__ = "runbook_layers"
@@ -49,8 +58,13 @@ class RunbookLayer(Base):
     # Relationships
     runbook: Mapped["Runbook"] = relationship(back_populates="layers")
     devices: Mapped[List["RunbookDevice"]] = relationship(
-        back_populates="layer", cascade="all, delete-orphan", passive_deletes=True, order_by="RunbookDevice.position", lazy="selectin"
+        back_populates="layer",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        order_by="RunbookDevice.position",
+        lazy="selectin",
     )
+
 
 class RunbookDevice(Base):
     __tablename__ = "runbook_devices"
@@ -81,10 +95,13 @@ class RunbookDevice(Base):
     # "Device" and "VirtualMachine" will be resolved by SQLAlchemy's registry if they are imported elsewhere
     device = relationship("Device", foreign_keys=[device_id], lazy="selectin")
     vm = relationship("VirtualMachine", foreign_keys=[vm_id], lazy="selectin")
-    
+
     execution_steps: Mapped[List["RunbookExecutionStep"]] = relationship(
-        back_populates="runbook_device", cascade="all, delete-orphan", passive_deletes=True
+        back_populates="runbook_device",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
+
 
 class RunbookExecution(Base):
     __tablename__ = "runbook_executions"
@@ -93,7 +110,9 @@ class RunbookExecution(Base):
     runbook_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("runbooks.id", ondelete="CASCADE"), nullable=False
     )
-    gestartet_am: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    gestartet_am: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None)
+    )
     gestartet_von: Mapped[Optional[str]] = mapped_column(String(100))
     modus: Mapped[str] = mapped_column(Enum("shutdown", "startup"), nullable=False)
     status: Mapped[str] = mapped_column(
@@ -104,8 +123,12 @@ class RunbookExecution(Base):
     # Relationships
     runbook: Mapped["Runbook"] = relationship(back_populates="executions")
     steps: Mapped[List["RunbookExecutionStep"]] = relationship(
-        back_populates="execution", cascade="all, delete-orphan", passive_deletes=True, lazy="selectin"
+        back_populates="execution",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        lazy="selectin",
     )
+
 
 class RunbookExecutionStep(Base):
     __tablename__ = "runbook_execution_steps"
@@ -123,4 +146,6 @@ class RunbookExecutionStep(Base):
 
     # Relationships
     execution: Mapped["RunbookExecution"] = relationship(back_populates="steps")
-    runbook_device: Mapped["RunbookDevice"] = relationship(back_populates="execution_steps", lazy="selectin")
+    runbook_device: Mapped["RunbookDevice"] = relationship(
+        back_populates="execution_steps", lazy="selectin"
+    )

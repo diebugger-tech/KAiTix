@@ -15,10 +15,34 @@ from ._helpers import (
 from openpyxl import Workbook
 from openpyxl.styles import Border, Side
 
-_HEADER = ["Rack", "Gerät", "Port", "Typ", "MAC", "Verbunden mit",
-           "Ziel-Port", "Kabel-Nr", "Kabel-Typ", "m", "Farbe", "★"]
-_HEADER_CSV = ["rack", "geraet", "port", "typ", "mac", "ziel_geraet", "ziel_port",
-               "kabel_nr", "kabel_typ", "laenge_m", "farbe", "rack_uebergreifend"]
+_HEADER = [
+    "Rack",
+    "Gerät",
+    "Port",
+    "Typ",
+    "MAC",
+    "Verbunden mit",
+    "Ziel-Port",
+    "Kabel-Nr",
+    "Kabel-Typ",
+    "m",
+    "Farbe",
+    "★",
+]
+_HEADER_CSV = [
+    "rack",
+    "geraet",
+    "port",
+    "typ",
+    "mac",
+    "ziel_geraet",
+    "ziel_port",
+    "kabel_nr",
+    "kabel_typ",
+    "laenge_m",
+    "farbe",
+    "rack_uebergreifend",
+]
 
 
 def _build_rows(data, empty_marker="–", cross_marker="★"):
@@ -33,23 +57,50 @@ def _build_rows(data, empty_marker="–", cross_marker="★"):
                     is_von = cable.get("von_dev") == d["id"]
                     dst_id = cable.get("nach_dev") if is_von else cable.get("von_dev")
                     dst_dev = dm.get(dst_id)
-                    dst_port = cable.get("nach_port" if is_von else "von_port", empty_marker)
+                    dst_port = cable.get(
+                        "nach_port" if is_von else "von_port", empty_marker
+                    )
                     cross = dst_dev and dst_dev.get("rack_id") != r["id"]
                     if cross_marker == "★":
-                        dst_rn = rm.get(dst_dev.get("rack_id") if dst_dev else None, {}).get("name", "")
+                        dst_rn = rm.get(
+                            dst_dev.get("rack_id") if dst_dev else None, {}
+                        ).get("name", "")
                         xmark = f"★ {dst_rn}" if cross else ""
                     else:
                         xmark = cross_marker if cross else ""
-                    rows.append([r["name"], d["hostname"], iface.get("port", empty_marker),
-                                 iface.get("typ", empty_marker), iface.get("mac", empty_marker),
-                                 dst_dev["hostname"] if dst_dev else empty_marker,
-                                 dst_port, cable["nr"], cable["typ"], cable["laenge"],
-                                 cable.get("farbe", empty_marker), xmark])
+                    rows.append(
+                        [
+                            r["name"],
+                            d["hostname"],
+                            iface.get("port", empty_marker),
+                            iface.get("typ", empty_marker),
+                            iface.get("mac", empty_marker),
+                            dst_dev["hostname"] if dst_dev else empty_marker,
+                            dst_port,
+                            cable["nr"],
+                            cable["typ"],
+                            cable["laenge"],
+                            cable.get("farbe", empty_marker),
+                            xmark,
+                        ]
+                    )
                 else:
-                    rows.append([r["name"], d["hostname"], iface.get("port", empty_marker),
-                                 iface.get("typ", empty_marker), iface.get("mac", empty_marker),
-                                 empty_marker, empty_marker, empty_marker, empty_marker,
-                                 empty_marker, empty_marker, ""])
+                    rows.append(
+                        [
+                            r["name"],
+                            d["hostname"],
+                            iface.get("port", empty_marker),
+                            iface.get("typ", empty_marker),
+                            iface.get("mac", empty_marker),
+                            empty_marker,
+                            empty_marker,
+                            empty_marker,
+                            empty_marker,
+                            empty_marker,
+                            empty_marker,
+                            "",
+                        ]
+                    )
     return rows
 
 

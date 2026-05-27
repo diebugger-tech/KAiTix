@@ -394,15 +394,15 @@ async def simulate_shutdown(
             select(DeviceModel).where(DeviceModel.rack_id == req.rack_id)
         )
     else:
-        result = await db.execute(
-            select(DeviceModel)
-        )
+        result = await db.execute(select(DeviceModel))
     devices = result.scalars().all()
 
     if not devices:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Keine Geräte gefunden" if req.rack_id is None else f"Keine Geräte im Rack {req.rack_id} gefunden",
+            detail="Keine Geräte gefunden"
+            if req.rack_id is None
+            else f"Keine Geräte im Rack {req.rack_id} gefunden",
         )
 
     device_dicts = [
@@ -442,9 +442,7 @@ async def get_phase_balancing(rack_id: int, db: AsyncSession = Depends(get_db)):
     """
     Suggests phase reassignments (L1, L2, L3) to balance load for a given rack (target <= 10% imbalance).
     """
-    result = await db.execute(
-        select(DeviceModel).where(DeviceModel.rack_id == rack_id)
-    )
+    result = await db.execute(select(DeviceModel).where(DeviceModel.rack_id == rack_id))
     devices = result.scalars().all()
     if not devices:
         raise HTTPException(

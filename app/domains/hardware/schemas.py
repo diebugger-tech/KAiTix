@@ -165,6 +165,7 @@ class Device(DeviceBase):
     geaendert_am: Optional[datetime] = None
     model_config = ConfigDict(from_attributes=True)
 
+
 # === VIRTUAL MACHINE SCHEMAS ===
 class VirtualMachineBase(BaseModel):
     name: str
@@ -179,8 +180,10 @@ class VirtualMachineBase(BaseModel):
     responsible: Optional[str] = None
     bemerkung: Optional[str] = None
 
+
 class VirtualMachineCreate(VirtualMachineBase):
     pass
+
 
 class VirtualMachineUpdate(BaseModel):
     name: Optional[str] = None
@@ -195,7 +198,7 @@ class VirtualMachineUpdate(BaseModel):
     responsible: Optional[str] = None
     bemerkung: Optional[str] = None
 
+
 class VirtualMachine(VirtualMachineBase):
     id: int
     model_config = ConfigDict(from_attributes=True)
-

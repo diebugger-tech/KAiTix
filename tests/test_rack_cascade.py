@@ -121,4 +121,3 @@ async def test_rack_delete_cascade(db: AsyncSession):
     db_strand = res.scalar_one_or_none()
     assert db_strand is not None
     assert db_strand.von_port_id is None
-

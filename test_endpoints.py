@@ -2,7 +2,6 @@ import sys
 import subprocess
 import time
 import urllib.request
-import os
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -11,9 +10,10 @@ p = subprocess.Popen(
     [sys.executable, "-m", "uvicorn", "app.main:app", "--port", "8003"],
     stdout=subprocess.PIPE,
     stderr=subprocess.STDOUT,
-    text=True
+    text=True,
 )
 time.sleep(3)
+
 
 def fetch(url):
     try:
@@ -24,6 +24,7 @@ def fetch(url):
         print(e.code, e.read().decode())
     except Exception as e:
         print(e)
+
 
 print("Testing /api/v1/hardware/")
 fetch("http://127.0.0.1:8003/api/v1/hardware/")

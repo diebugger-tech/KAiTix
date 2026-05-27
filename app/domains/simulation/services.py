@@ -6,59 +6,69 @@ from sqlalchemy.orm import selectinload
 from collections import defaultdict
 
 from app.domains.hardware.models import Device, DeviceDependency, Rack, PduOutlet
-from app.domains.simulation.schemas import SimulationScenario, SimulationResult, AffectedDevice, TimelineEvent
+from app.domains.simulation.schemas import (
+    SimulationScenario,
+    SimulationResult,
+    AffectedDevice,
+    TimelineEvent,
+)
 
-async def validate_no_cycles(session: AsyncSession, device_id: int, depends_on_ids: List[int]) -> bool:
+
+async def validate_no_cycles(
+    session: AsyncSession, device_id: int, depends_on_ids: List[int]
+) -> bool:
     if not depends_on_ids:
         return True
     if device_id in depends_on_ids:
         return False
-        
+
     stmt = select(DeviceDependency)
     result = await session.execute(stmt)
     deps = result.scalars().all()
-    
+
     graph = defaultdict(list)
     for d in deps:
         graph[d.device_id].append(d.depends_on_device_id)
-        
+
     for p_id in depends_on_ids:
         graph[device_id].append(p_id)
-        
+
     visited = set()
     rec_stack = set()
-    
+
     def dfs(node):
         visited.add(node)
         rec_stack.add(node)
-        
+
         for neighbor in graph.get(node, []):
             if neighbor not in visited:
                 if dfs(neighbor):
                     return True
             elif neighbor in rec_stack:
                 return True
-                
+
         rec_stack.remove(node)
         return False
-        
+
     for node in list(graph.keys()):
         if node not in visited:
             if dfs(node):
-                return False 
+                return False
     return True
 
 
-async def run_simulation(session: AsyncSession, scenario: SimulationScenario) -> SimulationResult:
+async def run_simulation(
+    session: AsyncSession, scenario: SimulationScenario
+) -> SimulationResult:
     messages = []
-    
+
     # 1. Fetch devices with outlets, dependencies, cables, and VMs
     stmt = select(Device).options(
         selectinload(Device.connected_pdu_outlets),
         selectinload(Device.dependencies),
         selectinload(Device.virtual_machines),
         selectinload(Device.cables_from),
-        selectinload(Device.cables_to)
+        selectinload(Device.cables_to),
     )
     res = await session.execute(stmt)
     devices = res.scalars().all()
@@ -66,7 +76,7 @@ async def run_simulation(session: AsyncSession, scenario: SimulationScenario) ->
     # Track states
     device_states = {d.id: "green" for d in devices}
     device_reasons = defaultdict(list)
-    
+
     # Pre-populate failed target
     if scenario.target_type == "device" and scenario.target_id:
         device_states[scenario.target_id] = "red"
@@ -79,8 +89,8 @@ async def run_simulation(session: AsyncSession, scenario: SimulationScenario) ->
         changed = False
         for dev in devices:
             if device_states[dev.id] == "red":
-                continue # already dead
-                
+                continue  # already dead
+
             new_state = device_states[dev.id]
             reasons = []
 
@@ -90,13 +100,21 @@ async def run_simulation(session: AsyncSession, scenario: SimulationScenario) ->
                 active_psus = 0
                 lost_psus = 0
                 for outlet in outlets:
-                    if (scenario.target_type == "phase" and outlet.phase == scenario.target_name) or \
-                       (scenario.target_type == "pdu_outlet" and outlet.id == scenario.target_id) or \
-                       (outlet.pdu_id and device_states.get(outlet.pdu_id) == "red"):
+                    if (
+                        (
+                            scenario.target_type == "phase"
+                            and outlet.phase == scenario.target_name
+                        )
+                        or (
+                            scenario.target_type == "pdu_outlet"
+                            and outlet.id == scenario.target_id
+                        )
+                        or (outlet.pdu_id and device_states.get(outlet.pdu_id) == "red")
+                    ):
                         lost_psus += 1
                     else:
                         active_psus += 1
-                        
+
                 if lost_psus > 0:
                     if active_psus > 0 and new_state == "green":
                         new_state = "yellow"
@@ -106,19 +124,27 @@ async def run_simulation(session: AsyncSession, scenario: SimulationScenario) ->
                         reasons.append("Lost all power")
 
             # Check network isolation
-            net_cables = [c for c in (dev.cables_from + dev.cables_to) if c.typ and not str(c.typ).startswith("Strom")]
+            net_cables = [
+                c
+                for c in (dev.cables_from + dev.cables_to)
+                if c.typ and not str(c.typ).startswith("Strom")
+            ]
             if net_cables:
                 active_net = 0
                 lost_net = 0
                 for cable in net_cables:
-                    peer_id = cable.nach_device_id if cable.von_device_id == dev.id else cable.von_device_id
+                    peer_id = (
+                        cable.nach_device_id
+                        if cable.von_device_id == dev.id
+                        else cable.von_device_id
+                    )
                     if not peer_id:
                         continue
                     if device_states.get(peer_id) == "red":
                         lost_net += 1
                     else:
                         active_net += 1
-                
+
                 if lost_net > 0 and active_net == 0:
                     new_state = "red"
                     reasons.append("Network isolated: lost all upstream connections")
@@ -130,12 +156,12 @@ async def run_simulation(session: AsyncSession, scenario: SimulationScenario) ->
                 for d in deps:
                     g = d.dependency_group or f"single_{d.depends_on_device_id}"
                     groups[g].append(d.depends_on_device_id)
-                    
+
                 failed_groups = []
                 for g_name, member_ids in groups.items():
                     if all(device_states.get(m_id) == "red" for m_id in member_ids):
                         failed_groups.append(g_name)
-                        
+
                 if failed_groups:
                     new_state = "red"
                     reasons.append(f"Lost dependencies: {', '.join(failed_groups)}")
@@ -148,34 +174,35 @@ async def run_simulation(session: AsyncSession, scenario: SimulationScenario) ->
 
     # 3. Process VMs
     from app.domains.hardware.models import VirtualMachine
-    from app.domains.runbooks.models import Runbook, RunbookDevice
+    from app.domains.runbooks.models import Runbook
+
     stmt_vms = select(VirtualMachine)
     res_vms = await session.execute(stmt_vms)
     vms = res_vms.scalars().all()
-    
+
     vm_states = {v.id: "green" for v in vms}
     vm_reasons = defaultdict(list)
-    
+
     vm_changed = True
     while vm_changed:
         vm_changed = False
         for vm in vms:
             if vm_states[vm.id] == "red":
                 continue
-                
+
             new_state = vm_states[vm.id]
             reasons = []
-            
+
             # Host failure
             if vm.host_device_id and device_states.get(vm.host_device_id) == "red":
                 new_state = "red"
                 reasons.append("Host device failed")
-                
+
             # Dependent VM failure
             if vm.depends_on_vm_id and vm_states.get(vm.depends_on_vm_id) == "red":
                 new_state = "red"
                 reasons.append(f"Dependent VM ({vm.depends_on_vm_id}) failed")
-                
+
             if new_state != vm_states[vm.id]:
                 vm_states[vm.id] = new_state
                 vm_reasons[vm.id].extend(reasons)
@@ -185,25 +212,31 @@ async def run_simulation(session: AsyncSession, scenario: SimulationScenario) ->
     affected_devs = []
     affected_vms_list = []
     from app.domains.simulation.schemas import AffectedVM, AffectedRunbook
-    
+
     for d_id, state in device_states.items():
         if state != "green":
-            affected_devs.append(AffectedDevice(device_id=d_id, state=state, reasons=list(set(device_reasons[d_id]))))
-            
+            affected_devs.append(
+                AffectedDevice(
+                    device_id=d_id, state=state, reasons=list(set(device_reasons[d_id]))
+                )
+            )
+
     for v_id, state in vm_states.items():
         if state != "green":
-            affected_vms_list.append(AffectedVM(vm_id=v_id, state=state, reasons=list(set(vm_reasons[v_id]))))
+            affected_vms_list.append(
+                AffectedVM(vm_id=v_id, state=state, reasons=list(set(vm_reasons[v_id])))
+            )
 
     # 5. Check Runbook Impact
     affected_runbooks = []
     if affected_devs or affected_vms_list:
         red_dev_ids = [d.device_id for d in affected_devs if d.state == "red"]
         red_vm_ids = [v.vm_id for v in affected_vms_list if v.state == "red"]
-        
+
         stmt_rb = select(Runbook).options(selectinload(Runbook.devices))
         res_rb = await session.execute(stmt_rb)
         runbooks = res_rb.scalars().unique().all()
-        
+
         for rb in runbooks:
             rb_reasons = []
             for rd in rb.devices:
@@ -212,10 +245,9 @@ async def run_simulation(session: AsyncSession, scenario: SimulationScenario) ->
                 if rd.vm_id and rd.vm_id in red_vm_ids:
                     rb_reasons.append(f"Contains failed VM ID {rd.vm_id}")
             if rb_reasons:
-                affected_runbooks.append(AffectedRunbook(
-                    runbook_id=rb.id,
-                    reasons=list(set(rb_reasons))
-                ))
+                affected_runbooks.append(
+                    AffectedRunbook(runbook_id=rb.id, reasons=list(set(rb_reasons)))
+                )
 
     # Build Timelines (using original logic)
     shutdown_timeline = _build_shutdown_timeline(devices, device_states)
@@ -228,59 +260,72 @@ async def run_simulation(session: AsyncSession, scenario: SimulationScenario) ->
         shutdown_timeline=shutdown_timeline,
         boot_timeline=boot_timeline,
         usv_battery_warning=False,
-        messages=messages
+        messages=messages,
     )
 
 
-def _build_shutdown_timeline(devices: List[Device], states: Dict[int, str]) -> List[TimelineEvent]:
+def _build_shutdown_timeline(
+    devices: List[Device], states: Dict[int, str]
+) -> List[TimelineEvent]:
     timeline = []
-    
+
     # We only shutdown things that are red (or we shutdown EVERYTHING if the scenario is a total datacenter loss)
     # For now, let's assume we build a sequence for all "red" devices
     red_devices = [d for d in devices if states[d.id] == "red"]
-    
+
     # Sort by priority (1=highest priority to shutdown FIRST, 4=last)
-    red_devices.sort(key=lambda d: (d.shutdown_priority or 2, d.shutdown_delay_seconds or 0))
-    
+    red_devices.sort(
+        key=lambda d: (d.shutdown_priority or 2, d.shutdown_delay_seconds or 0)
+    )
+
     current_time = 0
     for d in red_devices:
         delay = d.shutdown_delay_seconds or 0
         current_time += delay
         method = d.shutdown_method or "ACPI_Graceful"
-        
-        timeline.append(TimelineEvent(
-            time_seconds=current_time,
-            device_id=d.id,
-            action="shutdown",
-            method=method,
-            warning=False,
-            message=f"Shutting down {d.hostname} (Priority {d.shutdown_priority})"
-        ))
-        
+
+        timeline.append(
+            TimelineEvent(
+                time_seconds=current_time,
+                device_id=d.id,
+                action="shutdown",
+                method=method,
+                warning=False,
+                message=f"Shutting down {d.hostname} (Priority {d.shutdown_priority})",
+            )
+        )
+
     return timeline
 
-def _build_boot_timeline(devices: List[Device], states: Dict[int, str]) -> List[TimelineEvent]:
+
+def _build_boot_timeline(
+    devices: List[Device], states: Dict[int, str]
+) -> List[TimelineEvent]:
     timeline = []
     red_devices = [d for d in devices if states[d.id] == "red"]
-    
+
     # Boot sequence is reverse priority (4=boot first, 1=boot last)
     # Actually wait, DBs are usually 4 (boot first, shutdown last), App Servers are 2 (boot last, shutdown first)
-    red_devices.sort(key=lambda d: (-(d.shutdown_priority or 2), d.shutdown_delay_seconds or 0))
-    
+    red_devices.sort(
+        key=lambda d: (-(d.shutdown_priority or 2), d.shutdown_delay_seconds or 0)
+    )
+
     current_time = 0
     for d in red_devices:
         delay = d.shutdown_delay_seconds or 0
         current_time += delay
-        
-        timeline.append(TimelineEvent(
-            time_seconds=current_time,
-            device_id=d.id,
-            action="boot",
-            method="Power_On",
-            warning=False,
-            message=f"Booting {d.hostname} (Priority {d.shutdown_priority})"
-        ))
-        
+
+        timeline.append(
+            TimelineEvent(
+                time_seconds=current_time,
+                device_id=d.id,
+                action="boot",
+                method="Power_On",
+                warning=False,
+                message=f"Booting {d.hostname} (Priority {d.shutdown_priority})",
+            )
+        )
+
     return timeline
 
 
@@ -288,17 +333,17 @@ def _build_boot_timeline(devices: List[Device], states: Dict[int, str]) -> List[
 class RackAnomalyScore:
     rack_id: int
     rack_name: str
-    score: float          # 0.0 – 1.0
-    level: str            # 'ok' | 'warning' | 'critical'
+    score: float  # 0.0 – 1.0
+    level: str  # 'ok' | 'warning' | 'critical'
     issues: list[str]
 
 
 # Gewichte der Teilscores
-_W_PHASE    = 0.25
+_W_PHASE = 0.25
 _W_OVERLOAD = 0.30
-_W_NO_USV   = 0.20
+_W_NO_USV = 0.20
 _W_SHUTDOWN = 0.15
-_W_NO_PDU   = 0.10
+_W_NO_PDU = 0.10
 
 
 def _level(score: float) -> str:
@@ -351,9 +396,7 @@ class AnomalyScorer:
 
         # PDU-verbundene device_ids
         connected_device_ids: set[int] = {
-            o.connected_device_id
-            for o in outlets
-            if o.connected_device_id is not None
+            o.connected_device_id for o in outlets if o.connected_device_id is not None
         }
 
         results: list[dict] = []
@@ -385,8 +428,8 @@ class AnomalyScorer:
                 min_phase = min(phase_load, key=lambda k: phase_load[k])
                 if imbalance_score > 0.3:
                     issues.append(
-                        f"Phasen-Imbalance: {max_phase}={round(phase_load[max_phase]/1000,1)} kW"
-                        f" vs {min_phase}={round(phase_load[min_phase]/1000,1)} kW"
+                        f"Phasen-Imbalance: {max_phase}={round(phase_load[max_phase] / 1000, 1)} kW"
+                        f" vs {min_phase}={round(phase_load[min_phase] / 1000, 1)} kW"
                         f" (Δ {delta_kw} kW)"
                     )
             else:
@@ -394,37 +437,46 @@ class AnomalyScorer:
 
             # ── 2. Überlast vs. max_watt (30%) ───────────────────────────────
             total_watt = sum(_effective_watt(d) for d in devs)
-            max_watt = float(rack.max_watt) if hasattr(rack, "max_watt") and rack.max_watt else None  # type: ignore[union-attr]
+            max_watt = (
+                float(rack.max_watt)
+                if hasattr(rack, "max_watt") and rack.max_watt
+                else None
+            )  # type: ignore[union-attr]
             if max_watt and max_watt > 0:
                 overload_score = min(1.0, total_watt / max_watt)
                 partial_scores.append(overload_score * _W_OVERLOAD)
                 if overload_score > 0.85:
                     issues.append(
-                        f"Überlast: {round(total_watt/1000,1)} kW von {round(max_watt/1000,1)} kW"
-                        f" ({round(overload_score*100)}% Auslastung)"
+                        f"Überlast: {round(total_watt / 1000, 1)} kW von {round(max_watt / 1000, 1)} kW"
+                        f" ({round(overload_score * 100)}% Auslastung)"
                     )
                 elif overload_score > 0.7:
                     issues.append(
-                        f"Hohe Last: {round(total_watt/1000,1)} kW von {round(max_watt/1000,1)} kW"
-                        f" ({round(overload_score*100)}%)"
+                        f"Hohe Last: {round(total_watt / 1000, 1)} kW von {round(max_watt / 1000, 1)} kW"
+                        f" ({round(overload_score * 100)}%)"
                     )
             else:
                 # Kein max_watt dokumentiert — kleiner Hinweis-Score
                 partial_scores.append(0.1 * _W_OVERLOAD if total_watt > 0 else 0.0)
                 if total_watt > 0 and not max_watt:
-                    issues.append("Kein max_watt für Rack dokumentiert — Auslastung unbekannt")
+                    issues.append(
+                        "Kein max_watt für Rack dokumentiert — Auslastung unbekannt"
+                    )
 
             # ── 3. Kein USV (20%) ─────────────────────────────────────────────
             has_usv = rack.id in usv_rack_ids
             usv_score = 0.0 if has_usv else 1.0
             partial_scores.append(usv_score * _W_NO_USV)
             if not has_usv and servers:
-                issues.append(f"Kein USV für dieses Rack dokumentiert ({len(servers)} Server betroffen)")
+                issues.append(
+                    f"Kein USV für dieses Rack dokumentiert ({len(servers)} Server betroffen)"
+                )
 
             # ── 4. Shutdown-Lücken (15%) ─────────────────────────────────────
             if servers:
                 no_prio = [
-                    s for s in servers
+                    s
+                    for s in servers
                     if s.shutdown_priority is None or s.shutdown_priority == 0
                 ]
                 shutdown_score = len(no_prio) / len(servers)

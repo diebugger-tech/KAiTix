@@ -4,7 +4,6 @@ from decimal import Decimal
 from datetime import datetime
 
 
-
 # === USV MODULE SCHEMAS ===
 class UsvModuleBase(BaseModel):
     usv_unit_id: int

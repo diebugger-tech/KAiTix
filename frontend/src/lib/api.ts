@@ -1,5 +1,19 @@
 import { appState } from './state.svelte';
 
+export interface Empfehlung {
+  device_id: number;
+  hostname: string;
+  alte_phase: string;
+  neue_phase: string;
+  load_watt: number;
+}
+export interface OptimizeResult {
+  vorher_imbalance_pct: number;
+  nachher_imbalance_pct: number;
+  empfehlungen: Empfehlung[];
+  balanced: boolean;
+}
+
 export interface Device {
   id: number;
   hostname: string;
@@ -456,6 +470,10 @@ export const api = {
   createRack: (rack: Partial<Rack>): Promise<Rack> => request('racks/', { method: 'POST', body: JSON.stringify(rack) }),
   updateRack: (id: number, rack: Partial<Rack>): Promise<Rack> => request(`racks/${id}`, { method: 'PUT', body: JSON.stringify(rack) }),
   deleteRack: (id: number): Promise<null> => request(`racks/${id}`, { method: 'DELETE' }),
+
+  // Phase Optimization
+  optimizeRackPhases: (rackId: number): Promise<OptimizeResult> => request(`power/phase/optimize/${rackId}`, { method: 'POST' }),
+  applyRackPhases: (rackId: number, recommendations: Empfehlung[]): Promise<{status: string, updated: number, neue_imbalance_pct: number}> => request(`power/phase/optimize/${rackId}/apply`, { method: 'POST', body: JSON.stringify(recommendations) }),
 
   // Devices
   getDevices: (): Promise<Device[]> => request('devices/'),

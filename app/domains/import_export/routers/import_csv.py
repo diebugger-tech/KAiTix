@@ -289,6 +289,7 @@ async def commit_cables(
 ):
     created = 0
     updated = 0
+    skipped = 0
 
     existing_map: dict[str, Cable] = {}
     if payload.update_mode:

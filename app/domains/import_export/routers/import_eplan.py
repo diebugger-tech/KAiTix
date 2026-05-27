@@ -92,9 +92,7 @@ async def commit_eplan(
     # Pre-fetch existing devices with their ports
     from sqlalchemy.orm import selectinload
 
-    d_result = await db.execute(
-        select(Device).options(selectinload(Device.interfaces))
-    )
+    d_result = await db.execute(select(Device).options(selectinload(Device.interfaces)))
     for d in d_result.scalars().all():
         devices_cache[d.hostname.lower()] = d
         device_ports_cache[d.hostname.lower()] = list(d.interfaces)

@@ -11,8 +11,11 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
+
 @router.post("/run", response_model=SimulationResult)
-async def api_run_simulation(scenario: SimulationScenario, db: AsyncSession = Depends(get_db)):
+async def api_run_simulation(
+    scenario: SimulationScenario, db: AsyncSession = Depends(get_db)
+):
     """Run a power failure and shutdown/boot sequence simulation based on a specific scenario."""
     try:
         result = await run_simulation(db, scenario)

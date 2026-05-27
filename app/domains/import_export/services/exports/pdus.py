@@ -15,10 +15,32 @@ from ._helpers import (
 from openpyxl import Workbook
 from openpyxl.styles import Border, Side
 
-_HEADER = ["PDU", "Rack", "Steckdose", "Phase", "Steckdosentyp", "Max W",
-           "Angeschlossenes Gerät", "Gerät-Rack", "Port", "Schaltbar", "Status"]
-_HEADER_CSV = ["pdu", "rack", "steckdose", "phase", "steckdosentyp", "max_watt",
-               "geraet", "geraet_rack", "port", "schaltbar", "status"]
+_HEADER = [
+    "PDU",
+    "Rack",
+    "Steckdose",
+    "Phase",
+    "Steckdosentyp",
+    "Max W",
+    "Angeschlossenes Gerät",
+    "Gerät-Rack",
+    "Port",
+    "Schaltbar",
+    "Status",
+]
+_HEADER_CSV = [
+    "pdu",
+    "rack",
+    "steckdose",
+    "phase",
+    "steckdosentyp",
+    "max_watt",
+    "geraet",
+    "geraet_rack",
+    "port",
+    "schaltbar",
+    "status",
+]
 
 
 def _pdu_xlsx(data: dict) -> bytes:
@@ -36,17 +58,41 @@ def _pdu_xlsx(data: dict) -> bytes:
         rack_name = rm.get(pdu.get("rack_id"), {}).get("name", "–")
         outlets = _pdu_outlets(data, pdu["id"])
         if not outlets:
-            ws.append([pdu["hostname"], rack_name, "–", "–", "–", "–", "–", "–", "–", "–", "kein Outlet"])
+            ws.append(
+                [
+                    pdu["hostname"],
+                    rack_name,
+                    "–",
+                    "–",
+                    "–",
+                    "–",
+                    "–",
+                    "–",
+                    "–",
+                    "–",
+                    "kein Outlet",
+                ]
+            )
             style_row(ws, ws.max_row, fill_hex=COL_ALT)
             continue
         for o in outlets:
             dev = dm.get(o.get("connected_device_id"))
             dev_rack = rm.get(dev.get("rack_id") if dev else None, {}).get("name", "–")
-            ws.append([pdu["hostname"], rack_name, o.get("outlet_name", "–"), o.get("phase", "–"),
-                       o.get("steckdosentyp", "–"), o.get("max_watt", "–"),
-                       dev["hostname"] if dev else "frei", dev_rack,
-                       o.get("connected_port", "–"), "✓" if o.get("schaltbar") else "–",
-                       "belegt" if dev else "frei"])
+            ws.append(
+                [
+                    pdu["hostname"],
+                    rack_name,
+                    o.get("outlet_name", "–"),
+                    o.get("phase", "–"),
+                    o.get("steckdosentyp", "–"),
+                    o.get("max_watt", "–"),
+                    dev["hostname"] if dev else "frei",
+                    dev_rack,
+                    o.get("connected_port", "–"),
+                    "✓" if o.get("schaltbar") else "–",
+                    "belegt" if dev else "frei",
+                ]
+            )
             fill = COL_WARN if not dev else PHASE_COL.get(o.get("phase", ""), COL_WHITE)
             style_row(ws, ws.max_row, fill_hex=fill)
     autowidth(ws)
@@ -73,14 +119,25 @@ def _pdu_ods(data: dict) -> bytes:
         rn = rm.get(pdu.get("rack_id"), {}).get("name", "–")
         for o in _pdu_outlets(data, pdu["id"]):
             dev = dm.get(o.get("connected_device_id"))
-            t.addElement(mkrow([
-                pdu["hostname"], rn, o.get("outlet_name", "–"), o.get("phase", "–"),
-                o.get("steckdosentyp", "–"), o.get("max_watt", "–"),
-                dev["hostname"] if dev else "frei",
-                rm.get(dev.get("rack_id") if dev else None, {}).get("name", "–"),
-                o.get("connected_port", "–"), "JA" if o.get("schaltbar") else "NEIN",
-                "belegt" if dev else "frei",
-            ]))
+            t.addElement(
+                mkrow(
+                    [
+                        pdu["hostname"],
+                        rn,
+                        o.get("outlet_name", "–"),
+                        o.get("phase", "–"),
+                        o.get("steckdosentyp", "–"),
+                        o.get("max_watt", "–"),
+                        dev["hostname"] if dev else "frei",
+                        rm.get(dev.get("rack_id") if dev else None, {}).get(
+                            "name", "–"
+                        ),
+                        o.get("connected_port", "–"),
+                        "JA" if o.get("schaltbar") else "NEIN",
+                        "belegt" if dev else "frei",
+                    ]
+                )
+            )
     doc.spreadsheet.addElement(t)
     buf = io.BytesIO()
     doc.save(buf)
@@ -95,10 +152,19 @@ def _pdu_csv(data: dict) -> bytes:
         rn = rm.get(pdu.get("rack_id"), {}).get("name", "")
         for o in _pdu_outlets(data, pdu["id"]):
             dev = dm.get(o.get("connected_device_id"))
-            rows.append([pdu["hostname"], rn, o.get("outlet_name", ""), o.get("phase", ""),
-                         o.get("steckdosentyp", ""), o.get("max_watt", ""),
-                         dev["hostname"] if dev else "frei",
-                         rm.get(dev.get("rack_id") if dev else None, {}).get("name", ""),
-                         o.get("connected_port", ""), "JA" if o.get("schaltbar") else "NEIN",
-                         "belegt" if dev else "frei"])
+            rows.append(
+                [
+                    pdu["hostname"],
+                    rn,
+                    o.get("outlet_name", ""),
+                    o.get("phase", ""),
+                    o.get("steckdosentyp", ""),
+                    o.get("max_watt", ""),
+                    dev["hostname"] if dev else "frei",
+                    rm.get(dev.get("rack_id") if dev else None, {}).get("name", ""),
+                    o.get("connected_port", ""),
+                    "JA" if o.get("schaltbar") else "NEIN",
+                    "belegt" if dev else "frei",
+                ]
+            )
     return _to_csv(_HEADER_CSV, rows)

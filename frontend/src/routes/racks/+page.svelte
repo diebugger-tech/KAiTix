@@ -22,6 +22,10 @@
   let loading     = $state(true);
   let errorMsg    = $state('');
 
+  let optimizeResult = $state<import('$lib/api').OptimizeResult | null>(null);
+  let optimizeLoading = $state(false);
+  let applyLoading = $state(false);
+
   // Filtering and search state
   let filterStandort = $state('Alle');
   let filterReihe = $state('Alle');
@@ -227,6 +231,55 @@
       }
     } catch (e: any) { errorMsg = e.message || 'Ladefehler'; }
     finally { loading = false; }
+  }
+
+  // Helper for dropdown warning
+  function getRackImbalance(r: Rack) {
+    const rd = devices.filter(d => d.rack_id === r.id);
+    const ph = { L1: 0, L2: 0, L3: 0 };
+    for (const d of rd) {
+      const power = Number(d.anschlussleistung_watt ?? d.tdp_watt ?? 0);
+      if (power > 0) {
+        let phase = d.phase || 'L1';
+        if (d.connected_pdu_outlets && d.connected_pdu_outlets.length > 0) {
+          phase = d.connected_pdu_outlets[0].phase || 'L1';
+        }
+        if (ph[phase as 'L1'|'L2'|'L3'] !== undefined) {
+          ph[phase as 'L1'|'L2'|'L3'] += power;
+        }
+      }
+    }
+    const sum = ph.L1 + ph.L2 + ph.L3;
+    if (sum === 0) return 0;
+    const ideal = sum / 3;
+    const max_abw = Math.max(Math.abs(ph.L1 - ideal), Math.abs(ph.L2 - ideal), Math.abs(ph.L3 - ideal));
+    return (max_abw / ideal) * 100;
+  }
+
+  async function optimizePhases() {
+    if (!selectedRack) return;
+    optimizeLoading = true;
+    try {
+      optimizeResult = await api.optimizeRackPhases(selectedRack.id);
+    } catch (e: any) {
+      alert('Optimierung fehlgeschlagen: ' + e.message);
+    } finally {
+      optimizeLoading = false;
+    }
+  }
+
+  async function applyOptimizedPhases() {
+    if (!selectedRack || !optimizeResult || optimizeResult.empfehlungen.length === 0) return;
+    applyLoading = true;
+    try {
+      await api.applyRackPhases(selectedRack.id, optimizeResult.empfehlungen);
+      optimizeResult = null;
+      await loadAll();
+    } catch (e: any) {
+      alert('Übernehmen fehlgeschlagen: ' + e.message);
+    } finally {
+      applyLoading = false;
+    }
   }
 
   async function loadDeviceDetail(dev: Device) {
@@ -1187,37 +1240,63 @@
             </div>
 
             <!-- Phasen-Balken -->
-            <div class="px-4 py-2 border-b border-slate-900">
-              <div class="grid grid-cols-3 gap-2 text-[9px]">
-                {#each ['L1','L2','L3'] as ph}
-                  {@const loadWatts = phaseLoads()[ph as 'L1'|'L2'|'L3']}
-                  {@const kw = loadWatts / 1000}
-                  {@const capWatts = phaseCapacityWatts(ph as 'L1'|'L2'|'L3')}
-                  {@const pct = capWatts > 0 ? Math.min(100, Math.round((loadWatts / capWatts) * 100)) : 0}
-                  
-                  <div class="bg-[#090d14]/40 border rounded-lg px-2.5 py-1.5 flex flex-col justify-between
-                    {ph === 'L1' ? 'border-blue-500/15' : ph === 'L2' ? 'border-cyan-500/15' : 'border-orange-500/15'}">
-                    <div class="flex items-center justify-between mb-1">
-                      <span class="text-slate-500 font-medium">{ph}</span>
-                      <span class="font-bold {ph === 'L1' ? 'text-blue-400' : ph === 'L2' ? 'text-cyan-400' : 'text-orange-400'}">
-                        {kw.toFixed(2)} kW
-                      </span>
+            {#if selectedRack && Object.keys(phaseLoads()).length > 0}
+              {@const total = phaseLoads().L1 + phaseLoads().L2 + phaseLoads().L3 || 1}
+              <div class="px-4 py-2 border-b border-slate-900 bg-[#0c1018]">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex space-x-2">
+                    <span class="text-xs font-medium text-slate-300">L1: {(phaseLoads().L1/1000).toFixed(2)} kW</span>
+                    <span class="text-xs font-medium text-slate-500">|</span>
+                    <span class="text-xs font-medium text-slate-300">L2: {(phaseLoads().L2/1000).toFixed(2)} kW</span>
+                    <span class="text-xs font-medium text-slate-500">|</span>
+                    <span class="text-xs font-medium text-slate-300">L3: {(phaseLoads().L3/1000).toFixed(2)} kW</span>
+                    <span class="text-xs font-medium text-slate-500">|</span>
+                    <span class="text-xs font-bold {imbalanceInfo.pct <= 10 ? 'text-green-400' : imbalanceInfo.pct <= 25 ? 'text-yellow-400' : 'text-red-400'}">Imbalance: {imbalanceInfo.pct.toFixed(1)}%</span>
+                  </div>
+                  {#if imbalanceInfo.pct > 10}
+                    <button onclick={optimizePhases} disabled={optimizeLoading} class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded shadow transition flex items-center space-x-1 disabled:opacity-50">
+                      <Zap class="w-3 h-3" />
+                      <span>{optimizeLoading ? 'Lade...' : 'Phasen optimieren'}</span>
+                    </button>
+                  {/if}
+                </div>
+                
+                <div class="flex h-1.5 w-full rounded-full overflow-hidden mb-1">
+                  <!-- 3 Balken nebeneinander proportional zur Last -->
+                  <div style="width: {(phaseLoads().L1/total)*100}%" class="{imbalanceInfo.pct <= 10 ? 'bg-green-500' : imbalanceInfo.pct <= 25 ? 'bg-yellow-500' : 'bg-red-500'} opacity-90 border-r border-slate-900"></div>
+                  <div style="width: {(phaseLoads().L2/total)*100}%" class="{imbalanceInfo.pct <= 10 ? 'bg-green-500' : imbalanceInfo.pct <= 25 ? 'bg-yellow-500' : 'bg-red-500'} opacity-70 border-r border-slate-900"></div>
+                  <div style="width: {(phaseLoads().L3/total)*100}%" class="{imbalanceInfo.pct <= 10 ? 'bg-green-500' : imbalanceInfo.pct <= 25 ? 'bg-yellow-500' : 'bg-red-500'} opacity-50"></div>
+                </div>
+                
+                {#if optimizeResult}
+                  <div class="mt-3 p-3 bg-slate-900 rounded-lg border border-slate-700">
+                    <div class="flex justify-between items-center mb-2">
+                      <span class="text-xs text-slate-300">Delta: <span class="font-bold text-slate-400 line-through">{optimizeResult.vorher_imbalance_pct.toFixed(1)}%</span> &rarr; <span class="font-bold text-green-400">{optimizeResult.nachher_imbalance_pct.toFixed(1)}%</span></span>
+                      <button onclick={applyOptimizedPhases} disabled={applyLoading} class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium rounded shadow transition disabled:opacity-50">
+                        {applyLoading ? 'Wende an...' : 'Dokumentation aktualisieren'}
+                      </button>
                     </div>
-                    <div class="w-full h-1 bg-slate-950 rounded-full overflow-hidden">
-                      <div class="h-full rounded-full transition-all 
-                        {ph === 'L1' ? 'bg-blue-500' : ph === 'L2' ? 'bg-cyan-500' : 'bg-orange-500'}" 
-                        style="width: {pct}%" title="{pct}% Auslastung"></div>
+                    <div class="overflow-x-auto">
+                      <table class="w-full text-[10px] text-left text-slate-400">
+                        <thead class="text-xs uppercase bg-slate-800 text-slate-500">
+                          <tr><th class="px-2 py-1 rounded-tl">Gerät</th><th class="px-2 py-1">Alte Phase</th><th class="px-2 py-1">Neue Phase</th><th class="px-2 py-1 rounded-tr">Last (W)</th></tr>
+                        </thead>
+                        <tbody>
+                          {#each optimizeResult.empfehlungen as rec}
+                            <tr class="border-b border-slate-800 hover:bg-slate-800/50">
+                              <td class="px-2 py-1 font-medium text-white">{rec.hostname}</td>
+                              <td class="px-2 py-1">{rec.alte_phase}</td>
+                              <td class="px-2 py-1 font-bold text-green-400">{rec.neue_phase}</td>
+                              <td class="px-2 py-1">{rec.load_watt.toFixed(0)}</td>
+                            </tr>
+                          {/each}
+                        </tbody>
+                      </table>
                     </div>
                   </div>
-                {/each}
+                {/if}
               </div>
-              {#if imbalanceInfo.severity !== 'ok'}
-                <div class="flex items-center space-x-1.5 mt-2 text-[10px] {imbalanceInfo.severity === 'critical' ? 'text-red-400' : 'text-orange-400'}" title={'Ideale Last: ' + ((phaseLoads().L1 + phaseLoads().L2 + phaseLoads().L3) / 3000).toFixed(2) + ' kW pro Phase'}>
-                  <span class="font-bold">⚠</span>
-                  <span>Phasen unausgeglichen — {imbalanceInfo.pct.toFixed(1)}%</span>
-                </div>
-              {/if}
-            </div>
+            {/if}
 
             <!-- Rack Layout mit Seitlichen PDUs -->
             <div class="flex border-b border-slate-900 max-h-[60vh]">

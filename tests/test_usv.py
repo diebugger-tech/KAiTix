@@ -301,7 +301,6 @@ async def test_simulate_shutdown_peukert_discharge(
     # The curve slope should be steeper in early phase (higher load)
     # SoC drop per second should be larger in first interval
     if len(timeline) >= 3:
-        early_soc_drop = timeline[0]["soc_pct"] - timeline[1]["soc_pct"]
         # Load drops at t=10, so compare pre vs post
         late_points = [p for p in timeline if p["time_seconds"] >= 10]
         if late_points and late_points[0]["soc_pct"] > 0:

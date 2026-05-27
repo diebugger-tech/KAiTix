@@ -48,9 +48,7 @@ async def get_anomaly_scores(db: AsyncSession = Depends(get_db)):
     """
     service = CablingService(db)
     raw = await service.load_topology()
-    usv_rack_ids = set(
-        (await db.execute(select(UsvUnit.rack_id))).scalars().all()
-    )
+    usv_rack_ids = set((await db.execute(select(UsvUnit.rack_id))).scalars().all())
     return AnomalyScorer.score_all_racks(
         racks=raw.racks,
         devices=raw.devices,

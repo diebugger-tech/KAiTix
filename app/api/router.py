@@ -8,7 +8,7 @@ from app.domains.hardware.routers import (
     dashboard,
 )
 from app.domains.cabling.routers import cables, topology, search
-from app.domains.power.routers import usv
+from app.domains.power.routers import usv, phase
 from app.domains.runbooks.router import router as runbooks_router, executions_router
 from app.domains.import_export.routers import (
     import_csv,
@@ -26,6 +26,7 @@ api_router.include_router(racks.router, prefix="/racks", tags=["racks"])
 api_router.include_router(devices.router, prefix="/devices", tags=["devices"])
 api_router.include_router(cables.router, prefix="/cables", tags=["cables"])
 api_router.include_router(usv.router, prefix="/usv", tags=["usv"])
+api_router.include_router(phase.router, prefix="/power/phase", tags=["phase"])
 api_router.include_router(
     import_eplan.router, prefix="/import-eplan", tags=["import-eplan"]
 )

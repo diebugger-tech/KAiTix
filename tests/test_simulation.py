@@ -1,13 +1,10 @@
 import pytest
-from decimal import Decimal
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 
 from app.models import Rack, Device, PduOutlet
 from app.domains.hardware.models import DeviceDependency
-from app.domains.simulation.services import validate_no_cycles, run_simulation
-from app.domains.simulation.schemas import SimulationScenario
+from app.domains.simulation.services import validate_no_cycles
 
 
 @pytest.mark.asyncio
@@ -87,7 +84,9 @@ async def test_validate_no_cycles_complex_cycle(db: AsyncSession):
 
 
 @pytest.mark.asyncio
-async def test_simulation_power_loss_and_cascading(client: AsyncClient, db: AsyncSession):
+async def test_simulation_power_loss_and_cascading(
+    client: AsyncClient, db: AsyncSession
+):
     rack = Rack(name="Simulation Rack", standort="Room 1")
     db.add(rack)
     await db.flush()
@@ -140,8 +139,12 @@ async def test_simulation_power_loss_and_cascading(client: AsyncClient, db: Asyn
     # Let's define the connection by updating connected_device_id
     await db.flush()
 
-    o1_s2 = PduOutlet(pdu_id=pdu.id, outlet_name="Outlet L1-s2", phase="L1", connected_device_id=s2.id)
-    o2_s2 = PduOutlet(pdu_id=pdu.id, outlet_name="Outlet L2-s2", phase="L2", connected_device_id=s2.id)
+    o1_s2 = PduOutlet(
+        pdu_id=pdu.id, outlet_name="Outlet L1-s2", phase="L1", connected_device_id=s2.id
+    )
+    o2_s2 = PduOutlet(
+        pdu_id=pdu.id, outlet_name="Outlet L2-s2", phase="L2", connected_device_id=s2.id
+    )
     db.add_all([o1_s2, o2_s2])
     await db.flush()
 
@@ -149,15 +152,14 @@ async def test_simulation_power_loss_and_cascading(client: AsyncClient, db: Asyn
     o1.connected_device_id = s1.id
 
     # Add dependency: s3 depends on s1
-    dep = DeviceDependency(device_id=s3.id, depends_on_device_id=s1.id, dependency_type="service")
+    dep = DeviceDependency(
+        device_id=s3.id, depends_on_device_id=s1.id, dependency_type="service"
+    )
     db.add(dep)
     await db.commit()
 
     # Scenario: Loss of Phase L1
-    payload = {
-        "target_type": "phase",
-        "target_name": "L1"
-    }
+    payload = {"target_type": "phase", "target_name": "L1"}
 
     response = await client.post("/api/v1/simulation/run", json=payload)
     if response.status_code != 200:
@@ -170,7 +172,7 @@ async def test_simulation_power_loss_and_cascading(client: AsyncClient, db: Asyn
     # s2: yellow (lost L1, still has L2)
     # s3: red (depends on s1 which is red)
     affected = {item["device_id"]: item for item in data["affected_devices"]}
-    
+
     assert affected[s1.id]["state"] == "red"
     assert affected[s2.id]["state"] == "yellow"
     assert affected[s3.id]["state"] == "red"
@@ -179,7 +181,7 @@ async def test_simulation_power_loss_and_cascading(client: AsyncClient, db: Asyn
     # Filter only events for s1 and s3
     events = data["shutdown_timeline"]
     assert len(events) >= 2
-    
+
     # Sort events by time_seconds or sequence order
     assert events[0]["device_id"] == s1.id
     assert events[0]["action"] == "shutdown"
@@ -223,29 +225,36 @@ async def test_simulation_ha_grouping(client: AsyncClient, db: AsyncSession):
 
     # db_a is on L1 outlet (it will fail when L1 fails)
     o1.connected_device_id = db_a.id
-    
+
     # db_b is NOT on L1 outlet, it stays green
     # app_srv depends on (db_a OR db_b) as "db_cluster" group
-    dep1 = DeviceDependency(device_id=app_srv.id, depends_on_device_id=db_a.id, dependency_group="db_cluster")
-    dep2 = DeviceDependency(device_id=app_srv.id, depends_on_device_id=db_b.id, dependency_group="db_cluster")
+    dep1 = DeviceDependency(
+        device_id=app_srv.id,
+        depends_on_device_id=db_a.id,
+        dependency_group="db_cluster",
+    )
+    dep2 = DeviceDependency(
+        device_id=app_srv.id,
+        depends_on_device_id=db_b.id,
+        dependency_group="db_cluster",
+    )
     db.add_all([dep1, dep2])
     await db.commit()
 
     # Scenario: Loss of Phase L1 (db_a fails, but db_b is ok)
-    payload = {
-        "target_type": "phase",
-        "target_name": "L1"
-    }
+    payload = {"target_type": "phase", "target_name": "L1"}
 
     response = await client.post("/api/v1/simulation/run", json=payload)
     assert response.status_code == 200
     data = response.json()
 
     affected_ids = [item["device_id"] for item in data["affected_devices"]]
-    
+
     # db_a must be red (failed)
     assert db_a.id in affected_ids
-    affected_db_a = next(item for item in data["affected_devices"] if item["device_id"] == db_a.id)
+    affected_db_a = next(
+        item for item in data["affected_devices"] if item["device_id"] == db_a.id
+    )
     assert affected_db_a["state"] == "red"
 
     # app_srv must NOT be affected (green) because db_b is still active

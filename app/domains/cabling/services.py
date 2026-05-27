@@ -7,7 +7,12 @@ from sqlalchemy import select, func, or_
 from sqlalchemy.orm import selectinload
 from fastapi import HTTPException
 
-from app.models import Cable as CableModel, Device as DeviceModel, Rack as RackModel, PduOutlet as PduOutletModel
+from app.models import (
+    Cable as CableModel,
+    Device as DeviceModel,
+    Rack as RackModel,
+    PduOutlet as PduOutletModel,
+)
 from app.domains.cabling.schemas import CableCreate, CableUpdate
 from dataclasses import dataclass
 
@@ -226,7 +231,11 @@ class CablingService:
 
     async def load_topology(self) -> TopologyRaw:
         racks = (
-            (await self.db.execute(select(RackModel).options(selectinload(RackModel.devices))))
+            (
+                await self.db.execute(
+                    select(RackModel).options(selectinload(RackModel.devices))
+                )
+            )
             .scalars()
             .all()
         )
@@ -264,41 +273,49 @@ class CablingService:
                 cross_rack = bool(
                     vd and nd and vd.rack_id and nd.rack_id and vd.rack_id != nd.rack_id
                 )
-                edges.append({
-                    "id": f"cable-{cable.id}",
-                    "edge_type": "cable",
-                    "kabel_nr": cable.kabel_nr,
-                    "typ": cable.typ,
-                    "laenge_m": float(cable.laenge_m) if cable.laenge_m else None,
-                    "farbe": cable.farbe,
-                    "von_device_id": cable.von_device_id,
-                    "von_port": cable.von_port,
-                    "nach_device_id": cable.nach_device_id,
-                    "nach_port": cable.nach_port,
-                    "cross_rack": cross_rack,
-                })
+                edges.append(
+                    {
+                        "id": f"cable-{cable.id}",
+                        "edge_type": "cable",
+                        "kabel_nr": cable.kabel_nr,
+                        "typ": cable.typ,
+                        "laenge_m": float(cable.laenge_m) if cable.laenge_m else None,
+                        "farbe": cable.farbe,
+                        "von_device_id": cable.von_device_id,
+                        "von_port": cable.von_port,
+                        "nach_device_id": cable.nach_device_id,
+                        "nach_port": cable.nach_port,
+                        "cross_rack": cross_rack,
+                    }
+                )
 
         for outlet in raw.outlets:
             if outlet.pdu_id and outlet.connected_device_id:
                 pdu = raw.dev_map.get(outlet.pdu_id)
                 dev = raw.dev_map.get(outlet.connected_device_id)
                 cross_rack = bool(
-                    pdu and dev and pdu.rack_id and dev.rack_id and pdu.rack_id != dev.rack_id
+                    pdu
+                    and dev
+                    and pdu.rack_id
+                    and dev.rack_id
+                    and pdu.rack_id != dev.rack_id
                 )
-                edges.append({
-                    "id": f"power-{outlet.id}",
-                    "edge_type": "power",
-                    "kabel_nr": outlet.outlet_name,
-                    "typ": f"Strom-{outlet.steckdosentyp or 'PDU'}",
-                    "laenge_m": None,
-                    "farbe": None,
-                    "von_device_id": outlet.pdu_id,
-                    "von_port": outlet.outlet_name,
-                    "nach_device_id": outlet.connected_device_id,
-                    "nach_port": outlet.connected_port,
-                    "cross_rack": cross_rack,
-                    "phase": outlet.phase,
-                })
+                edges.append(
+                    {
+                        "id": f"power-{outlet.id}",
+                        "edge_type": "power",
+                        "kabel_nr": outlet.outlet_name,
+                        "typ": f"Strom-{outlet.steckdosentyp or 'PDU'}",
+                        "laenge_m": None,
+                        "farbe": None,
+                        "von_device_id": outlet.pdu_id,
+                        "von_port": outlet.outlet_name,
+                        "nach_device_id": outlet.connected_device_id,
+                        "nach_port": outlet.connected_port,
+                        "cross_rack": cross_rack,
+                        "phase": outlet.phase,
+                    }
+                )
 
         return edges
 
@@ -323,7 +340,9 @@ class CablingService:
     @staticmethod
     def update_color_rules(rules_payload: Dict[str, Any]) -> Dict[str, Any]:
         if "rules" not in rules_payload:
-            raise HTTPException(status_code=400, detail="Missing 'rules' array in payload")
+            raise HTTPException(
+                status_code=400, detail="Missing 'rules' array in payload"
+            )
         data = _load_color_rules()
         data["rules"] = rules_payload["rules"]
         _save_color_rules(data)
@@ -349,14 +368,16 @@ class CablingService:
 
     async def create_cable(self, cable_in: CableCreate) -> CableModel:
         if not cable_in.kabel_nr:
-            count_result = await self.db.execute(select(func.count()).select_from(CableModel))
+            count_result = await self.db.execute(
+                select(func.count()).select_from(CableModel)
+            )
             count = count_result.scalar() or 0
             cable_in.kabel_nr = f"KAB-{count + 1:04d}"
         data = cable_in.model_dump()
         db_cable = CableModel(**data)
         self.db.add(db_cable)
         await self.db.commit()
-        
+
         # Reload with strands
         result = await self.db.execute(
             select(CableModel)
@@ -376,8 +397,12 @@ class CablingService:
             raise HTTPException(status_code=404, detail="Cable not found")
         return cable
 
-    async def update_cable(self, cable_id: int, cable_in: CableUpdate, username: str | None) -> CableModel:
-        result = await self.db.execute(select(CableModel).where(CableModel.id == cable_id))
+    async def update_cable(
+        self, cable_id: int, cable_in: CableUpdate, username: str | None
+    ) -> CableModel:
+        result = await self.db.execute(
+            select(CableModel).where(CableModel.id == cable_id)
+        )
         cable = result.scalar_one_or_none()
         if not cable:
             raise HTTPException(status_code=404, detail="Cable not found")
@@ -398,7 +423,9 @@ class CablingService:
         return result.scalar_one()
 
     async def delete_cable(self, cable_id: int) -> None:
-        result = await self.db.execute(select(CableModel).where(CableModel.id == cable_id))
+        result = await self.db.execute(
+            select(CableModel).where(CableModel.id == cable_id)
+        )
         cable = result.scalar_one_or_none()
         if not cable:
             raise HTTPException(status_code=404, detail="Cable not found")
@@ -406,7 +433,9 @@ class CablingService:
         await self.db.commit()
 
     async def trace_cable(self, cable_id: int) -> Dict[str, Any]:
-        start_res = await self.db.execute(select(CableModel).where(CableModel.id == cable_id))
+        start_res = await self.db.execute(
+            select(CableModel).where(CableModel.id == cable_id)
+        )
         start = start_res.scalar_one_or_none()
         if not start:
             raise HTTPException(status_code=404, detail="Kabel nicht gefunden")
@@ -546,5 +575,7 @@ class CablingService:
                 }
                 for c in cables
             ],
-            "racks": [{"id": r.id, "name": r.name, "standort": r.standort} for r in racks],
+            "racks": [
+                {"id": r.id, "name": r.name, "standort": r.standort} for r in racks
+            ],
         }

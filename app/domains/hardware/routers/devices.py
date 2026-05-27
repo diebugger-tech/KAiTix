@@ -156,11 +156,11 @@ async def create_device(device_in: DeviceCreate, db: AsyncSession = Depends(get_
         await _check_side_conflict(
             db, data["rack_id"], data.get("side"), exclude_id=None
         )
-        
+
     # IP Validation
     if data.get("ip_adresse"):
         data["ip_adresse"] = await validate_and_check_ip(db, data["ip_adresse"])
-        
+
     db_device = DeviceModel(**data)
     db.add(db_device)
     try:
@@ -210,21 +210,27 @@ async def update_device(
 
     if "dependencies" in update_data:
         deps_data = update_data.pop("dependencies")
-        await db.execute(delete(DeviceDependency).where(DeviceDependency.device_id == device_id))
+        await db.execute(
+            delete(DeviceDependency).where(DeviceDependency.device_id == device_id)
+        )
         for dep in deps_data:
-            db.add(DeviceDependency(
-                device_id=device_id,
-                depends_on_device_id=dep["depends_on_device_id"],
-                dependency_type=dep["dependency_type"],
-                dependency_group=dep.get("dependency_group")
-            ))
+            db.add(
+                DeviceDependency(
+                    device_id=device_id,
+                    depends_on_device_id=dep["depends_on_device_id"],
+                    dependency_type=dep["dependency_type"],
+                    dependency_group=dep.get("dependency_group"),
+                )
+            )
 
     for field, value in update_data.items():
         setattr(device, field, value)
 
     # IP Validation
     if device.ip_adresse:
-        device.ip_adresse = await validate_and_check_ip(db, device.ip_adresse, exclude_device_id=device.id)
+        device.ip_adresse = await validate_and_check_ip(
+            db, device.ip_adresse, exclude_device_id=device.id
+        )
 
     # Conflict check with merged state
     eff_rack = device.rack_id

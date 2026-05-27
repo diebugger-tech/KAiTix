@@ -12,10 +12,36 @@ from ._helpers import (
 from openpyxl import Workbook
 from openpyxl.styles import Border, Side
 
-_HEADER = ["Kabel-Nr", "Typ", "Länge m", "Farbe", "Von-Gerät", "Von-Rack", "Von-Port",
-           "Nach-Gerät", "Nach-Rack", "Nach-Port", "Verlegt am", "Verlegt von", "★"]
-_HEADER_CSV = ["kabel_nr", "typ", "laenge_m", "farbe", "von_geraet", "von_rack", "von_port",
-               "nach_geraet", "nach_rack", "nach_port", "verlegt_am", "verlegt_von", "rack_uebergreifend"]
+_HEADER = [
+    "Kabel-Nr",
+    "Typ",
+    "Länge m",
+    "Farbe",
+    "Von-Gerät",
+    "Von-Rack",
+    "Von-Port",
+    "Nach-Gerät",
+    "Nach-Rack",
+    "Nach-Port",
+    "Verlegt am",
+    "Verlegt von",
+    "★",
+]
+_HEADER_CSV = [
+    "kabel_nr",
+    "typ",
+    "laenge_m",
+    "farbe",
+    "von_geraet",
+    "von_rack",
+    "von_port",
+    "nach_geraet",
+    "nach_rack",
+    "nach_port",
+    "verlegt_am",
+    "verlegt_von",
+    "rack_uebergreifend",
+]
 
 
 def _cable_xlsx(data: dict) -> bytes:
@@ -35,11 +61,23 @@ def _cable_xlsx(data: dict) -> bytes:
         vr = rm.get(vd.get("rack_id") if vd else None, {}).get("name", "–")
         nr = rm.get(nd.get("rack_id") if nd else None, {}).get("name", "–")
         cross = vd and nd and vd.get("rack_id") != nd.get("rack_id")
-        ws.append([c["nr"], c["typ"], c["laenge"], c.get("farbe", "–"),
-                   vd["hostname"] if vd else "–", vr, c.get("von_port", "–"),
-                   nd["hostname"] if nd else "–", nr, c.get("nach_port", "–"),
-                   c.get("verlegt_am", "–"), c.get("verlegt_von", "–"),
-                   "★ JA" if cross else ""])
+        ws.append(
+            [
+                c["nr"],
+                c["typ"],
+                c["laenge"],
+                c.get("farbe", "–"),
+                vd["hostname"] if vd else "–",
+                vr,
+                c.get("von_port", "–"),
+                nd["hostname"] if nd else "–",
+                nr,
+                c.get("nach_port", "–"),
+                c.get("verlegt_am", "–"),
+                c.get("verlegt_von", "–"),
+                "★ JA" if cross else "",
+            ]
+        )
         style_row(ws, ws.max_row, fill_hex=COL_XRACK if cross else COL_WHITE)
     autowidth(ws)
     ws.freeze_panes = "A2"
@@ -60,17 +98,46 @@ def _cable_ods(data: dict) -> bytes:
     rm = _rack_map(data)
 
     t = Table(name="Kabelliste")
-    t.addElement(mkrow(["Kabel-Nr", "Typ", "m", "Farbe", "Von-Gerät", "Von-Rack", "Von-Port",
-                         "Nach-Gerät", "Nach-Rack", "Nach-Port", "★"]))
+    t.addElement(
+        mkrow(
+            [
+                "Kabel-Nr",
+                "Typ",
+                "m",
+                "Farbe",
+                "Von-Gerät",
+                "Von-Rack",
+                "Von-Port",
+                "Nach-Gerät",
+                "Nach-Rack",
+                "Nach-Port",
+                "★",
+            ]
+        )
+    )
     for c in sorted(data.get("cables", []), key=lambda x: x["nr"]):
         vd = dm.get(c.get("von_dev"))
         nd = dm.get(c.get("nach_dev"))
         vr = rm.get(vd.get("rack_id") if vd else None, {}).get("name", "–")
         nr = rm.get(nd.get("rack_id") if nd else None, {}).get("name", "–")
         cross = "★" if (vd and nd and vd.get("rack_id") != nd.get("rack_id")) else ""
-        t.addElement(mkrow([c["nr"], c["typ"], c["laenge"], c.get("farbe", "–"),
-                            vd["hostname"] if vd else "–", vr, c.get("von_port", "–"),
-                            nd["hostname"] if nd else "–", nr, c.get("nach_port", "–"), cross]))
+        t.addElement(
+            mkrow(
+                [
+                    c["nr"],
+                    c["typ"],
+                    c["laenge"],
+                    c.get("farbe", "–"),
+                    vd["hostname"] if vd else "–",
+                    vr,
+                    c.get("von_port", "–"),
+                    nd["hostname"] if nd else "–",
+                    nr,
+                    c.get("nach_port", "–"),
+                    cross,
+                ]
+            )
+        )
     doc.spreadsheet.addElement(t)
     buf = io.BytesIO()
     doc.save(buf)
@@ -87,8 +154,21 @@ def _cable_csv(data: dict) -> bytes:
         vr = rm.get(vd.get("rack_id") if vd else None, {}).get("name", "")
         nr = rm.get(nd.get("rack_id") if nd else None, {}).get("name", "")
         cross = "JA" if (vd and nd and vd.get("rack_id") != nd.get("rack_id")) else ""
-        rows.append([c["nr"], c["typ"], c["laenge"], c.get("farbe", ""),
-                     vd["hostname"] if vd else "", vr, c.get("von_port", ""),
-                     nd["hostname"] if nd else "", nr, c.get("nach_port", ""),
-                     c.get("verlegt_am", ""), c.get("verlegt_von", ""), cross])
+        rows.append(
+            [
+                c["nr"],
+                c["typ"],
+                c["laenge"],
+                c.get("farbe", ""),
+                vd["hostname"] if vd else "",
+                vr,
+                c.get("von_port", ""),
+                nd["hostname"] if nd else "",
+                nr,
+                c.get("nach_port", ""),
+                c.get("verlegt_am", ""),
+                c.get("verlegt_von", ""),
+                cross,
+            ]
+        )
     return _to_csv(_HEADER_CSV, rows)

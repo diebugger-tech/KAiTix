@@ -6,10 +6,10 @@ from alembic import context
 
 # Load .env BEFORE importing app modules so os.getenv picks up the values
 from dotenv import load_dotenv
+
 load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 from app.core.database import Base
-import app.models  # ensure models are imported so they register with Base.metadata
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

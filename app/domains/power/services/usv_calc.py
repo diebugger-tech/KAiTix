@@ -14,17 +14,33 @@ from app.domains.power.schemas import VdeAuditResult
 def audit_vde_compliance(payload: dict) -> list[VdeAuditResult]:
     results = []
     if not payload.get("n1_safe"):
-        results.append(VdeAuditResult(rule="N1_IMPOSSIBLE", status="error",
-            message="Kein N+1 möglich"))
+        results.append(
+            VdeAuditResult(
+                rule="N1_IMPOSSIBLE", status="error", message="Kein N+1 möglich"
+            )
+        )
     if not payload.get("battery_redundant"):
-        results.append(VdeAuditResult(rule="BATTERY_SPOF", status="error",
-            message="SPOF Batteriesystem"))
+        results.append(
+            VdeAuditResult(
+                rule="BATTERY_SPOF", status="error", message="SPOF Batteriesystem"
+            )
+        )
     if not payload.get("epo_configured"):
-        results.append(VdeAuditResult(rule="EPO_MISSING", status="error",
-            message="Kein EPO-Kreis — VDE 0108-100 Verstoß"))
+        results.append(
+            VdeAuditResult(
+                rule="EPO_MISSING",
+                status="error",
+                message="Kein EPO-Kreis — VDE 0108-100 Verstoß",
+            )
+        )
     if not payload.get("mbs_configured"):
-        results.append(VdeAuditResult(rule="MBS_MISSING", status="warning",
-            message="Fehlender MBS — Wartung erfordert Downtime"))
+        results.append(
+            VdeAuditResult(
+                rule="MBS_MISSING",
+                status="warning",
+                message="Fehlender MBS — Wartung erfordert Downtime",
+            )
+        )
     return results
 
 
@@ -109,7 +125,11 @@ class UsvCalculator:
                 # Priorisierung: 1. psu_nennwatt * last_pct, 2. tdp_watt, 3. anschlussleistung_watt
                 if device.psu_nennwatt is not None:
                     last_pct = device.last_pct if device.last_pct is not None else 60.0
-                    effective_watt = Decimal(str(device.psu_nennwatt)) * Decimal(str(last_pct)) / Decimal("100.0")
+                    effective_watt = (
+                        Decimal(str(device.psu_nennwatt))
+                        * Decimal(str(last_pct))
+                        / Decimal("100.0")
+                    )
                 elif device.tdp_watt is not None:
                     effective_watt = Decimal(str(device.tdp_watt))
                 else:
@@ -1032,12 +1052,9 @@ class PhaseBalancer:
                 continue
             phase = dev.phase or "L1"
             watt = cls._device_effective_watt(dev)
-            device_list.append({
-                "id": dev.id,
-                "hostname": dev.hostname,
-                "phase": phase,
-                "watt": watt
-            })
+            device_list.append(
+                {"id": dev.id, "hostname": dev.hostname, "phase": phase, "watt": watt}
+            )
 
         current_phases = {d["id"]: d["phase"] for d in device_list}
         device_watts = {d["id"]: d["watt"] for d in device_list}
@@ -1104,13 +1121,15 @@ class PhaseBalancer:
                 phases[best_device_id] = best_to_phase
                 loads[from_p] -= device_watts[best_device_id]
                 loads[best_to_phase] += device_watts[best_device_id]
-                recommendations.append({
-                    "device_id": best_device_id,
-                    "hostname": device_hostnames[best_device_id],
-                    "from_phase": from_p,
-                    "to_phase": best_to_phase,
-                    "load_watt": float(round(device_watts[best_device_id], 2))
-                })
+                recommendations.append(
+                    {
+                        "device_id": best_device_id,
+                        "hostname": device_hostnames[best_device_id],
+                        "from_phase": from_p,
+                        "to_phase": best_to_phase,
+                        "load_watt": float(round(device_watts[best_device_id], 2)),
+                    }
+                )
             else:
                 # No move can improve the imbalance, stop searching
                 break
@@ -1128,5 +1147,5 @@ class PhaseBalancer:
             "final_imbalance_pct": float(round(final_imbalance * 100, 2)),
             "final_loads": {k: float(round(v, 2)) for k, v in final_loads.items()},
             "balanced": final_imbalance <= 0.10,
-            "recommendations": recommendations
+            "recommendations": recommendations,
         }

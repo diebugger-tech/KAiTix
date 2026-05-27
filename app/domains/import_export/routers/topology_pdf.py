@@ -44,7 +44,11 @@ async def _build_pdf_data(db: AsyncSession) -> dict:
         for dev in raw.devices
     ]
 
-    return {"racks": CablingService.build_racks_out(raw), "devices": devices, "edges": CablingService.build_edges(raw)}
+    return {
+        "racks": CablingService.build_racks_out(raw),
+        "devices": devices,
+        "edges": CablingService.build_edges(raw),
+    }
 
 
 @router.get("/pdf")

@@ -9,6 +9,7 @@ from app.domains.runbooks.models import (
     RunbookExecution,
     RunbookExecutionStep,
 )
+
 # Legacy aliases for unified Interface model
 ServerInterface = Interface
 DevicePort = Interface

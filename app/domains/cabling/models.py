@@ -8,7 +8,6 @@ if TYPE_CHECKING:
     from app.domains.hardware.models import Device
 
 
-
 class Cable(Base):
     __tablename__ = "cables"
 
@@ -83,7 +82,6 @@ class CableStrand(Base):
     cable: Mapped["Cable"] = relationship(back_populates="cable_strands")
     von_port: Mapped[Optional["Interface"]] = relationship(foreign_keys=[von_port_id])
     nach_port: Mapped[Optional["Interface"]] = relationship(foreign_keys=[nach_port_id])
-
 
 
 class Interface(Base):

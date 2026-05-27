@@ -20,7 +20,9 @@ def build_export(data: dict, fmt: Format) -> tuple[bytes, str, str]:
     return (_csv_zip(data), "application/zip", f"kaitix_dokumentation_{ts}.zip")
 
 
-def build_single_export(data: dict, sheet: Sheet, fmt: Format) -> tuple[bytes, str, str]:
+def build_single_export(
+    data: dict, sheet: Sheet, fmt: Format
+) -> tuple[bytes, str, str]:
     ts = _ts()
     builders: dict[Sheet, dict[Format, tuple]] = {
         "racks": {

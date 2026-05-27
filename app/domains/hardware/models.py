@@ -22,8 +22,12 @@ class Rack(Base):
     hersteller: Mapped[Optional[str]] = mapped_column(String(100))
     modell: Mapped[Optional[str]] = mapped_column(String(100))
     hardware_type_id: Mapped[Optional[int]] = mapped_column(Integer)
-    max_watt: Mapped[Optional[float]] = mapped_column(DECIMAL(10, 2), nullable=True)  # Max. Gesamtleistung für Overload-Check
-    usv_n1_redundant: Mapped[bool] = mapped_column(Boolean, default=False)  # USV N+1-Redundanz aktiviert
+    max_watt: Mapped[Optional[float]] = mapped_column(
+        DECIMAL(10, 2), nullable=True
+    )  # Max. Gesamtleistung für Overload-Check
+    usv_n1_redundant: Mapped[bool] = mapped_column(
+        Boolean, default=False
+    )  # USV N+1-Redundanz aktiviert
     geaendert_von: Mapped[Optional[str]] = mapped_column(String(100))
     geaendert_am: Mapped[Optional[datetime]] = mapped_column(DateTime)
 
@@ -46,7 +50,9 @@ class DeviceDependency(Base):
     depends_on_device_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("devices.id", ondelete="CASCADE"), primary_key=True
     )
-    dependency_type: Mapped[Optional[str]] = mapped_column(String(50), default="service")
+    dependency_type: Mapped[Optional[str]] = mapped_column(
+        String(50), default="service"
+    )
     dependency_group: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
 
     # Relationships
@@ -87,7 +93,9 @@ class Device(Base):
     u_position: Mapped[Optional[int]] = mapped_column(Integer)
     u_hoehe: Mapped[int] = mapped_column(Integer, default=1)
     side: Mapped[Optional[str]] = mapped_column(Enum("left", "right"), nullable=True)
-    subnet_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("subnets.id", ondelete="SET NULL"), nullable=True)
+    subnet_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("subnets.id", ondelete="SET NULL"), nullable=True
+    )
 
     phase: Mapped[Optional[str]] = mapped_column(Enum("L1", "L2", "L3"))
     tdp_watt: Mapped[Optional[float]] = mapped_column(
@@ -102,14 +110,11 @@ class Device(Base):
     einschaltstrom_faktor: Mapped[Optional[float]] = mapped_column(
         DECIMAL(3, 1), default=2.5
     )
-    shutdown_delay_seconds: Mapped[Optional[int]] = mapped_column(
-        Integer, default=0
-    )
-    shutdown_priority: Mapped[Optional[int]] = mapped_column(
-        Integer, default=2
-    )
+    shutdown_delay_seconds: Mapped[Optional[int]] = mapped_column(Integer, default=0)
+    shutdown_priority: Mapped[Optional[int]] = mapped_column(Integer, default=2)
     shutdown_method: Mapped[Optional[str]] = mapped_column(
-        Enum("ACPI_Graceful", "SSH_Script", "Hard_Power_Cut_PDU"), default="ACPI_Graceful"
+        Enum("ACPI_Graceful", "SSH_Script", "Hard_Power_Cut_PDU"),
+        default="ACPI_Graceful",
     )
 
     bemerkung: Mapped[Optional[str]] = mapped_column(String(255))
@@ -137,14 +142,14 @@ class Device(Base):
         back_populates="device",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        lazy="selectin"
+        lazy="selectin",
     )
     depended_by: Mapped[List["DeviceDependency"]] = relationship(
         foreign_keys="[DeviceDependency.depends_on_device_id]",
         back_populates="depends_on_device",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        lazy="selectin"
+        lazy="selectin",
     )
 
     interfaces: Mapped[List["Interface"]] = relationship(
@@ -164,12 +169,12 @@ class Device(Base):
         back_populates="pdu",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        lazy="selectin"
+        lazy="selectin",
     )
     connected_pdu_outlets: Mapped[List["PduOutlet"]] = relationship(
         foreign_keys="[PduOutlet.connected_device_id]",
         back_populates="connected_device",
-        lazy="selectin"
+        lazy="selectin",
     )
 
     virtual_machines: Mapped[List["VirtualMachine"]] = relationship(
@@ -186,7 +191,6 @@ class Device(Base):
     @property
     def server_interfaces(self) -> List["Interface"]:
         return self.interfaces
-
 
 
 class PduOutlet(Base):
@@ -220,6 +224,7 @@ class PduOutlet(Base):
     def pdu_name(self) -> Optional[str]:
         return self.pdu.hostname if self.pdu else None
 
+
 class VirtualMachine(Base):
     __tablename__ = "virtual_machines"
 
@@ -240,7 +245,9 @@ class VirtualMachine(Base):
     )
     shutdown_priority: Mapped[Optional[int]] = mapped_column(Integer, default=5)
     responsible: Mapped[Optional[str]] = mapped_column(String(100))
-    subnet_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("subnets.id", ondelete="SET NULL"), nullable=True)
+    subnet_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("subnets.id", ondelete="SET NULL"), nullable=True
+    )
     bemerkung: Mapped[Optional[str]] = mapped_column(String(1000))
 
     # Relationships

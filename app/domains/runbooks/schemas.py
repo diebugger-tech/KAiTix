@@ -3,13 +3,16 @@ from typing import List, Optional
 from pydantic import BaseModel, ConfigDict
 from app.domains.hardware.schemas import Device, VirtualMachine
 
+
 # === RUNBOOK EXECUTION STEP SCHEMAS ===
 class RunbookExecutionStepBase(BaseModel):
     runbook_device_id: int
     note: Optional[str] = None
 
+
 class RunbookExecutionStepCreate(RunbookExecutionStepBase):
     pass
+
 
 class RunbookExecutionStep(RunbookExecutionStepBase):
     id: int
@@ -18,16 +21,20 @@ class RunbookExecutionStep(RunbookExecutionStepBase):
     abgehakt_von: Optional[str] = None
     model_config = ConfigDict(from_attributes=True)
 
+
 class RunbookExecutionStepCheckRequest(BaseModel):
     note: Optional[str] = None
+
 
 # === RUNBOOK EXECUTION SCHEMAS ===
 class RunbookExecutionBase(BaseModel):
     runbook_id: int
     modus: str
 
+
 class RunbookExecutionCreate(RunbookExecutionBase):
     pass
+
 
 class RunbookExecution(RunbookExecutionBase):
     id: int
@@ -38,9 +45,11 @@ class RunbookExecution(RunbookExecutionBase):
     steps: List[RunbookExecutionStep] = []
     model_config = ConfigDict(from_attributes=True)
 
+
 class RunbookExecutionStatusUpdate(BaseModel):
     status: str
     note: Optional[str] = None
+
 
 # === RUNBOOK DEVICE SCHEMAS ===
 class RunbookDeviceBase(BaseModel):
@@ -52,8 +61,10 @@ class RunbookDeviceBase(BaseModel):
     note: Optional[str] = None
     position: int = 1
 
+
 class RunbookDeviceCreate(RunbookDeviceBase):
     layer_id: int
+
 
 class RunbookDeviceUpdate(BaseModel):
     layer_id: Optional[int] = None
@@ -61,6 +72,7 @@ class RunbookDeviceUpdate(BaseModel):
     responsible: Optional[str] = None
     note: Optional[str] = None
     position: Optional[int] = None
+
 
 class RunbookDevice(RunbookDeviceBase):
     id: int
@@ -72,13 +84,15 @@ class RunbookDevice(RunbookDeviceBase):
     # Note: Using Optional[Any] here avoids schema validation recursion loops if not careful.
     # We will use the actual models, but if it causes issues we can fall back to dicts.
     # Actually, Device schema might be heavy. Let's create a minimal schema for reference.
-    
+
     device: Optional[Device] = None
     vm: Optional[VirtualMachine] = None
     model_config = ConfigDict(from_attributes=True)
 
+
 class RunbookDeviceReorderRequest(BaseModel):
     device_ids: List[int]
+
 
 # === RUNBOOK LAYER SCHEMAS ===
 class RunbookLayerBase(BaseModel):
@@ -88,12 +102,15 @@ class RunbookLayerBase(BaseModel):
     shutdown_order: Optional[int] = None
     startup_order: Optional[int] = None
 
+
 class RunbookLayerCreate(RunbookLayerBase):
     pass
+
 
 class RunbookLayerUpdate(BaseModel):
     name: Optional[str] = None
     markdown_note: Optional[str] = None
+
 
 class RunbookLayer(RunbookLayerBase):
     id: int
@@ -101,8 +118,10 @@ class RunbookLayer(RunbookLayerBase):
     devices: List[RunbookDevice] = []
     model_config = ConfigDict(from_attributes=True)
 
+
 class RunbookLayerReorderRequest(BaseModel):
     layer_ids: List[int]
+
 
 # === RUNBOOK SCHEMAS ===
 class RunbookBase(BaseModel):
@@ -110,13 +129,16 @@ class RunbookBase(BaseModel):
     typ: str
     beschreibung: Optional[str] = None
 
+
 class RunbookCreate(RunbookBase):
     pass
+
 
 class RunbookUpdate(BaseModel):
     name: Optional[str] = None
     typ: Optional[str] = None
     beschreibung: Optional[str] = None
+
 
 class Runbook(RunbookBase):
     id: int
