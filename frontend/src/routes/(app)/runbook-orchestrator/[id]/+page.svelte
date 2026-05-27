@@ -2,8 +2,9 @@
   import { onMount } from 'svelte';
   import { page } from '$app/state';
   import { api, type Runbook, type RunbookLayer, type RunbookDevice, type Device, type VirtualMachine, type RunbookExecution } from '$lib/api';
-  import { BookOpen, Layers, Monitor, Server, Plus, ArrowLeft, Trash2, ArrowUp, ArrowDown, Play, CheckCircle2, Copy, FileText, Clock, User, XCircle, AlertCircle, Edit, Download } from '@lucide/svelte';
+  import { BookOpen, Layers, Monitor, Server, Plus, ArrowLeft, Trash2, ArrowUp, ArrowDown, Play, CheckCircle2, Copy, FileText, Clock, User, XCircle, AlertCircle, Edit, Download, Printer } from '@lucide/svelte';
   import { goto } from '$app/navigation';
+  import RunbookPrint from '$lib/components/RunbookPrint.svelte';
 
   let runbookId = parseInt(page.params.id);
   let runbook = $state<Runbook | null>(null);
@@ -327,11 +328,81 @@
   }
 
   function exportMarkdown() {
-    window.open(`/api/v1/runbooks/${runbookId}/export/markdown`, '_blank');
+    if (!runbook) return;
+    
+    const lines: string[] = [];
+    lines.push(`# Runbook: ${runbook.name}`);
+    
+    const typStr = runbook.typ === 'shutdown' ? 'Shutdown' : runbook.typ === 'startup' ? 'Startup' : runbook.typ;
+    const erstelltAm = runbook.erstellt_am ? new Date(runbook.erstellt_am).toLocaleString('de-DE') : 'Unbekannt';
+    lines.push(`**Typ:** ${typStr} | **Erstellt:** ${erstelltAm} | **Von:** ${runbook.erstellt_von || 'System'}`);
+    
+    if (runbook.beschreibung) {
+      lines.push(runbook.beschreibung);
+    }
+    
+    lines.push('');
+    lines.push('---');
+    lines.push('');
+    
+    const seqStr = runbook.typ === 'shutdown' 
+      ? 'SHUTDOWN-SEQUENZ' 
+      : runbook.typ === 'startup' 
+        ? 'STARTUP-SEQUENZ (umgekehrt)' 
+        : `${runbook.typ.toUpperCase()}-SEQUENZ`;
+    lines.push(`## ${seqStr}`);
+    lines.push('');
+    
+    const sortedLayers = runbook.layers ? [...runbook.layers].sort((a, b) => a.position - b.position) : [];
+    
+    let counter = 1;
+    for (const layer of sortedLayers) {
+      lines.push(`### Ebene ${layer.position}: ${layer.name}`);
+      if (layer.markdown_note) {
+        lines.push(`> ${layer.markdown_note}`);
+      }
+      lines.push('');
+      
+      const sortedDevices = layer.devices ? [...layer.devices].sort((a, b) => a.position - b.position) : [];
+      for (const dev of sortedDevices) {
+        const ident = dev.freitext || (dev.vm?.name || (dev.device?.hostname || 'Unknown'));
+        const resp = dev.responsible ? ` — ${dev.responsible}` : '';
+        lines.push(`- [ ] **${counter++}. ${ident}** (${dev.delay_seconds}s)${resp}`);
+        
+        // Add info if device
+        if (dev.device) {
+          const detailParts: string[] = [];
+          if (dev.device.phase) detailParts.push(`Phase: ${dev.device.phase}`);
+          if (dev.device.tdp_watt) detailParts.push(`Watt: ${dev.device.tdp_watt} W`);
+          if (dev.device.ip_adresse) detailParts.push(`Management: http://${dev.device.ip_adresse}`);
+          if (detailParts.length > 0) {
+            lines.push(`  - ${detailParts.join(' | ')}`);
+          }
+        } else if (dev.vm && dev.vm.ip_adresse) {
+          lines.push(`  - Management: http://${dev.vm.ip_adresse}`);
+        }
+        
+        if (dev.note) {
+          lines.push(`  - *Notiz: ${dev.note}*`);
+        }
+      }
+      lines.push('');
+    }
+    
+    lines.push('---');
+    lines.push('*KAiTix — Internes Dokument — Vertraulich*');
+    
+    const blob = new Blob([lines.join('\n')], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `runbook-${runbook.id}-${runbook.name.replace(/\s+/g, '-')}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   function exportPdf() {
-    window.open(`/api/v1/runbooks/${runbookId}/export/pdf`, '_blank');
+    window.print();
   }
 
   // --- DRAG & DROP FUNCTIONS ---
@@ -528,8 +599,8 @@
           MD Export
         </button>
         <button onclick={exportPdf} class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-medium transition">
-          <Download class="w-3.5 h-3.5" />
-          PDF Export
+          <Printer class="w-3.5 h-3.5" />
+          Drucken
         </button>
       </div>
     </div>
@@ -1005,6 +1076,11 @@
             </div>
           {/if}
         </div>
+      {/if}
+    </div>
+    <div class="print-only">
+      {#if runbook}
+        <RunbookPrint {runbook} />
       {/if}
     </div>
   {/if}
