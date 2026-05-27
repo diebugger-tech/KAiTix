@@ -106,6 +106,9 @@ virtuelle Maschinen und Shutdown/Startup-Runbooks.
 - **SPOF-Antithesen**: Single-Point-of-Failure Vermeidung ist essenziell. 
   - VDE-Audit Validierungsregeln im Generator-Skript setzen hart `N1_IMPOSSIBLE` (Kein N+1 bei <2 Modulen), `BATTERY_SPOF` (bei <2 Strings) und `EPO_MISSING` (Fehlender Not-Aus, VDE-Verstoß) auf ERROR. Fehlender Maintenance-Bypass (`MBS_MISSING`) erzeugt eine WARNING.
 - **Redundancy Path**: Nutzung des Feldes `redundancy_path` (A/B) als explizite Weichenstellung zur Sicherstellung der Tier-III Kompatibilität (Dual-Path Versorgung bis zum Endgerät).
+- **Phase Optimizer Sprint**: `phase_optimizer.py` als Wrapper über `PhaseBalancer`
+- **Neue Endpoints**: `POST /api/v1/power/phase/optimize/{rack_id}` und `/apply`
+- **Frontend**: Imbalance-Badge, Optimizer-Button, Dropdown-Warn-Icon
 
 ### Runbooks
 - Flexible Ebenen (`runbook_layers`) — nicht hardcodiert
@@ -134,6 +137,25 @@ virtuelle Maschinen und Shutdown/Startup-Runbooks.
 - **Backend API:** Neuer Endpoint `GET /api/v1/power/audit/{usv_unit_id}` zur On-The-Fly VDE-Compliance Prüfung anhand von `app/domains/power/services/usv_calc.py -> audit_vde_compliance()`.
 - **Frontend Refactoring:** Die Geräte-Detail-Ansicht in `racks/+page.svelte` wurde in ein zentriertes Modal (Overlay) mit drei Tabs (Geräte-Details, Ports & Kabel, VDE Protokoll) umgebaut.
 - Das VDE Protokoll-Tab visualisiert den Audit-Status sowie die Last-Historie asynchron.
+
+### ✅ Landingpage /landingpage
+- Eigenständige Route `/landingpage` ohne App-Layout (keine Sidebar, kein Header)
+- Haupt-App-Chrome und Routen in Route-Group `(app)/` isoliert, um das Root-Layout für `/landingpage` auszuschließen.
+- Hero-Section mit Hintergrundbild `/assets/hero-serverraum.jpg` (mit `filter: brightness(0.45) contrast(1.05) saturate(1.2)`)
+- Live-Stats via fetch: `/api/v1/racks`, `/api/v1/devices`, `/api/v1/dashboard/stats`
+- Health-Badge via `/api/v1/health` (grün/rot)
+- Lightbox: Klick auf Hero-Bild oder Kamera-Icon öffnet Vollbild, ESC oder Klick außen schließt
+- Feature-Grid 6 Module + Stack-Bar
+- Foto gesichert unter `docs/screenshots/hero-serverraum.jpg`
+
+### ✅ Backend Landingpage-Endpoints
+- GET `/api/v1/health` → `{"status": "healthy", "message": "System online"}`
+- GET `/api/v1/dashboard/stats` → `{"total_power_kw": float}` (Summe aller tdp_watt aus devices-Tabelle, geteilt durch 1000)
+- Router: `app/domains/hardware/routers/dashboard.py`
+
+### ✅ Dashboard-Routing-Anpassungen
+- Root `/` zeigt weiterhin das Dashboard (unter `(app)/+page.svelte` und `(app)/+layout.svelte`)
+- KAiTix-Logo in Sidebar verlinkt auf `/landingpage`
 
 ### ✅ Bugfix check_execution_step
 - `id == sid` → `runbook_device_id == sid` korrigiert
@@ -172,11 +194,11 @@ virtuelle Maschinen und Shutdown/Startup-Runbooks.
 
 ## Offene TODOs
 
-- [ ] Phasen-Imbalance beheben (12-17 kW unausgeglichen, L1/L2/L3)
+- [x] Phasen-Imbalance beheben (12-17 kW unausgeglichen, L1/L2/L3)
 - [ ] Protokoll-Tab: historische Ausführungen anzeigen
 - [ ] PDF-Export Runbook
 - [ ] Markdown-Export Runbook
-- [ ] Healthcheck-URL pro Gerät im Runbook
+- [ ] Management-URL / Deep-Link (statischer Link) pro Gerät im Runbook (KEIN Live-Polling!)
 
 ---
 
@@ -194,6 +216,7 @@ virtuelle Maschinen und Shutdown/Startup-Runbooks.
 - ❌ Proxmox als hypervisor_typ
 - ❌ Neue pip-Pakete ohne Rückfrage
 - ❌ Bestehende Router-Struktur brechen
+- ❌ Landingpage-Route in App-Layout einbetten (muss sidebar-frei bleiben)
 
 ---
 
