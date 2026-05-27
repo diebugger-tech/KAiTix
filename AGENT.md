@@ -130,6 +130,11 @@ virtuelle Maschinen und Shutdown/Startup-Runbooks.
 
 ## Implementierte Features (diese Session)
 
+### ✅ KAiTix Sprint 2 — Power Protokoll + Modal Refactoring
+- **Backend API:** Neuer Endpoint `GET /api/v1/power/audit/{usv_unit_id}` zur On-The-Fly VDE-Compliance Prüfung anhand von `app/domains/power/services/usv_calc.py -> audit_vde_compliance()`.
+- **Frontend Refactoring:** Die Geräte-Detail-Ansicht in `racks/+page.svelte` wurde in ein zentriertes Modal (Overlay) mit drei Tabs (Geräte-Details, Ports & Kabel, VDE Protokoll) umgebaut.
+- Das VDE Protokoll-Tab visualisiert den Audit-Status sowie die Last-Historie asynchron.
+
 ### ✅ Bugfix check_execution_step
 - `id == sid` → `runbook_device_id == sid` korrigiert
 
@@ -210,16 +215,14 @@ virtuelle Maschinen und Shutdown/Startup-Runbooks.
 
 ---
 
-## Letzte Session
-
-**Datum:** 2026-05-25 (Nachmittag)
-**Was gemacht:**
-- Neue API & DB-Migration für Runbook-Execution `note` Spalte implementiert (erzwingt Pflicht-Begründung beim Verwerfen).
-- Backend-Validierung für Status `verworfen` (HTTP 400 ohne Notiz) hinzugefügt und getestet.
-- Planer-Sperre & Tab-Trennung im Frontend implementiert: Planer ist komplett schreibgeschützt und Ressourcen-Katalog deaktiviert (pointer-events-none), wenn eine Ausführung offen ist.
-- PDU-Outlet Info-Badges in allen drei Ansichten (Planer, Ausführung, Protokoll-Details) eingebunden.
-- Layer Inline-Dropdown Ebenen-Hinzufügung per Dropdown-Templates implementiert.
-- Automatisierte GUI-Tests (`test_gui.py`) an neuen Workflow angepasst und erfolgreich validiert.
+**Letzte Session**
+**Datum:** 2026-05-27
+**Was gemacht (Sprint 2):**
+- Backend: `UsvCalculationResponse`, `VdeAuditResult` und `PowerAuditResponse` Schemas in `app/domains/power/schemas.py` hinzugefügt.
+- Backend: VDE Audit-Logik `audit_vde_compliance()` extrahiert nach `app/domains/power/services/usv_calc.py`.
+- Backend: Endpoint `GET /api/v1/power/audit/{usv_unit_id}` implementiert (idempotent, berechnet On-The-Fly).
+- Frontend: Types und Fetch-Methoden für PowerAudit in `api.ts` integriert.
+- Frontend: Geräte-Details in `racks/+page.svelte` in ein Modal mit Tabs umgebaut, inklusive "VDE Protokoll"-Tab für USV-Geräte.
 
 **Nächste Schritte:**
 - Phasen-Imbalance beheben (12-17 kW unausgeglichen)

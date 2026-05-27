@@ -169,6 +169,31 @@
 
   // PDU Outlet state
   let pduOutlets      = $state<PduOutlet[]>([]);
+  let activeModalTab  = $state<'details'|'interfaces'|'protokoll'>('details');
+  let powerAuditData  = $state<any>(null);
+  let powerAuditLoading = $state(false);
+
+  function closeModal() {
+    selectedDevice = null;
+    activeModalTab = 'details';
+    powerAuditData = null;
+  }
+
+  $effect(() => {
+    if (activeModalTab === 'protokoll' && selectedDevice?.typ === 'usv') {
+      if (!powerAuditData && !powerAuditLoading) {
+        powerAuditLoading = true;
+        api.getPowerAudit(selectedDevice.id).then(res => {
+          powerAuditData = res;
+        }).catch(err => {
+          console.error(err);
+          powerAuditData = { error: err.message };
+        }).finally(() => {
+          powerAuditLoading = false;
+        });
+      }
+    }
+  });
   let showAddOutlet   = $state(false);
   let outletName      = $state('');
   let outletPhase     = $state<'L1'|'L2'|'L3'>('L1');
@@ -971,6 +996,7 @@
 </script>
 
 <svelte:head><title>KAiTix - Racks</title></svelte:head>
+<svelte:window onkeydown={(e) => { if (e.key === 'Escape' && selectedDevice && !showEditDevice && !showAddDevice && !showAddCable && !showEditCable && !showAddOutlet && !showAddInterface) closeModal(); }} />
 
 <div class="space-y-6">
   <!-- Header -->
@@ -1136,7 +1162,7 @@
       </div>
 
       <!-- Rack-Visualisierung (mitte) -->
-      <div class="lg:col-span-1">
+      <div class="lg:col-span-3">
         {#if !selectedRack}
           <div class="p-8 text-center text-slate-500 text-sm bg-[#101622] border border-slate-800 rounded-xl">Rack auswählen</div>
         {:else}
@@ -1287,45 +1313,50 @@
         {/if}
       </div>
 
-      <!-- Geräte-Detail (rechts, breit) -->
-      <div class="lg:col-span-2">
-        {#if !selectedDevice}
-          <div class="p-8 text-center text-slate-500 text-sm bg-[#101622] border border-slate-800 rounded-xl border-dashed">
-            {#if selectedRack}
-              Gerät anklicken oder freien HE-Slot auswählen um Hardware einzubauen
-            {:else}
-              Rack auswählen
-            {/if}
-          </div>
-        {:else}
-          {@const c = typColor(selectedDevice.typ)}
-          <div class="bg-[#101622] border border-slate-800 rounded-xl overflow-hidden">
-            <!-- Device Header -->
-            <div class="px-5 py-4 border-b border-slate-800" style="border-left:3px solid {c.border}">
+      <!-- Geräte-Detail (als Modal) -->
+      {#if selectedDevice}
+        {@const c = typColor(selectedDevice.typ)}
+        <!-- Overlay -->
+        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 flex justify-center items-start pt-10 pb-10 overflow-y-auto" onclick={closeModal} role="dialog" tabindex="-1">
+          <!-- Modal Container -->
+          <div class="bg-[#101622] border border-slate-800 rounded-xl w-full max-w-4xl shadow-2xl relative flex flex-col min-h-[50vh] max-h-full" onclick={(e) => e.stopPropagation()} role="document" tabindex="0">
+            
+            <!-- Modal Header -->
+            <div class="px-5 py-4 border-b border-slate-800 shrink-0" style="border-top-left-radius: 0.75rem; border-top-right-radius: 0.75rem; border-left: 3px solid {c.border}">
               <div class="flex items-start justify-between">
                 <div>
-                  <h3 class="font-bold text-white text-base">{selectedDevice.hostname}</h3>
-                  <div class="flex flex-wrap gap-3 text-xs text-slate-500 mt-1">
+                  <h3 class="font-bold text-white text-base flex items-center space-x-2">
+                    <span>{selectedDevice.hostname}</span>
                     <span class="capitalize px-1.5 py-0.5 rounded text-[10px]" style="background:{c.bg};color:white">{selectedDevice.typ}</span>
+                  </h3>
+                  <div class="flex flex-wrap gap-3 text-xs text-slate-500 mt-1">
                     <span>{racks.find(r=>r.id===selectedDevice!.rack_id)?.name ?? '–'} · HE {selectedDevice.u_position ?? '?'}</span>
                     {#if selectedDevice.ip_adresse}<span class="font-mono">{selectedDevice.ip_adresse}</span>{/if}
                   </div>
                 </div>
                 <div class="flex space-x-1.5">
-                  <button onclick={openEditDevice}
-                    class="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-400 transition">
-                    <Edit2 class="w-3.5 h-3.5" />
-                  </button>
-                  <button onclick={() => deleteDevice(selectedDevice!.id)}
-                    class="p-2 bg-red-950/40 hover:bg-red-900/40 border border-red-900/60 rounded-lg text-red-400 transition">
-                    <Trash2 class="w-3.5 h-3.5" />
-                  </button>
+                  <button onclick={openEditDevice} class="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-400 transition"><Edit2 class="w-3.5 h-3.5" /></button>
+                  <button onclick={() => deleteDevice(selectedDevice!.id)} class="p-2 bg-red-950/40 hover:bg-red-900/40 border border-red-900/60 rounded-lg text-red-400 transition"><Trash2 class="w-3.5 h-3.5" /></button>
+                  <button onclick={closeModal} class="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-400 transition"><X class="w-4 h-4" /></button>
                 </div>
               </div>
 
-              <!-- Stats -->
-              <div class="grid grid-cols-3 gap-3 mt-3">
-                <div class="bg-slate-900/60 rounded-lg p-2.5">
+              <!-- Tabs -->
+              <div class="flex space-x-4 mt-4 -mb-4">
+                <button class="px-3 py-3 text-xs font-semibold border-b-2 {activeModalTab === 'details' ? 'text-blue-400 border-blue-400' : 'text-slate-500 hover:text-slate-300 border-transparent'}" onclick={() => activeModalTab = 'details'}>Geräte-Details</button>
+                <button class="px-3 py-3 text-xs font-semibold border-b-2 {activeModalTab === 'interfaces' ? 'text-blue-400 border-blue-400' : 'text-slate-500 hover:text-slate-300 border-transparent'}" onclick={() => activeModalTab = 'interfaces'}>Ports & Kabel</button>
+                {#if selectedDevice.typ === 'usv'}
+                  <button class="px-3 py-3 text-xs font-semibold border-b-2 {activeModalTab === 'protokoll' ? 'text-emerald-400 border-emerald-400' : 'text-slate-500 hover:text-slate-300 border-transparent'}" onclick={() => activeModalTab = 'protokoll'}>VDE Protokoll</button>
+                {/if}
+              </div>
+            </div>
+
+            <!-- Modal Content Scrollable -->
+            <div class="overflow-y-auto p-5 space-y-4">
+              {#if activeModalTab === 'details'}
+                <!-- Stats -->
+                <div class="grid grid-cols-3 gap-3 mt-3">
+                  <div class="bg-slate-900/60 rounded-lg p-2.5">
                   {#if selectedDevice.typ === 'pdu'}
                     <div class="text-[9px] text-slate-500 uppercase font-mono">Stromtyp</div>
                     <div class="font-bold text-white text-xs mt-0.5 truncate">{selectedDevice.strom_typ || '3-phasig'}</div>
@@ -1438,7 +1469,9 @@
                 {/if}
               </div>
             {/if}
+          {/if}
 
+          {#if activeModalTab === 'interfaces'}
             <!-- Switch Port-Matrix -->
             {#if selectedDevice.typ === 'switch'}
               {@const swPorts = [
@@ -1660,8 +1693,55 @@
                 <CableIcon class="w-3.5 h-3.5" /><span>Kabelverbindung anlegen</span>
               </button>
             </div>
-          </div>
-        {/if}
+          {/if}
+
+          {#if activeModalTab === 'protokoll'}
+            {#if powerAuditLoading}
+              <div class="py-8 text-center"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500 mx-auto"></div><p class="text-xs text-slate-500 mt-3">Lade VDE Protokoll...</p></div>
+            {:else if powerAuditData?.error}
+              <div class="bg-red-950/40 border border-red-900 rounded-lg p-4 text-red-400 text-sm text-center">{powerAuditData.error}</div>
+            {:else if powerAuditData}
+              <!-- VDE Audit Results -->
+              <div class="space-y-6">
+                <div class="grid grid-cols-2 gap-4">
+                  <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+                    <div class="text-[10px] text-slate-500 uppercase tracking-wider font-mono mb-2">VDE Compliance Status</div>
+                    <div class="space-y-2">
+                      {#each powerAuditData.audit_results as res}
+                        <div class="flex items-start gap-2 text-xs">
+                          <span class="shrink-0 mt-0.5 {res.status === 'error' ? 'text-red-400' : res.status === 'warning' ? 'text-orange-400' : 'text-emerald-400'}">
+                            {#if res.status === 'ok'}✓{:else if res.status === 'warning'}⚠{:else}✗{/if}
+                          </span>
+                          <div class="min-w-0">
+                            <div class="font-bold {res.status === 'error' ? 'text-red-300' : res.status === 'warning' ? 'text-orange-300' : 'text-emerald-300'}">{res.rule}</div>
+                            <div class="text-slate-400 text-[10px] leading-snug">{res.message}</div>
+                          </div>
+                        </div>
+                      {/each}
+                    </div>
+                  </div>
+                  
+                  <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+                    <div class="text-[10px] text-slate-500 uppercase tracking-wider font-mono mb-2">Last-Historie</div>
+                    {#if powerAuditData.calculations && powerAuditData.calculations.length > 0}
+                      <div class="space-y-2 max-h-[150px] overflow-y-auto pr-1">
+                        {#each powerAuditData.calculations as calc}
+                          <div class="flex items-center justify-between text-xs border-b border-slate-800/50 pb-1 last:border-0">
+                            <span class="text-slate-400">{new Date(calc.berechnet_am).toLocaleDateString()}</span>
+                            <span class="font-mono text-emerald-400">{calc.last_kw} kW / {calc.installiert_kw} kW</span>
+                          </div>
+                        {/each}
+                      </div>
+                    {:else}
+                      <div class="text-xs text-slate-500 italic">Keine Berechnungs-Historie vorhanden</div>
+                    {/if}
+                  </div>
+                </div>
+              </div>
+            {/if}
+          {/if}
+
+        </div>
       </div>
     </div>
   {/if}
