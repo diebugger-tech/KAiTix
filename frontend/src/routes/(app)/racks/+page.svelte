@@ -1426,7 +1426,7 @@
               <div class="flex space-x-4 mt-4 -mb-4">
                 <button class="px-3 py-3 text-xs font-semibold border-b-2 {activeModalTab === 'details' ? 'text-[#5DCAA5] border-[#1D9E75]' : 'text-slate-500 hover:text-slate-300 border-transparent'}" onclick={() => activeModalTab = 'details'}>Geräte-Details</button>
                 <button class="px-3 py-3 text-xs font-semibold border-b-2 {activeModalTab === 'interfaces' ? 'text-[#5DCAA5] border-[#1D9E75]' : 'text-slate-500 hover:text-slate-300 border-transparent'}" onclick={() => activeModalTab = 'interfaces'}>Ports & Kabel</button>
-                {#if selectedDevice.typ === 'usv'}
+                {#if selectedDevice!.hersteller && selectedDevice!.modell && hardware.find(h => h.hersteller === selectedDevice!.hersteller && h.modell === selectedDevice!.modell)?.kategorie === 'usv'}
                   <button class="px-3 py-3 text-xs font-semibold border-b-2 {activeModalTab === 'protokoll' ? 'text-emerald-400 border-emerald-400' : 'text-slate-500 hover:text-slate-300 border-transparent'}" onclick={() => activeModalTab = 'protokoll'}>VDE Protokoll</button>
                 {/if}
               </div>
