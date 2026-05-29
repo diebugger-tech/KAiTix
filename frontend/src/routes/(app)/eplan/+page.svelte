@@ -1,6 +1,6 @@
 <script lang="ts">
   import { FileText, Grid, Download } from '@lucide/svelte';
-  import { onMount } from 'svelte';
+  import { api, type UsvUnit } from '$lib/api';
 
   let activeTab = $state<'block' | 'cad'>('cad');
   let pdfLoading = $state(false);
@@ -13,16 +13,36 @@
     block_voltage_v: number;
     block_capacity_ah: number;
   }
+  
+  let allUsvUnits = $state<UsvUnit[]>([]);
+  let selectedUsvId = $state<number | null>(null);
   let usvData = $state<UsvData | null>(null);
 
-  onMount(async () => {
+  async function loadUsvData(id: number) {
     try {
-      const res = await fetch('/api/v1/usv/1');
+      const res = await fetch(`/api/v1/usv/${id}`);
       if (res.ok) {
         usvData = await res.json();
       }
     } catch (e) {
       console.error('Fehler beim Laden der USV-Daten', e);
+    }
+  }
+
+  $effect(() => {
+    if (selectedUsvId !== null) {
+      loadUsvData(selectedUsvId);
+    }
+  });
+
+  onMount(async () => {
+    try {
+      allUsvUnits = await api.getUsvUnits();
+      if (allUsvUnits.length > 0) {
+        selectedUsvId = allUsvUnits[0].id;
+      }
+    } catch (e) {
+      console.error('Fehler beim Laden der USV-Liste', e);
     }
   });
 
@@ -94,6 +114,18 @@
     
     <!-- PDF Button + Tab Toggle -->
     <div class="flex items-center gap-3">
+      <!-- USV Selector -->
+      {#if allUsvUnits.length > 0}
+        <select 
+          bind:value={selectedUsvId}
+          class="bg-[#080c14] border border-slate-700 text-slate-300 text-sm rounded-lg px-3 py-2 outline-none focus:border-emerald-500"
+        >
+          {#each allUsvUnits as u}
+            <option value={u.id}>{u.bezeichnung} ({u.hersteller})</option>
+          {/each}
+        </select>
+      {/if}
+
       <button
         onclick={printEplan}
         disabled={pdfLoading}
