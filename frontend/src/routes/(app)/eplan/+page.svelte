@@ -1,5 +1,6 @@
 <script lang="ts">
   import { FileText, Grid, Download } from '@lucide/svelte';
+  import { onMount } from 'svelte';
   import { api, type UsvUnit } from '$lib/api';
 
   let activeTab = $state<'block' | 'cad'>('cad');

@@ -216,6 +216,10 @@ async def main():
             hersteller="Wöhrle SVS",
             rack_id=rack_app.id,
             max_kw=40.0,
+            battery_strings=2,
+            blocks_per_string=32,
+            block_voltage_v=12.0,
+            block_capacity_ah=100.0,
         )
         db.add(usv1)
         await db.flush()
