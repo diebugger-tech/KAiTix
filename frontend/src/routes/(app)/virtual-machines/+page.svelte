@@ -377,7 +377,7 @@
                   <!-- Quick actions on hover -->
                   <div class="absolute -top-2 -right-2 hidden group-hover:flex items-center gap-1 bg-slate-900 border border-slate-700 rounded-md p-1 shadow-lg z-20">
                     <button
-                      onclick={(e) => { e.stopPropagation(); openEdit(vm); }}
+                      onclick={(e: Event) => { e.stopPropagation(); openEdit(vm); }}
                       class="p-0.5 text-[#5DCAA5] hover:text-[#86EFCB] hover:bg-slate-800 rounded"
                       title="Bearbeiten"
                     >
@@ -387,7 +387,7 @@
                       </svg>
                     </button>
                     <button
-                      onclick={(e) => { e.stopPropagation(); deleteVm(vm.id); }}
+                      onclick={(e: Event) => { e.stopPropagation(); deleteVm(vm.id); }}
                       class="p-0.5 text-red-400 hover:text-red-300 hover:bg-slate-800 rounded"
                       title="Löschen"
                     >
