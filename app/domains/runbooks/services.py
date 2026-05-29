@@ -169,16 +169,16 @@ class RunbookService:
             raise HTTPException(status_code=404, detail="Runbook not found")
 
         from io import BytesIO
-        from reportlab.lib.pagesizes import A4
-        from reportlab.platypus import (
+        from reportlab.lib.pagesizes import A4  # type: ignore
+        from reportlab.platypus import (  # type: ignore
             SimpleDocTemplate,
             Paragraph,
             Spacer,
             Table,
             TableStyle,
         )
-        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-        from reportlab.lib import colors
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle  # type: ignore
+        from reportlab.lib import colors  # type: ignore
 
         buffer = BytesIO()
         doc = SimpleDocTemplate(

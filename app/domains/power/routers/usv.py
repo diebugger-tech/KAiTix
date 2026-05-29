@@ -216,7 +216,7 @@ async def get_power_audit(usv_unit_id: int, db: AsyncSession = Depends(get_db)):
     return PowerAuditResponse(
         usv_unit_id=usv_unit_id,
         audit_results=audit_results,
-        calculations=calculations,
+        calculations=list(calculations),  # type: ignore
     )
 
 
