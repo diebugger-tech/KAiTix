@@ -48,7 +48,7 @@
     }
   }
 
-  async function handleAddRack(rackData) {
+  async function handleAddRack(rackData: Partial<Rack>) {
     try {
       await api.createRack(rackData);
       await loadData();
@@ -79,7 +79,7 @@
 
   function computeRoomPhaseLoads(roomRacks: Rack[]) {
     const rackIds = new Set(roomRacks.map(r => r.id));
-    const roomDevices = devices.filter(d => rackIds.has(d.rack_id));
+    const roomDevices = devices.filter(d => d.rack_id != null && rackIds.has(d.rack_id));
     return {
       l1: roomDevices.filter(d => d.phase === 'L1').reduce((s, d) => s + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0) / 1000,
       l2: roomDevices.filter(d => d.phase === 'L2').reduce((s, d) => s + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0) / 1000,

@@ -17,7 +17,7 @@ export interface OptimizeResult {
 export interface Device {
   id: number;
   hostname: string;
-  typ: 'server' | 'switch' | 'pdu' | 'sonstige';
+  typ: 'server' | 'switch' | 'pdu' | 'storage' | 'firewall' | 'kentix_raconode' | 'kentix_doormaster' | 'kentix_multisensor' | 'usv' | 'sonstige';
   ip_adresse?: string;
   hersteller?: string;
   modell?: string;
@@ -53,7 +53,7 @@ export interface Rack {
   id: number;
   name: string;
   standort: string;
-  rackreihe?: string;
+  rackreihe?: string | null;
   hoehe_u: number;
   breite_mm?: number;
   bemerkung?: string;

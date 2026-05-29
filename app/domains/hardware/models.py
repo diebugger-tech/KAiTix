@@ -78,6 +78,7 @@ class Device(Base):
             "kentix_raconode",
             "kentix_doormaster",
             "kentix_multisensor",
+            "usv",
             "sonstige",
         ),
         nullable=False,

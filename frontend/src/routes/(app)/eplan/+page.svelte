@@ -10,6 +10,7 @@
       const blockSvg = document.querySelector('#eplan-block svg')?.outerHTML ?? '';
       const blatt1Svg = document.querySelector('#eplan-blatt1')?.outerHTML ?? '';
       const blatt2Svg = document.querySelector('#eplan-blatt2')?.outerHTML ?? '';
+      const blatt3Svg = document.querySelector('#eplan-blatt3 svg')?.outerHTML ?? '';
 
       const html = `<!DOCTYPE html>
 <html lang="de">
@@ -41,6 +42,10 @@
   <div class="page">
     <p class="page-title">CAD E-Plan — Blatt 2: UV-USV-01 Verteilung</p>
     ${blatt2Svg}
+  </div>
+  <div class="page">
+    <p class="page-title">CAD E-Plan — Blatt 3: Batterieanlage 2-strängig + BMS</p>
+    ${blatt3Svg}
   </div>
 </body>
 </html>`;
@@ -557,6 +562,249 @@
 
             <text x="610" y="645" font-size="10" font-style="italic" fill="#64748b">Weiter zu UV-USV-01 (Blatt 2)</text>
             
+          </g>
+        </svg>
+      </div>
+
+      <!-- BLATT 3: 2-strängige Batterieanlage + BMS -->
+      <div id="eplan-blatt3" class="bg-white border-2 border-slate-300 rounded shadow-inner p-4 w-full flex justify-center mt-8" style="min-height: 800px;">
+        <svg viewBox="0 0 1000 700" class="w-full max-w-[1200px] h-auto drop-shadow-sm font-sans" shape-rendering="crispEdges">
+
+          <!-- Outer Frame -->
+          <rect x="20" y="20" width="960" height="660" fill="none" stroke="#334155" stroke-width="2" />
+
+          <!-- Grid -->
+          {#each Array(10) as _, i}
+            <line x1={20 + (i * 96)} y1="15" x2={20 + (i * 96)} y2="25" stroke="#94a3b8" stroke-width="1" />
+            <text x={68 + (i * 96)} y="15" font-size="10" fill="#94a3b8" text-anchor="middle">{i}</text>
+          {/each}
+          {#each Array(6) as _, i}
+            <line x1="15" y1={20 + (i * 110)} x2="25" y2={20 + (i * 110)} stroke="#94a3b8" stroke-width="1" />
+            <text x="10" y={75 + (i * 110)} font-size="10" fill="#94a3b8" text-anchor="end">{String.fromCharCode(65 + i)}</text>
+          {/each}
+
+          <!-- Title Block -->
+          <g transform="translate(680, 580)">
+            <rect x="0" y="0" width="300" height="100" fill="none" stroke="#334155" stroke-width="2" />
+            <line x1="0" y1="20" x2="300" y2="20" stroke="#334155" stroke-width="1" />
+            <line x1="0" y1="40" x2="300" y2="40" stroke="#334155" stroke-width="1" />
+            <line x1="0" y1="80" x2="300" y2="80" stroke="#334155" stroke-width="1" />
+            <line x1="100" y1="0" x2="100" y2="40" stroke="#334155" stroke-width="1" />
+            <line x1="200" y1="80" x2="200" y2="100" stroke="#334155" stroke-width="1" />
+            <line x1="250" y1="80" x2="250" y2="100" stroke="#334155" stroke-width="1" />
+            <text x="5" y="14" font-size="9" fill="#64748b">Datum</text><text x="40" y="14" font-size="10" fill="#0f172a" font-weight="bold">2026-05-22</text>
+            <text x="105" y="14" font-size="9" fill="#64748b">Bearbeiter</text><text x="155" y="14" font-size="10" fill="#0f172a" font-weight="bold">Andreas</text>
+            <text x="5" y="34" font-size="9" fill="#64748b">Geprüft</text>
+            <text x="105" y="34" font-size="9" fill="#64748b">Norm</text><text x="155" y="34" font-size="10" fill="#0f172a">EN 61082-1</text>
+            <text x="5" y="55" font-size="11" fill="#64748b">Projektbezeichnung:</text>
+            <text x="5" y="72" font-size="16" fill="#0f172a" font-weight="bold">KAiTix</text>
+            <text x="5" y="94" font-size="11" fill="#0f172a">Anlage: Batterieanlage 2-strängig + BMS</text>
+            <text x="205" y="94" font-size="10" fill="#64748b">Blatt:</text><text x="235" y="94" font-size="11" fill="#0f172a" font-weight="bold">3</text>
+            <text x="255" y="94" font-size="10" fill="#64748b">V.Bl.:</text><text x="285" y="94" font-size="11" fill="#0f172a">1</text>
+          </g>
+
+          <g stroke-linecap="round" stroke-linejoin="round">
+            <text x="30" y="65" font-size="10" font-style="italic" fill="#64748b">Von Blatt 1 — USV =T1 DC-Bus</text>
+
+            <!-- DC+ und DC- Sammelschienen -->
+            <line x1="50" y1="80" x2="650" y2="80" stroke="#dc2626" stroke-width="2.5" />
+            <text x="35" y="83" font-size="10" fill="#dc2626" font-weight="bold">DC+</text>
+            <line x1="50" y1="110" x2="650" y2="110" stroke="#1d4ed8" stroke-width="2.5" />
+            <text x="35" y="113" font-size="10" fill="#1d4ed8" font-weight="bold">DC−</text>
+            <text x="660" y="83" font-size="9" fill="#64748b">USV GR/WR Gleichstromzwischenkreis</text>
+            <text x="660" y="113" font-size="9" fill="#64748b">≈ 380 – 480 V DC</text>
+
+            <!-- ============================================================ -->
+            <!-- STRANG A (links) -->
+            <!-- ============================================================ -->
+            <rect x="50" y="140" width="270" height="380" fill="none" stroke="#059669" stroke-dasharray="8,4" stroke-width="1.5" />
+            <text x="56" y="135" font-size="12" font-weight="bold" fill="#059669">=BAT-A</text>
+            <text x="56" y="150" font-size="10" fill="#059669">Batterie-Strang A</text>
+
+            <!-- Abgriff DC+ auf Strang A -->
+            <circle cx="180" cy="80" r="3" fill="white" stroke="#dc2626" stroke-width="1.5"/>
+            <line x1="180" y1="80" x2="180" y2="165" stroke="#dc2626" stroke-width="1.5"/>
+
+            <!-- NH-Trennleiter -F-BAT-A (DC-seitig, 2-polig) -->
+            <g stroke="#0f172a" stroke-width="1.5" fill="none">
+              <!-- Pol + -->
+              <rect x="172" y="165" width="10" height="28"/>
+              <line x1="172" y1="165" x2="182" y2="193"/>
+              <!-- Pol − -->
+              <rect x="190" y="165" width="10" height="28"/>
+              <line x1="190" y1="165" x2="200" y2="193"/>
+              <!-- Betätigungsstange -->
+              <line x1="165" y1="179" x2="210" y2="179" stroke-dasharray="3,3" stroke-width="1"/>
+            </g>
+            <circle cx="172" cy="165" r="3" fill="white" stroke="#0f172a" stroke-width="1.5"/>
+            <circle cx="190" cy="165" r="3" fill="white" stroke="#0f172a" stroke-width="1.5"/>
+            <circle cx="182" cy="193" r="3" fill="white" stroke="#0f172a" stroke-width="1.5"/>
+            <circle cx="200" cy="193" r="3" fill="white" stroke="#0f172a" stroke-width="1.5"/>
+            <text x="120" y="182" font-size="10" font-weight="bold" fill="#0f172a">-F-BAT-A</text>
+            <text x="215" y="182" font-size="9" fill="#0f172a">NH-Trenner 2P</text>
+            <text x="215" y="193" font-size="8" fill="#64748b">DC-seitig manuell</text>
+
+            <!-- Strang A: DC+ Leitung zur Batteriereihe -->
+            <line x1="182" y1="193" x2="182" y2="230" stroke="#dc2626" stroke-width="1.5"/>
+            <!-- DC− Abgriff -->
+            <circle cx="200" cy="110" r="3" fill="white" stroke="#1d4ed8" stroke-width="1.5"/>
+            <line x1="200" y1="110" x2="200" y2="193" stroke="#1d4ed8" stroke-width="1.5"/>
+            <line x1="200" y1="193" x2="200" y2="230" stroke="#1d4ed8" stroke-width="1.5"/>
+
+            <!-- Batterie-Blöcke Strang A (40 Blöcke × 12V = 480V) -->
+            <!-- Zeige 4 Blöcke stellvertretend mit Beschriftung -->
+            {#each Array(4) as _, i}
+              <!-- Block Zelle -->
+              <rect x="155" y={230 + i * 55} width="70" height="40" fill="#f0fdf4" stroke="#059669" stroke-width="1.2"/>
+              <!-- Batterie-Symbol innen -->
+              <line x1="175" y1={248 + i * 55} x2="183" y2={248 + i * 55} stroke="#0f172a" stroke-width="1.5"/>
+              <line x1="183" y1={243 + i * 55} x2="183" y2={253 + i * 55} stroke="#0f172a" stroke-width="2"/>
+              <line x1="186" y1={243 + i * 55} x2="186" y2={253 + i * 55} stroke="#0f172a" stroke-width="1"/>
+              <line x1="186" y1={248 + i * 55} x2="195" y2={248 + i * 55} stroke="#0f172a" stroke-width="1.5"/>
+              <text x="190" y={261 + i * 55} font-size="7" fill="#059669">12V / {i < 3 ? '65Ah' : '65Ah'}</text>
+              <!-- Block-Nummer -->
+              <text x="158" y={244 + i * 55} font-size="8" font-weight="bold" fill="#0f172a">Blk {i + 1 + (i === 3 ? 0 : 0)}</text>
+
+              <!-- BMS Sensor am Block -->
+              <rect x="235" y={233 + i * 55} width="70" height="34" fill="#fef9c3" stroke="#ca8a04" stroke-width="1"/>
+              <text x="270" y={246 + i * 55} font-size="8" font-weight="bold" text-anchor="middle" fill="#92400e">BMS-S{i + 1}</text>
+              <text x="270" y={257 + i * 55} font-size="7" text-anchor="middle" fill="#78350f">U / Ri / T°</text>
+              <!-- Messleitung Block → BMS-Sensor -->
+              <line x1="225" y1={248 + i * 55} x2="235" y2={248 + i * 55} stroke="#ca8a04" stroke-width="0.8" stroke-dasharray="2,2"/>
+            {/each}
+
+            <!-- "... n Blöcke ..." Hinweis -->
+            <text x="182" y="468" font-size="9" font-style="italic" fill="#64748b" text-anchor="middle">⋯ 40 Blöcke gesamt in Reihe ⋯</text>
+
+            <!-- BMS-Datenbus Strang A (senkrecht, alle Sensoren → BMS-Controller) -->
+            <line x1="305" y1="230" x2="305" y2="455" stroke="#ca8a04" stroke-width="1" stroke-dasharray="3,2"/>
+            {#each Array(4) as _, i}
+              <circle cx="305" cy={248 + i * 55} r="2.5" fill="#ca8a04"/>
+              <!-- Verbindung Sensor → Bus -->
+              <line x1="305" y1={248 + i * 55} x2="305" y2={248 + i * 55} stroke="#ca8a04" stroke-width="1"/>
+            {/each}
+            <text x="310" y="345" font-size="8" fill="#92400e" transform="rotate(-90,310,345)">BMS-Datenbus Strang A</text>
+
+            <!-- ============================================================ -->
+            <!-- STRANG B (rechts) -->
+            <!-- ============================================================ -->
+            <rect x="360" y="140" width="270" height="380" fill="none" stroke="#7c3aed" stroke-dasharray="8,4" stroke-width="1.5" />
+            <text x="366" y="135" font-size="12" font-weight="bold" fill="#7c3aed">=BAT-B</text>
+            <text x="366" y="150" font-size="10" fill="#7c3aed">Batterie-Strang B</text>
+
+            <!-- Abgriff DC+ auf Strang B -->
+            <circle cx="390" cy="80" r="3" fill="white" stroke="#dc2626" stroke-width="1.5"/>
+            <line x1="390" y1="80" x2="390" y2="165" stroke="#dc2626" stroke-width="1.5"/>
+
+            <!-- NH-Trennleiter -F-BAT-B -->
+            <g stroke="#0f172a" stroke-width="1.5" fill="none">
+              <rect x="382" y="165" width="10" height="28"/>
+              <line x1="382" y1="165" x2="392" y2="193"/>
+              <rect x="400" y="165" width="10" height="28"/>
+              <line x1="400" y1="165" x2="410" y2="193"/>
+              <line x1="375" y1="179" x2="420" y2="179" stroke-dasharray="3,3" stroke-width="1"/>
+            </g>
+            <circle cx="382" cy="165" r="3" fill="white" stroke="#0f172a" stroke-width="1.5"/>
+            <circle cx="400" cy="165" r="3" fill="white" stroke="#0f172a" stroke-width="1.5"/>
+            <circle cx="392" cy="193" r="3" fill="white" stroke="#0f172a" stroke-width="1.5"/>
+            <circle cx="410" cy="193" r="3" fill="white" stroke="#0f172a" stroke-width="1.5"/>
+            <text x="330" y="182" font-size="10" font-weight="bold" fill="#0f172a">-F-BAT-B</text>
+            <text x="425" y="182" font-size="9" fill="#0f172a">NH-Trenner 2P</text>
+            <text x="425" y="193" font-size="8" fill="#64748b">DC-seitig manuell</text>
+
+            <line x1="392" y1="193" x2="392" y2="230" stroke="#dc2626" stroke-width="1.5"/>
+            <circle cx="410" cy="110" r="3" fill="white" stroke="#1d4ed8" stroke-width="1.5"/>
+            <line x1="410" y1="110" x2="410" y2="193" stroke="#1d4ed8" stroke-width="1.5"/>
+            <line x1="410" y1="193" x2="410" y2="230" stroke="#1d4ed8" stroke-width="1.5"/>
+
+            <!-- Batterie-Blöcke Strang B -->
+            {#each Array(4) as _, i}
+              <rect x="365" y={230 + i * 55} width="70" height="40" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.2"/>
+              <line x1="385" y1={248 + i * 55} x2="393" y2={248 + i * 55} stroke="#0f172a" stroke-width="1.5"/>
+              <line x1="393" y1={243 + i * 55} x2="393" y2={253 + i * 55} stroke="#0f172a" stroke-width="2"/>
+              <line x1="396" y1={243 + i * 55} x2="396" y2={253 + i * 55} stroke="#0f172a" stroke-width="1"/>
+              <line x1="396" y1={248 + i * 55} x2="405" y2={248 + i * 55} stroke="#0f172a" stroke-width="1.5"/>
+              <text x="400" y={261 + i * 55} font-size="7" fill="#7c3aed">12V / 65Ah</text>
+              <text x="368" y={244 + i * 55} font-size="8" font-weight="bold" fill="#0f172a">Blk {i + 1}</text>
+
+              <rect x="445" y={233 + i * 55} width="70" height="34" fill="#fef9c3" stroke="#ca8a04" stroke-width="1"/>
+              <text x="480" y={246 + i * 55} font-size="8" font-weight="bold" text-anchor="middle" fill="#92400e">BMS-S{i + 5}</text>
+              <text x="480" y={257 + i * 55} font-size="7" text-anchor="middle" fill="#78350f">U / Ri / T°</text>
+              <line x1="435" y1={248 + i * 55} x2="445" y2={248 + i * 55} stroke="#ca8a04" stroke-width="0.8" stroke-dasharray="2,2"/>
+            {/each}
+
+            <text x="392" y="468" font-size="9" font-style="italic" fill="#64748b" text-anchor="middle">⋯ 40 Blöcke gesamt in Reihe ⋯</text>
+
+            <!-- BMS-Datenbus Strang B -->
+            <line x1="518" y1="230" x2="518" y2="455" stroke="#ca8a04" stroke-width="1" stroke-dasharray="3,2"/>
+            {#each Array(4) as _, i}
+              <circle cx="518" cy={248 + i * 55} r="2.5" fill="#ca8a04"/>
+            {/each}
+            <text x="523" y="345" font-size="8" fill="#92400e" transform="rotate(-90,523,345)">BMS-Datenbus Strang B</text>
+
+            <!-- ============================================================ -->
+            <!-- BMS Controller -->
+            <!-- ============================================================ -->
+            <rect x="100" y="490" width="450" height="70" fill="#fefce8" stroke="#ca8a04" stroke-width="2"/>
+            <text x="325" y="510" font-size="12" font-weight="bold" text-anchor="middle" fill="#92400e">=BMS  Batterie-Management-System (Controller)</text>
+            <text x="325" y="526" font-size="9" text-anchor="middle" fill="#78350f">Einzelblock-Überwachung: U-Block / Innenwiderstand Ri / Temperatur T°</text>
+            <text x="325" y="540" font-size="8" text-anchor="middle" fill="#92400e">→ Alarm bei: Δ U &gt; 0.5V | Ri &gt; 150% Referenz | T° &gt; 40°C</text>
+            <text x="325" y="554" font-size="8" text-anchor="middle" fill="#64748b">Protokoll: SNMP v3 (Trap → USV-Monitoring / NMS)</text>
+
+            <!-- Datenbus-Linien von Strangs zum BMS-Controller -->
+            <line x1="305" y1="455" x2="305" y2="490" stroke="#ca8a04" stroke-width="1" stroke-dasharray="3,2"/>
+            <circle cx="305" cy="490" r="3" fill="#ca8a04"/>
+            <text x="290" y="475" font-size="8" fill="#92400e">Bus A</text>
+
+            <line x1="518" y1="455" x2="518" y2="490" stroke="#ca8a04" stroke-width="1" stroke-dasharray="3,2"/>
+            <circle cx="518" cy="490" r="3" fill="#ca8a04"/>
+            <text x="523" y="475" font-size="8" fill="#92400e">Bus B</text>
+
+            <!-- SNMP-Ausgang BMS → USV -->
+            <line x1="550" y1="525" x2="650" y2="525" stroke="#0369a1" stroke-width="1.5" stroke-dasharray="5,3"/>
+            <circle cx="550" cy="525" r="3" fill="white" stroke="#0369a1" stroke-width="1.5"/>
+            <text x="655" y="529" font-size="9" fill="#0369a1">SNMP v3 → USV / NMS</text>
+
+            <!-- Legende -->
+            <rect x="660" y="140" width="295" height="330" fill="#f8fafc" stroke="#334155" stroke-width="1"/>
+            <text x="807" y="160" font-size="11" font-weight="bold" text-anchor="middle" fill="#0f172a">Legende &amp; Erläuterung</text>
+
+            <line x1="670" y1="178" x2="700" y2="178" stroke="#dc2626" stroke-width="2.5"/>
+            <text x="705" y="182" font-size="9" fill="#0f172a">DC+ Sammelschiene</text>
+            <line x1="670" y1="196" x2="700" y2="196" stroke="#1d4ed8" stroke-width="2.5"/>
+            <text x="705" y="200" font-size="9" fill="#0f172a">DC− Sammelschiene</text>
+            <line x1="670" y1="214" x2="700" y2="214" stroke="#059669" stroke-dasharray="5,3" stroke-width="1.5"/>
+            <text x="705" y="218" font-size="9" fill="#0f172a">Strang A (redundanter Pfad)</text>
+            <line x1="670" y1="232" x2="700" y2="232" stroke="#7c3aed" stroke-dasharray="5,3" stroke-width="1.5"/>
+            <text x="705" y="236" font-size="9" fill="#0f172a">Strang B (redundanter Pfad)</text>
+            <line x1="670" y1="250" x2="700" y2="250" stroke="#ca8a04" stroke-dasharray="3,2" stroke-width="1"/>
+            <text x="705" y="254" font-size="9" fill="#0f172a">BMS-Datenbus (CAN/RS485)</text>
+            <line x1="670" y1="268" x2="700" y2="268" stroke="#0369a1" stroke-dasharray="5,3" stroke-width="1.5"/>
+            <text x="705" y="272" font-size="9" fill="#0f172a">SNMP v3 (Monitoring)</text>
+
+            <line x1="660" y1="285" x2="955" y2="285" stroke="#334155" stroke-width="0.5"/>
+
+            <text x="670" y="302" font-size="9" font-weight="bold" fill="#0f172a">Redundanzkonzept (2-strängig):</text>
+            <text x="670" y="316" font-size="8" fill="#334155">• Strang A u. B parallel am DC-Bus</text>
+            <text x="670" y="328" font-size="8" fill="#334155">• Strangausfall → NH-Trenner auslösen</text>
+            <text x="670" y="340" font-size="8" fill="#334155">• Restkapazität: 50 % (≈ 15 min)</text>
+            <text x="670" y="352" font-size="8" fill="#334155">• Wartung unter Last möglich</text>
+            <text x="670" y="364" font-size="8" fill="#334155">• Kein SPOF durch Einzelblock-Defekt</text>
+
+            <line x1="660" y1="378" x2="955" y2="378" stroke="#334155" stroke-width="0.5"/>
+
+            <text x="670" y="394" font-size="9" font-weight="bold" fill="#0f172a">BMS-Überwachung je Block:</text>
+            <text x="670" y="408" font-size="8" fill="#334155">• Blockspannung U [V] → Alterung</text>
+            <text x="670" y="420" font-size="8" fill="#334155">• Innenwiderstand Ri [mΩ] → Defekt</text>
+            <text x="670" y="432" font-size="8" fill="#334155">• Temperatur T° → Thermal Runaway</text>
+            <text x="670" y="444" font-size="8" fill="#334155">• Alarm via SNMP-Trap → USV / NMS</text>
+
+            <line x1="660" y1="458" x2="955" y2="458" stroke="#334155" stroke-width="0.5"/>
+
+            <text x="670" y="472" font-size="9" font-weight="bold" fill="#0f172a">Szenario Zelltod (Strang A):</text>
+            <text x="670" y="484" font-size="8" fill="#334155">NH-Trenner A löst → Strang B trägt</text>
+            <text x="670" y="496" font-size="8" fill="#059669">Last → RZ läuft weiter (unterbrechungsfrei)</text>
+
           </g>
         </svg>
       </div>

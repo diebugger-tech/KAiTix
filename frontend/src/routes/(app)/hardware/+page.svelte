@@ -16,7 +16,7 @@
 
   // Form fields
   let name = $state('');
-  let kategorie = $state<string>('server');
+  let kategorie = $state<HardwareType['kategorie']>('server');
   let hersteller = $state('');
   let modell = $state('');
   let u_hoehe = $state(1);

@@ -91,7 +91,7 @@
       await onSave(data);
       show = false;
     } catch (err) {
-      alert('Fehler beim Speichern: ' + err.message);
+      alert('Fehler beim Speichern: ' + (err instanceof Error ? err.message : String(err)));
     }
   }
 

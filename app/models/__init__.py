@@ -9,12 +9,11 @@ from app.domains.runbooks.models import (
     RunbookExecution,
     RunbookExecutionStep,
 )
+from app.domains.network.models import Vlan, Subnet
 
 # Legacy aliases for unified Interface model
 ServerInterface = Interface
 DevicePort = Interface
-
-from app.domains.network.models import Vlan, Subnet
 
 __all__ = [
     "Rack",

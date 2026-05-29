@@ -6,7 +6,7 @@
   import { goto } from '$app/navigation';
   import RunbookPrint from '$lib/components/RunbookPrint.svelte';
 
-  let runbookId = parseInt(page.params.id);
+  let runbookId = parseInt(page.params.id ?? '0');
   let runbook = $state<Runbook | null>(null);
   let loading = $state(true);
   
@@ -1092,7 +1092,7 @@
   <div class="bg-[#131615] border border-slate-800 rounded-xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
     <div class="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/50">
       <div>
-        <h3 class="text-lg font-bold text-white">Protokoll: {runbook.name}</h3>
+        <h3 class="text-lg font-bold text-white">Protokoll: {runbook?.name ?? ''}</h3>
         <p class="text-xs text-slate-400 mt-1">
           Gestartet am: {new Date(selectedExecutionDetails.gestartet_am).toLocaleString()} | Modus: <span class="uppercase font-semibold">{selectedExecutionDetails.modus}</span> | Status: <span class={`uppercase font-semibold ${selectedExecutionDetails.status === 'verworfen' ? 'text-red-400' : 'text-emerald-400'}`}>{selectedExecutionDetails.status}</span>
         </p>
@@ -1105,7 +1105,7 @@
     
     <div class="p-6 overflow-y-auto space-y-6">
       <!-- Derived layers list for this execution -->
-      {#each selectedExecutionDetails.modus === 'startup' ? [...runbook.layers].sort((a, b) => a.position - b.position).reverse() : [...runbook.layers].sort((a, b) => a.position - b.position) as layer}
+      {#each selectedExecutionDetails.modus === 'startup' ? [...(runbook?.layers ?? [])].sort((a, b) => a.position - b.position).reverse() : [...(runbook?.layers ?? [])].sort((a, b) => a.position - b.position) as layer}
         <div class="bg-slate-900/40 border border-slate-800 rounded-lg overflow-hidden">
           <div class="bg-slate-800/40 px-3 py-2 border-b border-slate-800 flex items-center gap-2">
             <span class="w-5 h-5 rounded bg-slate-800 flex items-center justify-center text-[10px] text-slate-400 font-bold border border-slate-700">{layer.position}</span>

@@ -20,7 +20,7 @@
   let showEditDevice = $state(false);
 
   let hostname = $state('');
-  let typ = $state<'server' | 'switch' | 'pdu' | 'sonstige'>('server');
+  let typ = $state<Device['typ']>('server');
   let u_position = $state(1);
   let u_hoehe = $state(1);
   let phase = $state<'L1' | 'L2' | 'L3'>('L1');

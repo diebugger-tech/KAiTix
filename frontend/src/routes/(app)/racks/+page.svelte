@@ -348,13 +348,13 @@
   });
 
   // ── Rack CRUD ──────────────────────────────────────────────
-  async function handleAddRack(rackData) {
+  async function handleAddRack(rackData: Partial<Rack>) {
     const r = await api.createRack(rackData);
     await loadAll();
     selectedRack = r;
   }
 
-  async function handleEditRack(rackData) {
+  async function handleEditRack(rackData: Partial<Rack>) {
     if (!selectedRack) return;
     const r = await api.updateRack(selectedRack.id, rackData);
     await loadAll();
@@ -833,11 +833,13 @@
   const phaseLoads = $derived(() => {
     const ph = { L1: 0, L2: 0, L3: 0 };
     for (const d of rackDevices) {
-      let effectivePhases = [];
+      const effectivePhases: Array<'L1' | 'L2' | 'L3'> = [];
       if (d.connected_pdu_outlets && d.connected_pdu_outlets.length > 0) {
-        effectivePhases = d.connected_pdu_outlets.map(o => o.phase);
+        for (const o of d.connected_pdu_outlets) {
+          if (o.phase === 'L1' || o.phase === 'L2' || o.phase === 'L3') effectivePhases.push(o.phase);
+        }
       } else if (d.phase === 'L1' || d.phase === 'L2' || d.phase === 'L3') {
-        effectivePhases = [d.phase];
+        effectivePhases.push(d.phase);
       }
       
       const power = Number(d.anschlussleistung_watt ?? d.tdp_watt ?? 0);
@@ -906,7 +908,7 @@
 
   let isZeroU = $derived(selectedHW ? selectedHW.u_hoehe === 0 : devUHoehe === 0);
 
-  function isHWIncompatible(hw) {
+  function isHWIncompatible(hw: HardwareType) {
     if (!selectedRack || !hw.min_rack_hoehe) return false;
     return selectedRack.hoehe_u < hw.min_rack_hoehe;
   }
@@ -2056,7 +2058,7 @@
         <div class="flex justify-end space-x-3 pt-2">
           <button type="button" onclick={() => { showAddDevice=false; pduOnlyMode=false; }} class="px-4 py-2 text-sm text-slate-400 hover:bg-slate-800 rounded-lg transition">Abbrechen</button>
           <button type="submit" 
-            disabled={selectedHW && selectedHW.min_rack_hoehe && selectedRack && selectedRack.hoehe_u < selectedHW.min_rack_hoehe}
+            disabled={!!(selectedHW?.min_rack_hoehe && selectedRack && selectedRack.hoehe_u < selectedHW.min_rack_hoehe)}
             class="px-4 py-2 bg-[#1D9E75] hover:bg-[#0F6E56] disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded-lg text-sm font-semibold transition"
           >
             Einbauen

@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine
-from app.models import *
+from app.models import *  # noqa: F403
 from app.core.database import Base
 
 engine = create_engine("sqlite:///:memory:")

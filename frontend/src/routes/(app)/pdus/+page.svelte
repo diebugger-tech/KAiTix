@@ -47,9 +47,9 @@
 
   // Outlet Form fields
   let outlet_name = $state('');
-  let outlet_phase = $state<L1 | L2 | L3>('L1');
-  let steckdosentyp = $state('C13');
-  let max_watt = $state(2300);
+  let outlet_phase = $state<'L1' | 'L2' | 'L3'>('L1');
+  let steckdosentyp = $state<'C13' | 'C19' | 'C14' | 'C20' | 'Schuko' | 'CEE-16A'>('C13');
+  let max_watt = $state<number | null>(2300);
   let schaltbar = $state(true);
   let connected_device_id = $state<number | null>(null);
   let connected_port = $state('');
@@ -246,8 +246,11 @@
         pdu_id: selectedPdu.id,
         outlet_name: outlet_name.trim(),
         phase: outlet_phase,
-        steckdosentyp, max_watt, schaltbar,
-        connected_device_id, connected_port
+        steckdosentyp,
+        max_watt: max_watt ?? undefined,
+        schaltbar,
+        connected_device_id: connected_device_id ?? undefined,
+        connected_port
       });
       showAddOutlet = false;
       resetOutletForm();
@@ -264,8 +267,11 @@
       await api.updatePduOutlet(selectedPdu.id, editingOutlet.id, {
         outlet_name: outlet_name.trim(),
         phase: outlet_phase,
-        steckdosentyp, max_watt, schaltbar,
-        connected_device_id, connected_port
+        steckdosentyp,
+        max_watt: max_watt ?? undefined,
+        schaltbar,
+        connected_device_id: connected_device_id ?? undefined,
+        connected_port
       });
       showEditOutlet = false;
       editingOutlet = null;
