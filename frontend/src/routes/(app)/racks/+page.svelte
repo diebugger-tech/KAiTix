@@ -184,7 +184,7 @@
   }
 
   $effect(() => {
-    if (activeModalTab === 'protokoll' && selectedDevice?.typ === 'usv') {
+    if (activeModalTab === 'protokoll' && selectedDevice && selectedDevice.hersteller && selectedDevice.modell && hardware.find(h => h.hersteller === selectedDevice!.hersteller && h.modell === selectedDevice!.modell)?.kategorie === 'usv') {
       if (!powerAuditData && !powerAuditLoading) {
         powerAuditLoading = true;
         api.getPowerAudit(selectedDevice.id).then(res => {
