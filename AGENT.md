@@ -63,6 +63,14 @@ virtuelle Maschinen und Shutdown/Startup-Runbooks.
 
 ---
 
+## Projekthistorie & Ursprung
+
+- **ServerFlow** war der Vorgänger / die Basis von KAiTix (Typer CLI, synchrone SQLAlchemy, PyMySQL).
+- **KAiTix** ist die vollständige asynchrone Neuentwicklung davon (FastAPI, async SQLAlchemy, Svelte 5, Alembic).
+- Die ServerFlow-Dateien (`cli.py`, `kentix.py`, `schema.sql`, `Leistungsbeschreibung_USV.docx`) dienen als wertvolles Referenzmaterial für Domänenwissen (z. B. USV-Berechnung, Kentix-Integration, Schema-Struktur).
+
+---
+
 ## Stack
 
 - **Backend:** FastAPI + SQLAlchemy 2.x async + aiomysql
@@ -228,8 +236,30 @@ virtuelle Maschinen und Shutdown/Startup-Runbooks.
 - Keine globalen pip installs (immer venv)
 - Seed-Scripts: Bestehende Seed-Scripts in `scripts/` (z.B. `seed_testdata.py`) immer komplett überschreiben (Clean Slate mit `drop_all`) oder sinnvoll ergänzen. Keine neuen, redundanten Seed-Skripte anlegen.
 - **Zero-U PDUs:** PDUs, die vertikal an der Seite im Rack montiert werden (Zero-U), MÜSSEN die Attribute `side="left"` oder `side="right"` sowie `u_position=0` besitzen. Zudem sollten korrekte Kentix-Modellbezeichnungen für vertikale PDUs (z.B. `SmartPDU Vertikal 40HE 3P-32A`) verwendet werden.
+## Verfügbare Claude-Skills
+
+### Öffentliche Skills (`/mnt/skills/public/`)
+- `docx` – Word-Dokumente erstellen/bearbeiten
+- `pdf` – PDF-Operationen
+- `pptx` – PowerPoint-Präsentationen
+- `xlsx` – Spreadsheets
+- `product-self-knowledge` – Anthropic-Produktinfos
+- `frontend-design` – Web-UIs & Komponenten
+- `file-reading` – Datei-Inhalte lesen
+- `pdf-reading` – PDFs lesen/extrahieren
+- `canvas-design` – Visuelles Design / Poster
+- `mcp-builder` – MCP-Server erstellen
+- `skill-creator` – Skills erstellen/optimieren
+
+### User-Skills (`/mnt/skills/user/`)
+- `setup-quality` – Reproduzierbares Projekt-Setup
+- `agent-md-deploy` – AGENT.md ins Projekt deployen
+- `bash-deploy` – Code als Bash-Heredoc formatieren
+- `kaioss-context-sync` – Kontext-Sync via AGENT.md & Cognee
+- `kaitix-agent-deploy` – AGENT.md speziell für KAiTix deployen
+
 ---
- 
+
 ## Referenzen
  
 - Gemini-Prompt Runbook Orchestrator: `gemini_prompt_runbook_orchestrator.md`

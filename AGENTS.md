@@ -14,6 +14,12 @@
 - **Kentix/Geräte**: Nur physische Installation dokumentieren (Modell, Seriennummer, Position, Anschlusswerte)
 - **Simulationen**: Reine Berechnung auf Basis dokumentierter Daten (z.B. N+1 USV-Redundanz, kaskadierende Ausfälle), keine Live-Lastdaten
 
+## Projekthistorie & Ursprung
+
+- **ServerFlow** war der Vorgänger / die Basis von KAiTix (Typer CLI, synchrone SQLAlchemy, PyMySQL).
+- **KAiTix** ist die vollständige asynchrone Neuentwicklung davon (FastAPI, async SQLAlchemy, Svelte 5, Alembic).
+- Die ServerFlow-Dateien (`cli.py`, `kentix.py`, `schema.sql`, `Leistungsbeschreibung_USV.docx`) dienen als wertvolles Referenzmaterial für Domänenwissen (z. B. USV-Berechnung, Kentix-Integration, Schema-Struktur).
+
 ### Design-Prinzipien (nicht verhandelbar)
 
 - **Intranet-Only** — keine Cloud, keine externen APIs, läuft vollständig im lokalen Netzwerk. Keine Internet-Exponierung vorgesehen.
@@ -222,3 +228,25 @@ Fehlend:
 | SAWarning: `update_default` in serverflow.py:113 | Ungültiges SQLAlchemy-Argument auf `DistributionCircuit.max_watt` | KNOWN — fällt weg bei Phase-1-Cleanup |
 | USV-Kalkulation rechnet alle Rack-Geräte der USV zu | Filterung erfolgt nur per `rack_id`, nicht per Stromkreis-Verknüpfung | KNOWN — Fix: Join über `distribution_circuits → panels → usv_unit_id` |
 | Fehlender Unique-Constraint auf `cables.kabel_nr` im ORM | `UNIQUE KEY` im Schema vorhanden, ORM-Model hat kein `unique=True` | KNOWN |
+
+## Verfügbare Claude-Skills
+
+### Öffentliche Skills (`/mnt/skills/public/`)
+- `docx` – Word-Dokumente erstellen/bearbeiten
+- `pdf` – PDF-Operationen
+- `pptx` – PowerPoint-Präsentationen
+- `xlsx` – Spreadsheets
+- `product-self-knowledge` – Anthropic-Produktinfos
+- `frontend-design` – Web-UIs & Komponenten
+- `file-reading` – Datei-Inhalte lesen
+- `pdf-reading` – PDFs lesen/extrahieren
+- `canvas-design` – Visuelles Design / Poster
+- `mcp-builder` – MCP-Server erstellen
+- `skill-creator` – Skills erstellen/optimieren
+
+### User-Skills (`/mnt/skills/user/`)
+- `setup-quality` – Reproduzierbares Projekt-Setup
+- `agent-md-deploy` – AGENT.md ins Projekt deployen
+- `bash-deploy` – Code als Bash-Heredoc formatieren
+- `kaioss-context-sync` – Kontext-Sync via AGENT.md & Cognee
+- `kaitix-agent-deploy` – AGENT.md speziell für KAiTix deployen
