@@ -16,6 +16,7 @@
   let devices     = $state<Device[]>([]);
   let cables      = $state<Cable[]>([]);
   let hardware    = $state<HardwareType[]>([]);
+  let usvUnits    = $state<import('$lib/api').UsvUnit[]>([]);
   let selectedRack = $state<Rack | null>(null);
   let selectedDevice = $state<Device | null>(null);
   let devicePorts = $state<DevicePort[]>([]);
@@ -187,7 +188,9 @@
     if (activeModalTab === 'protokoll' && selectedDevice && selectedDevice.hersteller && selectedDevice.modell && hardware.find(h => h.hersteller === selectedDevice!.hersteller && h.modell === selectedDevice!.modell)?.kategorie === 'usv') {
       if (!powerAuditData && !powerAuditLoading) {
         powerAuditLoading = true;
-        api.getPowerAudit(selectedDevice.id).then(res => {
+        // Lookup the logical UsvUnit that belongs to this rack
+        const usvId = usvUnits.find(u => u.rack_id === selectedDevice!.rack_id)?.id || 1;
+        api.getPowerAudit(usvId).then(res => {
           powerAuditData = res;
         }).catch(err => {
           console.error(err);
@@ -216,12 +219,13 @@
   async function loadAll() {
     loading = true; errorMsg = '';
     try {
-      const [rd, dd, cd, hd] = await Promise.all([
+      const [rd, dd, cd, hd, ud] = await Promise.all([
         api.getRacks(), api.getDevices(),
         api.getCables().catch(() => [] as Cable[]),
         api.getHardware().catch(() => [] as HardwareType[]),
+        api.getUsvUnits().catch(() => [] as import('$lib/api').UsvUnit[]),
       ]);
-      racks = rd; devices = dd; cables = cd; hardware = hd;
+      racks = rd; devices = dd; cables = cd; hardware = hd; usvUnits = ud;
       if (!selectedRack && rd.length > 0) {
         const rackParam = page.url.searchParams.get('rack');
         const preselect = rackParam ? rd.find(r => r.id === Number(rackParam)) : null;
