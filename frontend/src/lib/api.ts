@@ -280,6 +280,7 @@ export interface RuntimeCurveData {
   curve: RuntimeCurvePoint[];
   battery_summary: BatterySummary;
   current_runtime_min: number;
+  strangausfall_runtime_min?: number;
   installed_kw: number;
   total_load_kw: number;
   n1_kw: number;

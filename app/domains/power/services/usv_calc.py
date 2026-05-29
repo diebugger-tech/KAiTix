@@ -795,10 +795,33 @@ class BatteryCabinetEngine:
         phase_cap = n1_kw / 3 if n1_kw > 0 else 0
         n1_safe = (total_load <= n1_kw) and (max_phase <= phase_cap)
 
+        # Strangausfall (N-1) Runtime with Peukert
+        if parallel_strings > 1:
+            redundant_strings = parallel_strings - 1
+            redundant_battery_info = BatteryCabinetEngine.calculate_effective_capacity(
+                battery_type,
+                series_blocks,
+                redundant_strings,
+                block_voltage_v,
+                block_capacity_ah,
+                age_years,
+                temperature_c,
+            )
+            runtime_strangausfall = FaultSimulationEngine.calculate_battery_runtime_peukert(
+                Decimal(str(total_load)),
+                Decimal(str(redundant_battery_info["total_voltage_v"])),
+                Decimal(str(redundant_battery_info["effective_capacity_ah"])),
+                peukert_k,
+                inverter_efficiency,
+            )
+        else:
+            runtime_strangausfall = Decimal("0")
+
         return {
             "curve": curve_points,
             "battery_summary": battery_info,
             "current_runtime_min": float(runtime_at_current),
+            "strangausfall_runtime_min": float(runtime_strangausfall),
             "installed_kw": float(installed_kw),
             "total_load_kw": total_load,
             "n1_kw": n1_kw,

@@ -744,6 +744,24 @@
                 <div class="text-[10px] text-slate-500">{runtimeCurve.n1_kw} kW</div>
               </div>
             </div>
+            
+            {#if runtimeCurve.strangausfall_runtime_min !== undefined}
+              <div class="mt-4 p-3 bg-[#181C1A] border border-slate-700 rounded-lg flex justify-between items-center">
+                <div>
+                  <span class="text-xs text-slate-400 font-semibold block">Strang-Redundanz (Strangausfall N-1)</span>
+                  <span class="text-[10px] text-slate-500">Verbleibende Überbrückungszeit bei Ausfall eines parallelen Strangs (Peukert)</span>
+                </div>
+                <div class="text-right">
+                  {#if bs.parallel_strings > 1}
+                    <span class="text-lg font-bold {runtimeCurve.strangausfall_runtime_min >= 10 ? 'text-emerald-400' : runtimeCurve.strangausfall_runtime_min >= 5 ? 'text-amber-400' : 'text-red-400'}">
+                      {Math.round(runtimeCurve.strangausfall_runtime_min)} min
+                    </span>
+                  {:else}
+                    <span class="text-sm font-bold text-red-400">Keine Redundanz (0 min)</span>
+                  {/if}
+                </div>
+              </div>
+            {/if}
           </div>
         {/if}
 

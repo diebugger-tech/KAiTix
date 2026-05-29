@@ -35,6 +35,10 @@ class UsvUnitBase(BaseModel):
     hersteller: str = "Wöhrle SVS"
     rack_id: int
     max_kw: Decimal = Field(..., gt=0)
+    battery_strings: int = 2
+    blocks_per_string: int = 32
+    block_voltage_v: Decimal = Decimal("12.00")
+    block_capacity_ah: Decimal = Decimal("100.00")
 
 
 class UsvUnitCreate(UsvUnitBase):
@@ -46,6 +50,10 @@ class UsvUnitUpdate(BaseModel):
     hersteller: Optional[str] = None
     rack_id: Optional[int] = None
     max_kw: Optional[Decimal] = Field(None, gt=0)
+    battery_strings: Optional[int] = None
+    blocks_per_string: Optional[int] = None
+    block_voltage_v: Optional[Decimal] = None
+    block_capacity_ah: Optional[Decimal] = None
 
 
 class UsvUnit(UsvUnitBase):

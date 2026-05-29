@@ -11,6 +11,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 from datetime import datetime, timezone
+from decimal import Decimal
 import json
 from app.core.database import Base
 
@@ -31,7 +32,10 @@ class UsvUnit(Base):
         Integer, ForeignKey("racks.id", ondelete="CASCADE"), nullable=False
     )
     max_kw: Mapped[float] = mapped_column(DECIMAL(6, 2), nullable=False)
-    battery_strings: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    battery_strings: Mapped[int] = mapped_column(Integer, nullable=False, default=2)
+    blocks_per_string: Mapped[int] = mapped_column(Integer, nullable=False, default=32)
+    block_voltage_v: Mapped[Decimal] = mapped_column(DECIMAL(5, 2), nullable=False, default=Decimal("12.00"))
+    block_capacity_ah: Mapped[Decimal] = mapped_column(DECIMAL(7, 2), nullable=False, default=Decimal("100.00"))
     has_bypass_switch: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False
     )
