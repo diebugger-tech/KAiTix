@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { page } from '$app/state';
   import { api, type Rack, type Device, type HardwareType, type Cable, type DevicePort, type PduOutlet } from '$lib/api';
-  import { Server, Layers, Plus, HardDrive, Zap, LogOut, Check, X, ShieldAlert, Cpu, Network, Edit2, Trash2, ShieldCheck, ChevronRight, Activity, ZapOff, Play, Clock, Building, MapPin, Wifi, Box, ChevronDown, FileText } from '@lucide/svelte';
+  import { Server, Layers, Plus, HardDrive, Zap, LogOut, Check, X, ShieldAlert, Cpu, Network, Edit2, Trash2, ShieldCheck, ChevronRight, Activity, ZapOff, Play, Clock, Building, MapPin, Wifi, Box, ChevronDown, FileText, Cable as CableIcon } from '@lucide/svelte';
   import RackModal from '$lib/components/RackModal.svelte';
   import RackFilterBar from '$lib/components/RackFilterBar.svelte';
   import RackFrontView from '$lib/components/RackFrontView.svelte';
