@@ -2,9 +2,11 @@
   import { onMount } from 'svelte';
   import { api } from '$lib/api';
   import { goto } from '$app/navigation';
-  import { FileText, Network, List, Search, X, Zap, Building, Wifi } from '@lucide/svelte';
+  import { FileText, Network, List, Search, X, Zap, Building, Wifi, Box } from '@lucide/svelte';
   import { locationStore } from '$lib/locations.svelte';
   import RackFilterBar from '$lib/components/RackFilterBar.svelte';
+  import Topology3D from '$lib/components/Topology3D.svelte';
+  import { nodeColor, nodeStroke } from '$lib/topologyColors';
 
   type TopoData = Awaited<ReturnType<typeof api.getTopology>>;
   type Node = TopoData['nodes'][number];
@@ -20,7 +22,7 @@
   let showIntraRack = $state(true);
   let showPower = $state(true);
   let showCables = $state(true);
-  let viewMode = $state<'rack' | 'netzplan' | 'stromlauf'>('rack');
+  let viewMode = $state<'rack' | 'netzplan' | 'stromlauf' | '3d'>('rack');
   let showDeviceTypes = $state(new Set<string>(['server', 'switch', 'pdu', 'storage', 'firewall', 'kvm']));
   let searchQuery = $state('');
 
@@ -28,6 +30,7 @@
   let svgEl = $state<SVGSVGElement | undefined>(undefined);
   let viewBox = $state({ x: 0, y: 0, w: 1400, h: 900 });
   let isPanning = $state(false);
+  let topology3dRef = $state<ReturnType<typeof Topology3D>>();
   let panStart = $state({ x: 0, y: 0, vx: 0, vy: 0 });
 
   // Drag nodes
@@ -292,14 +295,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
     return '#94a3b8';
   }
 
-  function nodeColor(typ: string) {
-    const m: Record<string, string> = { server: '#1e40af', switch: '#065f46', pdu: '#78350f', firewall: '#7f1d1d', storage: '#4c1d95', kvm: '#1e3a5f' };
-    return m[typ] ?? '#1e293b';
-  }
-  function nodeStroke(typ: string) {
-    const m: Record<string, string> = { server: '#3b82f6', switch: '#10b981', pdu: '#f59e0b', firewall: '#ef4444', storage: '#8b5cf6', kvm: '#38bdf8' };
-    return m[typ] ?? '#475569';
-  }
+
 
   // ── Pan / zoom / drag ────────────────────────────────────────────────────────
   function onWheel(e: WheelEvent) {
@@ -346,9 +342,13 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
   }
   function onMouseUp() { isPanning = false; dragNodeId = null; }
   function resetView() {
-    const l = baseLayout;
-    viewBox = { x: 0, y: 0, w: Math.max(l.totalW + 40, 800), h: Math.max(l.totalH + 40, 600) };
-    nodeOffsets = new Map();
+    if (viewMode === 'rack') {
+      const l = baseLayout;
+      viewBox = { x: 0, y: 0, w: Math.max(l.totalW + 40, 800), h: Math.max(l.totalH + 40, 600) };
+      nodeOffsets = new Map();
+    } else if (viewMode === '3d' && topology3dRef) {
+      topology3dRef.resetCamera();
+    }
   }
   function zoomIn()  { const f = 0.8;  viewBox = { x: viewBox.x + viewBox.w*(1-f)/2, y: viewBox.y + viewBox.h*(1-f)/2, w: viewBox.w*f, h: viewBox.h*f }; }
   function zoomOut() { const f = 1.25; viewBox = { x: viewBox.x + viewBox.w*(1-f)/2, y: viewBox.y + viewBox.h*(1-f)/2, w: viewBox.w*f, h: viewBox.h*f }; }
@@ -547,13 +547,17 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
           class="flex items-center gap-1.5 px-3 py-1.5 text-xs transition {viewMode === 'rack' ? 'bg-[#1D9E75] text-white' : 'bg-[#181C1A] text-slate-400 hover:text-white'}">
           <Network size={12} /> Topologie
         </button>
+        <button onclick={() => viewMode = '3d'}
+          class="flex items-center gap-1.5 px-3 py-1.5 text-xs transition {viewMode === '3d' ? 'bg-[#1D9E75] text-white' : 'bg-[#181C1A] text-slate-400 hover:text-white'}">
+          <Box size={12} /> 3D Orbit
+        </button>
         <button onclick={() => viewMode = 'netzplan'}
           class="flex items-center gap-1.5 px-3 py-1.5 text-xs transition {viewMode === 'netzplan' ? 'bg-[#1D9E75] text-white' : 'bg-[#181C1A] text-slate-400 hover:text-white'}">
           <List size={12} /> Netzplan
         </button>
       </div>
 
-      {#if viewMode === 'rack'}
+      {#if viewMode === 'rack' || viewMode === '3d'}
         <!-- Search -->
         <div class="flex items-center gap-1.5 bg-[#181C1A] border border-slate-700 rounded-lg px-2 py-1 shrink-0">
           <Search size={11} class="text-slate-500 shrink-0" />
@@ -635,7 +639,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
       </div>
       {#if data}
         <span class="text-xs text-slate-600 shrink-0">
-          {#if viewMode === 'rack' && searchMatchIds}{searchMatchIds!.size} Treffer ·{/if}
+          {#if (viewMode === 'rack' || viewMode === '3d') && searchMatchIds}{searchMatchIds!.size} Treffer ·{/if}
           {#if viewMode === 'netzplan'}{filteredNetzplanData.length} / {netzplanData.length} Geräte{:else}{data.nodes.length} Geräte · {data.edges.length} Verb.{/if}
         </span>
       {/if}
@@ -686,8 +690,8 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
     {/if}
   </div>
 
-  <!-- ═══ TOPOLOGIE SVG ═══════════════════════════════════════════════════════ -->
-  {#if viewMode === 'rack'}
+  <!-- ═══ TOPOLOGIE SVG & 3D ═══════════════════════════════════════════════════════ -->
+  {#if viewMode === 'rack' || viewMode === '3d'}
     <div class="flex gap-4 flex-1 min-h-0">
       <div class="flex-1 bg-[#080c14] border border-slate-800 rounded-xl overflow-hidden relative">
         {#if loading}
@@ -700,7 +704,19 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
           <div class="absolute inset-0 flex items-center justify-center text-center">
             <p class="text-slate-400 text-sm">Keine Geräte gefunden</p>
           </div>
-        {:else if data}
+        {:else if data && viewMode === '3d'}
+          <Topology3D
+            bind:this={topology3dRef}
+            {data}
+            bind:selectedNode={selectedNode}
+            {visibleNodeIds}
+            {showDeviceTypes}
+            {showCables}
+            {showPower}
+            {showCrossRack}
+            {showIntraRack}
+          />
+        {:else if data && viewMode === 'rack'}
           {@const l = baseLayout}
           <svg bind:this={svgEl}
             class="w-full h-full {dragNodeId !== null || isPanning ? 'cursor-grabbing' : 'cursor-grab'}"
