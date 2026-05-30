@@ -715,6 +715,9 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
             {showPower}
             {showCrossRack}
             {showIntraRack}
+            {selectedStandort}
+            {selectedRackreihe}
+            {selectedRack}
           />
         {:else if data && viewMode === 'rack'}
           {@const l = baseLayout}

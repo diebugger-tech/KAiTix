@@ -13,7 +13,10 @@
     showPower = false,
     showCrossRack = false,
     showIntraRack = false,
-    showDeviceTypes = new Set<string>()
+    showDeviceTypes = new Set<string>(),
+    selectedStandort = 'Alle',
+    selectedRackreihe = 'Alle',
+    selectedRack = 'Alle'
   } = $props();
 
   let containerEl: HTMLElement;
@@ -22,6 +25,7 @@
   let scene: THREE.Scene;
   let camera: THREE.PerspectiveCamera;
   let controls: OrbitControls;
+  let sceneReady = $state(false);
   let animationFrameId: number;
 
   const RACK_WIDTH = 18;
@@ -34,6 +38,10 @@
 
   // Stores for interactivity
   let deviceMeshes: THREE.Mesh[] = [];
+  let rackWireframes: { mesh: THREE.LineSegments, rack: any }[] = [];
+  let rackLabels: { label: CSS2DObject, rackId: number }[] = [];
+  let standortLabels: { label: CSS2DObject, standort: string }[] = [];
+  let deviceBoxes = new Map<number, { x: number, y: number, z: number }>();
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
 
@@ -78,6 +86,7 @@
     renderer.domElement.addEventListener('pointerdown', onPointerDown);
 
     animate();
+    sceneReady = true;
   }
 
   function buildTopology() {
@@ -101,8 +110,6 @@
     let maxX = 0;
     let maxZ = 0;
 
-    const deviceBoxes = new Map<number, { x: number, y: number, z: number }>();
-
     for (const rack of sortedRacks) {
       if (currentStandort !== rack.standort) {
         if (currentStandort !== null) {
@@ -119,6 +126,7 @@
         const label = new CSS2DObject(div);
         label.position.set(xOffset, 40, zOffset - 10);
         scene.add(label);
+        standortLabels.push({ label, standort: rack.standort || '' });
       } else if (currentReihe !== rack.rackreihe) {
         zOffset += ROW_GAP;
         xOffset = Math.max(0, xOffset - (xOffset % STANDORT_GAP)); // Reset X relative to standort
@@ -138,6 +146,7 @@
       const rackCz = zOffset + RACK_DEPTH / 2;
       wireframe.position.set(rackCx, rackCy, rackCz);
       scene.add(wireframe);
+      rackWireframes.push({ mesh: wireframe, rack });
 
       // Rack Label
       const rDiv = document.createElement('div');
@@ -146,6 +155,7 @@
       const rLabel = new CSS2DObject(rDiv);
       rLabel.position.set(rackCx, rackH + 2, rackCz);
       scene.add(rLabel);
+      rackLabels.push({ label: rLabel, rackId: rack.id });
 
       // Devices in Rack
       const rackDevices = data.nodes.filter(n => n.rack_id === rack.id);
@@ -298,22 +308,52 @@
 
   // Reactive updates for filtering
   $effect(() => {
-    // Hide/show meshes based on visibleNodeIds and showDeviceTypes
+    if (!sceneReady) return;
+
+    // Svelte 5 reactivity: explicitly read dependencies outside the loop to ensure tracking
+    const currentStandort = selectedStandort;
+    const currentReihe = selectedRackreihe;
+    const currentRack = selectedRack;
+
+    // 1. Hide/show Racks (Wireframes & Labels)
+    const visibleRackIds = new Set<number>();
+    for (const rw of rackWireframes) {
+      const r = rw.rack;
+      let visible = true;
+      if (currentStandort !== 'Alle' && r.standort !== currentStandort) visible = false;
+      if (currentReihe !== 'Alle' && r.rackreihe !== currentReihe && `${r.standort} || ${r.rackreihe}` !== currentReihe) visible = false;
+      if (currentRack !== 'Alle' && String(r.id) !== String(currentRack)) visible = false;
+      
+      rw.mesh.visible = visible;
+      if (visible) visibleRackIds.add(r.id);
+      
+      const lbl = rackLabels.find(l => l.rackId === r.id);
+      if (lbl) lbl.label.visible = visible;
+    }
+
+    // 2. Hide/show meshes based on visibleRackIds, visibleNodeIds and showDeviceTypes
     for (const mesh of deviceMeshes) {
       const node = mesh.userData.node;
-      const isVisible = visibleNodeIds.has(node.id) && showDeviceTypes.has(node.typ);
+      const inVisibleRack = node.rack_id ? visibleRackIds.has(node.rack_id) : true;
+      const isVisible = inVisibleRack && visibleNodeIds.has(node.id) && showDeviceTypes.has(node.typ);
       mesh.visible = isVisible;
+    }
+
+    // 3. Hide/show Standort labels
+    for (const sl of standortLabels) {
+      sl.label.visible = (currentStandort === 'Alle' || sl.standort === currentStandort);
     }
     
     // Optional center camera on filtered
     if (visibleNodeIds.size > 0 && visibleNodeIds.size < data?.nodes.length) {
       let sumX = 0, sumY = 0, sumZ = 0;
       let count = 0;
-      for (const mesh of deviceMeshes) {
-        if (mesh.visible) {
-          sumX += mesh.position.x;
-          sumY += mesh.position.y;
-          sumZ += mesh.position.z;
+      // Calculate center based on visible racks instead of just devices to be more stable
+      for (const rw of rackWireframes) {
+        if (rw.mesh.visible) {
+          sumX += rw.mesh.position.x;
+          sumY += rw.mesh.position.y;
+          sumZ += rw.mesh.position.z;
           count++;
         }
       }
