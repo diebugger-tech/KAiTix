@@ -11,7 +11,8 @@
     onDeviceClick = undefined,
     onEmptyClick = undefined,
     onEmptySideClick = undefined,
-    readonly = false
+    readonly = false,
+    maxSlots = undefined
   } = $props<{
     rack: Rack,
     rackDevices?: Device[],
