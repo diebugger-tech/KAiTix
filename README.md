@@ -55,6 +55,7 @@ KAiTix ist ein hochspezialisiertes Planungs-, Simulations- und Dokumentationswer
 * **N+1 Dimensionierung:** Berechnung der minimalen Anzahl an USV- und Batteriemodulen, die für eine Autonomiezeit bei Phasenungleichgewicht (L1/L2/L3) erforderlich sind.
 * **VDE Protokoll-Tab:** On-the-Fly Audit und Visualisierung von USV-Compliance-Status und Berechnungs-Historien direkt im Modal der Geräteansicht.
 * **Phasenlasten:** Berechnung und Warnung bei Asymmetrie der Stromlasten über die drei Phasen (inklusive Phasen-Imbalance Widget).
+* **Detail-Dimensionierung:** Korrekte Hochvolt-Strangspannungen und Entladeschluss-Faktoren für reale Kabel- und Sicherungsdimensionierung bei Ausfall-Szenarien.
 * **Phase Optimizer Sprint:** `phase_optimizer.py` als Wrapper über `PhaseBalancer`
 * **Neue Endpoints:** `POST /api/v1/power/phase/optimize/{rack_id}` und `/apply`
 * **Frontend:** Imbalance-Badge, Optimizer-Button, Dropdown-Warn-Icon
@@ -71,7 +72,7 @@ KAiTix ist ein hochspezialisiertes Planungs-, Simulations- und Dokumentationswer
 * **Multi-Format-Export:** Download der Verkabelungsliste als CSV, XLSX (via `openpyxl`) oder ODS (via `odfpy`).
 
 ### 8. Stromlaufplan & Topologie
-* **Grafische Darstellung:** Interaktiver D3.js/Cytoscape.js Topologie-Graph zur rack-übergreifenden Visualisierung.
+* **Grafische Darstellung:** Interaktiver 2D-SVG Topologie-Graph zur rack-übergreifenden Visualisierung **sowie eine 3D-Orbit-Ansicht (three.js)** für komplexe RZ-Standorte.
 * **Allpoliger Stromlaufplan:** Darstellung der PDU- und USV-Verbindungspfade als SVG mit direktem PDF-Export.
 
 ---
@@ -93,7 +94,7 @@ KAiTix folgt einem bewusst einfachen und fokussierten Design. Diese Prinzipien s
 ## Tech Stack
 
 * **Backend:** FastAPI, SQLAlchemy 2.0 (Async), Alembic, MySQL 8 (aiomysql)
-* **Frontend:** Svelte 5, Vite, Vanilla JS (kein TypeScript), CSS
+* **Frontend:** Svelte 5, Vite, Vanilla JS (kein TypeScript), CSS, Three.js (für 3D-Visualisierung)
 * **Deployment:** Docker, Docker Compose, Nginx
 
 ---

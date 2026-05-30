@@ -46,6 +46,13 @@ ServerFlow-Dateien dienen als Referenz für Domänenwissen (USV-Berechnung, Kent
 
 ### Zuletzt abgeschlossen (diese Session)
 
+**Dashboard, 3D & USV-Verbesserungen** — komplett implementiert und gepusht:
+- 3D-Orbit-Ansicht der Topologie (three.js, ADDITIV neben 2D-SVG; eigene Komponente Topology3D.svelte; MeshStandardMaterial + Licht; EdgesGeometry-Rackrahmen; CSS2DRenderer-Labels mit pointerEvents:none; OrbitControls enableDamping + controls.update() im Loop; Raycaster nur gegen deviceMeshes; SSR-Guard via onMount). RackFilterBar wirkt auch in 3D.
+- topologyColors.ts: zentrale Farbquelle für Gerätetypen/Phasen, von 2D-SVG UND 3D gemeinsam genutzt (Single Source).
+- Dashboard: PDUs seitlich am Mini-Rack (RackFrontView.svelte extrahiert, von Racks-Seite + Dashboard geteilt); gezieltes Klick-Routing (Gerät/PDU -> ?rack=X&device=Y öffnet Panel; Rahmen -> ?rack=X). Racks-Seite versteht jetzt &device-URL-Param.
+- USV-Auslegung: Batteriespannung pro USV-Vorlage (Hochvolt) statt 48V-Default; Entladestrom rechnet gegen Entladeschluss (Faktor 0,85) für Kabel-/Sicherungsdimensionierung; Dimensionierungsrechner-Last aus Simulator-Gesamtlast (L1+L2+L3) vorbelegt + editierbar mit Abweichungshinweis; Batterietyp auf EIN Dropdown zusammengeführt (Single Source batType), "Blei-Säure (offen)" entfernt. Optionen: VRLA, LFP, Li-Ion NMC/NCA.
+  OFFEN/TODO: Wöhrle-LFP-Strangspannung ist Platzhalter (400V), vor echtem Beschaffungs-Export aus Datenblatt bestätigen.
+
 **E-Plan Batterie-Strang-Erweiterung** — komplett implementiert und gepusht:
 - Alembic-Migration `359168ea3c12`: `battery_strings`, `blocks_per_string`, `block_voltage_v`, `block_capacity_ah` zu `usv_units` (mit `server_default`)
 - E-Plan Blatt 1: BAT-Dummy ersetzt durch `-X-BAT` DC-Abgang + `-W3 NYY-J 2×25mm²` mit Verweis auf Blatt 3
@@ -88,7 +95,17 @@ ServerFlow-Dateien dienen als Referenz für Domänenwissen (USV-Berechnung, Kent
 - `UsvCalculationResponse`, `VdeAuditResult`, `PowerAuditResponse` Pydantic-Schemas
 - Detail-Modal für Geräte in `racks/+page.svelte` (Layout-Änderung)
 
-### 🟢 Backlog / Optional
+### 🟢 Backlog / Optional (Neue Ideen)
+
+- 3D-Orbit-Legende (Packet-Tracer-artig): erklärt 3D-spezifische Elemente (Rackreihen=Tiefe, Standorte=getrennte Blöcke, PDUs=seitliche Zero-U-Bars, Kabelfarben).
+- Blast-Radius-Hover: Hover auf PDU/Switch hebt angeschlossene Geräte hervor, Rest dimmt (Ausfallsimulation visuell).
+- Kabel-Tracing in der Rack-Frontansicht (SVG-Linien Gerät->Switch).
+- PDU-Kollisionscheck: physische PDU-Längen (mm/U) gegen Rackhöhe prüfen (analog zur bestehenden min_rack_hoehe-Validierung; braucht neues Feld im Hardware-Katalog).
+- Print-Ready Rack Elevations: s/w-optimiertes Vektor-PDF der Frontansicht + PDU-Belegungstabelle (= deckt sich mit Roadmap-Punkt PDF/Markdown-Export).
+- Natrium-Ionen-Batterietyp: aufnehmen, sobald Wöhrle/Eaton ein beschaffbares Produkt mit Datenblatt-Werten (Spannung, Peukert, Entladeschluss) liefern — derzeit nur Prototypen, keine validen Auslegungsparameter.
+- USV-Bereich-Audit: systematische Prüfung auf weitere "zwei Wahrheiten" / falsche Bezugsgrößen (in dieser Session 4 Einzelfälle gefunden).
+
+### 🟢 Backlog / Optional (Alt)
 
 - USV-Dropdown im E-Plan (Schritt 5 der Batterie-Erweiterung)
 - Testdaten Seed-Script
@@ -115,6 +132,9 @@ ServerFlow-Dateien dienen als Referenz für Domänenwissen (USV-Berechnung, Kent
 - **Conditional Rendering muss konsistent mit refaktoriertem State bleiben**
 - **AGENT.md muss async Stack korrekt dokumentieren** (kein sync/PyMySQL)
 - **server_default bei NOT NULL Spalten zwingend** wenn Tabelle bereits Zeilen hat
+- **Single Source statt zweitem State:** Batterietyp (batType/dimType) und Dimensionierungs-Last (dimLoad) waren je doppelt mit isoliertem State und liefen still auseinander -> ein Verbraucher liest den zentralen Wert, kein zweiter State. Pattern bei jeder neuen Eingabe prüfen.
+- **three.js in Svelte5:** Initialisierung nur clientseitig (onMount), sauberes Cleanup in onDestroy (dispose, Frame canceln, Listener entfernen), sonst SSR-Crash / WebGL-Leak.
+- **Beschaffungstool-Defaults:** müssen zur gewählten Vorlage passen; falsche hartkodierte Defaults (48V) erzeugen plausible aber falsche Zahlen — in einem Dimensionierungstool gefährlicher als gar kein Default.
 - **Svelte 5:** kein `...props` spread in Layout-Komponenten (SSR-Bug)
 - **Batterie-Strang-Formel:** Bei N-1 tragen verbleibende Stränge die **volle** Last (nicht geteilt)
 - **E-Plan schematisch:** 4 Blöcke + gestrichelte Linie ist professioneller als 32 winzige Blöcke
