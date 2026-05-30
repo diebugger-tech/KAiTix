@@ -65,10 +65,19 @@
 
   // --- Dimensioning state ---
   let dimLoad = $state(12);
+  let dimLoadTouched = $state(false);
   let dimTargetMin = $state(30);
   let dimType = $state('vrla');
   let dimResult = $state<DimensioningResult | null>(null);
   let dimLoading = $state(false);
+
+  const simulatorTotalLoad = $derived(Number((l1_kw + l2_kw + l3_kw).toFixed(1)));
+  
+  $effect(() => {
+    if (!dimLoadTouched) {
+      dimLoad = simulatorTotalLoad;
+    }
+  });
 
   // --- Derived ---
   const batteryTypeOptions = [
@@ -674,7 +683,13 @@
           <p class="text-[11px] text-slate-500 mb-3">Wieviele Batterieblöcke für X min Überbrückung bei Y kW?</p>
           <div class="space-y-3">
             <div class="grid grid-cols-2 gap-3">
-              <div><label class="text-xs text-slate-500 mb-1 block">Last (kW)</label><input type="number" step="0.1" min="0.1" bind:value={dimLoad} class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500" /></div>
+              <div>
+                <label class="text-xs text-slate-500 mb-1 block">Last (kW)</label>
+                <input type="number" step="0.1" min="0.1" bind:value={dimLoad} oninput={() => dimLoadTouched = true} class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500" />
+                {#if dimLoadTouched && Math.abs(dimLoad - simulatorTotalLoad) > 0.01}
+                  <div class="mt-1 text-[10px] text-amber-400">Simulator-Last: {simulatorTotalLoad} kW</div>
+                {/if}
+              </div>
               <div><label class="text-xs text-slate-500 mb-1 block">Ziel (min)</label><input type="number" step="1" min="1" bind:value={dimTargetMin} class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500" /></div>
             </div>
             <select bind:value={dimType} class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500">
