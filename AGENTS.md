@@ -220,6 +220,9 @@ Fehlend:
 - [ ] Volltext-Suche: "Welches Gerät hängt an Switch-01 Port 24?"
 - [ ] Asset-Export: XLSX mit Geräten, Seriennummern, Positionen (für Asset-Management)
 
+### Phase 5 — Daten & Integration
+- [ ] Seed-Script: Die hartcodierten USV-Vorlagen (Wöhrle 40kW, Eaton 93PM etc.) aus dem N+1 Simulator als echte `usv_units`-Einträge in die DB überführen, damit sie im E-Plan-Dropdown global wählbar sind.
+
 ## Bekannte Bugs
 
 | Bug | Ursache | Status |
