@@ -67,7 +67,6 @@
   let dimLoad = $state(12);
   let dimLoadTouched = $state(false);
   let dimTargetMin = $state(30);
-  let dimType = $state('vrla');
   let dimResult = $state<DimensioningResult | null>(null);
   let dimLoading = $state(false);
 
@@ -82,7 +81,6 @@
   // --- Derived ---
   const batteryTypeOptions = [
     { value: 'vrla', label: 'VRLA (Ventilgeregelte Blei-Säure)' },
-    { value: 'bleisaeure', label: 'Blei-Säure (offen)' },
     { value: 'lfp', label: 'LFP (Lithium-Eisenphosphat)' },
     { value: 'li_ion_nmc', label: 'Li-Ion NMC/NCA' },
   ];
@@ -153,7 +151,7 @@
     try {
       dimResult = await api.getDimensioning({
         load_kw: dimLoad, target_runtime_min: dimTargetMin,
-        battery_type: dimType,
+        battery_type: batType,
         block_voltage_v: batBlockV, block_capacity_ah: batBlockAh,
         inverter_efficiency: batEff,
       });
@@ -692,9 +690,6 @@
               </div>
               <div><label class="text-xs text-slate-500 mb-1 block">Ziel (min)</label><input type="number" step="1" min="1" bind:value={dimTargetMin} class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500" /></div>
             </div>
-            <select bind:value={dimType} class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500">
-              {#each batteryTypeOptions as bt}<option value={bt.value}>{bt.label}</option>{/each}
-            </select>
             <button onclick={runDimensioning} disabled={dimLoading}
               class="w-full py-2 bg-purple-600 hover:bg-purple-500 disabled:bg-slate-700 disabled:text-slate-500 text-white rounded-lg text-sm font-semibold transition flex items-center justify-center space-x-2">
               {#if dimLoading}<RefreshCw class="w-4 h-4 animate-spin" /><span>Rechnet...</span>{:else}<Wrench class="w-4 h-4" /><span>Berechnen</span>{/if}
