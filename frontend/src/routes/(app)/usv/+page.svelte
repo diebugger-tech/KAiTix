@@ -88,7 +88,7 @@
     return warns;
   });
 
-  const batteryDischargeCurrent = $derived(systemState ? Math.round((systemState.total_load_kw * 1000) / (systemState.battery_voltage * systemState.inverter_efficiency)) : 0);
+  const batteryDischargeCurrent = $derived(systemState ? Math.round((systemState.total_load_kw * 1000) / (systemState.battery_voltage * 0.85 * systemState.inverter_efficiency)) : 0);
   const cableSection = $derived(Math.ceil(batteryDischargeCurrent / 5));
 
   // --- Simulation actions ---
@@ -167,7 +167,8 @@
         
         if (hw.hersteller === 'Wöhrle SVS') {
           batType = 'lfp';
-          batBlockV = 48;
+          // TODO: Wöhrle WP2-R Datenblatt bestätigen — LFP-Strangspannung
+          batBlockV = 400;
           batSeries = 1;
           batParallel = 1;
           batBlockAh = 50;
@@ -200,8 +201,8 @@
           battery_capacity_ah = batParallel * batBlockAh;
         } else {
           batType = 'vrla';
-          batBlockV = 12;
-          batSeries = 4;
+          batBlockV = 400;
+          batSeries = 1;
           batParallel = 1;
           batBlockAh = 100;
           peukert_exponent = 1.2;
@@ -213,8 +214,8 @@
       }
     } else {
       batType = 'vrla';
-      batBlockV = 12;
-      batSeries = 4;
+      batBlockV = 400;
+      batSeries = 1;
       batParallel = 1;
       batBlockAh = 100;
       peukert_exponent = 1.2;
@@ -516,7 +517,7 @@
             
             <div class="mt-4 p-3 bg-slate-800/30 border border-slate-700/50 rounded-lg">
               <div class="flex justify-between items-center mb-1">
-                <span class="text-xs text-slate-400">Max. Batterie-Entladestrom:</span>
+                <span class="text-xs text-slate-400">Max. Entladestrom (Entladeschluss):</span>
                 <span class="text-sm font-semibold {batteryDischargeCurrent > 200 ? 'text-red-400' : 'text-slate-200'}">{batteryDischargeCurrent} A</span>
               </div>
               <div class="flex justify-between items-center">
