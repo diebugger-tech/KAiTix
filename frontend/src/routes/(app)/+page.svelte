@@ -15,7 +15,9 @@
     Wifi
   } from '@lucide/svelte';
   import RackModal from '$lib/components/RackModal.svelte';
+  import RackFrontView from '$lib/components/RackFrontView.svelte';
   import { locationStore } from '$lib/locations.svelte';
+  import { goto } from '$app/navigation';
 
   let racks = $state<Rack[]>([]);
   let devices = $state<Device[]>([]);
@@ -278,10 +280,13 @@
                   {@const hasPhased = rackDevices.some(d => d.phase)}
                   {@const rackPdus = rackDevices.filter(d => d.typ === 'pdu')}
 
-                  <a href="/racks?rack={rack.id}" class="block bg-[#131615] border border-slate-800 hover:border-[#1D9E75]/40 rounded-xl p-5 space-y-4 transition-colors">
+                  <!-- svelte-ignore a11y_click_events_have_key_events -->
+                  <div class="block bg-[#131615] border border-slate-800 hover:border-[#1D9E75]/40 rounded-xl p-5 space-y-4 transition-colors cursor-pointer" role="button" tabindex="0" onclick={() => goto(`/racks?rack=${rack.id}`)}>
                     <div class="flex items-start justify-between">
                       <div>
-                        <h4 class="font-bold text-white font-outfit">{rack.name}{rack.rackreihe ? ` (${rack.rackreihe})` : ''}</h4>
+                        <a href="/racks?rack={rack.id}" class="hover:underline" onclick={(e) => e.stopPropagation()}>
+                          <h4 class="font-bold text-white font-outfit">{rack.name}{rack.rackreihe ? ` (${rack.rackreihe})` : ''}</h4>
+                        </a>
                         <p class="text-[10px] text-slate-500 mt-0.5">{rack.breite_mm ? rack.breite_mm + 'mm · ' : ''}{rackKw.toFixed(2)} kW · {rackDevices.length} Geräte</p>
                       </div>
                       <span class="text-xs font-semibold px-2 py-1 rounded bg-slate-800 border border-slate-700 text-slate-300">
@@ -317,61 +322,33 @@
                       </div>
                     {/if}
 
-                    <!-- PDU indicators -->
-                    {#if rackPdus.length > 0}
-                      <div class="flex flex-wrap gap-1.5">
-                        {#each rackPdus as pdu}
-                          {@const outlets = pdu.pdu_outlets ?? []}
-                          {@const oL1 = outlets.filter(o => o.phase === 'L1').length}
-                          {@const oL2 = outlets.filter(o => o.phase === 'L2').length}
-                          {@const oL3 = outlets.filter(o => o.phase === 'L3').length}
-                          <div class="flex items-center gap-1.5 bg-slate-900/80 border border-slate-700/50 rounded-md px-2 py-1">
-                            <Zap class="w-2.5 h-2.5 text-yellow-500 shrink-0" />
-                            <span class="text-[9px] text-slate-300 font-medium truncate max-w-[80px]">{pdu.hostname}</span>
-                            <div class="flex gap-1">
-                              {#if oL1 > 0}<span class="text-[8px] bg-blue-500/15 text-blue-400 px-1 rounded">{oL1}×L1</span>{/if}
-                              {#if oL2 > 0}<span class="text-[8px] bg-cyan-500/15 text-cyan-400 px-1 rounded">{oL2}×L2</span>{/if}
-                              {#if oL3 > 0}<span class="text-[8px] bg-orange-500/15 text-orange-400 px-1 rounded">{oL3}×L3</span>{/if}
-                              {#if oL1 === 0 && oL2 === 0 && oL3 === 0}
-                                <span class="text-[8px] text-slate-600">{outlets.length ? outlets.length + ' Steckdosen' : 'keine Outlets'}</span>
-                              {/if}
-                            </div>
-                          </div>
-                        {/each}
-                      </div>
-                    {/if}
-
                     <!-- Vertical Rack View representation -->
-                    <div class="border border-slate-950 bg-slate-950/60 rounded p-1 font-mono text-[9px] select-none">
-                      <div class="text-center text-[8px] text-slate-600 border-b border-slate-900 pb-1 mb-1">FRONTANSICHT</div>
-                      <div class="space-y-0.5">
-                        {#each Array.from({ length: Math.min(10, rack.hoehe_u) }).map((_, i) => rack.hoehe_u - i) as u}
-                          {@const dev = rackDevices.find(d => u >= (d.u_position ?? 0) && u < (d.u_position ?? 0) + d.u_hoehe)}
-                          {#if dev}
-                            {#if u === (dev.u_position ?? 0) + dev.u_hoehe - 1}
-                              <div 
-                                class="px-2 py-1 rounded flex justify-between items-center text-white border border-blue-900/60"
-                                style="background-color: {dev.typ === 'server' ? 'rgba(59, 130, 246, 0.2)' : dev.typ === 'switch' ? 'rgba(6, 182, 212, 0.2)' : 'rgba(249, 115, 22, 0.2)'}; grid-row: span {dev.u_hoehe}"
-                              >
-                                <span class="truncate font-semibold">{dev.hostname}</span>
-                                <span class="text-[8px] opacity-65">{dev.typ.toUpperCase()} ({dev.u_hoehe}U)</span>
-                              </div>
-                            {/if}
-                          {:else}
-                            <div class="px-2 py-0.5 text-slate-700 border border-dashed border-slate-800/40 flex justify-between items-center">
-                              <span>HE {u}</span>
-                              <span class="text-[7px] text-slate-800">LEER</span>
-                            </div>
-                          {/if}
-                        {/each}
-                        {#if rack.hoehe_u > 10}
-                          <div class="text-center text-[8px] py-1 text-slate-600 border-t border-slate-900">
-                            + {rack.hoehe_u - 10} weitere Höheneinheiten...
-                          </div>
-                        {/if}
-                      </div>
+                    <div class="border border-slate-950 bg-slate-950/60 rounded p-1 select-none">
+                      <RackFrontView
+                        rack={rack}
+                        {rackDevices}
+                        {devices}
+                        hardware={hardwareTypes}
+                        readonly={true}
+                        maxSlots={10}
+                        onDeviceClick={(dev, e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          goto(`/racks?rack=${rack.id}&device=${dev.id}`);
+                        }}
+                        onEmptyClick={(u, e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          goto(`/racks?rack=${rack.id}`);
+                        }}
+                        onEmptySideClick={(side, e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          goto(`/racks?rack=${rack.id}`);
+                        }}
+                      />
                     </div>
-                  </a>
+                  </div>
                 {/each}
               </div>
             </div>

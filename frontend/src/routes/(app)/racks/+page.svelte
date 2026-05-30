@@ -2,13 +2,10 @@
   import { onMount } from 'svelte';
   import { page } from '$app/state';
   import { api, type Rack, type Device, type HardwareType, type Cable, type DevicePort, type PduOutlet } from '$lib/api';
-  import {
-    Layers, MapPin, Plus, Trash2, Edit2, X, Server, Zap,
-    ChevronRight, Activity, Network, Cable as CableIcon, Plug, FileText,
-    Building, Wifi
-  } from '@lucide/svelte';
+  import { Server, Layers, Plus, HardDrive, Zap, LogOut, Check, X, ShieldAlert, Cpu, Network, Edit2, Trash2, ShieldCheck, ChevronRight, Activity, ZapOff, Play, Clock, Building, MapPin, Wifi, Box, ChevronDown } from '@lucide/svelte';
   import RackModal from '$lib/components/RackModal.svelte';
   import RackFilterBar from '$lib/components/RackFilterBar.svelte';
+  import RackFrontView from '$lib/components/RackFrontView.svelte';
   import { locationStore, type LocationType } from '$lib/locations.svelte';
 
   // ── State ─────────────────────────────────────────────────
@@ -26,6 +23,8 @@
   let optimizeResult = $state<import('$lib/api').OptimizeResult | null>(null);
   let optimizeLoading = $state(false);
   let applyLoading = $state(false);
+
+  let hasParsedDeviceParam = false;
 
   // Filtering and search state
   let filterStandort = $state('Alle');
@@ -232,6 +231,16 @@
         selectedRack = preselect ?? rd[0];
       } else if (selectedRack) {
         selectedRack = rd.find(r => r.id === selectedRack!.id) ?? rd[0] ?? null;
+      }
+      if (!hasParsedDeviceParam) {
+        hasParsedDeviceParam = true;
+        const devParam = page.url.searchParams.get('device');
+        if (devParam && selectedRack) {
+          const preselectDev = dd.find(d => d.id === Number(devParam) && d.rack_id === selectedRack!.id);
+          if (preselectDev) {
+            await loadDeviceDetail(preselectDev);
+          }
+        }
       }
     } catch (e: any) { errorMsg = e.message || 'Ladefehler'; }
     finally { loading = false; }
@@ -1305,95 +1314,16 @@
             {/if}
 
             <!-- Rack Layout mit Seitlichen PDUs -->
-            <div class="flex border-b border-slate-900 max-h-[60vh]">
-              
-              <!-- Linke Seite (Zero-U) -->
-              <div class="w-10 sm:w-12 bg-[#090d14] border-r border-slate-900 flex flex-col items-stretch p-1.5 min-h-0">
-                <div class="text-[7px] text-slate-600 text-center uppercase mb-1">0U L</div>
-                {#each leftSide as dev}
-                  {@const c = typColor(dev.typ)}
-                  {@const isIncompatible = isDeviceIncompatible(dev)}
-                  <button
-                    onclick={() => loadDeviceDetail(dev)}
-                    class="w-full flex-1 min-h-0 rounded border hover:brightness-110 transition flex items-center justify-center overflow-hidden {selectedDevice?.id === dev.id ? 'ring-1 ring-white/30' : ''} {isIncompatible ? 'ring-1 ring-red-500 border-red-500' : ''}"
-                    style="background:{isIncompatible ? 'rgba(239,68,68,.22)' : c.bg}; border-color:{isIncompatible ? 'rgba(239,68,68,.7)' : c.border}; writing-mode: vertical-rl; transform: rotate(180deg);"
-                    title={isIncompatible ? '⚠ Höhenkonflikt: ' + getDeviceTooltip(dev) : getDeviceTooltip(dev)}
-                  >
-                    <span class="font-semibold text-white text-[9px] leading-none">{isIncompatible ? '⚠ ' : ''}{dev.hostname}</span>
-                    <span class="text-[7px] opacity-60">{dev.typ.toUpperCase()}</span>
-                  </button>
-                {/each}
-                {#if !occupiedSides.left}
-                <button onclick={() => { openAddDevice(null); devSide = 'left'; }} class="w-full aspect-square mt-auto border border-dashed border-slate-800 rounded flex items-center justify-center text-slate-600 hover:text-blue-500 hover:border-[#1D9E75]/50 hover:bg-[#1D9E75]/10 transition shrink-0">
-                  <Plus class="w-4 h-4" />
-                </button>
-                {:else}
-                <div class="w-full aspect-square mt-auto border border-dashed border-red-800/20 rounded flex items-center justify-center text-red-800/30 shrink-0" title="Seite bereits belegt">
-                  <X class="w-4 h-4" />
-                </div>
-                {/if}
-              </div>
-
-              <!-- Main HE Slots -->
-              <div class="flex-1 p-2 font-mono text-[9px] overflow-y-auto relative bg-[#131615]">
-                <div class="text-center text-[8px] text-slate-600 pb-1 mb-1 border-b border-slate-900 sticky top-0 bg-[#131615] z-10">FRONTANSICHT</div>
-                {#each Array.from({ length: selectedRack.hoehe_u }, (_, i) => selectedRack!.hoehe_u - i) as u}
-                  {@const dev = devAt(u)}
-                  {#if dev}
-                    {#if isTopU(dev, u)}
-                      {@const c = typColor(dev.typ)}
-                      {@const isConflict = conflictDeviceIds().has(dev.id)}
-                      {@const isIncompatible = isDeviceIncompatible(dev)}
-                      <button
-                        onclick={() => loadDeviceDetail(dev)}
-                        class="w-full px-2 rounded border mb-0.5 text-left hover:brightness-110 transition {selectedDevice?.id === dev.id ? 'ring-1 ring-white/30' : ''} {isConflict || isIncompatible ? 'ring-1 ring-red-500' : ''}"
-                        style="background:{isConflict || isIncompatible ? 'rgba(239,68,68,.22)' : c.bg}; border-color:{isConflict || isIncompatible ? 'rgba(239,68,68,.7)' : c.border}; min-height:{dev.u_hoehe * 22}px; display:flex; align-items:center; justify-content:space-between;"
-                        title={isConflict ? '⚠ U-Positions-Konflikt: ' + getDeviceTooltip(dev) : isIncompatible ? '⚠ Höhenkonflikt: ' + getDeviceTooltip(dev) : getDeviceTooltip(dev)}
-                      >
-                        <span class="font-semibold {isConflict || isIncompatible ? 'text-red-300' : 'text-white'} truncate">{isIncompatible ? '⚠ ' : ''}{dev.hostname}</span>
-                        <span class="text-[8px] opacity-60 shrink-0 ml-1">{isConflict || isIncompatible ? '⚠ ' : ''}{dev.typ.toUpperCase()} {dev.u_hoehe}U</span>
-                      </button>
-                    {/if}
-                  {:else}
-                    <button
-                      onclick={() => openAddDevice(u)}
-                      class="w-full px-2 py-1 mb-0.5 text-slate-700 border border-dashed border-slate-800/50 rounded flex justify-between items-center hover:border-[#1D9E75]/40 hover:text-[#1D9E75]/60 hover:bg-[#1D9E75]/5 transition group"
-                    >
-                      <span>HE {u}</span>
-                      <Plus class="w-3 h-3 opacity-0 group-hover:opacity-100 transition" />
-                    </button>
-                  {/if}
-                {/each}
-              </div>
-
-              <!-- Rechte Seite (Zero-U) -->
-              <div class="w-10 sm:w-12 bg-[#090d14] border-l border-slate-900 flex flex-col items-stretch p-1.5 min-h-0">
-                <div class="text-[7px] text-slate-600 text-center uppercase mb-1">0U R</div>
-                {#each rightSide as dev}
-                  {@const c = typColor(dev.typ)}
-                  {@const isIncompatible = isDeviceIncompatible(dev)}
-                  <button
-                    onclick={() => loadDeviceDetail(dev)}
-                    class="w-full flex-1 min-h-0 rounded border hover:brightness-110 transition flex items-center justify-center overflow-hidden {selectedDevice?.id === dev.id ? 'ring-1 ring-white/30' : ''} {isIncompatible ? 'ring-1 ring-red-500 border-red-500' : ''}"
-                    style="background:{isIncompatible ? 'rgba(239,68,68,.22)' : c.bg}; border-color:{isIncompatible ? 'rgba(239,68,68,.7)' : c.border}; writing-mode: vertical-rl; transform: rotate(180deg);"
-                    title={isIncompatible ? '⚠ Höhenkonflikt: ' + getDeviceTooltip(dev) : getDeviceTooltip(dev)}
-                  >
-                    <span class="font-semibold text-white text-[9px] leading-none">{isIncompatible ? '⚠ ' : ''}{dev.hostname}</span>
-                    <span class="text-[7px] opacity-60">{dev.typ.toUpperCase()}</span>
-                  </button>
-                {/each}
-                {#if !occupiedSides.right}
-                <button onclick={() => { openAddDevice(null); devSide = 'right'; }} class="w-full aspect-square mt-auto border border-dashed border-slate-800 rounded flex items-center justify-center text-slate-600 hover:text-blue-500 hover:border-[#1D9E75]/50 hover:bg-[#1D9E75]/10 transition shrink-0">
-                  <Plus class="w-4 h-4" />
-                </button>
-                {:else}
-                <div class="w-full aspect-square mt-auto border border-dashed border-red-800/20 rounded flex items-center justify-center text-red-800/30 shrink-0" title="Seite bereits belegt">
-                  <X class="w-4 h-4" />
-                </div>
-                {/if}
-              </div>
-
-            </div>
+            <RackFrontView
+              rack={selectedRack}
+              {rackDevices}
+              {devices}
+              {hardware}
+              {selectedDevice}
+              onDeviceClick={(dev) => loadDeviceDetail(dev)}
+              onEmptyClick={(u) => openAddDevice(u)}
+              onEmptySideClick={(side) => { openAddDevice(null); devSide = side; }}
+            />
           </div>
         {/if}
       </div>
