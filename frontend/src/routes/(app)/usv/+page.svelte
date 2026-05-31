@@ -272,7 +272,7 @@
   function severityClass(sev: string): string {
     if (sev === 'critical') return 'text-red-400 bg-red-500/10 border-red-500/30';
     if (sev === 'warning') return 'text-amber-400 bg-amber-500/10 border-amber-500/30';
-    return 'text-slate-400 bg-slate-500/10 border-slate-500/30';
+    return 'text-[var(--color-text2)] bg-[var(--color-border2)] border-[var(--color-border)]';
   }
 
   function formatTime(ts: string): string {
@@ -309,32 +309,32 @@
   {/if}
 
   <!-- Tab Bar -->
-  <div class="flex space-x-1 mb-6 bg-[#0d1220] rounded-lg p-1 w-fit border border-slate-800">
+  <div class="flex space-x-1 mb-6 bg-[var(--color-bg2)] rounded-lg p-1 w-fit border border-[var(--color-border)]">
     <button
       onclick={() => activeTab = 'simulation'}
       class="px-4 py-2 rounded-md text-sm font-medium transition flex items-center space-x-2
-        {activeTab === 'simulation' ? 'bg-[#1D9E75] text-white shadow' : 'text-slate-400 hover:text-slate-200'}"
+        {activeTab === 'simulation' ? 'bg-[#1D9E75] text-[var(--color-text)] shadow' : 'text-[var(--color-text2)] hover:text-slate-200'}"
     >
       <Zap class="w-3.5 h-3.5" /><span>USV N+1 Simulator</span>
     </button>
     <button
       onclick={() => activeTab = 'battery'}
       class="px-4 py-2 rounded-md text-sm font-medium transition flex items-center space-x-2
-        {activeTab === 'battery' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}"
+        {activeTab === 'battery' ? 'bg-emerald-600 text-[var(--color-text)] shadow' : 'text-[var(--color-text2)] hover:text-slate-200'}"
     >
       <Battery class="w-3.5 h-3.5" /><span>Batterieschrank</span>
     </button>
     <button
       onclick={() => activeTab = 'schaltbild'}
       class="px-4 py-2 rounded-md text-sm font-medium transition flex items-center space-x-2
-        {activeTab === 'schaltbild' ? 'bg-purple-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}"
+        {activeTab === 'schaltbild' ? 'bg-purple-600 text-[var(--color-text)] shadow' : 'text-[var(--color-text2)] hover:text-slate-200'}"
     >
       <Layers class="w-3.5 h-3.5" /><span>Stromlaufplan</span>
     </button>
     <button
       onclick={() => activeTab = 'shutdown_sequence'}
       class="px-4 py-2 rounded-md text-sm font-medium transition flex items-center space-x-2
-        {activeTab === 'shutdown_sequence' ? 'bg-rose-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}"
+        {activeTab === 'shutdown_sequence' ? 'bg-rose-600 text-[var(--color-text)] shadow' : 'text-[var(--color-text2)] hover:text-slate-200'}"
     >
       <Clock class="w-3.5 h-3.5" /><span>Shutdown-Ablauf</span>
     </button>
@@ -346,12 +346,12 @@
       <!-- Input Panel -->
       <div class="space-y-4">
         <!-- USV Template Selection -->
-        <div class="bg-[#131615] border border-slate-800 rounded-xl p-5">
-          <h3 class="text-sm font-semibold text-slate-300 flex items-center space-x-2 mb-4">
+        <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl p-5">
+          <h3 class="text-sm font-semibold text-[var(--color-text)] flex items-center space-x-2 mb-4">
             <Layers class="w-4 h-4 text-purple-400" /><span>USV-Vorlage</span>
           </h3>
           <select bind:value={hwTemplateId}
-            class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500">
+            class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-purple-500">
             <option value={0}>— Manuelle Eingabe —</option>
             {#each Object.entries(usvGroups) as [mfr, models]}
               <optgroup label="── {mfr} ──">
@@ -382,40 +382,40 @@
               {/if}
             {/if}
           {/if}
-          <p class="text-[10px] text-slate-600 mt-2">Richtwert — Parameter können angepasst werden</p>
+          <p class="text-[10px] text-[var(--color-text3)] mt-2">Richtwert — Parameter können angepasst werden</p>
         </div>
 
-        <div class="bg-[#131615] border border-slate-800 rounded-xl p-5">
-          <h3 class="text-sm font-semibold text-slate-300 flex items-center space-x-2 mb-4">
+        <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl p-5">
+          <h3 class="text-sm font-semibold text-[var(--color-text)] flex items-center space-x-2 mb-4">
             <Gauge class="w-4 h-4 text-blue-400" /><span>Sandbox-Parameter</span>
           </h3>
           <div class="grid grid-cols-3 gap-3 mb-3">
             <div>
-              <label class="text-xs text-slate-500 mb-1 block">L1 (kW)</label>
+              <label class="text-xs text-[var(--color-text3)] mb-1 block">L1 (kW)</label>
               <input type="number" step="0.1" min="0" bind:value={l1_kw}
-                class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
+                class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]" />
             </div>
             <div>
-              <label class="text-xs text-slate-500 mb-1 block">L2 (kW)</label>
+              <label class="text-xs text-[var(--color-text3)] mb-1 block">L2 (kW)</label>
               <input type="number" step="0.1" min="0" bind:value={l2_kw}
-                class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
+                class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]" />
             </div>
             <div>
-              <label class="text-xs text-slate-500 mb-1 block">L3 (kW)</label>
+              <label class="text-xs text-[var(--color-text3)] mb-1 block">L3 (kW)</label>
               <input type="number" step="0.1" min="0" bind:value={l3_kw}
-                class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
+                class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]" />
             </div>
           </div>
           <div class="grid grid-cols-2 gap-3 mb-3">
             <div>
-              <label class="text-xs text-slate-500 mb-1 block">Module (Anzahl)</label>
+              <label class="text-xs text-[var(--color-text3)] mb-1 block">Module (Anzahl)</label>
               <input type="number" step="1" min="1" bind:value={module_count}
-                class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
+                class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]" />
             </div>
             <div>
-              <label class="text-xs text-slate-500 mb-1 block">Modul-Leistung (kW)</label>
+              <label class="text-xs text-[var(--color-text3)] mb-1 block">Modul-Leistung (kW)</label>
               <input type="number" step="0.5" min="1" bind:value={module_capacity_kw}
-                class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
+                class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]" />
             </div>
           </div>
           <button onclick={() => showBatterySettings = !showBatterySettings}
@@ -423,36 +423,36 @@
             {showBatterySettings ? '▲ Batterie ausblenden' : '▼ Batterie-Einstellungen'}
           </button>
           {#if showBatterySettings}
-            <div class="grid grid-cols-2 gap-3 mb-3 p-3 bg-[#181C1A] rounded-lg border border-slate-700">
-              <div><label class="text-xs text-slate-500 mb-1 block">Spannung (V)</label><input type="number" step="1" min="12" bind:value={battery_voltage} class="w-full bg-[#0f1720] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" /></div>
-              <div><label class="text-xs text-slate-500 mb-1 block">Kapazität (Ah)</label><input type="number" step="1" min="10" bind:value={battery_capacity_ah} class="w-full bg-[#0f1720] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" /></div>
-              <div><label class="text-xs text-slate-500 mb-1 block">Peukert (k)</label><input type="number" step="0.01" min="1.0" max="1.5" bind:value={peukert_exponent} class="w-full bg-[#0f1720] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" /></div>
-              <div><label class="text-xs text-slate-500 mb-1 block">Wirkungsgrad (η)</label><input type="number" step="0.01" min="0.7" max="1.0" bind:value={inverter_efficiency} class="w-full bg-[#0f1720] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" /></div>
+            <div class="grid grid-cols-2 gap-3 mb-3 p-3 bg-[var(--color-bg3)] rounded-lg border border-[var(--color-border2)]">
+              <div><label class="text-xs text-[var(--color-text3)] mb-1 block">Spannung (V)</label><input type="number" step="1" min="12" bind:value={battery_voltage} class="w-full bg-[var(--color-bg2)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]" /></div>
+              <div><label class="text-xs text-[var(--color-text3)] mb-1 block">Kapazität (Ah)</label><input type="number" step="1" min="10" bind:value={battery_capacity_ah} class="w-full bg-[var(--color-bg2)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]" /></div>
+              <div><label class="text-xs text-[var(--color-text3)] mb-1 block">Peukert (k)</label><input type="number" step="0.01" min="1.0" max="1.5" bind:value={peukert_exponent} class="w-full bg-[var(--color-bg2)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]" /></div>
+              <div><label class="text-xs text-[var(--color-text3)] mb-1 block">Wirkungsgrad (η)</label><input type="number" step="0.01" min="0.7" max="1.0" bind:value={inverter_efficiency} class="w-full bg-[var(--color-bg2)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]" /></div>
             </div>
           {/if}
           <button onclick={runSimulation} disabled={isLoading}
-            class="w-full py-2.5 bg-[#1D9E75] hover:bg-[#0F6E56] disabled:bg-slate-700 disabled:text-slate-500 text-white rounded-lg text-sm font-semibold transition flex items-center justify-center space-x-2">
+            class="w-full py-2.5 bg-[#1D9E75] hover:bg-[#0F6E56] disabled:bg-[var(--color-border2)] disabled:text-[var(--color-text3)] text-[var(--color-text)] rounded-lg text-sm font-semibold transition flex items-center justify-center space-x-2">
             {#if isLoading}<RefreshCw class="w-4 h-4 animate-spin" /><span>Lädt...</span>{:else}<Activity class="w-4 h-4" /><span>Simulation starten</span>{/if}
           </button>
         </div>
 
         <!-- Fault Controls -->
-        <div class="bg-[#131615] border border-slate-800 rounded-xl p-5">
-          <h3 class="text-sm font-semibold text-slate-300 flex items-center space-x-2 mb-4">
+        <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl p-5">
+          <h3 class="text-sm font-semibold text-[var(--color-text)] flex items-center space-x-2 mb-4">
             <AlertTriangle class="w-4 h-4 text-orange-400" /><span>Fehler-Simulation</span>
           </h3>
           <div class="space-y-2">
             <button onclick={() => injectFault('grid_failure')} disabled={!systemState || isLoading}
-              class="w-full py-2.5 bg-red-500/20 hover:bg-red-500/30 disabled:bg-slate-700/50 disabled:text-slate-600 border border-red-500/30 text-red-400 rounded-lg text-sm font-medium transition flex items-center justify-center space-x-2">
+              class="w-full py-2.5 bg-red-500/20 hover:bg-red-500/30 disabled:bg-[var(--color-border2)] disabled:text-[var(--color-text3)] border border-red-500/30 text-red-400 rounded-lg text-sm font-medium transition flex items-center justify-center space-x-2">
               <Power class="w-4 h-4" /><span>Netzausfall</span></button>
             <button onclick={() => injectFault('battery_defect')} disabled={!systemState || isLoading}
-              class="w-full py-2.5 bg-amber-500/20 hover:bg-amber-500/30 disabled:bg-slate-700/50 disabled:text-slate-600 border border-amber-500/30 text-amber-400 rounded-lg text-sm font-medium transition flex items-center justify-center space-x-2">
+              class="w-full py-2.5 bg-amber-500/20 hover:bg-amber-500/30 disabled:bg-[var(--color-border2)] disabled:text-[var(--color-text3)] border border-amber-500/30 text-amber-400 rounded-lg text-sm font-medium transition flex items-center justify-center space-x-2">
               <Battery class="w-4 h-4" /><span>Batterie-Defekt</span></button>
             <button onclick={() => injectFault('module_failure')} disabled={!systemState || isLoading || (systemState?.active_modules_count ?? 0) <= 0}
-              class="w-full py-2.5 bg-orange-500/20 hover:bg-orange-500/30 disabled:bg-slate-700/50 disabled:text-slate-600 border border-orange-500/30 text-orange-300 rounded-lg text-sm font-medium transition flex items-center justify-center space-x-2">
+              class="w-full py-2.5 bg-orange-500/20 hover:bg-orange-500/30 disabled:bg-[var(--color-border2)] disabled:text-[var(--color-text3)] border border-orange-500/30 text-orange-300 rounded-lg text-sm font-medium transition flex items-center justify-center space-x-2">
               <Zap class="w-4 h-4" /><span>Modul-Ausfall</span></button>
             <button onclick={() => injectFault('reset')} disabled={!systemState || isLoading}
-              class="w-full py-2.5 bg-slate-500/20 hover:bg-slate-500/30 disabled:bg-slate-700/50 disabled:text-slate-600 border border-slate-500/30 text-slate-400 rounded-lg text-sm font-medium transition flex items-center justify-center space-x-2">
+              class="w-full py-2.5 bg-[var(--color-border2)] hover:bg-[var(--color-border2)] disabled:bg-[var(--color-border2)] disabled:text-[var(--color-text3)] border border-[var(--color-border)] text-[var(--color-text2)] rounded-lg text-sm font-medium transition flex items-center justify-center space-x-2">
               <RefreshCw class="w-4 h-4" /><span>Reset</span></button>
           </div>
         </div>
@@ -460,8 +460,8 @@
 
       <!-- Block Diagram + Results -->
       <div class="lg:col-span-2 space-y-6">
-        <div class="bg-[#131615] border border-slate-800 rounded-xl p-6">
-          <h3 class="text-sm font-semibold text-slate-300 flex items-center space-x-2 mb-4">
+        <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl p-6">
+          <h3 class="text-sm font-semibold text-[var(--color-text)] flex items-center space-x-2 mb-4">
             <Zap class="w-4 h-4 text-yellow-400" /><span>Stromfluss-Diagramm</span>
           </h3>
           {#if systemState}
@@ -470,13 +470,13 @@
                 <div class="w-20 h-12 rounded-lg {systemState.grid_online ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400' : 'border-red-500/50 bg-red-500/10 text-red-400'} border flex items-center justify-center text-xs font-semibold"><Power class="w-4 h-4" /><span class="ml-1">Netz</span></div>
                 <span class="text-[10px] mt-1 {systemState.grid_online ? 'text-emerald-500' : 'text-red-500'}">{systemState.grid_online ? 'ONLINE' : 'AUS'}</span>
               </div>
-              <span class="text-slate-600 text-xl">{systemState.grid_online ? '→' : '✕'}</span>
-              <div class="flex flex-col items-center"><div class="w-20 h-12 rounded-lg border {systemState.status === 'stable' ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400' : systemState.status === 'degraded' ? 'border-amber-500/50 bg-amber-500/10 text-amber-400' : 'border-red-500/50 bg-red-500/10 text-red-400'} flex items-center justify-center text-xs font-semibold">GL</div><span class="text-[10px] text-slate-500 mt-1">Gleichrichter</span></div>
-              <span class="text-slate-600 text-xl">→</span>
-              <div class="flex flex-col items-center"><div class="w-20 h-12 rounded-lg border {systemState.status === 'stable' ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400' : systemState.status === 'degraded' ? 'border-amber-500/50 bg-amber-500/10 text-amber-400' : 'border-red-500/50 bg-red-500/10 text-red-400'} flex items-center justify-center text-xs font-semibold">WR</div><span class="text-[10px] text-slate-500 mt-1">Wechselrichter</span></div>
-              <span class="text-slate-600 text-xl">→</span>
-              <div class="flex flex-col items-center"><div class="w-20 h-12 rounded-lg border border-slate-600 bg-slate-800/30 text-slate-300 flex items-center justify-center text-xs font-semibold"><Activity class="w-4 h-4" /></div><span class="text-[10px] text-slate-500 mt-1">{systemState.total_load_kw} kW</span></div>
-              <div class="flex flex-col items-center mt-6 ml-2"><span class="text-[10px] text-slate-600 mb-1">↕</span><div class="w-20 h-12 rounded-lg border {systemState.battery_soc_pct > 50 ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400' : 'border-amber-500/50 bg-amber-500/10 text-amber-400'} flex items-center justify-center text-xs font-semibold"><Battery class="w-4 h-4" /><span class="ml-1">{systemState.battery_soc_pct}%</span></div><span class="text-[10px] text-slate-500 mt-1">Batterie</span></div>
+              <span class="text-[var(--color-text3)] text-xl">{systemState.grid_online ? '→' : '✕'}</span>
+              <div class="flex flex-col items-center"><div class="w-20 h-12 rounded-lg border {systemState.status === 'stable' ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400' : systemState.status === 'degraded' ? 'border-amber-500/50 bg-amber-500/10 text-amber-400' : 'border-red-500/50 bg-red-500/10 text-red-400'} flex items-center justify-center text-xs font-semibold">GL</div><span class="text-[10px] text-[var(--color-text3)] mt-1">Gleichrichter</span></div>
+              <span class="text-[var(--color-text3)] text-xl">→</span>
+              <div class="flex flex-col items-center"><div class="w-20 h-12 rounded-lg border {systemState.status === 'stable' ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400' : systemState.status === 'degraded' ? 'border-amber-500/50 bg-amber-500/10 text-amber-400' : 'border-red-500/50 bg-red-500/10 text-red-400'} flex items-center justify-center text-xs font-semibold">WR</div><span class="text-[10px] text-[var(--color-text3)] mt-1">Wechselrichter</span></div>
+              <span class="text-[var(--color-text3)] text-xl">→</span>
+              <div class="flex flex-col items-center"><div class="w-20 h-12 rounded-lg border border-[var(--color-border2)] bg-[var(--color-border2)] text-[var(--color-text)] flex items-center justify-center text-xs font-semibold"><Activity class="w-4 h-4" /></div><span class="text-[10px] text-[var(--color-text3)] mt-1">{systemState.total_load_kw} kW</span></div>
+              <div class="flex flex-col items-center mt-6 ml-2"><span class="text-[10px] text-[var(--color-text3)] mb-1">↕</span><div class="w-20 h-12 rounded-lg border {systemState.battery_soc_pct > 50 ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400' : 'border-amber-500/50 bg-amber-500/10 text-amber-400'} flex items-center justify-center text-xs font-semibold"><Battery class="w-4 h-4" /><span class="ml-1">{systemState.battery_soc_pct}%</span></div><span class="text-[10px] text-[var(--color-text3)] mt-1">Batterie</span></div>
             </div>
             <div class="mt-4 text-center">
               <span class="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full text-xs font-bold
@@ -490,46 +490,46 @@
               </span>
             </div>
           {:else}
-            <div class="flex items-center justify-center py-8 text-slate-600"><p class="text-sm">Simulation starten, um das Diagramm zu sehen</p></div>
+            <div class="flex items-center justify-center py-8 text-[var(--color-text3)]"><p class="text-sm">Simulation starten, um das Diagramm zu sehen</p></div>
           {/if}
         </div>
 
-        <div class="bg-[#131615] border border-slate-800 rounded-xl p-5">
-          <h3 class="text-sm font-semibold text-slate-300 flex items-center space-x-2 mb-4"><Activity class="w-4 h-4 text-blue-400" /><span>Messergebnisse</span></h3>
+        <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl p-5">
+          <h3 class="text-sm font-semibold text-[var(--color-text)] flex items-center space-x-2 mb-4"><Activity class="w-4 h-4 text-blue-400" /><span>Messergebnisse</span></h3>
           {#if systemState}
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <div class="flex justify-between text-xs text-slate-500 mb-1"><span>Gesamtlast</span><span>{systemState.total_load_kw} / {systemState.installed_kw} kW</span></div>
-                <div class="w-full bg-slate-800 rounded-full h-2.5"><div class="h-2.5 rounded-full transition-all duration-300 {loadPct() > 80 ? 'bg-red-500' : loadPct() > 60 ? 'bg-amber-500' : 'bg-emerald-500'}" style="width: {loadPct()}%"></div></div>
+                <div class="flex justify-between text-xs text-[var(--color-text3)] mb-1"><span>Gesamtlast</span><span>{systemState.total_load_kw} / {systemState.installed_kw} kW</span></div>
+                <div class="w-full bg-[var(--color-border)] rounded-full h-2.5"><div class="h-2.5 rounded-full transition-all duration-300 {loadPct() > 80 ? 'bg-red-500' : loadPct() > 60 ? 'bg-amber-500' : 'bg-emerald-500'}" style="width: {loadPct()}%"></div></div>
               </div>
-              <div class="flex items-center space-x-3"><span class="text-xs text-slate-500">N+1 Status:</span>
+              <div class="flex items-center space-x-3"><span class="text-xs text-[var(--color-text3)]">N+1 Status:</span>
                 {#if systemState.n1_safe}<span class="inline-flex items-center space-x-1 text-xs font-semibold text-emerald-400"><CircleCheck class="w-3.5 h-3.5" /><span>SICHER</span></span>
                 {:else}<span class="inline-flex items-center space-x-1 text-xs font-semibold text-red-400"><CircleX class="w-3.5 h-3.5" /><span>UNSICHER</span></span>{/if}
               </div>
-              <div class="space-y-1.5"><span class="text-xs text-slate-500">Phasen-Last</span>
+              <div class="space-y-1.5"><span class="text-xs text-[var(--color-text3)]">Phasen-Last</span>
                 {#each ['l1', 'l2', 'l3'] as phase}
-                  <div class="flex items-center space-x-2"><span class="text-xs text-slate-400 w-5 uppercase">{phase}</span>
-                    <div class="flex-1 bg-slate-800 rounded-full h-1.5"><div class="h-1.5 rounded-full {phase === 'l1' ? 'bg-blue-500' : phase === 'l2' ? 'bg-yellow-500' : 'bg-purple-500'}" style="width: {Math.min(100, (systemState.loads[phase as keyof typeof systemState.loads] / (systemState.phase_capacity_n1_kw || 1)) * 100)}%"></div></div>
-                    <span class="text-xs text-slate-400 w-12 text-right">{systemState.loads[phase as keyof typeof systemState.loads]} kW</span></div>
+                  <div class="flex items-center space-x-2"><span class="text-xs text-[var(--color-text2)] w-5 uppercase">{phase}</span>
+                    <div class="flex-1 bg-[var(--color-border)] rounded-full h-1.5"><div class="h-1.5 rounded-full {phase === 'l1' ? 'bg-blue-500' : phase === 'l2' ? 'bg-yellow-500' : 'bg-purple-500'}" style="width: {Math.min(100, (systemState.loads[phase as keyof typeof systemState.loads] / (systemState.phase_capacity_n1_kw || 1)) * 100)}%"></div></div>
+                    <span class="text-xs text-[var(--color-text2)] w-12 text-right">{systemState.loads[phase as keyof typeof systemState.loads]} kW</span></div>
                 {/each}
-                <div class="text-[10px] text-slate-500 mt-0.5">Imbalance: {systemState.imbalance_kw} kW | Phase-N-1: {systemState.phase_capacity_n1_kw} kW</div>
+                <div class="text-[10px] text-[var(--color-text3)] mt-0.5">Imbalance: {systemState.imbalance_kw} kW | Phase-N-1: {systemState.phase_capacity_n1_kw} kW</div>
               </div>
               <div class="space-y-3">
-                <div class="flex items-center space-x-2"><Power class="w-3.5 h-3.5 {systemState.grid_online ? 'text-emerald-400' : 'text-red-400'}" /><span class="text-xs text-slate-400">Grid: </span><span class="text-xs font-semibold {systemState.grid_online ? 'text-emerald-400' : 'text-red-400'}">{systemState.grid_online ? 'Online' : 'AUS'}</span></div>
-                <div class="flex items-center space-x-2"><Battery class="w-3.5 h-3.5 {systemState.battery_soc_pct > 50 ? 'text-emerald-400' : systemState.battery_soc_pct > 30 ? 'text-amber-400' : 'text-red-400'}" /><span class="text-xs text-slate-400">Batterie:</span><span class="text-xs font-semibold text-slate-200">{systemState.battery_soc_pct}%</span><span class="text-xs text-slate-500">| {systemState.battery_runtime_min} min</span></div>
-                <div class="flex items-center space-x-2"><span class="text-xs text-slate-400">Module:</span><span class="text-xs font-semibold text-slate-200">{systemState.active_modules_count}/{systemState.installed_modules_count} aktiv{#if systemState.failed_modules_count > 0}<span class="text-red-400"> ({systemState.failed_modules_count} defekt)</span>{/if}</span></div>
-                <div class="flex items-center space-x-2"><span class="text-xs text-slate-400">N+1 Kapazität:</span><span class="text-xs font-semibold text-slate-200">{systemState.n1_kw} kW</span></div>
+                <div class="flex items-center space-x-2"><Power class="w-3.5 h-3.5 {systemState.grid_online ? 'text-emerald-400' : 'text-red-400'}" /><span class="text-xs text-[var(--color-text2)]">Grid: </span><span class="text-xs font-semibold {systemState.grid_online ? 'text-emerald-400' : 'text-red-400'}">{systemState.grid_online ? 'Online' : 'AUS'}</span></div>
+                <div class="flex items-center space-x-2"><Battery class="w-3.5 h-3.5 {systemState.battery_soc_pct > 50 ? 'text-emerald-400' : systemState.battery_soc_pct > 30 ? 'text-amber-400' : 'text-red-400'}" /><span class="text-xs text-[var(--color-text2)]">Batterie:</span><span class="text-xs font-semibold text-slate-200">{systemState.battery_soc_pct}%</span><span class="text-xs text-[var(--color-text3)]">| {systemState.battery_runtime_min} min</span></div>
+                <div class="flex items-center space-x-2"><span class="text-xs text-[var(--color-text2)]">Module:</span><span class="text-xs font-semibold text-slate-200">{systemState.active_modules_count}/{systemState.installed_modules_count} aktiv{#if systemState.failed_modules_count > 0}<span class="text-red-400"> ({systemState.failed_modules_count} defekt)</span>{/if}</span></div>
+                <div class="flex items-center space-x-2"><span class="text-xs text-[var(--color-text2)]">N+1 Kapazität:</span><span class="text-xs font-semibold text-slate-200">{systemState.n1_kw} kW</span></div>
               </div>
             </div>
             
-            <div class="mt-4 p-3 bg-slate-800/30 border border-slate-700/50 rounded-lg">
+            <div class="mt-4 p-3 bg-[var(--color-border2)] border border-[var(--color-border2)]/50 rounded-lg">
               <div class="flex justify-between items-center mb-1">
-                <span class="text-xs text-slate-400">Max. Entladestrom (Entladeschluss):</span>
+                <span class="text-xs text-[var(--color-text2)]">Max. Entladestrom (Entladeschluss):</span>
                 <span class="text-sm font-semibold {batteryDischargeCurrent > 200 ? 'text-red-400' : 'text-slate-200'}">{batteryDischargeCurrent} A</span>
               </div>
               <div class="flex justify-between items-center">
-                <span class="text-[10px] text-slate-500">DC-Kabelquerschnitt empfohlen:</span>
-                <span class="text-[10px] font-mono text-slate-400">≥ {cableSection} mm²</span>
+                <span class="text-[10px] text-[var(--color-text3)]">DC-Kabelquerschnitt empfohlen:</span>
+                <span class="text-[10px] font-mono text-[var(--color-text2)]">≥ {cableSection} mm²</span>
               </div>
               {#if batteryDischargeCurrent > 200}
                 <div class="mt-2 p-1.5 bg-red-500/10 border border-red-500/20 rounded text-[10px] text-red-400 flex items-center space-x-1.5">
@@ -538,31 +538,31 @@
               {/if}
             </div>
           {:else}
-            <div class="flex items-center justify-center py-8 text-slate-600"><p class="text-sm">Simulation starten</p></div>
+            <div class="flex items-center justify-center py-8 text-[var(--color-text3)]"><p class="text-sm">Simulation starten</p></div>
           {/if}
         </div>
       </div>
     </div>
 
     <!-- Event Log -->
-    <div class="mt-6 bg-[#131615] border border-slate-800 rounded-xl p-5">
-      <h3 class="text-sm font-semibold text-slate-300 flex items-center space-x-2 mb-4"><Activity class="w-4 h-4 text-yellow-400" /><span>Event-Log</span><span class="text-xs text-slate-600">({events.length} Einträge)</span></h3>
+    <div class="mt-6 bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl p-5">
+      <h3 class="text-sm font-semibold text-[var(--color-text)] flex items-center space-x-2 mb-4"><Activity class="w-4 h-4 text-yellow-400" /><span>Event-Log</span><span class="text-xs text-[var(--color-text3)]">({events.length} Einträge)</span></h3>
       {#if events.length > 0}
         <div class="overflow-x-auto"><table class="w-full text-sm">
-          <thead><tr class="text-left text-xs text-slate-500 border-b border-slate-800"><th class="pb-2 pr-4 font-medium">Zeit</th><th class="pb-2 pr-4 font-medium">Typ</th><th class="pb-2 pr-4 font-medium">Severity</th><th class="pb-2 font-medium">Beschreibung</th></tr></thead>
+          <thead><tr class="text-left text-xs text-[var(--color-text3)] border-b border-[var(--color-border)]"><th class="pb-2 pr-4 font-medium">Zeit</th><th class="pb-2 pr-4 font-medium">Typ</th><th class="pb-2 pr-4 font-medium">Severity</th><th class="pb-2 font-medium">Beschreibung</th></tr></thead>
           <tbody>
             {#each events as ev}
-              <tr class="border-b border-slate-800/50 hover:bg-slate-800/20 transition">
-                <td class="py-2 pr-4 text-xs text-slate-500 font-mono whitespace-nowrap">{formatTime(ev.timestamp)}</td>
-                <td class="py-2 pr-4"><span class="text-xs font-mono text-slate-400">{ev.event_type}</span></td>
+              <tr class="border-b border-[var(--color-border)]/50 hover:bg-[var(--color-border2)] transition">
+                <td class="py-2 pr-4 text-xs text-[var(--color-text3)] font-mono whitespace-nowrap">{formatTime(ev.timestamp)}</td>
+                <td class="py-2 pr-4"><span class="text-xs font-mono text-[var(--color-text2)]">{ev.event_type}</span></td>
                 <td class="py-2 pr-4"><span class="text-[10px] font-semibold px-2 py-0.5 rounded border {severityClass(ev.severity)}">{ev.severity.toUpperCase()}</span></td>
-                <td class="py-2 text-xs text-slate-300">{ev.description}</td>
+                <td class="py-2 text-xs text-[var(--color-text)]">{ev.description}</td>
               </tr>
             {/each}
           </tbody>
         </table></div>
       {:else}
-        <div class="flex items-center justify-center py-6 text-slate-600"><p class="text-sm">Keine Events. Simulation starten!</p></div>
+        <div class="flex items-center justify-center py-6 text-[var(--color-text3)]"><p class="text-sm">Keine Events. Simulation starten!</p></div>
       {/if}
     </div>
 
@@ -571,8 +571,8 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Battery Configuration -->
       <div class="space-y-4">
-        <div class="bg-[#131615] border border-slate-800 rounded-xl p-5">
-          <h3 class="text-sm font-semibold text-slate-300 flex items-center space-x-2 mb-4">
+        <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl p-5">
+          <h3 class="text-sm font-semibold text-[var(--color-text)] flex items-center space-x-2 mb-4">
             <Cpu class="w-4 h-4 text-emerald-400" /><span>Batterie-Konfiguration</span>
           </h3>
 
@@ -593,8 +593,8 @@
             </div>
           {/if}
 
-          <label class="text-xs text-slate-500 mb-1 block">Batterietyp</label>
-          <select bind:value={batType} class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 mb-2">
+          <label class="text-xs text-[var(--color-text3)] mb-1 block">Batterietyp</label>
+          <select bind:value={batType} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-emerald-500 mb-2">
             {#each batteryTypeOptions as bt}
               <option value={bt.value}>
                 {bt.label}
@@ -605,7 +605,7 @@
           </select>
 
           {#if batType === 'vrla'}
-            <div class="mb-4 p-2 bg-slate-800/50 border border-slate-700 rounded text-[10px] text-slate-400 leading-tight">
+            <div class="mb-4 p-2 bg-[var(--color-border2)] border border-[var(--color-border2)] rounded text-[10px] text-[var(--color-text2)] leading-tight">
               ⚠ Belüftung erforderlich — Wasserstoffgas bei Überladung. Optimale Temperatur 20-25°C. Bei >25°C halbiert sich die Lebensdauer je 10°C Temperaturerhöhung.
             </div>
           {:else if batType === 'lfp'}
@@ -622,28 +622,28 @@
 
           <div class="grid grid-cols-2 gap-3 mb-3">
             <div>
-              <label class="text-xs text-slate-500 mb-1 block">Serie (Blöcke)</label>
+              <label class="text-xs text-[var(--color-text3)] mb-1 block">Serie (Blöcke)</label>
               <input type="range" min="1" max="20" bind:value={batSeries} class="w-full accent-emerald-500" />
-              <span class="text-xs text-slate-400">{batSeries} × {batBlockV}V = {batSeries * batBlockV}V</span>
+              <span class="text-xs text-[var(--color-text2)]">{batSeries} × {batBlockV}V = {batSeries * batBlockV}V</span>
             </div>
             <div>
-              <label class="text-xs text-slate-500 mb-1 block">Parallel (Strings)</label>
+              <label class="text-xs text-[var(--color-text3)] mb-1 block">Parallel (Strings)</label>
               <input type="range" min="1" max="10" bind:value={batParallel} class="w-full accent-emerald-500" />
-              <span class="text-xs text-slate-400">{batParallel} × {batBlockAh}Ah = {batParallel * batBlockAh}Ah</span>
+              <span class="text-xs text-[var(--color-text2)]">{batParallel} × {batBlockAh}Ah = {batParallel * batBlockAh}Ah</span>
             </div>
           </div>
 
           <!-- Block visual -->
-          <div class="bg-[#181C1A] border border-slate-700 rounded-lg p-3 mb-3">
-            <span class="text-[10px] text-slate-500 uppercase mb-2 block">Block-Konfiguration: {batParallel} Strings × {batSeries} Blöcke</span>
+          <div class="bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg p-3 mb-3">
+            <span class="text-[10px] text-[var(--color-text3)] uppercase mb-2 block">Block-Konfiguration: {batParallel} Strings × {batSeries} Blöcke</span>
             <div class="flex gap-1 justify-center flex-wrap">
               {#each Array(Math.min(batParallel, 3)) as _, si}
-                <div class="flex flex-col items-center gap-0.5 px-1 {si > 0 ? 'border-l border-slate-700 ml-1 pl-2' : ''}">
+                <div class="flex flex-col items-center gap-0.5 px-1 {si > 0 ? 'border-l border-[var(--color-border2)] ml-1 pl-2' : ''}">
                   {#each Array(Math.min(batSeries, 8)) as _}
                     <div class="w-8 h-4 bg-emerald-500/20 border border-emerald-500/40 rounded text-[8px] text-emerald-400 flex items-center justify-center">{batBlockV}V</div>
-                    {#if batParallel > 3 && si === 2}<div class="text-[8px] text-slate-600">…×{batParallel}</div>{/if}
+                    {#if batParallel > 3 && si === 2}<div class="text-[8px] text-[var(--color-text3)]">…×{batParallel}</div>{/if}
                   {/each}
-                  {#if batSeries > 8}<div class="text-[8px] text-slate-600">…×{batSeries}</div>{/if}
+                  {#if batSeries > 8}<div class="text-[8px] text-[var(--color-text3)]">…×{batSeries}</div>{/if}
                 </div>
               {/each}
             </div>
@@ -651,56 +651,56 @@
 
           <div class="grid grid-cols-2 gap-3 mb-3">
             <div>
-              <label class="text-xs text-slate-500 mb-1 block">Alter (Jahre)</label>
+              <label class="text-xs text-[var(--color-text3)] mb-1 block">Alter (Jahre)</label>
               <input type="range" min="0" max="20" step="0.5" bind:value={batAge} class="w-full accent-amber-500" />
-              <span class="text-xs text-slate-400">{batAge} Jahre</span>
+              <span class="text-xs text-[var(--color-text2)]">{batAge} Jahre</span>
             </div>
             <div>
-              <label class="text-xs text-slate-500 mb-1 block">Temperatur (°C)</label>
+              <label class="text-xs text-[var(--color-text3)] mb-1 block">Temperatur (°C)</label>
               <input type="range" min="-10" max="50" bind:value={batTemp} class="w-full accent-red-500" />
-              <span class="text-xs text-slate-400">{batTemp}°C</span>
+              <span class="text-xs text-[var(--color-text2)]">{batTemp}°C</span>
             </div>
           </div>
 
           <div class="grid grid-cols-2 gap-3 mb-3">
-            <div><label class="text-xs text-slate-500 mb-1 block">Block-Spannung (V)</label><input type="number" step="1" min="2" bind:value={batBlockV} class="w-full bg-[#0f1720] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500" /></div>
-            <div><label class="text-xs text-slate-500 mb-1 block">Block-Kapazität (Ah)</label><input type="number" step="5" min="10" bind:value={batBlockAh} class="w-full bg-[#0f1720] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500" /></div>
+            <div><label class="text-xs text-[var(--color-text3)] mb-1 block">Block-Spannung (V)</label><input type="number" step="1" min="2" bind:value={batBlockV} class="w-full bg-[var(--color-bg2)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-emerald-500" /></div>
+            <div><label class="text-xs text-[var(--color-text3)] mb-1 block">Block-Kapazität (Ah)</label><input type="number" step="5" min="10" bind:value={batBlockAh} class="w-full bg-[var(--color-bg2)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-emerald-500" /></div>
           </div>
 
           <button onclick={loadRuntimeCurve} disabled={batteryLoading}
-            class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-700 disabled:text-slate-500 text-white rounded-lg text-sm font-semibold transition flex items-center justify-center space-x-2">
+            class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-[var(--color-border2)] disabled:text-[var(--color-text3)] text-[var(--color-text)] rounded-lg text-sm font-semibold transition flex items-center justify-center space-x-2">
             {#if batteryLoading}<RefreshCw class="w-4 h-4 animate-spin" /><span>Lädt...</span>{:else}<TrendingUp class="w-4 h-4" /><span>Runtime-Kurve laden</span>{/if}
           </button>
         </div>
 
         <!-- Dimensioning Calculator -->
-        <div class="bg-[#131615] border border-slate-800 rounded-xl p-5">
-          <h3 class="text-sm font-semibold text-slate-300 flex items-center space-x-2 mb-4">
+        <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl p-5">
+          <h3 class="text-sm font-semibold text-[var(--color-text)] flex items-center space-x-2 mb-4">
             <Wrench class="w-4 h-4 text-purple-400" /><span>Dimensionierungsrechner</span>
           </h3>
-          <p class="text-[11px] text-slate-500 mb-3">Wieviele Batterieblöcke für X min Überbrückung bei Y kW?</p>
+          <p class="text-[11px] text-[var(--color-text3)] mb-3">Wieviele Batterieblöcke für X min Überbrückung bei Y kW?</p>
           <div class="space-y-3">
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="text-xs text-slate-500 mb-1 block">Last (kW)</label>
-                <input type="number" step="0.1" min="0.1" bind:value={dimLoad} oninput={() => dimLoadTouched = true} class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500" />
+                <label class="text-xs text-[var(--color-text3)] mb-1 block">Last (kW)</label>
+                <input type="number" step="0.1" min="0.1" bind:value={dimLoad} oninput={() => dimLoadTouched = true} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-purple-500" />
                 {#if dimLoadTouched && Math.abs(dimLoad - simulatorTotalLoad) > 0.01}
                   <div class="mt-1 text-[10px] text-amber-400">Simulator-Last: {simulatorTotalLoad} kW</div>
                 {/if}
               </div>
-              <div><label class="text-xs text-slate-500 mb-1 block">Ziel (min)</label><input type="number" step="1" min="1" bind:value={dimTargetMin} class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500" /></div>
+              <div><label class="text-xs text-[var(--color-text3)] mb-1 block">Ziel (min)</label><input type="number" step="1" min="1" bind:value={dimTargetMin} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-purple-500" /></div>
             </div>
             <button onclick={runDimensioning} disabled={dimLoading}
-              class="w-full py-2 bg-purple-600 hover:bg-purple-500 disabled:bg-slate-700 disabled:text-slate-500 text-white rounded-lg text-sm font-semibold transition flex items-center justify-center space-x-2">
+              class="w-full py-2 bg-purple-600 hover:bg-purple-500 disabled:bg-[var(--color-border2)] disabled:text-[var(--color-text3)] text-[var(--color-text)] rounded-lg text-sm font-semibold transition flex items-center justify-center space-x-2">
               {#if dimLoading}<RefreshCw class="w-4 h-4 animate-spin" /><span>Rechnet...</span>{:else}<Wrench class="w-4 h-4" /><span>Berechnen</span>{/if}
             </button>
           </div>
           {#if dimResult}
-            <div class="mt-4 p-3 bg-[#181C1A] border border-slate-700 rounded-lg space-y-1">
-              <div class="flex justify-between text-xs"><span class="text-slate-400">Benötigt:</span><span class="text-slate-200 font-semibold">{dimResult.required_capacity_ah} Ah</span></div>
-              <div class="flex justify-between text-xs"><span class="text-slate-400">Konfiguration:</span><span class="text-slate-200 font-semibold">{dimResult.series_blocks}S × {dimResult.parallel_strings}P = {dimResult.total_blocks} Blöcke</span></div>
-              <div class="flex justify-between text-xs"><span class="text-slate-400">Tatsächlich:</span><span class="text-emerald-400 font-semibold">{dimResult.actual_capacity_ah} Ah → {dimResult.actual_runtime_min} min</span></div>
-              <div class="flex justify-between text-xs"><span class="text-slate-400">Sicherheit:</span><span class="text-slate-200">{dimResult.safety_margin_pct}% → {dimResult.load_with_margin_kw} kW</span></div>
+            <div class="mt-4 p-3 bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg space-y-1">
+              <div class="flex justify-between text-xs"><span class="text-[var(--color-text2)]">Benötigt:</span><span class="text-slate-200 font-semibold">{dimResult.required_capacity_ah} Ah</span></div>
+              <div class="flex justify-between text-xs"><span class="text-[var(--color-text2)]">Konfiguration:</span><span class="text-slate-200 font-semibold">{dimResult.series_blocks}S × {dimResult.parallel_strings}P = {dimResult.total_blocks} Blöcke</span></div>
+              <div class="flex justify-between text-xs"><span class="text-[var(--color-text2)]">Tatsächlich:</span><span class="text-emerald-400 font-semibold">{dimResult.actual_capacity_ah} Ah → {dimResult.actual_runtime_min} min</span></div>
+              <div class="flex justify-between text-xs"><span class="text-[var(--color-text2)]">Sicherheit:</span><span class="text-slate-200">{dimResult.safety_margin_pct}% → {dimResult.load_with_margin_kw} kW</span></div>
             </div>
           {/if}
         </div>
@@ -711,56 +711,56 @@
         <!-- Battery Summary -->
         {#if runtimeCurve?.battery_summary}
           {@const bs = runtimeCurve.battery_summary}
-          <div class="bg-[#131615] border border-slate-800 rounded-xl p-5">
-            <h3 class="text-sm font-semibold text-slate-300 flex items-center space-x-2 mb-4">
+          <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl p-5">
+            <h3 class="text-sm font-semibold text-[var(--color-text)] flex items-center space-x-2 mb-4">
               <Battery class="w-4 h-4 text-emerald-400" /><span>Batterie-Übersicht</span>
             </h3>
             <div class="grid grid-cols-4 gap-3">
-              <div class="bg-[#181C1A] border border-slate-700 rounded-lg p-3 text-center">
-                <div class="text-[10px] text-slate-500 uppercase mb-1">Typ</div>
+              <div class="bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg p-3 text-center">
+                <div class="text-[10px] text-[var(--color-text3)] uppercase mb-1">Typ</div>
                 <div class="text-sm font-semibold text-emerald-400">{bs.battery_type_name}</div>
               </div>
-              <div class="bg-[#181C1A] border border-slate-700 rounded-lg p-3 text-center">
-                <div class="text-[10px] text-slate-500 uppercase mb-1">Kapazität</div>
+              <div class="bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg p-3 text-center">
+                <div class="text-[10px] text-[var(--color-text3)] uppercase mb-1">Kapazität</div>
                 <div class="text-sm font-semibold text-slate-200">{bs.nominal_capacity_ah} Ah</div>
-                <div class="text-[10px] text-slate-500">effektiv: <span class="text-amber-400">{bs.effective_capacity_ah} Ah</span></div>
+                <div class="text-[10px] text-[var(--color-text3)]">effektiv: <span class="text-amber-400">{bs.effective_capacity_ah} Ah</span></div>
               </div>
-              <div class="bg-[#181C1A] border border-slate-700 rounded-lg p-3 text-center">
-                <div class="text-[10px] text-slate-500 uppercase mb-1">Energie</div>
+              <div class="bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg p-3 text-center">
+                <div class="text-[10px] text-[var(--color-text3)] uppercase mb-1">Energie</div>
                 <div class="text-sm font-semibold text-slate-200">{bs.nominal_energy_kwh} kWh</div>
-                <div class="text-[10px] text-slate-500">effektiv: <span class="text-amber-400">{bs.effective_energy_kwh} kWh</span></div>
+                <div class="text-[10px] text-[var(--color-text3)]">effektiv: <span class="text-amber-400">{bs.effective_energy_kwh} kWh</span></div>
               </div>
-              <div class="bg-[#181C1A] border border-slate-700 rounded-lg p-3 text-center">
-                <div class="text-[10px] text-slate-500 uppercase mb-1">Blöcke</div>
+              <div class="bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg p-3 text-center">
+                <div class="text-[10px] text-[var(--color-text3)] uppercase mb-1">Blöcke</div>
                 <div class="text-sm font-semibold text-slate-200">{bs.total_blocks}</div>
-                <div class="text-[10px] text-slate-500">{bs.series_blocks}S × {bs.parallel_strings}P</div>
+                <div class="text-[10px] text-[var(--color-text3)]">{bs.series_blocks}S × {bs.parallel_strings}P</div>
               </div>
-              <div class="bg-[#181C1A] border border-slate-700 rounded-lg p-3 text-center">
-                <div class="text-[10px] text-slate-500 uppercase mb-1">Alterung</div>
+              <div class="bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg p-3 text-center">
+                <div class="text-[10px] text-[var(--color-text3)] uppercase mb-1">Alterung</div>
                 <div class="text-sm font-semibold {bs.aging_factor_pct >= 90 ? 'text-emerald-400' : bs.aging_factor_pct >= 70 ? 'text-amber-400' : 'text-red-400'}">{bs.aging_factor_pct}%</div>
-                <div class="text-[10px] text-slate-500">{bs.age_years} / {bs.lifespan_years} Jahre</div>
+                <div class="text-[10px] text-[var(--color-text3)]">{bs.age_years} / {bs.lifespan_years} Jahre</div>
               </div>
-              <div class="bg-[#181C1A] border border-slate-700 rounded-lg p-3 text-center">
-                <div class="text-[10px] text-slate-500 uppercase mb-1">Temperatur</div>
+              <div class="bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg p-3 text-center">
+                <div class="text-[10px] text-[var(--color-text3)] uppercase mb-1">Temperatur</div>
                 <div class="text-sm font-semibold {bs.temperature_factor_pct >= 95 ? 'text-emerald-400' : bs.temperature_factor_pct >= 85 ? 'text-amber-400' : 'text-red-400'}">{bs.temperature_factor_pct}%</div>
-                <div class="text-[10px] text-slate-500">{bs.temperature_c}°C</div>
+                <div class="text-[10px] text-[var(--color-text3)]">{bs.temperature_c}°C</div>
               </div>
-              <div class="bg-[#181C1A] border border-slate-700 rounded-lg p-3 text-center">
-                <div class="text-[10px] text-slate-500 uppercase mb-1">Peukert k</div>
+              <div class="bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg p-3 text-center">
+                <div class="text-[10px] text-[var(--color-text3)] uppercase mb-1">Peukert k</div>
                 <div class="text-sm font-semibold text-slate-200">{bs.peukert_k}</div>
               </div>
-              <div class="bg-[#181C1A] border border-slate-700 rounded-lg p-3 text-center">
-                <div class="text-[10px] text-slate-500 uppercase mb-1">N+1</div>
+              <div class="bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg p-3 text-center">
+                <div class="text-[10px] text-[var(--color-text3)] uppercase mb-1">N+1</div>
                 <div class="text-sm font-semibold {runtimeCurve.n1_safe ? 'text-emerald-400' : 'text-red-400'}">{runtimeCurve.n1_safe ? 'SICHER' : 'UNSICHER'}</div>
-                <div class="text-[10px] text-slate-500">{runtimeCurve.n1_kw} kW</div>
+                <div class="text-[10px] text-[var(--color-text3)]">{runtimeCurve.n1_kw} kW</div>
               </div>
             </div>
             
             {#if runtimeCurve.strangausfall_runtime_min !== undefined}
-              <div class="mt-4 p-3 bg-[#181C1A] border border-slate-700 rounded-lg flex justify-between items-center">
+              <div class="mt-4 p-3 bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg flex justify-between items-center">
                 <div>
-                  <span class="text-xs text-slate-400 font-semibold block">Strang-Redundanz (Strangausfall N-1)</span>
-                  <span class="text-[10px] text-slate-500">Verbleibende Überbrückungszeit bei Ausfall eines parallelen Strangs (Peukert)</span>
+                  <span class="text-xs text-[var(--color-text2)] font-semibold block">Strang-Redundanz (Strangausfall N-1)</span>
+                  <span class="text-[10px] text-[var(--color-text3)]">Verbleibende Überbrückungszeit bei Ausfall eines parallelen Strangs (Peukert)</span>
                 </div>
                 <div class="text-right">
                   {#if bs.parallel_strings > 1}
@@ -777,11 +777,11 @@
         {/if}
 
         <!-- Runtime Curve Chart -->
-        <div class="bg-[#131615] border border-slate-800 rounded-xl p-5">
-          <h3 class="text-sm font-semibold text-slate-300 flex items-center space-x-2 mb-4">
+        <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl p-5">
+          <h3 class="text-sm font-semibold text-[var(--color-text)] flex items-center space-x-2 mb-4">
             <TrendingUp class="w-4 h-4 text-yellow-400" /><span>Überbrückungszeit vs Last (Peukert)</span>
             {#if runtimeCurve}
-              <span class="text-xs text-slate-500 ml-2">| {runtimeCurve.total_load_kw} kW aktuell → {runtimeCurve.current_runtime_min} min</span>
+              <span class="text-xs text-[var(--color-text3)] ml-2">| {runtimeCurve.total_load_kw} kW aktuell → {runtimeCurve.current_runtime_min} min</span>
             {/if}
           </h3>
           {#if runtimeCurve?.curve && runtimeCurve.curve.length > 0}
@@ -829,7 +829,7 @@
               {/if}
             </svg>
           {:else}
-            <div class="flex items-center justify-center py-12 text-slate-600">
+            <div class="flex items-center justify-center py-12 text-[var(--color-text3)]">
               <p class="text-sm">Batterie konfigurieren und "Runtime-Kurve laden" klicken</p>
             </div>
           {/if}
@@ -841,9 +841,9 @@
     <ShutdownSimulator />
   {:else}
     <!-- === STROMLAUFPLAN TAB === -->
-    <div class="bg-[#131615] border border-slate-800 rounded-xl p-6">
-      <h3 class="text-lg font-bold text-white mb-2">Stromlaufplan & Topologie (40kW USV)</h3>
-      <p class="text-sm text-slate-400 mb-6">
+    <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl p-6">
+      <h3 class="text-lg font-bold text-[var(--color-text)] mb-2">Stromlaufplan & Topologie (40kW USV)</h3>
+      <p class="text-sm text-[var(--color-text2)] mb-6">
         Die schematische Einspeisungs- und Verteilerstruktur des RZs. Die Zuleitung zur Unterverteilung ist für 40kW mit <strong>5x25 mm²</strong> dimensioniert.
         <br/><span class="text-blue-400 font-semibold mt-2 inline-block">Interaktiv:</span> Klicke auf Elemente (z.B. Phasen oder USV), um einen Ausfall zu simulieren und die Kaskadeneffekte auf angeschlossene Geräte zu sehen.
       </p>
@@ -854,7 +854,7 @@
 
       <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <!-- SVG diagram column (occupies 3 cols) -->
-        <div class="lg:col-span-3 bg-[#0d1220] border border-slate-800 rounded-xl p-4 flex justify-center">
+        <div class="lg:col-span-3 bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl p-4 flex justify-center">
           <svg viewBox="0 0 700 850" class="w-full max-w-[650px] h-auto">
             <!-- Definitions for markers and filters -->
             <defs>
@@ -996,31 +996,31 @@
 
         <!-- Legend / Info panel (1 col) -->
         <div class="space-y-4">
-          <div class="bg-[#181C1A] border border-slate-700/50 rounded-xl p-4">
-            <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-3">Legende & Kabel</h4>
+          <div class="bg-[var(--color-bg3)] border border-[var(--color-border2)]/50 rounded-xl p-4">
+            <h4 class="text-xs font-semibold text-[var(--color-text)] uppercase tracking-wider mb-3">Legende & Kabel</h4>
             <div class="space-y-3 text-xs">
               <div class="flex items-center space-x-2">
                 <div class="w-4 h-1 bg-slate-500"></div>
-                <span class="text-slate-400">Normalnetz (ungepuffert)</span>
+                <span class="text-[var(--color-text2)]">Normalnetz (ungepuffert)</span>
               </div>
               <div class="flex items-center space-x-2">
                 <div class="w-4 h-1 bg-emerald-500"></div>
-                <span class="text-slate-400">USV-Pfad (aktiv gepuffert)</span>
+                <span class="text-[var(--color-text2)]">USV-Pfad (aktiv gepuffert)</span>
               </div>
               <div class="flex items-center space-x-2">
                 <div class="w-4 h-1 bg-red-500 stroke-dasharray-2"></div>
-                <span class="text-slate-400">Direktnetz / Bypass</span>
+                <span class="text-[var(--color-text2)]">Direktnetz / Bypass</span>
               </div>
-              <div class="pt-3 border-t border-slate-700/50 space-y-2">
-                <p class="text-[11px] text-slate-400"><strong>Zuleitung HV ──► UV:</strong><br />NYY-J 5x25 mm² (NH 80A)</p>
-                <p class="text-[11px] text-slate-400"><strong>Verbindungen USV/MBS:</strong><br />NYY-J 5x16 mm² (LS 63A)</p>
-                <p class="text-[11px] text-slate-400"><strong>Zuleitung PDU:</strong><br />NYY-J 3x10 mm² (LS 32A)</p>
+              <div class="pt-3 border-t border-[var(--color-border2)]/50 space-y-2">
+                <p class="text-[11px] text-[var(--color-text2)]"><strong>Zuleitung HV ──► UV:</strong><br />NYY-J 5x25 mm² (NH 80A)</p>
+                <p class="text-[11px] text-[var(--color-text2)]"><strong>Verbindungen USV/MBS:</strong><br />NYY-J 5x16 mm² (LS 63A)</p>
+                <p class="text-[11px] text-[var(--color-text2)]"><strong>Zuleitung PDU:</strong><br />NYY-J 3x10 mm² (LS 32A)</p>
               </div>
             </div>
           </div>
 
-          <div class="bg-[#181C1A] border border-slate-700/50 rounded-xl p-4 text-xs text-slate-400 leading-relaxed space-y-2">
-            <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider">EPLAN Integration</h4>
+          <div class="bg-[var(--color-bg3)] border border-[var(--color-border2)]/50 rounded-xl p-4 text-xs text-[var(--color-text2)] leading-relaxed space-y-2">
+            <h4 class="text-xs font-semibold text-[var(--color-text)] uppercase tracking-wider">EPLAN Integration</h4>
             <p>
               Dieses Einspeise-Schema ist mit den tatsächlichen physikalischen Verbindungen im RZ deckungsgleich.
             </p>

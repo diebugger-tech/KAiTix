@@ -104,11 +104,11 @@
   }
 </script>
 
-<div class="bg-[#131615] border border-slate-800 rounded-xl p-6 min-h-[85vh] flex flex-col">
+<div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl p-6 min-h-[85vh] flex flex-col">
   <div class="flex items-center justify-between mb-6">
     <div>
-      <h3 class="text-xl font-bold text-white mb-1">Stromlaufplan & Topologie</h3>
-      <p class="text-sm text-slate-400">
+      <h3 class="text-xl font-bold text-[var(--color-text)] mb-1">Stromlaufplan & Topologie</h3>
+      <p class="text-sm text-[var(--color-text2)]">
         Einspeisungs- und Verteilerstruktur des RZs (USV, Hauptverteilung, PDUs).
       </p>
     </div>
@@ -119,7 +119,7 @@
       {#if allUsvUnits.length > 0}
         <select 
           bind:value={selectedUsvId}
-          class="bg-[#080c14] border border-slate-700 text-slate-300 text-sm rounded-lg px-3 py-2 outline-none focus:border-emerald-500"
+          class="bg-[var(--color-bg3)] border border-[var(--color-border2)] text-[var(--color-text)] text-sm rounded-lg px-3 py-2 outline-none focus:border-emerald-500"
         >
           {#each allUsvUnits as u}
             <option value={u.id}>{u.bezeichnung} ({u.hersteller})</option>
@@ -130,21 +130,21 @@
       <button
         onclick={printEplan}
         disabled={pdfLoading}
-        class="flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium bg-[#1D9E75] hover:bg-[#0F6E56] disabled:opacity-50 text-white transition-colors"
+        class="flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium bg-[#1D9E75] hover:bg-[#0F6E56] disabled:opacity-50 text-[var(--color-text)] transition-colors"
       >
         <Download class="w-4 h-4" />
         <span>{pdfLoading ? 'Wird geladen…' : 'PDF Export'}</span>
       </button>
-    <div class="flex items-center bg-[#080c14] border border-slate-800 rounded-lg p-1">
+    <div class="flex items-center bg-[var(--color-bg3)] border border-[var(--color-border)] rounded-lg p-1">
       <button 
-        class="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-all {activeTab === 'block' ? 'bg-slate-800 text-white shadow' : 'text-slate-400 hover:text-slate-200'}"
+        class="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-all {activeTab === 'block' ? 'bg-[var(--color-border)] text-[var(--color-text)] shadow' : 'text-[var(--color-text2)] hover:text-slate-200'}"
         onclick={() => activeTab = 'block'}
       >
         <Grid class="w-4 h-4" />
         <span>Blockschaltbild</span>
       </button>
       <button
-        class="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-all {activeTab === 'cad' ? 'bg-slate-800 text-white shadow' : 'text-slate-400 hover:text-slate-200'}"
+        class="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-all {activeTab === 'cad' ? 'bg-[var(--color-border)] text-[var(--color-text)] shadow' : 'text-[var(--color-text2)] hover:text-slate-200'}"
         onclick={() => activeTab = 'cad'}
       >
         <FileText class="w-4 h-4" />
@@ -158,7 +158,7 @@
     <div class:hidden={activeTab !== 'block'}>
       <!-- EXISTING BLOCK DIAGRAM -->
       <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 h-full">
-        <div id="eplan-block" class="lg:col-span-3 bg-[#0d1220] border border-slate-800 rounded-xl p-4 flex justify-center">
+        <div id="eplan-block" class="lg:col-span-3 bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl p-4 flex justify-center">
           <svg viewBox="0 0 700 850" class="w-full max-w-[650px] h-auto">
             <defs>
               <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
@@ -248,25 +248,25 @@
         </div>
 
         <div class="space-y-4">
-          <div class="bg-[#181C1A] border border-slate-700/50 rounded-xl p-4">
-            <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-3">Legende & Kabel</h4>
+          <div class="bg-[var(--color-bg3)] border border-[var(--color-border2)]/50 rounded-xl p-4">
+            <h4 class="text-xs font-semibold text-[var(--color-text)] uppercase tracking-wider mb-3">Legende & Kabel</h4>
             <div class="space-y-3 text-xs">
               <div class="flex items-center space-x-2">
                 <div class="w-4 h-1 bg-slate-500"></div>
-                <span class="text-slate-400">Normalnetz (ungepuffert)</span>
+                <span class="text-[var(--color-text2)]">Normalnetz (ungepuffert)</span>
               </div>
               <div class="flex items-center space-x-2">
                 <div class="w-4 h-1 bg-emerald-500"></div>
-                <span class="text-slate-400">USV-Pfad (aktiv gepuffert)</span>
+                <span class="text-[var(--color-text2)]">USV-Pfad (aktiv gepuffert)</span>
               </div>
               <div class="flex items-center space-x-2">
                 <div class="w-4 h-1 bg-red-500 stroke-dasharray-2"></div>
-                <span class="text-slate-400">Direktnetz / Bypass</span>
+                <span class="text-[var(--color-text2)]">Direktnetz / Bypass</span>
               </div>
             </div>
           </div>
-          <div class="bg-[#181C1A] border border-slate-700/50 rounded-xl p-4 text-xs text-slate-400 leading-relaxed space-y-2">
-            <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Information</h4>
+          <div class="bg-[var(--color-bg3)] border border-[var(--color-border2)]/50 rounded-xl p-4 text-xs text-[var(--color-text2)] leading-relaxed space-y-2">
+            <h4 class="text-xs font-semibold text-[var(--color-text)] uppercase tracking-wider">Information</h4>
             <p>
               Dieses Blockschaltbild zeigt die logische Topologie. Die Sicherungen (NH) sind nun korrekt innerhalb der UV-RZ-01 dargestellt. Wechsle auf den Reiter "CAD E-Plan", um den allpoligen Stromlaufplan zu sehen.
             </p>

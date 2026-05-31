@@ -130,11 +130,11 @@
   }
 </script>
 
-<div class="flex border-b border-slate-900 max-h-[60vh] rack-front-view-container">
+<div class="flex border-b border-[var(--color-border)] max-h-[60vh] rack-front-view-container">
   
   <!-- Linke Seite (Zero-U) -->
-  <div class="w-10 sm:w-12 bg-[#090d14] border-r border-slate-900 flex flex-col items-stretch p-1.5 min-h-0">
-    <div class="text-[7px] text-slate-600 text-center uppercase mb-1">0U L</div>
+  <div class="w-10 sm:w-12 bg-[var(--color-bg3)] border-r border-[var(--color-border)] flex flex-col items-stretch p-1.5 min-h-0">
+    <div class="text-[7px] text-[var(--color-text3)] text-center uppercase mb-1">0U L</div>
     {#each leftSide as dev}
       {@const c = typColor(dev.typ)}
       {@const isIncompatible = isDeviceIncompatible(dev)}
@@ -144,13 +144,13 @@
         style="background:{isIncompatible ? 'rgba(239,68,68,.22)' : c.bg}; border-color:{isIncompatible ? 'rgba(239,68,68,.7)' : c.border}; writing-mode: vertical-rl; transform: rotate(180deg);"
         title={isIncompatible ? '⚠ Höhenkonflikt: ' + getDeviceTooltip(dev) : getDeviceTooltip(dev)}
       >
-        <span class="font-semibold text-white text-[9px] leading-none">{isIncompatible ? '⚠ ' : ''}{dev.hostname}</span>
+        <span class="font-semibold text-[var(--color-text)] text-[9px] leading-none">{isIncompatible ? '⚠ ' : ''}{dev.hostname}</span>
         <span class="text-[7px] opacity-60">{dev.typ.toUpperCase()}</span>
       </button>
     {/each}
     {#if !readonly}
       {#if !occupiedSides.left}
-      <button onclick={(e) => handleEmptySideClick('left', e)} class="w-full aspect-square mt-auto border border-dashed border-slate-800 rounded flex items-center justify-center text-slate-600 hover:text-blue-500 hover:border-[#1D9E75]/50 hover:bg-[#1D9E75]/10 transition shrink-0">
+      <button onclick={(e) => handleEmptySideClick('left', e)} class="w-full aspect-square mt-auto border border-dashed border-[var(--color-border)] rounded flex items-center justify-center text-[var(--color-text3)] hover:text-blue-500 hover:border-[#1D9E75]/50 hover:bg-[#1D9E75]/10 transition shrink-0">
         <Plus class="w-4 h-4" />
       </button>
       {:else}
@@ -162,8 +162,8 @@
   </div>
 
   <!-- Main HE Slots -->
-  <div class="flex-1 p-2 font-mono text-[9px] overflow-y-auto relative bg-[#131615]">
-    <div class="text-center text-[8px] text-slate-600 pb-1 mb-1 border-b border-slate-900 sticky top-0 bg-[#131615] z-10">FRONTANSICHT</div>
+  <div class="flex-1 p-2 font-mono text-[9px] overflow-y-auto relative bg-[var(--color-bg2)]">
+    <div class="text-center text-[8px] text-[var(--color-text3)] pb-1 mb-1 border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-bg2)] z-10">FRONTANSICHT</div>
     {#each Array.from({ length: Math.min(maxSlots || rack.hoehe_u, rack.hoehe_u) }, (_, i) => rack.hoehe_u - i) as u}
       {@const dev = devAt(u)}
       {#if dev}
@@ -177,7 +177,7 @@
             style="background:{isConflict || isIncompatible ? 'rgba(239,68,68,.22)' : c.bg}; border-color:{isConflict || isIncompatible ? 'rgba(239,68,68,.7)' : c.border}; min-height:{dev.u_hoehe * 22}px; display:flex; align-items:center; justify-content:space-between;"
             title={isConflict ? '⚠ U-Positions-Konflikt: ' + getDeviceTooltip(dev) : isIncompatible ? '⚠ Höhenkonflikt: ' + getDeviceTooltip(dev) : getDeviceTooltip(dev)}
           >
-            <span class="font-semibold {isConflict || isIncompatible ? 'text-red-300' : 'text-white'} truncate">{isIncompatible ? '⚠ ' : ''}{dev.hostname}</span>
+            <span class="font-semibold {isConflict || isIncompatible ? 'text-red-300' : 'text-[var(--color-text)]'} truncate">{isIncompatible ? '⚠ ' : ''}{dev.hostname}</span>
             <span class="text-[8px] opacity-60 shrink-0 ml-1">{isConflict || isIncompatible ? '⚠ ' : ''}{dev.typ.toUpperCase()} {dev.u_hoehe}U</span>
           </button>
         {/if}
@@ -185,28 +185,28 @@
         {#if !readonly}
         <button
           onclick={(e) => handleEmptyClick(u, e)}
-          class="w-full px-2 py-1 mb-0.5 text-slate-700 border border-dashed border-slate-800/50 rounded flex justify-between items-center hover:border-[#1D9E75]/40 hover:text-[#1D9E75]/60 hover:bg-[#1D9E75]/5 transition group"
+          class="w-full px-2 py-1 mb-0.5 text-[var(--color-text3)] border border-dashed border-[var(--color-border)]/50 rounded flex justify-between items-center hover:border-[#1D9E75]/40 hover:text-[#1D9E75]/60 hover:bg-[#1D9E75]/5 transition group"
         >
           <span>HE {u}</span>
           <Plus class="w-3 h-3 opacity-0 group-hover:opacity-100 transition" />
         </button>
         {:else}
-        <div class="w-full px-2 py-1 mb-0.5 text-slate-800/50 border border-transparent rounded flex justify-between items-center">
+        <div class="w-full px-2 py-1 mb-0.5 text-[var(--color-text2)]/50 border border-transparent rounded flex justify-between items-center">
           <span>HE {u}</span>
         </div>
         {/if}
       {/if}
     {/each}
     {#if maxSlots && rack.hoehe_u > maxSlots}
-      <div class="text-center text-[8px] py-1 text-slate-600 border-t border-slate-900 mt-1">
+      <div class="text-center text-[8px] py-1 text-[var(--color-text3)] border-t border-[var(--color-border)] mt-1">
         + {rack.hoehe_u - maxSlots} weitere Höheneinheiten...
       </div>
     {/if}
   </div>
 
   <!-- Rechte Seite (Zero-U) -->
-  <div class="w-10 sm:w-12 bg-[#090d14] border-l border-slate-900 flex flex-col items-stretch p-1.5 min-h-0">
-    <div class="text-[7px] text-slate-600 text-center uppercase mb-1">0U R</div>
+  <div class="w-10 sm:w-12 bg-[var(--color-bg3)] border-l border-[var(--color-border)] flex flex-col items-stretch p-1.5 min-h-0">
+    <div class="text-[7px] text-[var(--color-text3)] text-center uppercase mb-1">0U R</div>
     {#each rightSide as dev}
       {@const c = typColor(dev.typ)}
       {@const isIncompatible = isDeviceIncompatible(dev)}
@@ -216,7 +216,7 @@
         style="background:{isIncompatible ? 'rgba(239,68,68,.22)' : c.bg}; border-color:{isIncompatible ? 'rgba(239,68,68,.7)' : c.border}; writing-mode: vertical-rl; transform: rotate(180deg);"
         title={isIncompatible ? '⚠ Höhenkonflikt: ' + getDeviceTooltip(dev) : getDeviceTooltip(dev)}
       >
-        <span class="font-semibold text-white text-[9px] leading-none">{isIncompatible ? '⚠ ' : ''}{dev.hostname}</span>
+        <span class="font-semibold text-[var(--color-text)] text-[9px] leading-none">{isIncompatible ? '⚠ ' : ''}{dev.hostname}</span>
         <span class="text-[7px] opacity-60">{dev.typ.toUpperCase()}</span>
       </button>
     {/each}
@@ -224,11 +224,11 @@
       <div class="flex-1 flex justify-center py-2 min-h-0">
         <button
           onclick={(e) => handleEmptySideClick('right', e)}
-          class="w-4 h-full border border-dashed border-slate-700/50 rounded flex flex-col items-center justify-center hover:bg-slate-800/50 hover:border-slate-500 transition-colors"
+          class="w-4 h-full border border-dashed border-[var(--color-border2)]/50 rounded flex flex-col items-center justify-center hover:bg-[var(--color-border2)] hover:border-slate-500 transition-colors"
           title="0-U Gerät rechts hinzufügen"
           aria-label="0-U Gerät rechts hinzufügen"
         >
-          <Plus class="w-3 h-3 text-slate-600" />
+          <Plus class="w-3 h-3 text-[var(--color-text3)]" />
         </button>
       </div>
     {/if}

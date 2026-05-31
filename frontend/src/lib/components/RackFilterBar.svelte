@@ -123,11 +123,11 @@
   <div class="space-y-3">
     <!-- Standort -->
     <div>
-      <label class="block text-[9px] uppercase font-bold tracking-wider text-slate-500 mb-1">Standort</label>
+      <label class="block text-[9px] uppercase font-bold tracking-wider text-[var(--color-text3)] mb-1">Standort</label>
       <select
         bind:value={selectedStandort}
         onchange={handleStandortChange}
-        class="w-full bg-[#181C1A] border border-slate-700 hover:border-slate-600 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] disabled:opacity-50 transition"
+        class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] hover:border-[var(--color-border2)] rounded-lg px-2.5 py-1.5 text-xs text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75] disabled:opacity-50 transition"
       >
         <option value="Alle">Alle Standorte</option>
         {#each standorte as s}
@@ -138,12 +138,12 @@
 
     <!-- Reihe -->
     <div>
-      <label class="block text-[9px] uppercase font-bold tracking-wider text-slate-500 mb-1">Reihe</label>
+      <label class="block text-[9px] uppercase font-bold tracking-wider text-[var(--color-text3)] mb-1">Reihe</label>
       <select
         value={selectedRackreihe}
         onchange={handleReiheChange}
         disabled={reiheList.length === 0}
-        class="w-full bg-[#181C1A] border border-slate-700 hover:border-slate-600 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] disabled:opacity-50 transition"
+        class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] hover:border-[var(--color-border2)] rounded-lg px-2.5 py-1.5 text-xs text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75] disabled:opacity-50 transition"
       >
         <option value="Alle">Alle Reihen</option>
         {#each reiheList as r}
@@ -154,11 +154,11 @@
 
     <!-- Rack -->
     <div>
-      <label class="block text-[9px] uppercase font-bold tracking-wider text-slate-500 mb-1">Rack</label>
+      <label class="block text-[9px] uppercase font-bold tracking-wider text-[var(--color-text3)] mb-1">Rack</label>
       <select
         bind:value={selectedRack}
         disabled={filteredRacks.length === 0}
-        class="w-full bg-[#181C1A] border border-slate-700 hover:border-slate-600 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] disabled:opacity-50 transition"
+        class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] hover:border-[var(--color-border2)] rounded-lg px-2.5 py-1.5 text-xs text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75] disabled:opacity-50 transition"
       >
         <option value="Alle">Alle Racks</option>
         {#each filteredRacks as rack}
@@ -172,11 +172,11 @@
   <div class="flex items-center gap-3 flex-wrap">
     <!-- Standort -->
     <div class="flex items-center gap-2">
-      <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500 shrink-0">Standort</span>
+      <span class="text-[10px] uppercase font-bold tracking-wider text-[var(--color-text3)] shrink-0">Standort</span>
       <select
         bind:value={selectedStandort}
         onchange={handleStandortChange}
-        class="bg-[#181C1A] border border-slate-700 hover:border-slate-600 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-[#1D9E75] disabled:opacity-50 transition"
+        class="bg-[var(--color-bg3)] border border-[var(--color-border2)] hover:border-[var(--color-border2)] rounded-lg px-2.5 py-1 text-xs text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75] disabled:opacity-50 transition"
       >
         <option value="Alle">Alle</option>
         {#each standorte as s}
@@ -186,13 +186,13 @@
     </div>
 
     <!-- Reihe -->
-    <div class="flex items-center gap-2 border-l border-slate-800 pl-3">
-      <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500 shrink-0">Reihe</span>
+    <div class="flex items-center gap-2 border-l border-[var(--color-border)] pl-3">
+      <span class="text-[10px] uppercase font-bold tracking-wider text-[var(--color-text3)] shrink-0">Reihe</span>
       <select
         value={selectedRackreihe}
         onchange={handleReiheChange}
         disabled={reiheList.length === 0}
-        class="bg-[#181C1A] border border-slate-700 hover:border-slate-600 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-[#1D9E75] disabled:opacity-50 transition"
+        class="bg-[var(--color-bg3)] border border-[var(--color-border2)] hover:border-[var(--color-border2)] rounded-lg px-2.5 py-1 text-xs text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75] disabled:opacity-50 transition"
       >
         <option value="Alle">Alle</option>
         {#each reiheList as r}
@@ -202,12 +202,12 @@
     </div>
 
     <!-- Rack -->
-    <div class="flex items-center gap-2 border-l border-slate-800 pl-3">
-      <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500 shrink-0">Rack</span>
+    <div class="flex items-center gap-2 border-l border-[var(--color-border)] pl-3">
+      <span class="text-[10px] uppercase font-bold tracking-wider text-[var(--color-text3)] shrink-0">Rack</span>
       <select
         bind:value={selectedRack}
         disabled={filteredRacks.length === 0}
-        class="bg-[#181C1A] border border-slate-700 hover:border-slate-600 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-[#1D9E75] disabled:opacity-50 transition"
+        class="bg-[var(--color-bg3)] border border-[var(--color-border2)] hover:border-[var(--color-border2)] rounded-lg px-2.5 py-1 text-xs text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75] disabled:opacity-50 transition"
       >
         <option value="Alle">Alle</option>
         {#each filteredRacks as rack}

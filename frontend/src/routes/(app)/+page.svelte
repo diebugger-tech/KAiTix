@@ -98,43 +98,43 @@
 <div class="space-y-8">
   <!-- Stats Header Grid -->
   <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-    <div class="bg-[#131615] border border-slate-800 rounded-xl p-5 flex items-center space-x-4">
+    <div class="app-card border rounded-xl p-5 flex items-center space-x-4">
       <div class="p-3 bg-[rgba(29,158,117,0.15)] text-[#5DCAA5] rounded-lg">
         <Layers class="w-6 h-6" />
       </div>
       <div>
-        <div class="text-xs text-slate-500 font-medium">Serverracks</div>
-        <div class="text-2xl font-bold text-white mt-0.5">{totalRacks}</div>
+        <div class="text-xs app-card-subtitle font-medium">Serverracks</div>
+        <div class="text-2xl font-bold app-card-title mt-0.5">{totalRacks}</div>
       </div>
     </div>
 
-    <div class="bg-[#131615] border border-slate-800 rounded-xl p-5 flex items-center space-x-4">
+    <div class="app-card border rounded-xl p-5 flex items-center space-x-4">
       <div class="p-3 bg-cyan-500/10 text-cyan-400 rounded-lg">
         <Server class="w-6 h-6" />
       </div>
       <div>
-        <div class="text-xs text-slate-500 font-medium">Aktive Geräte</div>
-        <div class="text-2xl font-bold text-white mt-0.5">{totalDevices}</div>
+        <div class="text-xs app-card-subtitle font-medium">Aktive Geräte</div>
+        <div class="text-2xl font-bold app-card-title mt-0.5">{totalDevices}</div>
       </div>
     </div>
 
-    <div class="bg-[#131615] border border-slate-800 rounded-xl p-5 flex items-center space-x-4">
+    <div class="app-card border rounded-xl p-5 flex items-center space-x-4">
       <div class="p-3 bg-orange-500/10 text-orange-400 rounded-lg">
         <Zap class="w-6 h-6" />
       </div>
       <div>
-        <div class="text-xs text-slate-500 font-medium">Gesamtleistung (Nenn)</div>
-        <div class="text-2xl font-bold text-white mt-0.5">{(totalPowerWatt / 1000).toFixed(2)} kW</div>
+        <div class="text-xs app-card-subtitle font-medium">Gesamtleistung (Nenn)</div>
+        <div class="text-2xl font-bold app-card-title mt-0.5">{(totalPowerWatt / 1000).toFixed(2)} kW</div>
       </div>
     </div>
 
-    <a href="/cables" class="bg-[#131615] border border-slate-800 rounded-xl p-5 flex items-center space-x-4 hover:border-emerald-500/30 transition">
+    <a href="/cables" class="app-card border rounded-xl p-5 flex items-center space-x-4 transition app-card-hover">
       <div class="p-3 bg-emerald-500/10 text-emerald-400 rounded-lg">
         <CableIcon class="w-6 h-6" />
       </div>
       <div>
-        <div class="text-xs text-slate-500 font-medium">Kabel dokumentiert</div>
-        <div class="text-2xl font-bold text-white mt-0.5">{totalCables}</div>
+        <div class="text-xs app-card-subtitle font-medium">Kabel dokumentiert</div>
+        <div class="text-2xl font-bold app-card-title mt-0.5">{totalCables}</div>
       </div>
     </a>
   </div>
@@ -142,31 +142,31 @@
   <!-- Phase Power Cards -->
   {#if pduDevices.length > 0}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div class="bg-[#131615] border border-[#1D9E75]/20 rounded-xl p-5 flex items-center space-x-4">
+      <div class="app-card border border-[#1D9E75]/20 rounded-xl p-5 flex items-center space-x-4">
         <div class="p-3 bg-blue-500/10 text-blue-400 rounded-lg">
           <Zap class="w-6 h-6" />
         </div>
         <div>
-          <div class="text-xs text-slate-500 font-medium">Phase L1</div>
-          <div class="text-2xl font-bold text-white mt-0.5">{totalL1Kw.toFixed(2)} kW</div>
+          <div class="text-xs app-card-subtitle font-medium">Phase L1</div>
+          <div class="text-2xl font-bold app-card-title mt-0.5">{totalL1Kw.toFixed(2)} kW</div>
         </div>
       </div>
-      <div class="bg-[#131615] border border-cyan-500/20 rounded-xl p-5 flex items-center space-x-4">
+      <div class="app-card border border-cyan-500/20 rounded-xl p-5 flex items-center space-x-4">
         <div class="p-3 bg-cyan-500/10 text-cyan-400 rounded-lg">
           <Zap class="w-6 h-6" />
         </div>
         <div>
-          <div class="text-xs text-slate-500 font-medium">Phase L2</div>
-          <div class="text-2xl font-bold text-white mt-0.5">{totalL2Kw.toFixed(2)} kW</div>
+          <div class="text-xs app-card-subtitle font-medium">Phase L2</div>
+          <div class="text-2xl font-bold app-card-title mt-0.5">{totalL2Kw.toFixed(2)} kW</div>
         </div>
       </div>
-      <div class="bg-[#131615] border border-orange-500/20 rounded-xl p-5 flex items-center space-x-4">
+      <div class="app-card border border-orange-500/20 rounded-xl p-5 flex items-center space-x-4">
         <div class="p-3 bg-orange-500/10 text-orange-400 rounded-lg">
           <Zap class="w-6 h-6" />
         </div>
         <div>
-          <div class="text-xs text-slate-500 font-medium">Phase L3</div>
-          <div class="text-2xl font-bold text-white mt-0.5">{totalL3Kw.toFixed(2)} kW</div>
+          <div class="text-xs app-card-subtitle font-medium">Phase L3</div>
+          <div class="text-2xl font-bold app-card-title mt-0.5">{totalL3Kw.toFixed(2)} kW</div>
         </div>
       </div>
     </div>
@@ -174,7 +174,7 @@
 
   <!-- Loading / Error Alert -->
   {#if loading}
-    <div class="flex items-center justify-center p-12 bg-[#131615] border border-slate-800 rounded-xl">
+    <div class="flex items-center justify-center p-12 app-card border rounded-xl">
       <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1D9E75]"></div>
     </div>
   {:else if errorMsg}
@@ -188,12 +188,12 @@
       <div class="space-y-6">
         <div class="flex items-center justify-between">
           <div>
-            <h3 class="text-lg font-bold text-white font-outfit">Rechenzentrum Racks</h3>
-            <p class="text-xs text-slate-500 mt-0.5">Racks, Hardware und Verkabelung verwalten</p>
+            <h3 class="text-lg font-bold app-card-title font-outfit">Rechenzentrum Racks</h3>
+            <p class="text-xs app-card-subtitle mt-0.5">Racks, Hardware und Verkabelung verwalten</p>
           </div>
           <button
             onclick={() => showAddRack = true}
-            class="flex items-center space-x-2 px-3 py-1.5 bg-[#1D9E75] hover:bg-[#0F6E56] text-white rounded-lg text-xs font-semibold transition"
+            class="flex items-center space-x-2 px-3 py-1.5 bg-[#1D9E75] hover:bg-[#0F6E56] text-[var(--color-text)] rounded-lg text-xs font-semibold transition"
           >
             <Plus class="w-3.5 h-3.5" />
             <span>Rack hinzufügen</span>
@@ -201,8 +201,8 @@
         </div>
 
         {#if racks.length === 0}
-          <div class="p-12 text-center bg-[#131615] border border-slate-800 border-dashed rounded-xl text-slate-500">
-            <Info class="w-8 h-8 mx-auto mb-2 text-slate-600" />
+          <div class="p-12 text-center app-card border border-dashed rounded-xl app-card-subtitle">
+            <Info class="w-8 h-8 mx-auto mb-2 opacity-70" />
             Keine Racks vorhanden. Erstellen Sie ein neues Rack, um zu starten.
           </div>
         {:else}
@@ -215,47 +215,47 @@
             <div class="space-y-4">
               <!-- Room Header -->
               <div class="flex items-center gap-3">
-                <div class="p-2 {locTyp === 'dienstaußenstelle' ? 'bg-violet-900/30' : 'bg-slate-800'} rounded-lg">
+                <div class="p-2 {locTyp === 'dienstaußenstelle' ? 'bg-violet-900/30' : 'icon-bg-default'} rounded-lg">
                   {#if locTyp === 'dienstaußenstelle'}
                     <Wifi class="w-4 h-4 text-violet-400" />
                   {:else}
-                    <Building class="w-4 h-4 text-slate-400" />
+                    <Building class="w-4 h-4 text-[var(--color-text2)]" />
                   {/if}
                 </div>
                 <div>
                   <div class="flex items-center gap-2">
-                    <h4 class="font-bold text-white font-outfit text-sm">{room}</h4>
+                    <h4 class="font-bold app-card-title font-outfit text-sm">{room}</h4>
                     <span class="text-[9px] px-1.5 py-0.5 rounded-full font-semibold {locTyp === 'dienstaußenstelle' ? 'bg-violet-900/40 text-violet-400 border border-violet-700/40' : 'bg-[rgba(29,158,117,0.18)] text-[#5DCAA5] border border-[rgba(29,158,117,0.4)]'}">
                       {locTyp === 'dienstaußenstelle' ? 'Außenstelle' : 'RZ'}
                     </span>
                   </div>
-                  <span class="text-[10px] text-slate-500">{roomRacks.length} Rack{roomRacks.length !== 1 ? 's' : ''} · {roomTotalKw.toFixed(2)} kW gesamt</span>
+                  <span class="text-[10px] app-card-subtitle">{roomRacks.length} Rack{roomRacks.length !== 1 ? 's' : ''} · {roomTotalKw.toFixed(2)} kW gesamt</span>
                 </div>
               </div>
 
               <!-- Room Phase Bars -->
               <div class="grid grid-cols-3 gap-3">
-                <div class="bg-[#131615] border border-[#1D9E75]/15 rounded-lg px-3 py-2">
+                <div class="app-card border border-[#1D9E75]/15 rounded-lg px-3 py-2">
                   <div class="flex items-center justify-between mb-1">
-                    <span class="text-[10px] text-slate-500 font-medium">L1</span>
+                    <span class="text-[10px] app-card-subtitle font-medium">L1</span>
                     <span class="text-xs font-bold text-blue-400">{ph.l1.toFixed(2)} kW</span>
                   </div>
                   <div class="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden">
                     <div class="h-full bg-blue-500 rounded-full transition-all" style="width: {roomTotalKw > 0 ? Math.round(ph.l1 / roomTotalKw * 100) : 0}%"></div>
                   </div>
                 </div>
-                <div class="bg-[#131615] border border-cyan-500/15 rounded-lg px-3 py-2">
+                <div class="app-card border border-cyan-500/15 rounded-lg px-3 py-2">
                   <div class="flex items-center justify-between mb-1">
-                    <span class="text-[10px] text-slate-500 font-medium">L2</span>
+                    <span class="text-[10px] app-card-subtitle font-medium">L2</span>
                     <span class="text-xs font-bold text-cyan-400">{ph.l2.toFixed(2)} kW</span>
                   </div>
                   <div class="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden">
                     <div class="h-full bg-cyan-500 rounded-full transition-all" style="width: {roomTotalKw > 0 ? Math.round(ph.l2 / roomTotalKw * 100) : 0}%"></div>
                   </div>
                 </div>
-                <div class="bg-[#131615] border border-orange-500/15 rounded-lg px-3 py-2">
+                <div class="app-card border border-orange-500/15 rounded-lg px-3 py-2">
                   <div class="flex items-center justify-between mb-1">
-                    <span class="text-[10px] text-slate-500 font-medium">L3</span>
+                    <span class="text-[10px] app-card-subtitle font-medium">L3</span>
                     <span class="text-xs font-bold text-orange-400">{ph.l3.toFixed(2)} kW</span>
                   </div>
                   <div class="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden">
@@ -281,22 +281,22 @@
                   {@const rackPdus = rackDevices.filter(d => d.typ === 'pdu')}
 
                   <!-- svelte-ignore a11y_click_events_have_key_events -->
-                  <div class="block bg-[#131615] border border-slate-800 hover:border-[#1D9E75]/40 rounded-xl p-5 space-y-4 transition-colors cursor-pointer" role="button" tabindex="0" onclick={() => goto(`/racks?rack=${rack.id}`)}>
+                  <div class="block app-card border rounded-xl p-5 space-y-4 transition-colors cursor-pointer app-card-hover" role="button" tabindex="0" onclick={() => goto(`/racks?rack=${rack.id}`)}>
                     <div class="flex items-start justify-between">
                       <div>
                         <a href="/racks?rack={rack.id}" class="hover:underline" onclick={(e) => e.stopPropagation()}>
-                          <h4 class="font-bold text-white font-outfit">{rack.name}{rack.rackreihe ? ` (${rack.rackreihe})` : ''}</h4>
+                          <h4 class="font-bold app-card-title font-outfit">{rack.name}{rack.rackreihe ? ` (${rack.rackreihe})` : ''}</h4>
                         </a>
-                        <p class="text-[10px] text-slate-500 mt-0.5">{rack.breite_mm ? rack.breite_mm + 'mm · ' : ''}{rackKw.toFixed(2)} kW · {rackDevices.length} Geräte</p>
+                        <p class="text-[10px] app-card-subtitle mt-0.5">{rack.breite_mm ? rack.breite_mm + 'mm · ' : ''}{rackKw.toFixed(2)} kW · {rackDevices.length} Geräte</p>
                       </div>
-                      <span class="text-xs font-semibold px-2 py-1 rounded bg-slate-800 border border-slate-700 text-slate-300">
+                      <span class="text-xs font-semibold px-2 py-1 rounded border he-pill">
                         {occupiedU} / {rack.hoehe_u} HE
                       </span>
                     </div>
 
                     <!-- Progress bar -->
                     <div class="space-y-1">
-                      <div class="flex justify-between text-[10px] text-slate-400 font-mono">
+                      <div class="flex justify-between text-[10px] app-card-subtitle font-mono">
                         <span>Auslastung</span>
                         <span>{percent}%</span>
                       </div>
@@ -323,7 +323,7 @@
                     {/if}
 
                     <!-- Vertical Rack View representation -->
-                    <div class="border border-slate-950 bg-slate-950/60 rounded p-1 select-none">
+                    <div class="border border-slate-950 bg-[var(--color-bg3)] rounded p-1 select-none">
                       <RackFrontView
                         rack={rack}
                         {rackDevices}
@@ -358,12 +358,12 @@
           {#if racksWithoutRoom.length > 0}
             <div class="space-y-4">
               <div class="flex items-center gap-3">
-                <div class="p-2 bg-slate-800 rounded-lg">
+                <div class="p-2 icon-bg-default rounded-lg">
                   <AlertTriangle class="w-4 h-4 text-amber-400" />
                 </div>
                 <div>
-                  <h4 class="font-bold text-white font-outfit text-sm">Ohne Standort</h4>
-                  <span class="text-[10px] text-slate-500">{racksWithoutRoom.length} Rack{racksWithoutRoom.length !== 1 ? 's' : ''} ohne Raum-Zuordnung</span>
+                  <h4 class="font-bold app-card-title font-outfit text-sm">Ohne Standort</h4>
+                  <span class="text-[10px] app-card-subtitle">{racksWithoutRoom.length} Rack{racksWithoutRoom.length !== 1 ? 's' : ''} ohne Raum-Zuordnung</span>
                 </div>
               </div>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -381,18 +381,18 @@
                   {@const hasPhased = rackDevices.some(d => d.phase)}
                   {@const rackPdus = rackDevices.filter(d => d.typ === 'pdu')}
 
-                  <a href="/racks?rack={rack.id}" class="block bg-[#131615] border border-amber-500/20 hover:border-amber-500/40 rounded-xl p-5 space-y-4 transition-colors">
+                  <a href="/racks?rack={rack.id}" class="block app-card border hover:border-amber-500/40 rounded-xl p-5 space-y-4 transition-colors">
                     <div class="flex items-start justify-between">
                       <div>
-                        <h4 class="font-bold text-white font-outfit">{rack.name}{rack.rackreihe ? ` (${rack.rackreihe})` : ''}</h4>
+                        <h4 class="font-bold app-card-title font-outfit">{rack.name}{rack.rackreihe ? ` (${rack.rackreihe})` : ''}</h4>
                         <p class="text-[10px] text-amber-400/60 mt-0.5">{rack.breite_mm ? rack.breite_mm + 'mm · ' : ''}{rackKw.toFixed(2)} kW · {rackDevices.length} Geräte</p>
                       </div>
-                      <span class="text-xs font-semibold px-2 py-1 rounded bg-slate-800 border border-slate-700 text-slate-300">
+                      <span class="text-xs font-semibold px-2 py-1 rounded border he-pill">
                         {occupiedU} / {rack.hoehe_u} HE
                       </span>
                     </div>
                     <div class="space-y-1">
-                      <div class="flex justify-between text-[10px] text-slate-400 font-mono">
+                      <div class="flex justify-between text-[10px] app-card-subtitle font-mono">
                         <span>Auslastung</span>
                         <span>{percent}%</span>
                       </div>
@@ -423,15 +423,15 @@
                           {@const oL1 = outlets.filter(o => o.phase === 'L1').length}
                           {@const oL2 = outlets.filter(o => o.phase === 'L2').length}
                           {@const oL3 = outlets.filter(o => o.phase === 'L3').length}
-                          <div class="flex items-center gap-1.5 bg-slate-900/80 border border-slate-700/50 rounded-md px-2 py-1">
+                          <div class="flex items-center gap-1.5 bg-[var(--color-bg3)] border border-[var(--color-border2)]/50 rounded-md px-2 py-1">
                             <Zap class="w-2.5 h-2.5 text-yellow-500 shrink-0" />
-                            <span class="text-[9px] text-slate-300 font-medium truncate max-w-[80px]">{pdu.hostname}</span>
+                            <span class="text-[9px] text-[var(--color-text)] font-medium truncate max-w-[80px]">{pdu.hostname}</span>
                             <div class="flex gap-1">
                               {#if oL1 > 0}<span class="text-[8px] bg-blue-500/15 text-blue-400 px-1 rounded">{oL1}×L1</span>{/if}
                               {#if oL2 > 0}<span class="text-[8px] bg-cyan-500/15 text-cyan-400 px-1 rounded">{oL2}×L2</span>{/if}
                               {#if oL3 > 0}<span class="text-[8px] bg-orange-500/15 text-orange-400 px-1 rounded">{oL3}×L3</span>{/if}
                               {#if oL1 === 0 && oL2 === 0 && oL3 === 0}
-                                <span class="text-[8px] text-slate-600">{outlets.length ? outlets.length + ' Steckdosen' : 'keine Outlets'}</span>
+                                <span class="text-[8px] text-[var(--color-text3)]">{outlets.length ? outlets.length + ' Steckdosen' : 'keine Outlets'}</span>
                               {/if}
                             </div>
                           </div>

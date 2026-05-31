@@ -72,8 +72,8 @@
       case 1: return 'text-red-400 bg-red-500/10 border-red-500/30';
       case 2: return 'text-[#5DCAA5] bg-[rgba(29,158,117,0.15)] border-[rgba(29,158,117,0.3)]';
       case 3: return 'text-amber-400 bg-amber-500/10 border-amber-500/30';
-      case 4: return 'text-slate-400 bg-slate-500/10 border-slate-500/30';
-      default: return 'text-slate-400 bg-slate-500/10 border-slate-500/30';
+      case 4: return 'text-[var(--color-text2)] bg-[var(--color-border2)] border-[var(--color-border)]';
+      default: return 'text-[var(--color-text2)] bg-[var(--color-border2)] border-[var(--color-border)]';
     }
   }
 
@@ -216,17 +216,17 @@
 
 <div class="space-y-6">
   <!-- Config bar -->
-  <div class="bg-[#111827] border border-slate-700/50 rounded-xl p-4">
+  <div class="bg-[var(--color-bg2)] border border-[var(--color-border2)]/50 rounded-xl p-4">
     <div class="flex flex-wrap items-center justify-between gap-4">
       <div class="flex items-center space-x-2">
         <Server class="w-5 h-5 text-[#5DCAA5]" />
         <h3 class="text-sm font-semibold text-slate-200">RZ-weiter Shutdown-Plan</h3>
-        <span class="text-xs text-slate-500 ml-2">Basierend auf Server-Priorität</span>
+        <span class="text-xs text-[var(--color-text3)] ml-2">Basierend auf Server-Priorität</span>
       </div>
 
       <div class="flex items-center gap-3">
         <button onclick={() => showConfig = !showConfig}
-          class="flex items-center space-x-1 text-xs text-slate-400 hover:text-slate-200 transition px-3 py-2 border border-slate-700 rounded-lg">
+          class="flex items-center space-x-1 text-xs text-[var(--color-text2)] hover:text-slate-200 transition px-3 py-2 border border-[var(--color-border2)] rounded-lg">
           <Battery class="w-3.5 h-3.5" />
           <span>Batterie-Konfiguration</span>
           <ChevronDown class="w-3 h-3 transition-transform {showConfig ? 'rotate-180' : ''}" />
@@ -235,8 +235,8 @@
         <button onclick={runShutdown} disabled={isLoading}
           class="px-5 py-2 rounded-lg text-sm font-medium transition
             {!isLoading
-              ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white hover:from-amber-500 hover:to-orange-500 shadow-lg shadow-amber-900/30'
-              : 'bg-slate-700 text-slate-400 cursor-not-allowed'}">
+              ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-[var(--color-text)] hover:from-amber-500 hover:to-orange-500 shadow-lg shadow-amber-900/30'
+              : 'bg-[var(--color-border2)] text-[var(--color-text2)] cursor-not-allowed'}">
           {#if isLoading}
             <span class="animate-spin inline-block mr-1">⏳</span> Simuliere…
           {:else}
@@ -247,34 +247,34 @@
     </div>
 
     {#if showConfig}
-      <div class="mt-4 pt-4 border-t border-slate-700/50 grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div class="mt-4 pt-4 border-t border-[var(--color-border2)]/50 grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div>
-          <label class="block text-xs text-slate-500 mb-1">Batterietyp</label>
-          <select bind:value={batType} class="w-full bg-[#0d1220] border border-slate-600 rounded px-2 py-1.5 text-xs text-slate-200">
+          <label class="block text-xs text-[var(--color-text3)] mb-1">Batterietyp</label>
+          <select bind:value={batType} class="w-full bg-[var(--color-bg2)] border border-[var(--color-border2)] rounded px-2 py-1.5 text-xs text-slate-200">
             {#each batteryTypeOptions as opt}
               <option value={opt.value}>{opt.label}</option>
             {/each}
           </select>
         </div>
         <div>
-          <label class="block text-xs text-slate-500 mb-1">Seriell × Parallel</label>
+          <label class="block text-xs text-[var(--color-text3)] mb-1">Seriell × Parallel</label>
           <div class="flex space-x-1">
-            <input type="number" bind:value={batSeries} min="1" class="w-1/2 bg-[#0d1220] border border-slate-600 rounded px-2 py-1.5 text-xs text-slate-200" />
-            <input type="number" bind:value={batParallel} min="1" class="w-1/2 bg-[#0d1220] border border-slate-600 rounded px-2 py-1.5 text-xs text-slate-200" />
+            <input type="number" bind:value={batSeries} min="1" class="w-1/2 bg-[var(--color-bg2)] border border-[var(--color-border2)] rounded px-2 py-1.5 text-xs text-slate-200" />
+            <input type="number" bind:value={batParallel} min="1" class="w-1/2 bg-[var(--color-bg2)] border border-[var(--color-border2)] rounded px-2 py-1.5 text-xs text-slate-200" />
           </div>
         </div>
         <div>
-          <label class="block text-xs text-slate-500 mb-1">Block V / Ah</label>
+          <label class="block text-xs text-[var(--color-text3)] mb-1">Block V / Ah</label>
           <div class="flex space-x-1">
-            <input type="number" bind:value={batBlockV} min="1" class="w-1/2 bg-[#0d1220] border border-slate-600 rounded px-2 py-1.5 text-xs text-slate-200" />
-            <input type="number" bind:value={batBlockAh} min="1" class="w-1/2 bg-[#0d1220] border border-slate-600 rounded px-2 py-1.5 text-xs text-slate-200" />
+            <input type="number" bind:value={batBlockV} min="1" class="w-1/2 bg-[var(--color-bg2)] border border-[var(--color-border2)] rounded px-2 py-1.5 text-xs text-slate-200" />
+            <input type="number" bind:value={batBlockAh} min="1" class="w-1/2 bg-[var(--color-bg2)] border border-[var(--color-border2)] rounded px-2 py-1.5 text-xs text-slate-200" />
           </div>
         </div>
         <div>
-          <label class="block text-xs text-slate-500 mb-1">Alter / Temp</label>
+          <label class="block text-xs text-[var(--color-text3)] mb-1">Alter / Temp</label>
           <div class="flex space-x-1">
-            <input type="number" bind:value={batAge} min="0" step="0.5" class="w-1/2 bg-[#0d1220] border border-slate-600 rounded px-2 py-1.5 text-xs text-slate-200" />
-            <input type="number" bind:value={batTemp} min="-20" class="w-1/2 bg-[#0d1220] border border-slate-600 rounded px-2 py-1.5 text-xs text-slate-200" />
+            <input type="number" bind:value={batAge} min="0" step="0.5" class="w-1/2 bg-[var(--color-bg2)] border border-[var(--color-border2)] rounded px-2 py-1.5 text-xs text-slate-200" />
+            <input type="number" bind:value={batTemp} min="-20" class="w-1/2 bg-[var(--color-bg2)] border border-[var(--color-border2)] rounded px-2 py-1.5 text-xs text-slate-200" />
           </div>
         </div>
       </div>
@@ -290,38 +290,38 @@
   {#if simResult}
     <!-- Summary Cards -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-      <div class="bg-[#111827] border border-slate-700/50 rounded-xl p-4">
-        <div class="text-xs text-slate-500 mb-1">Batterie-Kapazität</div>
+      <div class="bg-[var(--color-bg2)] border border-[var(--color-border2)]/50 rounded-xl p-4">
+        <div class="text-xs text-[var(--color-text3)] mb-1">Batterie-Kapazität</div>
         <div class="text-lg font-bold text-emerald-400">{simResult.battery_summary.effective_capacity_ah.toFixed(0)} Ah</div>
-        <div class="text-xs text-slate-500">{simResult.battery_summary.total_voltage_v}V System</div>
+        <div class="text-xs text-[var(--color-text3)]">{simResult.battery_summary.total_voltage_v}V System</div>
       </div>
-      <div class="bg-[#111827] border border-slate-700/50 rounded-xl p-4">
-        <div class="text-xs text-slate-500 mb-1">Gesamtdauer</div>
+      <div class="bg-[var(--color-bg2)] border border-[var(--color-border2)]/50 rounded-xl p-4">
+        <div class="text-xs text-[var(--color-text3)] mb-1">Gesamtdauer</div>
         <div class="text-lg font-bold text-[#5DCAA5]">{formatSeconds(totalDuration)}</div>
-        <div class="text-xs text-slate-500">{simResult.timeline.length} Datenpunkte</div>
+        <div class="text-xs text-[var(--color-text3)]">{simResult.timeline.length} Datenpunkte</div>
       </div>
-      <div class="bg-[#111827] border border-slate-700/50 rounded-xl p-4">
-        <div class="text-xs text-slate-500 mb-1">Sicher heruntergefahren</div>
+      <div class="bg-[var(--color-bg2)] border border-[var(--color-border2)]/50 rounded-xl p-4">
+        <div class="text-xs text-[var(--color-text3)] mb-1">Sicher heruntergefahren</div>
         <div class="text-lg font-bold text-emerald-400">{safeCount}</div>
-        <div class="text-xs text-slate-500">Geräte korrekt aus</div>
+        <div class="text-xs text-[var(--color-text3)]">Geräte korrekt aus</div>
       </div>
-      <div class="bg-[#111827] border border-slate-700/50 rounded-xl p-4">
-        <div class="text-xs text-slate-500 mb-1">Abgestürzt</div>
+      <div class="bg-[var(--color-bg2)] border border-[var(--color-border2)]/50 rounded-xl p-4">
+        <div class="text-xs text-[var(--color-text3)] mb-1">Abgestürzt</div>
         <div class="text-lg font-bold {crashedCount > 0 ? 'text-red-400' : 'text-emerald-400'}">{crashedCount}</div>
-        <div class="text-xs text-slate-500">{crashedCount > 0 ? '⚠ Datenverlust möglich' : 'Alles sicher'}</div>
+        <div class="text-xs text-[var(--color-text3)]">{crashedCount > 0 ? '⚠ Datenverlust möglich' : 'Alles sicher'}</div>
       </div>
     </div>
 
     <!-- SOC Timeline Chart -->
-    <div class="bg-[#111827] border border-slate-700/50 rounded-xl p-4">
+    <div class="bg-[var(--color-bg2)] border border-[var(--color-border2)]/50 rounded-xl p-4">
       <div class="flex items-center justify-between mb-3">
         <h3 class="text-sm font-semibold text-slate-200">Batterie-Entladekurve & Shutdown-Ablauf</h3>
         <div class="flex items-center space-x-2">
           <!-- Speed -->
-          <div class="flex items-center space-x-1 text-xs text-slate-400">
+          <div class="flex items-center space-x-1 text-xs text-[var(--color-text2)]">
             <FastForward class="w-3 h-3" />
             <select bind:value={playbackSpeed} onchange={() => { const was = isPlaying; stopPlayback(); if (was) startPlayback(); }}
-              class="bg-[#0d1220] border border-slate-600 rounded px-1 py-0.5 text-xs text-slate-200">
+              class="bg-[var(--color-bg2)] border border-[var(--color-border2)] rounded px-1 py-0.5 text-xs text-slate-200">
               <option value={0.5}>0.5×</option>
               <option value={1}>1×</option>
               <option value={2}>2×</option>
@@ -329,7 +329,7 @@
             </select>
           </div>
           <!-- Playback controls -->
-          <button onclick={resetPlayback} class="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 transition">
+          <button onclick={resetPlayback} class="p-1.5 rounded-lg text-[var(--color-text2)] hover:text-slate-200 hover:bg-[var(--color-border2)] transition">
             <RotateCcw class="w-4 h-4" />
           </button>
           <button onclick={togglePlayback}
@@ -392,8 +392,8 @@
       {#if currentSnapshot}
         <div class="flex flex-wrap gap-4 mt-3 text-xs">
           <div class="flex items-center space-x-1.5">
-            <Clock class="w-3.5 h-3.5 text-slate-400" />
-            <span class="text-slate-300 font-medium">{formatSeconds(currentSnapshot.time_seconds)}</span>
+            <Clock class="w-3.5 h-3.5 text-[var(--color-text2)]" />
+            <span class="text-[var(--color-text)] font-medium">{formatSeconds(currentSnapshot.time_seconds)}</span>
           </div>
           <div class="flex items-center space-x-1.5">
             <Battery class="w-3.5 h-3.5" style="color: {socColor(currentSnapshot.soc_pct)}" />
@@ -401,22 +401,22 @@
           </div>
           <div class="flex items-center space-x-1.5">
             <Zap class="w-3.5 h-3.5 text-amber-400" />
-            <span class="text-slate-300">{currentSnapshot.load_kw.toFixed(2)} kW Last</span>
+            <span class="text-[var(--color-text)]">{currentSnapshot.load_kw.toFixed(2)} kW Last</span>
           </div>
           <div class="flex items-center space-x-1.5">
             <Server class="w-3.5 h-3.5 text-[#5DCAA5]" />
-            <span class="text-slate-300">{currentSnapshot.active_device_ids.length} aktiv</span>
+            <span class="text-[var(--color-text)]">{currentSnapshot.active_device_ids.length} aktiv</span>
           </div>
           <div class="flex items-center space-x-1.5">
             <Clock class="w-3.5 h-3.5 text-emerald-400" />
-            <span class="text-slate-300">~{currentSnapshot.remaining_runtime_min.toFixed(1)} min verbleibend</span>
+            <span class="text-[var(--color-text)]">~{currentSnapshot.remaining_runtime_min.toFixed(1)} min verbleibend</span>
           </div>
         </div>
       {/if}
     </div>
 
     <!-- Device Status Cards -->
-    <div class="bg-[#111827] border border-slate-700/50 rounded-xl p-4">
+    <div class="bg-[var(--color-bg2)] border border-[var(--color-border2)]/50 rounded-xl p-4">
       <h3 class="text-sm font-semibold text-slate-200 mb-3">Geräte-Status (Shutdown-Reihenfolge)</h3>
       <div class="grid gap-2">
         {#each simResult.device_statuses.sort((a, b) => a.shutdown_delay_seconds - b.shutdown_delay_seconds) as dev}
@@ -426,20 +426,20 @@
               ? 'bg-red-950/30 border-red-500/30'
               : isActive
                 ? 'bg-emerald-950/20 border-emerald-500/30'
-                : 'bg-slate-800/50 border-slate-700/30 opacity-60'}">
+                : 'bg-[var(--color-border2)] border-[var(--color-border2)]/30 opacity-60'}">
             <div class="flex items-center space-x-3">
               <div class="w-2 h-2 rounded-full transition-colors duration-300
-                {dev.crashed ? 'bg-red-500 animate-pulse' : isActive ? 'bg-emerald-500' : 'bg-slate-600'}"></div>
+                {dev.crashed ? 'bg-red-500 animate-pulse' : isActive ? 'bg-emerald-500' : 'bg-[var(--color-border2)]'}"></div>
               <div>
                 <span class="text-sm font-medium text-slate-200">{dev.hostname}</span>
-                <span class="text-xs text-slate-500 ml-2">{dev.tdp_watt}W</span>
+                <span class="text-xs text-[var(--color-text3)] ml-2">{dev.tdp_watt}W</span>
               </div>
             </div>
             <div class="flex items-center space-x-3 text-xs">
               <span class="px-2 py-0.5 rounded border {priorityColor(dev.shutdown_priority)}">
                 {priorityLabel(dev.shutdown_priority)}
               </span>
-              <span class="text-slate-400">
+              <span class="text-[var(--color-text2)]">
                 {dev.shutdown_delay_seconds > 0 ? `Aus nach ${formatSeconds(dev.shutdown_delay_seconds)}` : 'Sofort aus'}
               </span>
               {#if dev.crashed}
@@ -462,14 +462,14 @@
     </div>
   {:else if !isLoading}
     <!-- Empty state -->
-    <div class="bg-[#111827] border border-slate-700/50 rounded-xl p-8 text-center">
-      <Server class="w-12 h-12 mx-auto text-slate-600 mb-3" />
-      <h3 class="text-sm font-semibold text-slate-300 mb-1">Globale Shutdown-Simulation</h3>
-      <p class="text-xs text-slate-500 max-w-md mx-auto">
+    <div class="bg-[var(--color-bg2)] border border-[var(--color-border2)]/50 rounded-xl p-8 text-center">
+      <Server class="w-12 h-12 mx-auto text-[var(--color-text3)] mb-3" />
+      <h3 class="text-sm font-semibold text-[var(--color-text)] mb-1">Globale Shutdown-Simulation</h3>
+      <p class="text-xs text-[var(--color-text3)] max-w-md mx-auto">
         Die Simulation zeigt den kontrollierten Shutdown-Ablauf über alle Standorte bei Stromausfall.
         Die Priorisierung erfolgt server-basiert (kritisch vs. unkritisch).
       </p>
-      <p class="text-xs text-slate-600 mt-3">
+      <p class="text-xs text-[var(--color-text3)] mt-3">
         💡 Tipp: Konfiguriere <code class="text-amber-400/60">shutdown_priority</code> und
         <code class="text-amber-400/60">shutdown_delay_seconds</code> in den Geräte-Einstellungen.
       </p>

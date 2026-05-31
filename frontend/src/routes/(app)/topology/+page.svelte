@@ -539,40 +539,40 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
 <div class="flex flex-col h-[calc(100vh-8rem)] gap-3">
   <!-- ── Toolbar ──────────────────────────────────────────────────────────────── -->
   <div class="flex flex-col gap-2 shrink-0">
-    <div class="flex items-center gap-3 flex-wrap bg-[#131615] border border-slate-800 rounded-xl px-4 py-2.5">
+    <div class="flex items-center gap-3 flex-wrap bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl px-4 py-2.5">
 
       <!-- View mode toggle -->
-      <div class="flex items-center rounded-lg border border-slate-700 overflow-hidden shrink-0">
+      <div class="flex items-center rounded-lg border border-[var(--color-border2)] overflow-hidden shrink-0">
         <button onclick={() => viewMode = 'rack'}
-          class="flex items-center gap-1.5 px-3 py-1.5 text-xs transition {viewMode === 'rack' ? 'bg-[#1D9E75] text-white' : 'bg-[#181C1A] text-slate-400 hover:text-white'}">
+          class="flex items-center gap-1.5 px-3 py-1.5 text-xs transition {viewMode === 'rack' ? 'bg-[#1D9E75] text-[var(--color-text)]' : 'bg-[var(--color-bg3)] text-[var(--color-text2)] hover:text-[var(--color-text)]'}">
           <Network size={12} /> Topologie
         </button>
         <button onclick={() => viewMode = '3d'}
-          class="flex items-center gap-1.5 px-3 py-1.5 text-xs transition {viewMode === '3d' ? 'bg-[#1D9E75] text-white' : 'bg-[#181C1A] text-slate-400 hover:text-white'}">
+          class="flex items-center gap-1.5 px-3 py-1.5 text-xs transition {viewMode === '3d' ? 'bg-[#1D9E75] text-[var(--color-text)]' : 'bg-[var(--color-bg3)] text-[var(--color-text2)] hover:text-[var(--color-text)]'}">
           <Box size={12} /> 3D Orbit
         </button>
         <button onclick={() => viewMode = 'netzplan'}
-          class="flex items-center gap-1.5 px-3 py-1.5 text-xs transition {viewMode === 'netzplan' ? 'bg-[#1D9E75] text-white' : 'bg-[#181C1A] text-slate-400 hover:text-white'}">
+          class="flex items-center gap-1.5 px-3 py-1.5 text-xs transition {viewMode === 'netzplan' ? 'bg-[#1D9E75] text-[var(--color-text)]' : 'bg-[var(--color-bg3)] text-[var(--color-text2)] hover:text-[var(--color-text)]'}">
           <List size={12} /> Netzplan
         </button>
       </div>
 
       {#if viewMode === 'rack' || viewMode === '3d'}
         <!-- Search -->
-        <div class="flex items-center gap-1.5 bg-[#181C1A] border border-slate-700 rounded-lg px-2 py-1 shrink-0">
-          <Search size={11} class="text-slate-500 shrink-0" />
+        <div class="flex items-center gap-1.5 bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-2 py-1 shrink-0">
+          <Search size={11} class="text-[var(--color-text3)] shrink-0" />
           <input bind:value={searchQuery} placeholder="Suche…"
-            class="bg-transparent text-xs text-white placeholder-slate-600 outline-none w-28" />
+            class="bg-transparent text-xs text-[var(--color-text)] placeholder-slate-600 outline-none w-28" />
           {#if searchQuery}
-            <button onclick={() => searchQuery = ''} class="text-slate-600 hover:text-slate-400"><X size={11} /></button>
+            <button onclick={() => searchQuery = ''} class="text-[var(--color-text3)] hover:text-[var(--color-text2)]"><X size={11} /></button>
           {/if}
         </div>
 
         <!-- Device type checkboxes -->
-        <div class="flex items-center gap-2 border-l border-slate-800 pl-3 flex-wrap">
-          <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500 shrink-0">Geräte</span>
+        <div class="flex items-center gap-2 border-l border-[var(--color-border)] pl-3 flex-wrap">
+          <span class="text-[10px] uppercase font-bold tracking-wider text-[var(--color-text3)] shrink-0">Geräte</span>
           {#each deviceTypes as dt}
-            <label class="flex items-center gap-1 cursor-pointer text-[11px] text-slate-300 whitespace-nowrap select-none">
+            <label class="flex items-center gap-1 cursor-pointer text-[11px] text-[var(--color-text)] whitespace-nowrap select-none">
               <input type="checkbox" checked={showDeviceTypes.has(dt)} oninput={() => toggleDeviceType(dt)} class="w-3 h-3" />
               <span class="w-2 h-2 rounded-sm shrink-0" style="background:{nodeStroke(dt)};opacity:.8"></span>
               {deviceTypeLabel[dt]}
@@ -581,32 +581,32 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
         </div>
 
         <!-- Cable checkboxes (SVG-Topologie) -->
-        <div class="flex items-center gap-2 border-l border-slate-800 pl-3">
-          <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500 shrink-0">Kabel</span>
-          <label class="flex items-center gap-1 cursor-pointer text-[11px] text-slate-300 select-none">
+        <div class="flex items-center gap-2 border-l border-[var(--color-border)] pl-3">
+          <span class="text-[10px] uppercase font-bold tracking-wider text-[var(--color-text3)] shrink-0">Kabel</span>
+          <label class="flex items-center gap-1 cursor-pointer text-[11px] text-[var(--color-text)] select-none">
             <input type="checkbox" bind:checked={showCables} class="accent-blue-500 w-3 h-3" /> Netz
           </label>
-          <label class="flex items-center gap-1 cursor-pointer text-[11px] text-slate-300 select-none">
+          <label class="flex items-center gap-1 cursor-pointer text-[11px] text-[var(--color-text)] select-none">
             <input type="checkbox" bind:checked={showPower} class="accent-orange-500 w-3 h-3" /> Strom
           </label>
-          <label class="flex items-center gap-1 cursor-pointer text-[11px] text-slate-300 select-none">
+          <label class="flex items-center gap-1 cursor-pointer text-[11px] text-[var(--color-text)] select-none">
             <input type="checkbox" bind:checked={showCrossRack} class="accent-violet-500 w-3 h-3" /> XRack
           </label>
-          <label class="flex items-center gap-1 cursor-pointer text-[11px] text-slate-300 select-none">
+          <label class="flex items-center gap-1 cursor-pointer text-[11px] text-[var(--color-text)] select-none">
             <input type="checkbox" bind:checked={showIntraRack} class="accent-slate-400 w-3 h-3" /> Intra
           </label>
         </div>
 
         <!-- Quick presets (Strom-only, Alle) -->
-        <div class="flex items-center gap-1.5 border-l border-slate-800 pl-3">
-          <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500 shrink-0">Schnell</span>
-          <button onclick={() => applyPreset('all')} class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded text-[10px] text-slate-300 transition">Alle</button>
-          <button onclick={() => applyPreset('strom')} class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 border border-orange-900/60 rounded text-[10px] text-orange-400 transition">Stromplan</button>
+        <div class="flex items-center gap-1.5 border-l border-[var(--color-border)] pl-3">
+          <span class="text-[10px] uppercase font-bold tracking-wider text-[var(--color-text3)] shrink-0">Schnell</span>
+          <button onclick={() => applyPreset('all')} class="px-2 py-0.5 bg-[var(--color-border)] hover:bg-[var(--color-border2)] border border-[var(--color-border2)] rounded text-[10px] text-[var(--color-text)] transition">Alle</button>
+          <button onclick={() => applyPreset('strom')} class="px-2 py-0.5 bg-[var(--color-border)] hover:bg-[var(--color-border2)] border border-orange-900/60 rounded text-[10px] text-orange-400 transition">Stromplan</button>
         </div>
 
         <!-- Rack filter -->
         {#if data}
-          <div class="flex items-center border-l border-slate-800 pl-3">
+          <div class="flex items-center border-l border-[var(--color-border)] pl-3">
             <RackFilterBar
               racks={data.racks}
               bind:selectedStandort={selectedStandort}
@@ -617,7 +617,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
           </div>
           <!-- Heatmap Toggle -->
           <button onclick={toggleHeatmap}
-            class="flex items-center gap-1.5 px-2.5 py-1 bg-slate-800 hover:bg-slate-700 border rounded-lg text-xs transition shrink-0 ml-2 {showHeatmap ? 'border-red-500/50 text-red-400 bg-red-950/20' : 'border-slate-700 text-slate-300'}">
+            class="flex items-center gap-1.5 px-2.5 py-1 bg-[var(--color-border)] hover:bg-[var(--color-border2)] border rounded-lg text-xs transition shrink-0 ml-2 {showHeatmap ? 'border-red-500/50 text-red-400 bg-red-950/20' : 'border-[var(--color-border2)] text-[var(--color-text)]'}">
             🌡 Heatmap
           </button>
         {/if}
@@ -626,19 +626,19 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
       <div class="flex items-center gap-2 ml-auto">
         {#if viewMode === 'netzplan'}
           <button onclick={printNetzplan}
-            class="px-3 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs text-slate-300 transition flex items-center gap-1.5">
+            class="px-3 py-1 bg-[var(--color-border)] hover:bg-[var(--color-border2)] border border-[var(--color-border2)] rounded-lg text-xs text-[var(--color-text)] transition flex items-center gap-1.5">
             <FileText size={13} /> Drucken / PDF
           </button>
         {:else}
           <button onclick={downloadTopologyPdf} disabled={pdfLoading}
-            class="px-3 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs text-slate-300 transition disabled:opacity-40 flex items-center gap-1.5">
+            class="px-3 py-1 bg-[var(--color-border)] hover:bg-[var(--color-border2)] border border-[var(--color-border2)] rounded-lg text-xs text-[var(--color-text)] transition disabled:opacity-40 flex items-center gap-1.5">
             <FileText size={13} />{pdfLoading ? '…' : 'PDF'}
           </button>
-          <button onclick={resetView} class="px-3 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs text-slate-300 transition">Reset</button>
+          <button onclick={resetView} class="px-3 py-1 bg-[var(--color-border)] hover:bg-[var(--color-border2)] border border-[var(--color-border2)] rounded-lg text-xs text-[var(--color-text)] transition">Reset</button>
         {/if}
       </div>
       {#if data}
-        <span class="text-xs text-slate-600 shrink-0">
+        <span class="text-xs text-[var(--color-text3)] shrink-0">
           {#if (viewMode === 'rack' || viewMode === '3d') && searchMatchIds}{searchMatchIds!.size} Treffer ·{/if}
           {#if viewMode === 'netzplan'}{filteredNetzplanData.length} / {netzplanData.length} Geräte{:else}{data.nodes.length} Geräte · {data.edges.length} Verb.{/if}
         </span>
@@ -647,7 +647,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
 
     <!-- Netzplan Filterleiste -->
     {#if viewMode === 'netzplan' && data}
-      <div class="flex items-center gap-3 flex-wrap bg-[#131615] border border-slate-800 rounded-xl px-4 py-2">
+      <div class="flex items-center gap-3 flex-wrap bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl px-4 py-2">
         <!-- Standort-Filter -->
         <RackFilterBar
           racks={data.racks}
@@ -658,13 +658,13 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
         />
 
         <!-- Netzwerkkabel-Filter -->
-        <div class="flex items-center gap-2 border-l border-slate-800 pl-3">
+        <div class="flex items-center gap-2 border-l border-[var(--color-border)] pl-3">
           <button onclick={() => setCableGroup('netz', true)}
             class="text-[9px] text-[#5DCAA5] hover:text-[#86EFCB] font-semibold">Netz</button>
           <button onclick={() => setCableGroup('netz', false)}
-            class="text-[9px] text-slate-600 hover:text-slate-400">✕</button>
+            class="text-[9px] text-[var(--color-text3)] hover:text-[var(--color-text2)]">✕</button>
           {#each [['cat','Cat/RJ45','#3b82f6'],['lwl','LWL/Glasfaser','#d946ef'],['sfp','SFP+','#06b6d4'],['dac','DAC','#6b7280'],['breakout','Breakout','#8b5cf6'],['sonstige-netz','Sonstige','#475569']] as [key,label,col]}
-            <label class="flex items-center gap-1 cursor-pointer text-[11px] text-slate-300 whitespace-nowrap select-none">
+            <label class="flex items-center gap-1 cursor-pointer text-[11px] text-[var(--color-text)] whitespace-nowrap select-none">
               <input type="checkbox" checked={netzplanCableFilter.has(key)} oninput={() => toggleCableFilter(key)} class="w-3 h-3" />
               <span class="w-2 h-2 rounded-full shrink-0" style="background:{col}"></span>
               {label}
@@ -673,13 +673,13 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
         </div>
 
         <!-- Strom-Filter -->
-        <div class="flex items-center gap-2 border-l border-slate-800 pl-3">
+        <div class="flex items-center gap-2 border-l border-[var(--color-border)] pl-3">
           <button onclick={() => setCableGroup('strom', true)}
             class="text-[9px] text-orange-400 hover:text-orange-300 font-semibold">Strom</button>
           <button onclick={() => setCableGroup('strom', false)}
-            class="text-[9px] text-slate-600 hover:text-slate-400">✕</button>
+            class="text-[9px] text-[var(--color-text3)] hover:text-[var(--color-text2)]">✕</button>
           {#each [['strom-l1','L1','#f97316'],['strom-l2','L2','#84cc16'],['strom-l3','L3','#a855f7'],['strom-other','allg.','#ef4444']] as [key,label,col]}
-            <label class="flex items-center gap-1 cursor-pointer text-[11px] text-slate-300 whitespace-nowrap select-none">
+            <label class="flex items-center gap-1 cursor-pointer text-[11px] text-[var(--color-text)] whitespace-nowrap select-none">
               <input type="checkbox" checked={netzplanCableFilter.has(key)} oninput={() => toggleCableFilter(key)} class="w-3 h-3" />
               <span class="w-2 h-2 rounded-full shrink-0" style="background:{col}"></span>
               {label}
@@ -693,7 +693,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
   <!-- ═══ TOPOLOGIE SVG & 3D ═══════════════════════════════════════════════════════ -->
   {#if viewMode === 'rack' || viewMode === '3d'}
     <div class="flex gap-4 flex-1 min-h-0">
-      <div class="flex-1 bg-[#080c14] border border-slate-800 rounded-xl overflow-hidden relative">
+      <div class="flex-1 bg-[var(--color-bg3)] border border-[var(--color-border)] rounded-xl overflow-hidden relative">
         {#if loading}
           <div class="absolute inset-0 flex items-center justify-center">
             <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-500"></div>
@@ -702,7 +702,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
           <div class="absolute inset-0 flex items-center justify-center text-red-400 text-sm">{error}</div>
         {:else if data && data.nodes.length === 0}
           <div class="absolute inset-0 flex items-center justify-center text-center">
-            <p class="text-slate-400 text-sm">Keine Geräte gefunden</p>
+            <p class="text-[var(--color-text2)] text-sm">Keine Geräte gefunden</p>
           </div>
         {:else if data && viewMode === '3d'}
           <Topology3D
@@ -728,7 +728,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
             onmousemove={onMouseMove} onmouseup={onMouseUp} onmouseleave={onMouseUp}>
             <defs>
               <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                <circle cx="0" cy="0" r="0.7" fill="#1e293b" />
+                <circle cx="0" cy="0" r="0.7" fill="var(--color-border2)" />
               </pattern>
               <!-- Glow filter for nodes -->
               <filter id="glow-filter" x="-30%" y="-30%" width="160%" height="160%">
@@ -747,13 +747,13 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
             <!-- Geographic group labels -->
             {#each l.groupLabels as gl}
               {#if gl.name && gl.name !== '—'}
-                {@const locTyp = locationStore.getTyp(gl.name)}
-                <rect x={gl.x - 6} y={RACK_TOP - 28} width={gl.w + 12} height={24} rx="4"
-                  fill={locTyp === 'dienstaußenstelle' ? '#1a1030' : '#0a1828'}
-                  stroke={locTyp === 'dienstaußenstelle' ? '#3b1f6a' : '#1e3a5a'} stroke-width="0.8" />
-                <text x={gl.x} y={RACK_TOP - 12} font-size="10" font-weight="700"
-                  fill={locTyp === 'dienstaußenstelle' ? '#a78bfa' : '#60a5fa'}
-                  class="select-none">{gl.name}</text>
+                <g class="transition-opacity duration-300">
+                  <rect x={gl.x - 6} y={RACK_TOP - 28} width={gl.w + 12} height={24} rx="4"
+                    fill="var(--color-bg3)" stroke="var(--color-border)" stroke-width="1.5" />
+                  <text x={gl.x} y={RACK_TOP - 12} font-size="11" font-weight="bold"
+                    fill="var(--color-text)" font-family="sans-serif"
+                    class="select-none">{gl.name}</text>
+                </g>
               {/if}
             {/each}
 
@@ -780,7 +780,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
                     {#if a && b}
                       {@const [sA, sB] = edgeStandorts(edge)}
                       <text x={(a.cx+b.cx)/2} y={Math.min(a.cy,b.cy)-Math.abs(b.cx-a.cx)*0.25-30}
-                        text-anchor="middle" font-size="9" fill="#e2e8f0" class="pointer-events-none select-none"
+                        text-anchor="middle" font-size="9" fill="var(--color-text)" class="pointer-events-none select-none"
                       >{edge.kabel_nr ?? '—'} · {edge.typ}{(edge as any).phase ? ' · '+(edge as any).phase : ''}{edge.von_port ? ' · '+edge.von_port : ''}{edge.nach_port ? ' → '+edge.nach_port : ''}{clStatus === 'invalid' ? ' ⚠ Standortgrenze!' : clStatus === 'warning' ? ' ⚠ Optik prüfen' : sA && sB && sA !== sB ? ' · '+sA+'→'+sB : ''}</text>
                     {/if}
                   {/if}
@@ -795,11 +795,11 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
               {@const utilCol = utilPct > 0.9 ? '#ef4444' : utilPct > 0.7 ? '#f59e0b' : '#10b981'}
               <!-- Pseudo-3D Rack-Kanten (Behind front face) -->
               <polygon points="{rb.x + rb.w},{rb.y + 4} {rb.x + rb.w + 6},{rb.y + 10} {rb.x + rb.w + 6},{rb.y + rb.h + 6} {rb.x + rb.w},{rb.y + rb.h}"
-                fill="#04060f" stroke="#111625" stroke-width="0.5" />
+                fill="var(--color-bg1)" stroke="var(--color-border2)" stroke-width="0.5" />
               <polygon points="{rb.x + 4},{rb.y + rb.h} {rb.x + 10},{rb.y + rb.h + 6} {rb.x + rb.w + 6},{rb.y + rb.h + 6} {rb.x + rb.w},{rb.y + rb.h}"
-                fill="#080c18" stroke="#111625" stroke-width="0.5" />
+                fill="var(--color-bg1)" stroke="var(--color-border2)" stroke-width="0.5" />
 
-              <rect x={rb.x} y={rb.y} width={rb.w} height={rb.h} rx="5" fill="#0f172a" stroke="#1e293b" stroke-width="1" />
+              <rect x={rb.x} y={rb.y} width={rb.w} height={rb.h} rx="5" fill="var(--color-bg2)" stroke="var(--color-border)" stroke-width="1" />
               {#if showHeatmap}
                 {@const scoreObj = anomalyScores.find(s => s.rack_id === rb.rack.id)}
                 {#if scoreObj}
@@ -811,20 +811,20 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
                     onmouseleave={() => hoveredScoreId = null} />
                 {/if}
               {/if}
-              <text x={rb.x+rb.w/2} y={rb.y+17} text-anchor="middle" font-size="10" font-weight="bold" fill="#64748b" class="select-none">{rb.rack.name}</text>
-              <text x={rb.x+rb.w/2} y={rb.y+27} text-anchor="middle" font-size="8" fill="#334155" class="select-none">{rb.rack.standort}</text>
+              <text x={rb.x+rb.w/2} y={rb.y+17} text-anchor="middle" font-size="10" font-weight="bold" fill="var(--color-text2)" class="select-none">{rb.rack.name}</text>
+              <text x={rb.x+rb.w/2} y={rb.y+27} text-anchor="middle" font-size="8" fill="var(--color-text3)" class="select-none">{rb.rack.standort}</text>
               {#each Array.from({ length: rb.rack.hoehe_u }, (_, i) => i) as u}
-                <line x1={rb.x+2} y1={rb.y+LABEL_H+u*U_HEIGHT} x2={rb.x+7} y2={rb.y+LABEL_H+u*U_HEIGHT} stroke="#1e293b" stroke-width="0.5" />
+                <line x1={rb.x+2} y1={rb.y+LABEL_H+u*U_HEIGHT} x2={rb.x+7} y2={rb.y+LABEL_H+u*U_HEIGHT} stroke="var(--color-border)" stroke-width="0.5" />
               {/each}
               <!-- Utilization bar (right edge) -->
               {@const barY = rb.y + LABEL_H}
               {@const barH = rb.h - LABEL_H - DEV_PAD}
-              <rect x={rb.x+rb.w-4} y={barY} width={3} height={barH} rx="1" fill="#1e293b" />
+              <rect x={rb.x+rb.w-4} y={barY} width={3} height={barH} rx="1" fill="var(--color-border2)" />
               <rect x={rb.x+rb.w-4} y={barY + barH*(1-utilPct)} width={3} height={barH*utilPct} rx="1" fill={utilCol} opacity="0.85" />
               <text x={rb.x+rb.w-7} y={rb.y+rb.h-3} text-anchor="end" font-size="7" fill={utilCol} class="select-none" opacity="0.7">{usedU}/{rb.rack.hoehe_u}U</text>
               <!-- Side PDU brackets -->
-              <rect x={rb.x-PDU_SIDE_GAP-PDU_SIDE_W} y={rb.y} width={PDU_SIDE_W} height={rb.h} rx="3" fill="#0a1020" stroke="#1c2030" stroke-width="0.8" stroke-dasharray="2 2" />
-              <rect x={rb.x+rb.w+PDU_SIDE_GAP} y={rb.y} width={PDU_SIDE_W} height={rb.h} rx="3" fill="#0a1020" stroke="#1c2030" stroke-width="0.8" stroke-dasharray="2 2" />
+              <rect x={rb.x-PDU_SIDE_GAP-PDU_SIDE_W} y={rb.y} width={PDU_SIDE_W} height={rb.h} rx="3" fill="var(--color-bg3)" stroke="var(--color-border)" stroke-width="0.8" stroke-dasharray="2 2" />
+              <rect x={rb.x+rb.w+PDU_SIDE_GAP} y={rb.y} width={PDU_SIDE_W} height={rb.h} rx="3" fill="var(--color-bg3)" stroke="var(--color-border)" stroke-width="0.8" stroke-dasharray="2 2" />
             {/each}
 
             <!-- Nodes -->
@@ -868,16 +868,16 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
 
           <!-- Zoom buttons -->
           <div class="absolute top-3 right-3 flex flex-col gap-0.5 z-10">
-            <button onclick={zoomIn}  class="w-7 h-7 bg-[#181C1A] hover:bg-slate-700 border border-slate-700 rounded-t-lg text-xs text-white flex items-center justify-center transition">+</button>
-            <button onclick={zoomOut} class="w-7 h-7 bg-[#181C1A] hover:bg-slate-700 border-x border-slate-700 text-xs text-white flex items-center justify-center transition">−</button>
-            <button onclick={resetView} class="w-7 h-7 bg-[#181C1A] hover:bg-slate-700 border border-slate-700 rounded-b-lg text-xs text-white flex items-center justify-center transition">⊙</button>
+            <button onclick={zoomIn}  class="w-7 h-7 bg-[var(--color-bg3)] hover:bg-[var(--color-border2)] border border-[var(--color-border2)] rounded-t-lg text-xs text-[var(--color-text)] flex items-center justify-center transition">+</button>
+            <button onclick={zoomOut} class="w-7 h-7 bg-[var(--color-bg3)] hover:bg-[var(--color-border2)] border-x border-[var(--color-border2)] text-xs text-[var(--color-text)] flex items-center justify-center transition">−</button>
+            <button onclick={resetView} class="w-7 h-7 bg-[var(--color-bg3)] hover:bg-[var(--color-border2)] border border-[var(--color-border2)] rounded-b-lg text-xs text-[var(--color-text)] flex items-center justify-center transition">⊙</button>
           </div>
 
           <!-- Heatmap Tooltip -->
           {#if showHeatmap && hoveredScore}
-            <div class="absolute bg-[#0f172a]/95 border border-slate-700/80 rounded-lg p-3 shadow-xl backdrop-blur text-xs text-white max-w-xs pointer-events-none z-50 transition-all duration-75"
+            <div class="absolute bg-[#0f172a]/95 border border-[var(--color-border2)]/80 rounded-lg p-3 shadow-xl backdrop-blur text-xs text-[var(--color-text)] max-w-xs pointer-events-none z-50 transition-all duration-75"
               style="left: {mousePos.x + 15}px; top: {mousePos.y + 15}px;">
-              <div class="flex items-center justify-between gap-4 mb-1 border-b border-slate-800 pb-1">
+              <div class="flex items-center justify-between gap-4 mb-1 border-b border-[var(--color-border)] pb-1">
                 <span class="font-bold">{hoveredScore.rack_name}</span>
                 <span class="px-1.5 py-0.5 rounded font-mono text-[9px] font-bold
                   {hoveredScore.level === 'critical' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
@@ -887,13 +887,13 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
                 </span>
               </div>
               {#if hoveredScore.issues.length > 0}
-                <ul class="list-disc list-inside space-y-1 text-slate-300 mt-2 text-[9px]">
+                <ul class="list-disc list-inside space-y-1 text-[var(--color-text)] mt-2 text-[9px]">
                   {#each hoveredScore.issues as issue}
                     <li>{issue}</li>
                   {/each}
                 </ul>
               {:else}
-                <p class="text-slate-500 text-[9px] mt-1.5">Keine Anomalien festgestellt.</p>
+                <p class="text-[var(--color-text3)] text-[9px] mt-1.5">Keine Anomalien festgestellt.</p>
               {/if}
             </div>
           {/if}
@@ -902,44 +902,44 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
 
       <!-- Detail Panel -->
       <div class="w-72 shrink-0 flex flex-col gap-3">
-        <div class="bg-[#131615] border border-slate-800 rounded-xl p-4">
-          <p class="text-[10px] uppercase font-bold tracking-wider text-slate-500 mb-3">Legende</p>
+        <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl p-4">
+          <p class="text-[10px] uppercase font-bold tracking-wider text-[var(--color-text3)] mb-3">Legende</p>
           <div class="grid grid-cols-2 gap-1.5 text-[10px]">
             {#each deviceTypes as dt}
               <div class="flex items-center gap-1.5">
                 <div class="w-2.5 h-2.5 rounded-sm shrink-0" style="background:{nodeStroke(dt)};opacity:.7"></div>
-                <span class="text-slate-400">{deviceTypeLabel[dt]}</span>
+                <span class="text-[var(--color-text2)]">{deviceTypeLabel[dt]}</span>
               </div>
             {/each}
           </div>
-          <div class="border-t border-slate-800 mt-2.5 pt-2.5 space-y-1.5">
+          <div class="border-t border-[var(--color-border)] mt-2.5 pt-2.5 space-y-1.5">
             {#each [['#3b82f6','Kupfer (Cat)'],['#d946ef','LWL / Glasfaser'],['#06b6d4','SFP+'],['#6b7280','DAC'],['#ef4444','Strom'],['#f97316','Strom L1'],['#84cc16','Strom L2'],['#a855f7','Strom L3']] as [col, label]}
               <div class="flex items-center gap-2">
                 <svg width="20" height="8"><line x1="0" y1="4" x2="20" y2="4" stroke={col} stroke-width="1.5"/></svg>
-                <span class="text-[10px] text-slate-500">{label}</span>
+                <span class="text-[10px] text-[var(--color-text3)]">{label}</span>
               </div>
             {/each}
             <div class="flex items-center gap-2">
               <svg width="20" height="8"><line x1="0" y1="4" x2="20" y2="4" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5 2"/></svg>
-              <span class="text-[10px] text-slate-500">Rack-übergreifend</span>
+              <span class="text-[10px] text-[var(--color-text3)]">Rack-übergreifend</span>
             </div>
             <div class="flex items-center gap-2">
               <svg width="20" height="8"><line x1="0" y1="4" x2="20" y2="4" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3 3"/></svg>
-              <span class="text-[10px] text-slate-500">PDU-Strom</span>
+              <span class="text-[10px] text-[var(--color-text3)]">PDU-Strom</span>
             </div>
           </div>
-          <div class="border-t border-slate-800 mt-2.5 pt-2 flex items-center gap-2">
+          <div class="border-t border-[var(--color-border)] mt-2.5 pt-2 flex items-center gap-2">
             <div class="flex gap-0.5">
               <div class="w-2 h-3 rounded-sm bg-emerald-500 opacity-70"></div>
               <div class="w-2 h-3 rounded-sm bg-amber-500 opacity-70"></div>
               <div class="w-2 h-3 rounded-sm bg-red-500 opacity-70"></div>
             </div>
-            <span class="text-[10px] text-slate-500">Rack-Auslastung (HE)</span>
+            <span class="text-[10px] text-[var(--color-text3)]">Rack-Auslastung (HE)</span>
           </div>
           {#if showHeatmap}
-            <div class="border-t border-slate-800 mt-2.5 pt-2">
-              <p class="text-[9px] uppercase font-bold tracking-wider text-slate-400 mb-1.5">Anomalie-Heatmap</p>
-              <div class="space-y-1 text-[10px] text-slate-400">
+            <div class="border-t border-[var(--color-border)] mt-2.5 pt-2">
+              <p class="text-[9px] uppercase font-bold tracking-wider text-[var(--color-text2)] mb-1.5">Anomalie-Heatmap</p>
+              <div class="space-y-1 text-[10px] text-[var(--color-text2)]">
                 <div class="flex items-center gap-1.5">
                   <div class="w-3 h-3 rounded bg-red-500/20 border border-red-500 shrink-0"></div>
                   <span>Kritisch (Score &ge; 60%)</span>
@@ -955,48 +955,48 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
               </div>
             </div>
           {/if}
-          <p class="text-[9px] text-slate-600 mt-2">PDUs seitlich · Drag: verschieben · Scroll: Zoom</p>
+          <p class="text-[9px] text-[var(--color-text3)] mt-2">PDUs seitlich · Drag: verschieben · Scroll: Zoom</p>
         </div>
 
         {#if selectedNode}
-          <div class="bg-[#131615] border border-violet-800/40 rounded-xl p-4 flex-1 overflow-y-auto">
+          <div class="bg-[var(--color-bg2)] border border-violet-800/40 rounded-xl p-4 flex-1 overflow-y-auto">
             <div class="flex items-start justify-between mb-3">
               <div>
-                <p class="text-xs font-bold text-white font-mono">{selectedNode.hostname}</p>
-                <p class="text-[10px] text-slate-500 mt-0.5">{selectedNode.typ} · {selectedNode.rack_name ?? 'kein Rack'}</p>
+                <p class="text-xs font-bold text-[var(--color-text)] font-mono">{selectedNode.hostname}</p>
+                <p class="text-[10px] text-[var(--color-text3)] mt-0.5">{selectedNode.typ} · {selectedNode.rack_name ?? 'kein Rack'}</p>
               </div>
-              <button onclick={() => selectedNode = null} class="text-slate-600 hover:text-slate-400 text-xs">✕</button>
+              <button onclick={() => selectedNode = null} class="text-[var(--color-text3)] hover:text-[var(--color-text2)] text-xs">✕</button>
             </div>
             {#if selectedNode.hersteller || selectedNode.modell}
-              <p class="text-xs text-slate-400 mb-1">{[selectedNode.hersteller, selectedNode.modell].filter(Boolean).join(' / ')}</p>
+              <p class="text-xs text-[var(--color-text2)] mb-1">{[selectedNode.hersteller, selectedNode.modell].filter(Boolean).join(' / ')}</p>
             {/if}
             {#if selectedNode.ip_adresse}
               <p class="text-xs font-mono text-blue-400 mb-2">{selectedNode.ip_adresse}</p>
             {/if}
             {#if selectedNode.u_position}
-              <p class="text-[10px] text-slate-500 mb-3">HE {selectedNode.u_position} · {selectedNode.u_hoehe}U</p>
+              <p class="text-[10px] text-[var(--color-text3)] mb-3">HE {selectedNode.u_position} · {selectedNode.u_hoehe}U</p>
             {/if}
             {#if nodeEdges.length > 0}
-              <p class="text-[10px] uppercase font-bold tracking-wider text-slate-500 mb-2">Verbindungen ({nodeEdges.length})</p>
+              <p class="text-[10px] uppercase font-bold tracking-wider text-[var(--color-text3)] mb-2">Verbindungen ({nodeEdges.length})</p>
               <div class="space-y-1.5">
                 {#each nodeEdges as edge}
                   {@const otherId = connectedNodeId(edge)}
                   {@const other = data?.nodes.find(n => n.id === otherId)}
                   {@const isPow = (edge as any).edge_type === 'power'}
-                  <div class="bg-slate-900/60 rounded-lg p-2 text-xs border-l-2 {isPow ? 'border-orange-500/50' : 'border-[#1D9E75]/30'}">
+                  <div class="bg-[var(--color-bg3)] rounded-lg p-2 text-xs border-l-2 {isPow ? 'border-orange-500/50' : 'border-[#1D9E75]/30'}">
                     <div class="flex items-center justify-between">
-                      <span class="font-mono text-slate-300 truncate">{other?.hostname ?? `#${otherId}`}</span>
+                      <span class="font-mono text-[var(--color-text)] truncate">{other?.hostname ?? `#${otherId}`}</span>
                       <div class="flex items-center gap-1 shrink-0 ml-1">
                         {#if isPow}<span class="text-[8px] text-orange-400 font-bold">⚡</span>{/if}
                         {#if edge.cross_rack}<span class="text-[8px] text-violet-400 font-bold">XR</span>{/if}
                       </div>
                     </div>
-                    <div class="text-[10px] text-slate-500 mt-0.5">
+                    <div class="text-[10px] text-[var(--color-text3)] mt-0.5">
                       {edge.typ}{(edge as any).phase ? ' · '+(edge as any).phase : ''}
                       {edge.laenge_m != null ? ' · '+edge.laenge_m+'m' : ''}
                     </div>
                     {#if edge.von_port || edge.nach_port}
-                      <div class="text-[9px] text-slate-600 mt-0.5 font-mono">
+                      <div class="text-[9px] text-[var(--color-text3)] mt-0.5 font-mono">
                         {edge.von_device_id === selectedNode.id ? (edge.von_port ?? '–') : (edge.nach_port ?? '–')}
                         → {edge.von_device_id === selectedNode.id ? (edge.nach_port ?? '–') : (edge.von_port ?? '–')}
                       </div>
@@ -1005,7 +1005,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
                 {/each}
               </div>
             {:else}
-              <p class="text-xs text-slate-600 italic">Keine Verbindungen</p>
+              <p class="text-xs text-[var(--color-text3)] italic">Keine Verbindungen</p>
             {/if}
             {#if selectedNode.rack_id}
               <button onclick={() => goto(`/racks?rack=${selectedNode!.rack_id}`)}
@@ -1015,8 +1015,8 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
             {/if}
           </div>
         {:else}
-          <div class="bg-[#131615] border border-slate-800 rounded-xl p-4 text-center flex-1 flex items-center justify-center">
-            <p class="text-xs text-slate-600">Gerät anklicken für Details</p>
+          <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl p-4 text-center flex-1 flex items-center justify-center">
+            <p class="text-xs text-[var(--color-text3)]">Gerät anklicken für Details</p>
           </div>
         {/if}
       </div>
@@ -1031,9 +1031,9 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
         </div>
       {:else if data}
         <div class="space-y-3 pb-6">
-          <div class="bg-[#131615] border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-500 flex items-center justify-between">
+          <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl px-4 py-2.5 text-xs text-[var(--color-text3)] flex items-center justify-between">
             <span>Port-Routing · Verbindungen nach Kabeltyp und Standort filterbar.</span>
-            <span class="text-slate-600">{filteredNetzplanData.length} / {netzplanData.length} Geräte</span>
+            <span class="text-[var(--color-text3)]">{filteredNetzplanData.length} / {netzplanData.length} Geräte</span>
           </div>
           {#each filteredNetzplanData as item, idx}
             {@const rack = data.racks.find(r => r.id === item.node.rack_id)}
@@ -1051,22 +1051,22 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
                 {/if}
                 <span class="text-xs font-bold {locTyp === 'dienstaußenstelle' ? 'text-violet-400' : 'text-blue-400'}">{rack.standort}</span>
                 <span class="text-[9px] px-1.5 py-0.5 rounded-full border {locTyp === 'dienstaußenstelle' ? 'bg-violet-900/30 text-violet-500 border-violet-700/40' : 'bg-blue-900/30 text-blue-500 border-blue-700/40'}">{locTyp === 'dienstaußenstelle' ? 'Außenstelle' : 'RZ'}</span>
-                <div class="flex-1 h-px bg-slate-800"></div>
+                <div class="flex-1 h-px bg-[var(--color-border)]"></div>
               </div>
             {/if}
 
-            <div class="bg-[#131615] border border-slate-800 rounded-xl overflow-hidden">
-              <div class="flex items-center gap-3 px-4 py-2.5 border-b border-slate-800/60" style="border-left: 3px solid {nodeStroke(item.node.typ)}">
+            <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl overflow-hidden">
+              <div class="flex items-center gap-3 px-4 py-2.5 border-b border-[var(--color-border)]/60" style="border-left: 3px solid {nodeStroke(item.node.typ)}">
                 <div>
-                  <span class="text-sm font-bold text-white font-mono">{item.node.hostname}</span>
-                  <span class="ml-2 text-[10px] text-slate-500">{item.node.typ.toUpperCase()}</span>
+                  <span class="text-sm font-bold text-[var(--color-text)] font-mono">{item.node.hostname}</span>
+                  <span class="ml-2 text-[10px] text-[var(--color-text3)]">{item.node.typ.toUpperCase()}</span>
                   {#if item.node.hersteller || item.node.modell}
-                    <span class="ml-1 text-[10px] text-slate-600">{[item.node.hersteller, item.node.modell].filter(Boolean).join(' ')}</span>
+                    <span class="ml-1 text-[10px] text-[var(--color-text3)]">{[item.node.hersteller, item.node.modell].filter(Boolean).join(' ')}</span>
                   {/if}
                 </div>
                 <div class="ml-auto flex items-center gap-2">
-                  {#if rack}<span class="text-[10px] text-slate-600 bg-slate-800/60 px-1.5 py-0.5 rounded">{rack.name}{rack.standort ? ' · '+rack.standort : ''}</span>{/if}
-                  {#if item.node.u_position}<span class="text-[10px] text-slate-600 bg-slate-800/60 px-1.5 py-0.5 rounded">HE {item.node.u_position}</span>{/if}
+                  {#if rack}<span class="text-[10px] text-[var(--color-text3)] bg-[var(--color-border2)] px-1.5 py-0.5 rounded">{rack.name}{rack.standort ? ' · '+rack.standort : ''}</span>{/if}
+                  {#if item.node.u_position}<span class="text-[10px] text-[var(--color-text3)] bg-[var(--color-border2)] px-1.5 py-0.5 rounded">HE {item.node.u_position}</span>{/if}
                   {#if item.node.ip_adresse}<span class="text-[10px] font-mono text-blue-400">{item.node.ip_adresse}</span>{/if}
                 </div>
               </div>
@@ -1074,22 +1074,22 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
                 {#each item.connections as conn}
                   {@const clStatus = crossLocationStatus(conn.edge)}
                   {@const [clA, clB] = edgeStandorts(conn.edge)}
-                  <div class="flex items-center gap-3 px-4 py-2 text-xs hover:bg-slate-800/20 transition
+                  <div class="flex items-center gap-3 px-4 py-2 text-xs hover:bg-[var(--color-border2)] transition
                     {clStatus === 'invalid' ? 'bg-red-950/20' : clStatus === 'warning' ? 'bg-amber-950/10' : ''}">
                     <div class="w-28 shrink-0">
                       {#if conn.localPort && conn.localPort !== '–'}
-                        <span class="font-mono text-[10px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded">{conn.localPort}</span>
+                        <span class="font-mono text-[10px] bg-[var(--color-border)] text-[var(--color-text)] px-1.5 py-0.5 rounded">{conn.localPort}</span>
                       {:else}
-                        <span class="text-slate-700 text-[10px]">—</span>
+                        <span class="text-[var(--color-text2)] text-[10px]">—</span>
                       {/if}
                     </div>
                     <div class="flex items-center gap-1.5 flex-1 min-w-0">
                       <div class="w-4 h-px shrink-0" style="background:{edgeColor(conn.edge)}"></div>
-                      <span class="text-[10px] font-mono text-slate-500 truncate">
+                      <span class="text-[10px] font-mono text-[var(--color-text3)] truncate">
                         {conn.edge.kabel_nr ?? ''}
-                        {#if conn.edge.typ}<span class="text-slate-600"> · {conn.edge.typ}</span>{/if}
+                        {#if conn.edge.typ}<span class="text-[var(--color-text3)]"> · {conn.edge.typ}</span>{/if}
                         {#if (conn.edge as any).phase}<span class="text-[10px] font-bold" style="color:{edgeColor(conn.edge)}"> {(conn.edge as any).phase}</span>{/if}
-                        {#if conn.edge.laenge_m}<span class="text-slate-700"> · {conn.edge.laenge_m}m</span>{/if}
+                        {#if conn.edge.laenge_m}<span class="text-[var(--color-text2)]"> · {conn.edge.laenge_m}m</span>{/if}
                       </span>
                       <div class="w-4 h-px shrink-0" style="background:{edgeColor(conn.edge)}"></div>
                       {#if clStatus === 'invalid'}
@@ -1112,14 +1112,14 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
                     <div class="flex items-center gap-2 shrink-0 text-right">
                       <div>
                         <button onclick={() => goto(`/racks?rack=${conn.remoteNode?.rack_id}`)}
-                          class="font-mono text-[11px] text-slate-300 hover:text-blue-400 transition"
+                          class="font-mono text-[11px] text-[var(--color-text)] hover:text-blue-400 transition"
                         >{conn.remoteNode?.hostname ?? `#${conn.edge.von_device_id === item.node.id ? conn.edge.nach_device_id : conn.edge.von_device_id}`}</button>
                         {#if conn.remotePort && conn.remotePort !== '–'}
-                          <div><span class="font-mono text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded">{conn.remotePort}</span></div>
+                          <div><span class="font-mono text-[10px] bg-[var(--color-border)] text-[var(--color-text2)] px-1.5 py-0.5 rounded">{conn.remotePort}</span></div>
                         {/if}
                       </div>
                       {#if conn.remoteNode?.rack_id}
-                        <span class="text-[9px] text-slate-600 bg-slate-800/40 px-1 py-0.5 rounded shrink-0">
+                        <span class="text-[9px] text-[var(--color-text3)] bg-[var(--color-border2)] px-1 py-0.5 rounded shrink-0">
                           {data.racks.find(r => r.id === conn.remoteNode?.rack_id)?.name ?? ''}
                         </span>
                       {/if}
@@ -1130,7 +1130,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
             </div>
           {/each}
           {#if filteredNetzplanData.length === 0}
-            <div class="text-center py-12 text-slate-500 text-sm">Keine Verbindungen für aktive Filter.</div>
+            <div class="text-center py-12 text-[var(--color-text3)] text-sm">Keine Verbindungen für aktive Filter.</div>
           {/if}
         </div>
       {/if}

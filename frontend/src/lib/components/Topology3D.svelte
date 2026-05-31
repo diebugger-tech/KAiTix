@@ -4,6 +4,7 @@
   import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
   import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
   import { nodeColor, nodeStroke, baseEdgeColor } from '$lib/topologyColors';
+  import { appState } from '$lib/state.svelte';
 
   let {
     data,
@@ -47,7 +48,7 @@
 
   function initScene() {
     scene = new THREE.Scene();
-    scene.background = new THREE.Color('#080c14');
+    scene.background = new THREE.Color(appState.theme === 'light' ? '#F4F7F5' : '#080c14');
 
     // Lighting (Catch #1)
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -89,6 +90,12 @@
     sceneReady = true;
   }
 
+  $effect(() => {
+    if (sceneReady && scene) {
+      scene.background = new THREE.Color(appState.theme === 'light' ? '#F4F7F5' : '#080c14');
+    }
+  });
+
   function buildTopology() {
     if (!data) return;
 
@@ -121,7 +128,7 @@
 
         // Standort Label
         const div = document.createElement('div');
-        div.className = 'text-xs font-bold text-blue-400 bg-slate-900/80 px-2 py-1 rounded border border-blue-900/50 backdrop-blur-sm';
+        div.className = 'text-xs font-bold text-[var(--color-text)] bg-[var(--color-bg3)] px-2 py-1 rounded border border-[var(--color-border2)] backdrop-blur-sm';
         div.textContent = rack.standort || 'Unbekannt';
         const label = new CSS2DObject(div);
         label.position.set(xOffset, 40, zOffset - 10);
@@ -150,7 +157,7 @@
 
       // Rack Label
       const rDiv = document.createElement('div');
-      rDiv.className = 'text-[9px] text-slate-400 font-bold whitespace-nowrap';
+      rDiv.className = 'text-[9px] text-[var(--color-text2)] font-bold whitespace-nowrap';
       rDiv.textContent = rack.name;
       const rLabel = new CSS2DObject(rDiv);
       rLabel.position.set(rackCx, rackH + 2, rackCz);

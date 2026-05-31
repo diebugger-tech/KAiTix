@@ -1,5 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { appState } from '$lib/state.svelte';
+  import { Sun, Moon } from '@lucide/svelte';
 
   let stats = $state({
     racks: 0,
@@ -57,10 +59,19 @@
       <a href="#prinzipien">Prinzipien</a>
       <a href="#stack">Stack</a>
     </div>
-    <a href="/" class="nav-cta">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-      App öffnen
-    </a>
+    <div style="display: flex; align-items: center; gap: 1rem;">
+      <button class="theme-toggle-btn" onclick={() => appState.toggleTheme()} title="Theme wechseln">
+        {#if appState.theme === 'dark'}
+          <Sun size={18} />
+        {:else}
+          <Moon size={18} />
+        {/if}
+      </button>
+      <a href="/" class="nav-cta">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        App öffnen
+      </a>
+    </div>
   </nav>
 
   <section class="hero">
@@ -328,6 +339,30 @@
     z-index: -1;
   }
 
+  /* Light Theme Overrides */
+  :global(html.light) .landing-page-root {
+    --bg: #F4F7F5;
+    --bg2: #FFFFFF;
+    --bg3: #EAEFEA;
+    --border: rgba(0,0,0,0.08);
+    --border2: rgba(0,0,0,0.15);
+    --text: #131615;
+    --text2: #556059;
+    --text3: #8A9A8D;
+    --teal: #14805E;
+    --teal-light: #1D9E75;
+    --teal-dim: rgba(29,158,117,0.12);
+    --teal-border: rgba(29,158,117,0.3);
+  }
+
+  :global(html.light) .hero-bg {
+    filter: brightness(0.8) contrast(1.0) saturate(1.1);
+  }
+
+  :global(html.light) .hero-overlay {
+    background: linear-gradient(105deg, rgba(244,247,245,0.85) 0%, rgba(244,247,245,0.3) 100%);
+  }
+
   /* ─── NAV ─── */
   nav {
     position: sticky; top: 0; z-index: 100;
@@ -374,6 +409,21 @@
   }
   .nav-cta:hover { background: #0F6E56; }
   .nav-cta svg { width: 14px; height: 14px; }
+
+  .theme-toggle-btn {
+    background: transparent;
+    border: none;
+    color: var(--text2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s;
+    padding: 4px;
+  }
+  .theme-toggle-btn:hover {
+    color: var(--text);
+  }
 
   /* ─── HERO ─── */
   .hero {
@@ -708,4 +758,13 @@
   .lightbox-close:hover {
     color: var(--teal);
   }
+  :global(html.light) nav {
+    background: var(--color-bg2);
+    border-color: var(--color-border);
+  }
+  :global(html.light) .stat-card {
+    background: var(--color-bg2);
+    border-color: var(--color-border);
+  }
+
 </style>

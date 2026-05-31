@@ -24,6 +24,52 @@
   /* Radien */
   --radius:    10px;
   --radius-lg: 16px;
+
+  /* Dynamische UI Farben */
+  --color-header-bg:     rgba(13,15,14,0.85);
+  --color-hover:         rgba(255,255,255,0.04);
+  --color-row-hover:     rgba(255,255,255,0.03);
+  --color-btn-bg:        rgba(255,255,255,0.05);
+  --color-scrollbar:     rgba(29,158,117,0.3);
+  --color-scrollbar-hover: rgba(29,158,117,0.5);
+  /* Input Felder */
+  --color-input-bg:      #181C1A;
+  --color-input-border:  rgba(255,255,255,0.13);
+  --color-input-text:    #ffffff;
+}
+
+:root.light {
+  /* Helle Hintergrundfarben */
+  --color-bg:        #F4F7F5;
+  --color-bg2:       #FFFFFF;
+  --color-bg3:       #EAEFEA;
+  
+  /* Dunkle Rahmenlinien für Kontrast */
+  --color-border:    rgba(0, 0, 0, 0.08);
+  --color-border2:   rgba(0, 0, 0, 0.15);
+  
+  /* Textfarben invertieren */
+  --color-text:      #131615;
+  --color-text2:     #556059;
+  --color-text3:     #8A9A8D;
+
+  /* Teal Akzent (etwas dunkler für guten Kontrast auf hellem Grund) */
+  --color-accent:        #14805E; 
+  --color-accent-light:  #1D9E75;
+  --color-accent-dim:    rgba(29, 158, 117, 0.12);
+  --color-accent-border: rgba(29, 158, 117, 0.3);
+
+  /* Dynamische UI Farben (Hell) */
+  --color-header-bg:     rgba(255,255,255,0.85);
+  --color-hover:         rgba(0,0,0,0.04);
+  --color-row-hover:     rgba(0,0,0,0.03);
+  --color-btn-bg:        rgba(0,0,0,0.05);
+  --color-scrollbar:     rgba(29,158,117,0.4);
+  --color-scrollbar-hover: rgba(29,158,117,0.6);
+  /* Input Felder (Hell) */
+  --color-input-bg:      #FFFFFF;
+  --color-input-border:  rgba(0,0,0,0.15);
+  --color-input-text:    #131615;
 }
 
 @layer base {
@@ -44,34 +90,149 @@
   }
 }
 
-/* Schritt 3 — Sidebar */
+/* Schritt 3 — Sidebar Navigation Refactoring */
 aside {
   background: var(--color-bg2) !important;
   border-right: 1px solid var(--color-border) !important;
 }
 
-aside a[class*="bg-"][class*="500"], 
-aside a[class*="bg-"][class*="600"] {
-  background: var(--color-accent-dim) !important;
-  color: var(--color-accent-light) !important;
-  border-left-color: var(--color-accent) !important;
+.nav-group-title {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text3);
+  display: block;
 }
 
-aside a:hover {
-  background: rgba(255,255,255,0.04) !important;
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem; /* space-x-3 */
+  padding: 0.625rem 1rem; /* py-2.5 px-4 */
+  border-radius: 0.5rem; /* rounded-lg */
+  font-size: 0.875rem; /* text-sm */
+  font-weight: 500;
+  color: var(--color-text2);
+  transition: all 0.2s;
+  text-decoration: none;
 }
 
-aside span.uppercase {
-  font-family: var(--font-mono) !important;
-  font-size: 10px !important;
-  letter-spacing: 0.1em !important;
-  color: var(--color-text3) !important;
+.nav-link:hover {
+  background: var(--color-hover);
+  color: var(--color-text);
+}
+
+.nav-link.active {
+  background: var(--color-accent-dim);
+  color: var(--color-accent-light);
+  border-left: 2px solid var(--color-accent);
+  padding-left: 0.875rem; /* pl-3.5 */
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+/* Kategorie-Trenner Override */
+aside .border-[var(--color-border2)]\/60,
+aside .border-[var(--color-border2)] {
+  border-color: var(--color-border) !important;
 }
 
 aside h1 {
   color: var(--color-accent-light) !important;
   background: none !important;
   -webkit-text-fill-color: var(--color-accent-light) !important;
+}
+
+/* Utilities für Svelte Refactoring */
+.global-search-input {
+  background-color: var(--color-input-bg) !important;
+  border-color: var(--color-input-border) !important;
+  color: var(--color-input-text) !important;
+}
+.global-search-input::placeholder {
+  color: var(--color-text2) !important;
+}
+
+.quick-export-btn {
+  background: var(--color-btn-bg) !important;
+  border-color: var(--color-border2) !important;
+  color: var(--color-text2) !important;
+  transition: all 0.2s;
+}
+.quick-export-btn:hover {
+  background: var(--color-hover) !important;
+  color: var(--color-text) !important;
+}
+.quick-export-btn-teal {
+  background: var(--color-accent-dim) !important;
+  border-color: var(--color-accent-border) !important;
+  color: var(--color-accent-light) !important;
+}
+.quick-export-btn-teal:hover {
+  background: var(--color-accent) !important;
+  color: #fff !important;
+}
+
+.app-root {
+  background-color: var(--color-bg) !important;
+}
+
+.app-header {
+  background-color: var(--color-bg2) !important;
+  border-bottom-color: var(--color-border) !important;
+}
+
+.app-header h2 {
+  color: var(--color-text) !important;
+}
+
+.dropdown-menu {
+  background-color: var(--color-bg2) !important;
+  border-color: var(--color-border) !important;
+}
+.dropdown-menu button:hover {
+  background-color: var(--color-hover) !important;
+}
+.dropdown-menu .dropdown-text {
+  color: var(--color-text) !important;
+}
+.dropdown-menu .dropdown-subtext {
+  color: var(--color-text3) !important;
+}
+.dropdown-menu .dropdown-divider {
+  border-top-color: var(--color-border) !important;
+}
+
+.bearbeiter-pill {
+  background-color: var(--color-bg2) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text) !important;
+}
+
+.app-card {
+  background-color: var(--color-bg2) !important;
+  border-color: var(--color-border) !important;
+}
+.app-card-title {
+  color: var(--color-text) !important;
+}
+.app-card-subtitle {
+  color: var(--color-text3) !important;
+}
+.app-card-hover:hover {
+  border-color: var(--color-accent) !important;
+}
+
+.he-pill {
+  background-color: var(--color-bg2) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text) !important;
+}
+
+.icon-bg-default {
+  background-color: var(--color-bg3, rgba(255,255,255,0.05)) !important;
 }
 
 /* Schritt 4 — Dashboard Karten */
@@ -102,15 +263,15 @@ a.bg-blue-600:hover {
 
 button.bg-slate-800,
 a.bg-slate-800,
-.border-slate-700 {
-  background: rgba(255,255,255,0.05) !important;
+.border-[var(--color-border2)] {
+  background: var(--color-btn-bg) !important;
   border-color: var(--color-border2) !important;
   color: var(--color-text2) !important;
 }
 
 /* Schritt 6 — Header / Topbar */
 header {
-  background: rgba(13,15,14,0.85) !important;
+  background: var(--color-header-bg) !important;
   backdrop-filter: blur(12px) !important;
   border-bottom: 1px solid var(--color-border) !important;
 }
@@ -122,7 +283,7 @@ header span.bg-slate-800 {
 }
 
 /* Schritt 7 — Tabellen & Listen */
-thead, .border-b.border-slate-800 th {
+thead, .border-b.border-[var(--color-border2)] th {
   background: var(--color-bg3) !important;
   font-family: var(--font-mono) !important;
   font-size: 11px !important;
@@ -130,11 +291,11 @@ thead, .border-b.border-slate-800 th {
   color: var(--color-text3) !important;
 }
 
-tr, .border-b.border-slate-800 {
+tr, .border-b.border-[var(--color-border2)] {
   border-bottom: 1px solid var(--color-border) !important;
 }
 tr:hover {
-  background: rgba(255,255,255,0.03) !important;
+  background: var(--color-row-hover) !important;
 }
 
 /* Custom Scrollbar for premium terminal feel */
@@ -146,11 +307,11 @@ tr:hover {
   background: var(--color-bg);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(29,158,117,0.3);
+  background: var(--color-scrollbar);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(29,158,117,0.5);
+  background: var(--color-scrollbar-hover);
 }
 
 @media print {

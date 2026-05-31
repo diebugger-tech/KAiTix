@@ -614,29 +614,29 @@
 
 {#if loading}
   <div class="h-full flex flex-col space-y-4 screen-only">
-    <div class="text-slate-500 py-12 text-center">Lade Runbook...</div>
+    <div class="text-[var(--color-text3)] py-12 text-center">Lade Runbook...</div>
   </div>
 {:else if runbook}
   <div class="h-full flex flex-col space-y-4 screen-only">
     <!-- Header -->
-    <div class="flex items-center justify-between bg-[#131615] border border-slate-800 rounded-xl p-4 shrink-0">
+    <div class="flex items-center justify-between bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl p-4 shrink-0">
       <div class="flex items-center gap-4">
-        <button onclick={() => goto('/runbook-orchestrator')} class="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition">
+        <button onclick={() => goto('/runbook-orchestrator')} class="p-2 hover:bg-[var(--color-border)] rounded-lg text-[var(--color-text2)] hover:text-[var(--color-text)] transition">
           <ArrowLeft class="w-5 h-5" />
         </button>
         <div>
           <div class="flex items-center gap-2">
-            <h1 class="text-xl font-bold text-white tracking-tight">{runbook.name}</h1>
+            <h1 class="text-xl font-bold text-[var(--color-text)] tracking-tight">{runbook.name}</h1>
             <span class="text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded border bg-yellow-500/10 text-yellow-400 border-yellow-500/20">
               {runbook.typ}
             </span>
             {#if runbook.generated_from_id}
-              <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded border border-slate-700">
+              <span class="text-[10px] bg-[var(--color-border)] text-[var(--color-text2)] px-2 py-0.5 rounded border border-[var(--color-border2)]">
                 Generiert aus ID: {runbook.generated_from_id}
               </span>
             {/if}
           </div>
-          <p class="text-xs text-slate-400 mt-1">{runbook.beschreibung || 'Keine Beschreibung'}</p>
+          <p class="text-xs text-[var(--color-text2)] mt-1">{runbook.beschreibung || 'Keine Beschreibung'}</p>
         </div>
       </div>
       <div class="flex items-center gap-3">
@@ -646,11 +646,11 @@
             Startup generieren
           </button>
         {/if}
-        <button onclick={exportMarkdown} class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-medium transition">
+        <button onclick={exportMarkdown} class="flex items-center gap-2 bg-[var(--color-border)] hover:bg-[var(--color-border2)] text-[var(--color-text)] border border-[var(--color-border2)] px-3 py-1.5 rounded-lg text-xs font-medium transition">
           <FileText class="w-3.5 h-3.5" />
           MD Export
         </button>
-        <button onclick={exportPdf} class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-medium transition">
+        <button onclick={exportPdf} class="flex items-center gap-2 bg-[var(--color-border)] hover:bg-[var(--color-border2)] text-[var(--color-text)] border border-[var(--color-border2)] px-3 py-1.5 rounded-lg text-xs font-medium transition">
           <Printer class="w-3.5 h-3.5" />
           Drucken
         </button>
@@ -658,11 +658,11 @@
     </div>
 
     <!-- Tabs -->
-    <div class="flex space-x-1 border-b border-slate-800 shrink-0">
+    <div class="flex space-x-1 border-b border-[var(--color-border)] shrink-0">
       {#each ['PLANER', 'AUSFÜHRUNG', 'PROTOKOLL'] as tab}
         <button
           onclick={() => activeTab = tab as any}
-          class={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === tab ? 'border-[#1D9E75] text-blue-400' : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-600'}`}
+          class={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === tab ? 'border-[#1D9E75] text-blue-400' : 'border-transparent text-[var(--color-text2)] hover:text-slate-200 hover:border-[var(--color-border2)]'}`}
         >
           {tab}
         </button>
@@ -685,15 +685,15 @@
           <div class="flex-1 space-y-6">
             {#each [...(runbook.layers || [])].sort((a,b) => a.position - b.position) as layer, i}
               <div 
-                class={`bg-[#131615] border rounded-xl overflow-hidden transition ${draggedOverLayerId === layer.id ? 'border-[#1D9E75] bg-blue-950/5' : 'border-slate-800'}`}
+                class={`bg-[var(--color-bg2)] border rounded-xl overflow-hidden transition ${draggedOverLayerId === layer.id ? 'border-[#1D9E75] bg-blue-950/5' : 'border-[var(--color-border)]'}`}
                 ondragover={(e) => { if (!currentExecution) handleDragOverLayer(e, layer.id); }}
                 ondragleave={() => { if (!currentExecution) handleDragLeaveLayer(); }}
                 ondrop={(e) => { if (!currentExecution) handleDropLayer(e, layer.id); }}
               >
                 <!-- Layer Header -->
-                <div class="bg-slate-800/50 p-4 border-b border-slate-800 flex items-center justify-between group/header">
+                <div class="bg-[var(--color-border2)] p-4 border-b border-[var(--color-border)] flex items-center justify-between group/header">
                   <div class="flex items-center gap-3">
-                    <div class="w-6 h-6 rounded bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-400 border border-slate-700">
+                    <div class="w-6 h-6 rounded bg-[var(--color-border)] flex items-center justify-center text-xs font-bold text-[var(--color-text2)] border border-[var(--color-border2)]">
                       {layer.position}
                     </div>
                     {#if editingLayerId === layer.id}
@@ -705,12 +705,12 @@
                           if (e.key === 'Enter') saveLayerName(layer.id);
                           if (e.key === 'Escape') editingLayerId = null;
                         }}
-                        class="bg-[#181C1A] text-sm font-bold text-white px-2 py-1 border border-[#1D9E75] rounded outline-none w-64"
+                        class="bg-[var(--color-bg3)] text-sm font-bold text-[var(--color-text)] px-2 py-1 border border-[#1D9E75] rounded outline-none w-64"
                         autofocus
                       />
                     {:else}
                       <h3 
-                        class={`text-sm font-bold text-white flex items-center gap-2 ${!currentExecution ? 'cursor-pointer hover:text-blue-400' : ''} transition`}
+                        class={`text-sm font-bold text-[var(--color-text)] flex items-center gap-2 ${!currentExecution ? 'cursor-pointer hover:text-blue-400' : ''} transition`}
                         onclick={() => { if (!currentExecution) { editingLayerId = layer.id; editingLayerName = layer.name; } }}
                         title={!currentExecution ? "Klicken zum Umbenennen" : ""}
                       >
@@ -721,9 +721,9 @@
                   </div>
                   <div class="flex items-center gap-1 opacity-50 group-hover/header:opacity-100 transition-opacity">
                     {#if !currentExecution}
-                      <button onclick={() => { editingLayerId = layer.id; editingLayerName = layer.name; }} class="p-1.5 text-slate-500 hover:text-blue-400 hover:bg-slate-700 rounded mr-2" title="Ebene umbenennen"><Edit class="w-3.5 h-3.5" /></button>
-                      <button disabled={i === 0} onclick={() => moveLayer(i, -1)} class="p-1.5 text-slate-500 hover:text-white hover:bg-slate-700 rounded disabled:opacity-30"><ArrowUp class="w-3.5 h-3.5" /></button>
-                      <button disabled={i === (runbook.layers?.length || 0) - 1} onclick={() => moveLayer(i, 1)} class="p-1.5 text-slate-500 hover:text-white hover:bg-slate-700 rounded disabled:opacity-30"><ArrowDown class="w-3.5 h-3.5" /></button>
+                      <button onclick={() => { editingLayerId = layer.id; editingLayerName = layer.name; }} class="p-1.5 text-[var(--color-text3)] hover:text-blue-400 hover:bg-[var(--color-border2)] rounded mr-2" title="Ebene umbenennen"><Edit class="w-3.5 h-3.5" /></button>
+                      <button disabled={i === 0} onclick={() => moveLayer(i, -1)} class="p-1.5 text-[var(--color-text3)] hover:text-[var(--color-text)] hover:bg-[var(--color-border2)] rounded disabled:opacity-30"><ArrowUp class="w-3.5 h-3.5" /></button>
+                      <button disabled={i === (runbook.layers?.length || 0) - 1} onclick={() => moveLayer(i, 1)} class="p-1.5 text-[var(--color-text3)] hover:text-[var(--color-text)] hover:bg-[var(--color-border2)] rounded disabled:opacity-30"><ArrowDown class="w-3.5 h-3.5" /></button>
                       <button onclick={() => deleteLayer(layer.id)} class="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded ml-2"><Trash2 class="w-3.5 h-3.5" /></button>
                     {/if}
                   </div>
@@ -733,7 +733,7 @@
                 <div class="p-4">
                   <textarea 
                     disabled={!!currentExecution}
-                    class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-300 focus:border-[#1D9E75] resize-none mb-4 disabled:opacity-50"
+                    class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-xs text-[var(--color-text)] focus:border-[#1D9E75] resize-none mb-4 disabled:opacity-50"
                     rows="2"
                     placeholder="Notizen / Instruktionen (Markdown unterstützt) ..."
                     value={layer.markdown_note || ''}
@@ -749,18 +749,18 @@
                         ondragover={(e) => { if (!currentExecution) { e.preventDefault(); draggedOverDeviceId = dev.id; } }}
                         ondragleave={() => { if (!currentExecution) draggedOverDeviceId = null; }}
                         ondrop={(e) => { if (!currentExecution) { draggedOverDeviceId = null; handleDropDevice(e, layer.id, dIdx); } }}
-                        class={`flex items-center justify-between bg-slate-900/50 border rounded-lg p-2.5 group hover:border-slate-600 transition ${draggedOverDeviceId === dev.id ? 'border-[#1D9E75] bg-blue-950/20' : 'border-slate-800/80'}`}
+                        class={`flex items-center justify-between bg-[var(--color-bg2)] border rounded-lg p-2.5 group hover:border-[var(--color-border2)] transition ${draggedOverDeviceId === dev.id ? 'border-[#1D9E75] bg-blue-950/20' : 'border-[var(--color-border)]/80'}`}
                       >
                         <div class="flex items-center gap-3">
                           {#if !currentExecution}
                             <div class="flex flex-col gap-0.5">
-                              <button disabled={dIdx === 0} onclick={() => moveDevice(layer, dIdx, -1)} class="text-slate-600 hover:text-slate-300 disabled:opacity-30"><ArrowUp class="w-3 h-3" /></button>
-                              <button disabled={dIdx === (layer.devices?.length || 0) - 1} onclick={() => moveDevice(layer, dIdx, 1)} class="text-slate-600 hover:text-slate-300 disabled:opacity-30"><ArrowDown class="w-3 h-3" /></button>
+                              <button disabled={dIdx === 0} onclick={() => moveDevice(layer, dIdx, -1)} class="text-[var(--color-text3)] hover:text-[var(--color-text)] disabled:opacity-30"><ArrowUp class="w-3 h-3" /></button>
+                              <button disabled={dIdx === (layer.devices?.length || 0) - 1} onclick={() => moveDevice(layer, dIdx, 1)} class="text-[var(--color-text3)] hover:text-[var(--color-text)] disabled:opacity-30"><ArrowDown class="w-3 h-3" /></button>
                             </div>
                           {/if}
                           
-                          <div class="w-8 h-8 rounded bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0">
-                            <Icon class={`w-4 h-4 ${dev.vm ? 'text-pink-400' : dev.device ? 'text-slate-300' : 'text-blue-400'}`} />
+                          <div class="w-8 h-8 rounded bg-[var(--color-border)] border border-[var(--color-border2)] flex items-center justify-center shrink-0">
+                            <Icon class={`w-4 h-4 ${dev.vm ? 'text-pink-400' : dev.device ? 'text-[var(--color-text)]' : 'text-blue-400'}`} />
                           </div>
                           
                           <div>
@@ -774,7 +774,7 @@
                                 {/each}
                               </div>
                             {/if}
-                            <div class="text-[10px] text-slate-500 flex items-center gap-2 mt-0.5">
+                            <div class="text-[10px] text-[var(--color-text3)] flex items-center gap-2 mt-0.5">
                               <span class="flex items-center gap-1"><Clock class="w-3 h-3" /> {dev.delay_seconds}s</span>
                               {#if dev.responsible}
                                 <span class="flex items-center gap-1"><User class="w-3 h-3" /> {dev.responsible}</span>
@@ -800,7 +800,7 @@
                         ondragover={(e) => { e.preventDefault(); draggedOverAddButtonLayerId = layer.id; }}
                         ondragleave={() => draggedOverAddButtonLayerId = null}
                         ondrop={(e) => { draggedOverAddButtonLayerId = null; handleDropLayer(e, layer.id); }}
-                        class={`w-full flex items-center justify-center gap-2 py-2 border-2 border-dashed rounded-lg text-xs transition ${draggedOverAddButtonLayerId === layer.id ? 'border-[#1D9E75] bg-blue-950/20 text-blue-300' : 'border-slate-800 hover:border-slate-600 text-slate-400 hover:text-slate-200'}`}
+                        class={`w-full flex items-center justify-center gap-2 py-2 border-2 border-dashed rounded-lg text-xs transition ${draggedOverAddButtonLayerId === layer.id ? 'border-[#1D9E75] bg-blue-950/20 text-blue-300' : 'border-[var(--color-border)] hover:border-[var(--color-border2)] text-[var(--color-text2)] hover:text-slate-200'}`}
                       >
                         <Plus class="w-3.5 h-3.5" /> Gerät hinzufügen (oder hierher ziehen)
                       </button>
@@ -812,14 +812,14 @@
 
             {#if !currentExecution}
               {#if showInlineLayerForm}
-                <div class="bg-[#131615] border border-slate-800 rounded-xl p-4 space-y-4">
-                  <h4 class="text-sm font-bold text-white">Neue Ebene hinzufügen</h4>
+                <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl p-4 space-y-4">
+                  <h4 class="text-sm font-bold text-[var(--color-text)]">Neue Ebene hinzufügen</h4>
                   <div class="flex flex-wrap gap-4 items-end">
                     <div class="flex-1 min-w-[200px]">
-                      <label class="block text-xs font-semibold text-slate-400 mb-1">Ebenen-Typ / Template</label>
+                      <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Ebenen-Typ / Template</label>
                       <select 
                         bind:value={selectedLayerTemplate} 
-                        class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
+                        class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]"
                       >
                         <option value="Web-Tier">Web-Tier</option>
                         <option value="App-Tier">App-Tier</option>
@@ -833,12 +833,12 @@
                     
                     {#if selectedLayerTemplate === 'freitext'}
                       <div class="flex-1 min-w-[200px]">
-                        <label class="block text-xs font-semibold text-slate-400 mb-1">Eigener Ebenen-Name</label>
+                        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Eigener Ebenen-Name</label>
                         <input 
                           type="text" 
                           bind:value={inlineLayerFreitext} 
                           placeholder="z.B. Cache-Tier" 
-                          class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
+                          class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]"
                         />
                       </div>
                     {/if}
@@ -846,14 +846,14 @@
                     <div class="flex gap-2">
                       <button 
                         onclick={() => { showInlineLayerForm = false; inlineLayerFreitext = ''; }} 
-                        class="px-4 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 transition"
+                        class="px-4 py-2 rounded-lg text-sm text-[var(--color-text2)] hover:bg-[var(--color-border)] transition"
                       >
                         Abbrechen
                       </button>
                       <button 
                         onclick={addLayer} 
                         disabled={selectedLayerTemplate === 'freitext' && !inlineLayerFreitext.trim()} 
-                        class="px-4 py-2 bg-[#1D9E75] hover:bg-[#0F6E56] disabled:opacity-50 text-white rounded-lg text-sm font-semibold transition"
+                        class="px-4 py-2 bg-[#1D9E75] hover:bg-[#0F6E56] disabled:opacity-50 text-[var(--color-text)] rounded-lg text-sm font-semibold transition"
                       >
                         Hinzufügen
                       </button>
@@ -872,21 +872,21 @@
           </div>
 
           <!-- Right Column: Sidebar (1/3 width, sticky) -->
-          <div class={`w-80 bg-[#131615] border border-slate-800 rounded-xl p-4 sticky top-4 shrink-0 flex flex-col max-h-[85vh] transition ${currentExecution ? 'opacity-40 pointer-events-none' : ''}`}>
-            <h3 class="text-sm font-bold text-white mb-1">Ressourcen-Katalog</h3>
-            <p class="text-[10px] text-slate-400 mb-3">Ziehe Elemente per Drag & Drop in eine beliebige Ebene, um sie hinzuzufügen.</p>
+          <div class={`w-80 bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl p-4 sticky top-4 shrink-0 flex flex-col max-h-[85vh] transition ${currentExecution ? 'opacity-40 pointer-events-none' : ''}`}>
+            <h3 class="text-sm font-bold text-[var(--color-text)] mb-1">Ressourcen-Katalog</h3>
+            <p class="text-[10px] text-[var(--color-text2)] mb-3">Ziehe Elemente per Drag & Drop in eine beliebige Ebene, um sie hinzuzufügen.</p>
 
             <!-- Sidebar Tabs -->
-            <div class="flex border-b border-slate-800 mb-3 shrink-0">
+            <div class="flex border-b border-[var(--color-border)] mb-3 shrink-0">
               <button 
                 onclick={() => sidebarTab = 'vms'}
-                class={`flex-1 pb-2 text-xs font-semibold border-b-2 transition ${sidebarTab === 'vms' ? 'border-pink-500 text-pink-400' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
+                class={`flex-1 pb-2 text-xs font-semibold border-b-2 transition ${sidebarTab === 'vms' ? 'border-pink-500 text-pink-400' : 'border-transparent text-[var(--color-text2)] hover:text-slate-200'}`}
               >
                 VMs ({allVms.length})
               </button>
               <button 
                 onclick={() => sidebarTab = 'devices'}
-                class={`flex-1 pb-2 text-xs font-semibold border-b-2 transition ${sidebarTab === 'devices' ? 'border-[#1D9E75] text-blue-400' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
+                class={`flex-1 pb-2 text-xs font-semibold border-b-2 transition ${sidebarTab === 'devices' ? 'border-[#1D9E75] text-blue-400' : 'border-transparent text-[var(--color-text2)] hover:text-slate-200'}`}
               >
                 Geräte ({allDevices.length})
               </button>
@@ -898,7 +898,7 @@
                 type="text" 
                 bind:value={searchQuery} 
                 placeholder="Suchen..." 
-                class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75]"
+                class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-2.5 py-1.5 text-xs text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]"
               />
             </div>
 
@@ -920,13 +920,13 @@
                   <div 
                     draggable="true"
                     ondragstart={(e) => handleDragStartResource(e, 'vm', vm.id, vm.name)}
-                    class={`p-2 bg-slate-900/40 border rounded-lg cursor-grab hover:border-pink-500/60 transition select-none flex items-center justify-between ${added ? 'border-emerald-500/30 opacity-70 bg-emerald-950/5' : 'border-slate-800'}`}
+                    class={`p-2 bg-[var(--color-bg3)] border rounded-lg cursor-grab hover:border-pink-500/60 transition select-none flex items-center justify-between ${added ? 'border-emerald-500/30 opacity-70 bg-emerald-950/5' : 'border-[var(--color-border)]'}`}
                   >
                     <div class="flex items-center gap-2 min-w-0">
                       <Monitor class="w-3.5 h-3.5 text-pink-400 shrink-0" />
                       <div class="truncate text-xs">
                         <div class="font-medium text-slate-200 truncate">{vm.name}</div>
-                        <div class="text-[9px] text-slate-500 mt-0.5">{vm.ip_adresse || 'Keine IP'}</div>
+                        <div class="text-[9px] text-[var(--color-text3)] mt-0.5">{vm.ip_adresse || 'Keine IP'}</div>
                       </div>
                     </div>
                     {#if added}
@@ -942,13 +942,13 @@
                   <div 
                     draggable="true"
                     ondragstart={(e) => handleDragStartResource(e, 'device', dev.id, dev.hostname)}
-                    class={`p-2 bg-slate-900/40 border rounded-lg cursor-grab hover:border-[#1D9E75]/60 transition select-none flex items-center justify-between ${added ? 'border-emerald-500/30 opacity-70 bg-emerald-950/5' : 'border-slate-800'}`}
+                    class={`p-2 bg-[var(--color-bg3)] border rounded-lg cursor-grab hover:border-[#1D9E75]/60 transition select-none flex items-center justify-between ${added ? 'border-emerald-500/30 opacity-70 bg-emerald-950/5' : 'border-[var(--color-border)]'}`}
                   >
                     <div class="flex items-center gap-2 min-w-0">
-                      <Server class="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <Server class="w-3.5 h-3.5 text-[var(--color-text2)] shrink-0" />
                       <div class="truncate text-xs">
                         <div class="font-medium text-slate-200 truncate">{dev.hostname}</div>
-                        <div class="text-[9px] text-slate-500 mt-0.5 capitalize">{dev.typ} | {dev.ip_adresse || 'Keine IP'}</div>
+                        <div class="text-[9px] text-[var(--color-text3)] mt-0.5 capitalize">{dev.typ} | {dev.ip_adresse || 'Keine IP'}</div>
                       </div>
                     </div>
                     {#if added}
@@ -966,20 +966,20 @@
 
       {#if activeTab === 'AUSFÜHRUNG'}
         {#if !currentExecution}
-          <div class="bg-[#131615] border border-slate-800 rounded-xl p-8 max-w-lg mx-auto mt-12 text-center">
+          <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl p-8 max-w-lg mx-auto mt-12 text-center">
             <Play class="w-12 h-12 text-emerald-400 mx-auto mb-4" />
-            <h2 class="text-xl font-bold text-white mb-2">Neue Ausführung starten</h2>
-            <p class="text-sm text-slate-400 mb-6">Sie sind im Begriff, die Sequenz live zu protokollieren. Alle Schritte werden revisionssicher erfasst.</p>
+            <h2 class="text-xl font-bold text-[var(--color-text)] mb-2">Neue Ausführung starten</h2>
+            <p class="text-sm text-[var(--color-text2)] mb-6">Sie sind im Begriff, die Sequenz live zu protokollieren. Alle Schritte werden revisionssicher erfasst.</p>
             
             <div class="mb-6 text-left">
-              <label class="block text-xs font-semibold text-slate-400 mb-2">Modus</label>
-              <select bind:value={execMode} class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+              <label class="block text-xs font-semibold text-[var(--color-text2)] mb-2">Modus</label>
+              <select bind:value={execMode} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-emerald-500">
                 <option value="shutdown">Shutdown (Herunterfahren)</option>
                 <option value="startup">Startup (Hochfahren)</option>
               </select>
             </div>
             
-            <button onclick={startExecution} class="w-full bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg px-4 py-3 text-sm font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20">
+            <button onclick={startExecution} class="w-full bg-emerald-600 hover:bg-emerald-500 text-[var(--color-text)] rounded-lg px-4 py-3 text-sm font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20">
               <Play class="w-4 h-4" />
               Starten
             </button>
@@ -987,24 +987,24 @@
         {:else}
           <!-- Execution Checklist -->
           <div class="space-y-6 pb-12">
-            <div class="flex items-center justify-between bg-slate-800/40 border border-slate-700 rounded-xl p-4">
+            <div class="flex items-center justify-between bg-[var(--color-border2)] border border-[var(--color-border2)] rounded-xl p-4">
               <div>
-                <div class="text-xs text-slate-400 mb-1">Status: <span class="font-bold text-emerald-400 uppercase">{currentExecution.status}</span></div>
-                <div class="text-[10px] text-slate-500">Gestartet am: {new Date(currentExecution.gestartet_am).toLocaleString()}</div>
+                <div class="text-xs text-[var(--color-text2)] mb-1">Status: <span class="font-bold text-emerald-400 uppercase">{currentExecution.status}</span></div>
+                <div class="text-[10px] text-[var(--color-text3)]">Gestartet am: {new Date(currentExecution.gestartet_am).toLocaleString()}</div>
               </div>
               {#if currentExecution.status === 'offen'}
                 <div class="flex items-center gap-2">
                   <button onclick={() => updateExecutionStatus('verworfen')} class="px-3 py-1.5 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-lg text-xs font-medium border border-red-500/20 transition">Verwerfen</button>
-                  <button onclick={() => updateExecutionStatus('abgeschlossen')} class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-white rounded-lg text-xs font-medium transition shadow-lg shadow-emerald-500/20 flex items-center gap-1"><CheckCircle2 class="w-3.5 h-3.5"/> Abschließen</button>
+                  <button onclick={() => updateExecutionStatus('abgeschlossen')} class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-[var(--color-text)] rounded-lg text-xs font-medium transition shadow-lg shadow-emerald-500/20 flex items-center gap-1"><CheckCircle2 class="w-3.5 h-3.5"/> Abschließen</button>
                 </div>
               {/if}
             </div>
 
             {#each executionLayers as layer}
-              <div class="bg-[#131615] border border-slate-800 rounded-xl overflow-hidden">
-                <div class="bg-slate-800/50 p-3 border-b border-slate-800 flex items-center gap-3">
-                  <div class="w-5 h-5 rounded bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-400 border border-slate-700">{layer.position}</div>
-                  <h3 class="text-sm font-bold text-white">{layer.name}</h3>
+              <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl overflow-hidden">
+                <div class="bg-[var(--color-border2)] p-3 border-b border-[var(--color-border)] flex items-center gap-3">
+                  <div class="w-5 h-5 rounded bg-[var(--color-border)] flex items-center justify-center text-[10px] font-bold text-[var(--color-text2)] border border-[var(--color-border2)]">{layer.position}</div>
+                  <h3 class="text-sm font-bold text-[var(--color-text)]">{layer.name}</h3>
                 </div>
                 {#if layer.markdown_note}
                   <div class="px-4 py-2 bg-blue-900/10 border-b border-blue-900/20 text-xs text-blue-200/80 italic">{layer.markdown_note}</div>
@@ -1013,18 +1013,18 @@
                   {#each getSortedDevices(layer) as dev}
                     {@const checked = isStepChecked(dev.id)}
                     {@const step = getStep(dev.id)}
-                    <div class={`p-3 flex items-start gap-3 transition-colors ${checked ? 'bg-emerald-900/5' : 'hover:bg-slate-800/30'}`}>
+                    <div class={`p-3 flex items-start gap-3 transition-colors ${checked ? 'bg-emerald-900/5' : 'hover:bg-[var(--color-border2)]'}`}>
                       <button 
                         onclick={() => toggleStep(dev.id, '')}
                         disabled={currentExecution.status !== 'offen'}
-                        class={`mt-1 shrink-0 w-6 h-6 rounded flex items-center justify-center border transition ${checked ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-[#181C1A] border-slate-600 text-transparent hover:border-emerald-400 disabled:opacity-50'}`}
+                        class={`mt-1 shrink-0 w-6 h-6 rounded flex items-center justify-center border transition ${checked ? 'bg-emerald-500 border-emerald-500 text-[var(--color-text)]' : 'bg-[var(--color-bg3)] border-[var(--color-border2)] text-transparent hover:border-emerald-400 disabled:opacity-50'}`}
                       >
                         <CheckCircle2 class="w-4 h-4" />
                       </button>
                       <div class="flex-1">
                         <div class="flex justify-between items-start">
                           <div>
-                            <div class={`text-sm font-medium ${checked ? 'text-slate-400 line-through' : 'text-slate-200'}`}>{getDeviceName(dev)}</div>
+                            <div class={`text-sm font-medium ${checked ? 'text-[var(--color-text2)] line-through' : 'text-slate-200'}`}>{getDeviceName(dev)}</div>
                             {#if dev.device && dev.device.connected_pdu_outlets && dev.device.connected_pdu_outlets.length > 0}
                               <div class="flex flex-wrap gap-1 mt-1">
                                 {#each dev.device.connected_pdu_outlets as outlet}
@@ -1034,7 +1034,7 @@
                                 {/each}
                               </div>
                             {/if}
-                            <div class="text-[10px] text-slate-500 flex items-center gap-2 mt-0.5">
+                            <div class="text-[10px] text-[var(--color-text3)] flex items-center gap-2 mt-0.5">
                               <span class="flex items-center gap-1"><Clock class="w-3 h-3" /> {dev.delay_seconds}s</span>
                               {#if dev.responsible}
                                 <span class="flex items-center gap-1"><User class="w-3 h-3" /> {dev.responsible}</span>
@@ -1059,12 +1059,12 @@
                               type="text" 
                               placeholder="Optionale Notiz zur Ausführung..." 
                               onkeydown={(e) => { if (e.key === 'Enter') toggleStep(dev.id, e.currentTarget.value); }}
-                              class="w-full bg-[#181C1A] border border-slate-700 rounded text-xs px-2 py-1 focus:border-emerald-500 outline-none text-slate-300"
+                              class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded text-xs px-2 py-1 focus:border-emerald-500 outline-none text-[var(--color-text)]"
                             />
                           </div>
                         {/if}
                         {#if checked && step?.note}
-                          <div class="text-[10px] text-slate-400 bg-slate-800/50 p-2 rounded mt-2 border border-slate-700">
+                          <div class="text-[10px] text-[var(--color-text2)] bg-[var(--color-border2)] p-2 rounded mt-2 border border-[var(--color-border2)]">
                             <strong>Notiz:</strong> {step.note}
                           </div>
                         {/if}
@@ -1081,14 +1081,14 @@
       {#if activeTab === 'PROTOKOLL'}
         <div class="space-y-4">
           {#if executions.length === 0}
-            <div class="text-slate-500 py-12 text-center border border-dashed border-slate-800 rounded-xl bg-[#131615]">
-              <FileText class="w-8 h-8 mx-auto mb-2 opacity-50 text-slate-400" />
+            <div class="text-[var(--color-text3)] py-12 text-center border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg2)]">
+              <FileText class="w-8 h-8 mx-auto mb-2 opacity-50 text-[var(--color-text2)]" />
               Bisher keine Protokolle vorhanden.
             </div>
           {:else}
-            <div class="bg-[#131615] border border-slate-800 rounded-xl overflow-hidden shadow-2xl">
-              <table class="w-full text-left text-sm text-slate-300">
-                <thead class="text-xs uppercase bg-slate-800/50 text-slate-400 border-b border-slate-800">
+            <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl overflow-hidden shadow-2xl">
+              <table class="w-full text-left text-sm text-[var(--color-text)]">
+                <thead class="text-xs uppercase bg-[var(--color-border2)] text-[var(--color-text2)] border-b border-[var(--color-border)]">
                   <tr>
                     <th class="px-4 py-3 font-semibold">Datum</th>
                     <th class="px-4 py-3 font-semibold">Modus</th>
@@ -1099,7 +1099,7 @@
                 </thead>
                 <tbody class="divide-y divide-slate-800/40">
                   {#each executions as exec}
-                    <tr class="hover:bg-slate-800/20 transition group">
+                    <tr class="hover:bg-[var(--color-border2)] transition group">
                       <td class="px-4 py-3 text-slate-200 font-medium">
                         {new Date(exec.gestartet_am).toLocaleString('de-DE')}
                       </td>
@@ -1108,7 +1108,7 @@
                           {exec.modus}
                         </span>
                       </td>
-                      <td class="px-4 py-3 text-slate-400 text-xs">
+                      <td class="px-4 py-3 text-[var(--color-text2)] text-xs">
                         {exec.gestartet_von || 'System'}
                       </td>
                       <td class="px-4 py-3">
@@ -1134,31 +1134,32 @@
   <div class="print-only">
     <RunbookPrint {runbook} affectedRacks={affectedRacksInfo} />
   </div>
+  </div>
 {/if}
 
 <!-- Modal for Execution Details (Protocol View) -->
 {#if showExecutionDetailsModal && selectedExecutionDetails}
 <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-  <div class="bg-[#131615] border border-slate-800 rounded-xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-    <div class="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/50">
+  <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div class="p-4 border-b border-[var(--color-border)] flex items-center justify-between bg-[var(--color-bg2)]">
       <div>
-        <h3 class="text-lg font-bold text-white">Protokoll: {runbook?.name ?? ''}</h3>
-        <p class="text-xs text-slate-400 mt-1">
+        <h3 class="text-lg font-bold text-[var(--color-text)]">Protokoll: {runbook?.name ?? ''}</h3>
+        <p class="text-xs text-[var(--color-text2)] mt-1">
           Gestartet am: {new Date(selectedExecutionDetails.gestartet_am).toLocaleString()} | Modus: <span class="uppercase font-semibold">{selectedExecutionDetails.modus}</span> | Status: <span class={`uppercase font-semibold ${selectedExecutionDetails.status === 'verworfen' ? 'text-red-400' : 'text-emerald-400'}`}>{selectedExecutionDetails.status}</span>
         </p>
         {#if selectedExecutionDetails.status === 'verworfen' && selectedExecutionDetails.note}
           <p class="text-xs text-red-400 mt-1 italic font-medium">Begründung: {selectedExecutionDetails.note}</p>
         {/if}
       </div>
-      <button onclick={() => showExecutionDetailsModal = false} class="text-slate-400 hover:text-white text-lg">✕</button>
+      <button onclick={() => showExecutionDetailsModal = false} class="text-[var(--color-text2)] hover:text-[var(--color-text)] text-lg">✕</button>
     </div>
     
     <div class="p-6 overflow-y-auto space-y-6">
       <!-- Derived layers list for this execution -->
       {#each selectedExecutionDetails.modus === 'startup' ? [...(runbook?.layers ?? [])].sort((a, b) => a.position - b.position).reverse() : [...(runbook?.layers ?? [])].sort((a, b) => a.position - b.position) as layer}
-        <div class="bg-slate-900/40 border border-slate-800 rounded-lg overflow-hidden">
-          <div class="bg-slate-800/40 px-3 py-2 border-b border-slate-800 flex items-center gap-2">
-            <span class="w-5 h-5 rounded bg-slate-800 flex items-center justify-center text-[10px] text-slate-400 font-bold border border-slate-700">{layer.position}</span>
+        <div class="bg-[var(--color-bg3)] border border-[var(--color-border)] rounded-lg overflow-hidden">
+          <div class="bg-[var(--color-border2)] px-3 py-2 border-b border-[var(--color-border)] flex items-center gap-2">
+            <span class="w-5 h-5 rounded bg-[var(--color-border)] flex items-center justify-center text-[10px] text-[var(--color-text2)] font-bold border border-[var(--color-border2)]">{layer.position}</span>
             <span class="text-xs font-bold text-slate-200">{layer.name}</span>
           </div>
           <div class="divide-y divide-slate-800/40">
@@ -1166,7 +1167,7 @@
               {@const step = selectedExecutionDetails.steps?.find(s => s.runbook_device_id === dev.id)}
               <div class="p-3 flex items-start justify-between gap-4">
                 <div>
-                  <span class="text-sm text-slate-300 font-medium">{getDeviceName(dev)}</span>
+                  <span class="text-sm text-[var(--color-text)] font-medium">{getDeviceName(dev)}</span>
                   {#if dev.device && dev.device.connected_pdu_outlets && dev.device.connected_pdu_outlets.length > 0}
                     <div class="flex flex-wrap gap-1 mt-1">
                       {#each dev.device.connected_pdu_outlets as outlet}
@@ -1176,9 +1177,9 @@
                       {/each}
                     </div>
                   {/if}
-                  <div class="text-[10px] text-slate-500 mt-0.5">Verzögerung: {dev.delay_seconds}s | Verantwortlich: {dev.responsible || '—'}</div>
+                  <div class="text-[10px] text-[var(--color-text3)] mt-0.5">Verzögerung: {dev.delay_seconds}s | Verantwortlich: {dev.responsible || '—'}</div>
                   {#if step?.note}
-                    <div class="text-[10px] text-slate-400 bg-slate-800/50 border border-slate-800 p-1.5 rounded mt-1.5 font-mono">
+                    <div class="text-[10px] text-[var(--color-text2)] bg-[var(--color-border2)] border border-[var(--color-border)] p-1.5 rounded mt-1.5 font-mono">
                       Notiz: {step.note}
                     </div>
                   {/if}
@@ -1192,7 +1193,7 @@
                       {/if}
                     </span>
                   {:else}
-                    <span class="text-[10px] text-slate-500 bg-slate-800/40 border border-slate-800/60 px-2 py-1 rounded">
+                    <span class="text-[10px] text-[var(--color-text3)] bg-[var(--color-border2)] border border-[var(--color-border)]/60 px-2 py-1 rounded">
                       Ausstehend
                     </span>
                   {/if}
@@ -1204,8 +1205,8 @@
       {/each}
     </div>
     
-    <div class="p-4 border-t border-slate-800 bg-slate-900/50 flex justify-end shrink-0">
-      <button onclick={() => showExecutionDetailsModal = false} class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-lg text-sm font-semibold transition">
+    <div class="p-4 border-t border-[var(--color-border)] bg-[var(--color-bg2)] flex justify-end shrink-0">
+      <button onclick={() => showExecutionDetailsModal = false} class="px-4 py-2 bg-[var(--color-border)] hover:bg-[var(--color-border2)] text-[var(--color-text)] border border-[var(--color-border2)] rounded-lg text-sm font-semibold transition">
         Schließen
       </button>
     </div>
@@ -1218,16 +1219,16 @@
 <!-- Modal Device Add -->
 {#if showDeviceModal}
 <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-  <div class="bg-[#131615] border border-slate-800 rounded-xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-    <div class="p-4 border-b border-slate-800 flex items-center justify-between">
-      <h3 class="text-lg font-bold text-white">Gerät hinzufügen</h3>
-      <button onclick={() => showDeviceModal = false} class="text-slate-400 hover:text-white">✕</button>
+  <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div class="p-4 border-b border-[var(--color-border)] flex items-center justify-between">
+      <h3 class="text-lg font-bold text-[var(--color-text)]">Gerät hinzufügen</h3>
+      <button onclick={() => showDeviceModal = false} class="text-[var(--color-text2)] hover:text-[var(--color-text)]">✕</button>
     </div>
     
     <div class="p-6 space-y-4 overflow-y-auto">
       <div>
-        <label class="block text-xs font-semibold text-slate-400 mb-1">Typ</label>
-        <select bind:value={deviceType} class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]">
+        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Typ</label>
+        <select bind:value={deviceType} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]">
           <option value="vm">Virtuelle Maschine (VM)</option>
           <option value="device">Physisches Gerät (Server/Switch)</option>
           <option value="freitext">Freitext (Extern, Cloud etc.)</option>
@@ -1236,8 +1237,8 @@
 
       {#if deviceType === 'vm'}
         <div>
-          <label class="block text-xs font-semibold text-slate-400 mb-1">VM wählen</label>
-          <select bind:value={selectedVmId} class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]">
+          <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">VM wählen</label>
+          <select bind:value={selectedVmId} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]">
             <option value={null}>-- Bitte wählen --</option>
             {#each allVms as v}
               <option value={v.id}>{v.name}</option>
@@ -1246,8 +1247,8 @@
         </div>
       {:else if deviceType === 'device'}
         <div>
-          <label class="block text-xs font-semibold text-slate-400 mb-1">Gerät wählen</label>
-          <select bind:value={selectedDeviceId} class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]">
+          <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Gerät wählen</label>
+          <select bind:value={selectedDeviceId} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]">
             <option value={null}>-- Bitte wählen --</option>
             {#each allDevices as d}
               <option value={d.id}>{d.hostname} ({d.typ})</option>
@@ -1256,31 +1257,31 @@
         </div>
       {:else}
         <div>
-          <label class="block text-xs font-semibold text-slate-400 mb-1">Bezeichnung</label>
-          <input type="text" bind:value={freitext} placeholder="z.B. AWS RDS MySQL" class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
+          <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Bezeichnung</label>
+          <input type="text" bind:value={freitext} placeholder="z.B. AWS RDS MySQL" class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]" />
         </div>
       {/if}
 
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-xs font-semibold text-slate-400 mb-1">Verzögerung (Sek)</label>
-          <input type="number" bind:value={delay} min="0" class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
+          <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Verzögerung (Sek)</label>
+          <input type="number" bind:value={delay} min="0" class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]" />
         </div>
         <div>
-          <label class="block text-xs font-semibold text-slate-400 mb-1">Verantwortlich</label>
-          <input type="text" bind:value={responsible} placeholder="z.B. Andreas" class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]" />
+          <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Verantwortlich</label>
+          <input type="text" bind:value={responsible} placeholder="z.B. Andreas" class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]" />
         </div>
       </div>
 
       <div>
-        <label class="block text-xs font-semibold text-slate-400 mb-1">Spezielle Notiz (z.B. Command)</label>
-        <textarea bind:value={deviceNote} rows="2" class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75] resize-none"></textarea>
+        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Spezielle Notiz (z.B. Command)</label>
+        <textarea bind:value={deviceNote} rows="2" class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75] resize-none"></textarea>
       </div>
     </div>
 
-    <div class="p-4 border-t border-slate-800 flex justify-end gap-3 shrink-0">
-      <button onclick={() => showDeviceModal = false} class="px-4 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800">Abbrechen</button>
-      <button onclick={addDevice} class="px-4 py-2 bg-[#1D9E75] hover:bg-[#0F6E56] text-white rounded-lg text-sm font-semibold">Hinzufügen</button>
+    <div class="p-4 border-t border-[var(--color-border)] flex justify-end gap-3 shrink-0">
+      <button onclick={() => showDeviceModal = false} class="px-4 py-2 rounded-lg text-sm text-[var(--color-text2)] hover:bg-[var(--color-border)]">Abbrechen</button>
+      <button onclick={addDevice} class="px-4 py-2 bg-[#1D9E75] hover:bg-[#0F6E56] text-[var(--color-text)] rounded-lg text-sm font-semibold">Hinzufügen</button>
     </div>
   </div>
 </div>
@@ -1289,25 +1290,25 @@
 <!-- Edit Device Modal -->
 {#if showEditDeviceModal && editingDevice}
 <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-  <div class="bg-[#131615] border border-slate-800 rounded-xl w-full max-w-sm shadow-2xl p-6">
-    <h3 class="text-lg font-bold text-white mb-4">Gerät bearbeiten</h3>
+  <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl w-full max-w-sm shadow-2xl p-6">
+    <h3 class="text-lg font-bold text-[var(--color-text)] mb-4">Gerät bearbeiten</h3>
     <div class="space-y-4">
       <div>
-        <label class="block text-xs font-semibold text-slate-400 mb-1">Verzögerung (Sek)</label>
-        <input type="number" bind:value={editingDevice.delay_seconds} class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-[#1D9E75]" />
+        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Verzögerung (Sek)</label>
+        <input type="number" bind:value={editingDevice.delay_seconds} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:border-[#1D9E75]" />
       </div>
       <div>
-        <label class="block text-xs font-semibold text-slate-400 mb-1">Verantwortlicher</label>
-        <input type="text" bind:value={editingDevice.responsible} class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-[#1D9E75]" />
+        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Verantwortlicher</label>
+        <input type="text" bind:value={editingDevice.responsible} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:border-[#1D9E75]" />
       </div>
       <div>
-        <label class="block text-xs font-semibold text-slate-400 mb-1">Notiz</label>
-        <textarea bind:value={editingDevice.note} class="w-full bg-[#181C1A] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-[#1D9E75]"></textarea>
+        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Notiz</label>
+        <textarea bind:value={editingDevice.note} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:border-[#1D9E75]"></textarea>
       </div>
     </div>
     <div class="mt-6 flex justify-end gap-3">
-      <button onclick={() => showEditDeviceModal = false} class="px-4 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800">Abbrechen</button>
-      <button onclick={saveEditDevice} class="px-4 py-2 bg-[#1D9E75] hover:bg-[#0F6E56] text-white rounded-lg text-sm font-semibold">Speichern</button>
+      <button onclick={() => showEditDeviceModal = false} class="px-4 py-2 rounded-lg text-sm text-[var(--color-text2)] hover:bg-[var(--color-border)]">Abbrechen</button>
+      <button onclick={saveEditDevice} class="px-4 py-2 bg-[#1D9E75] hover:bg-[#0F6E56] text-[var(--color-text)] rounded-lg text-sm font-semibold">Speichern</button>
     </div>
   </div>
 </div>
