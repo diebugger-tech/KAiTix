@@ -174,31 +174,12 @@
   // PDU Outlet state
   let pduOutlets      = $state<PduOutlet[]>([]);
   let activeModalTab  = $state<'details'|'interfaces'|'protokoll'>('details');
-  let powerAuditData  = $state<any>(null);
-  let powerAuditLoading = $state(false);
 
   function closeModal() {
     selectedDevice = null;
     activeModalTab = 'details';
-    powerAuditData = null;
   }
 
-  $effect(() => {
-    if (activeModalTab === 'protokoll' && selectedDevice && selectedDevice.hersteller && selectedDevice.modell && hardware.find(h => h.hersteller === selectedDevice!.hersteller && h.modell === selectedDevice!.modell)?.kategorie === 'usv') {
-      if (!powerAuditData && !powerAuditLoading) {
-        powerAuditLoading = true;
-        // Lookup the logical UsvUnit that belongs to this rack
-        const usvId = usvUnits.find(u => u.rack_id === selectedDevice!.rack_id)?.id || 1;
-        api.getPowerAudit(usvId).then(res => {
-          powerAuditData = res;
-        }).catch(err => {
-          console.error(err);
-          powerAuditData = { error: err.message };
-        }).finally(() => {
-          powerAuditLoading = false;
-        });
-      }
-    }
   });
   let showAddOutlet   = $state(false);
   let outletName      = $state('');
@@ -1360,9 +1341,6 @@
               <div class="flex space-x-4 mt-4 -mb-4">
                 <button class="px-3 py-3 text-xs font-semibold border-b-2 {activeModalTab === 'details' ? 'text-[#5DCAA5] border-[#1D9E75]' : 'text-slate-500 hover:text-slate-300 border-transparent'}" onclick={() => activeModalTab = 'details'}>Geräte-Details</button>
                 <button class="px-3 py-3 text-xs font-semibold border-b-2 {activeModalTab === 'interfaces' ? 'text-[#5DCAA5] border-[#1D9E75]' : 'text-slate-500 hover:text-slate-300 border-transparent'}" onclick={() => activeModalTab = 'interfaces'}>Ports & Kabel</button>
-                {#if selectedDevice!.hersteller && selectedDevice!.modell && hardware.find(h => h.hersteller === selectedDevice!.hersteller && h.modell === selectedDevice!.modell)?.kategorie === 'usv'}
-                  <button class="px-3 py-3 text-xs font-semibold border-b-2 {activeModalTab === 'protokoll' ? 'text-emerald-400 border-emerald-400' : 'text-slate-500 hover:text-slate-300 border-transparent'}" onclick={() => activeModalTab = 'protokoll'}>VDE Protokoll</button>
-                {/if}
               </div>
             </div>
 
@@ -1709,63 +1687,6 @@
             </div>
           {/if}
 
-          {#if activeModalTab === 'protokoll'}
-            {#if powerAuditLoading}
-              <div class="py-8 text-center"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500 mx-auto"></div><p class="text-xs text-slate-500 mt-3">Lade VDE Protokoll...</p></div>
-            {:else if powerAuditData?.error}
-              <div class="bg-red-950/40 border border-red-900 rounded-lg p-4 text-red-400 text-sm text-center">{powerAuditData.error}</div>
-            {:else if powerAuditData}
-              <!-- VDE Audit Results -->
-              <div class="space-y-6">
-                <div class="grid grid-cols-2 gap-4">
-                  <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
-                    <div class="text-[10px] text-slate-500 uppercase tracking-wider font-mono mb-2">VDE Compliance Status</div>
-                    <div class="space-y-2">
-                      {#each powerAuditData.audit_results as res}
-                        <div class="flex items-start gap-2 text-xs">
-                          <span class="shrink-0 mt-0.5 {res.status === 'error' ? 'text-red-400' : res.status === 'warning' ? 'text-orange-400' : 'text-emerald-400'}">
-                            {#if res.status === 'ok'}✓{:else if res.status === 'warning'}⚠{:else}✗{/if}
-                          </span>
-                          <div class="min-w-0">
-                            <div class="font-bold {res.status === 'error' ? 'text-red-300' : res.status === 'warning' ? 'text-orange-300' : 'text-emerald-300'}">{res.rule}</div>
-                            <div class="text-slate-400 text-[10px] leading-snug">{res.message}</div>
-                          </div>
-                        </div>
-                      {/each}
-                    </div>
-                  </div>
-                  
-                  <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
-                    <div class="text-[10px] text-slate-500 uppercase tracking-wider font-mono mb-2">Last-Historie</div>
-                    {#if powerAuditData.calculations && powerAuditData.calculations.length > 0}
-                      <div class="space-y-2 max-h-[150px] overflow-y-auto pr-1">
-                        {#each powerAuditData.calculations as calc}
-                          <div class="flex items-center justify-between text-xs border-b border-slate-800/50 pb-1 last:border-0">
-                            <span class="text-slate-400">{new Date(calc.berechnet_am).toLocaleDateString()}</span>
-                            <span class="font-mono text-emerald-400">{calc.last_kw} kW / {calc.installiert_kw} kW</span>
-                          </div>
-                        {/each}
-                      </div>
-                    {:else}
-                      <div class="text-xs text-slate-500 italic">Keine Berechnungs-Historie vorhanden</div>
-                    {/if}
-                  </div>
-                </div>
-              </div>
-            {/if}
-          {/if}
-
-        </div>
-      </div>
-    </div>
-  {/if}
-
-  <!-- ═══ Kabeltyp-Referenz für Techniker ═══════════════════════ -->
-  {#if legendCableTypes.length > 0}
-    <div class="bg-[#131615] border border-slate-800 rounded-xl p-5">
-      <div class="flex items-center justify-between mb-4">
-        <div>
-          <h3 class="text-sm font-bold text-white font-outfit flex items-center gap-2">
             <CableIcon class="w-4 h-4 text-slate-400" />
             Kabeltyp-Referenz
           </h3>
