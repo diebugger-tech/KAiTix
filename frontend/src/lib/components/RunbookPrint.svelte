@@ -1,11 +1,13 @@
 <script lang="ts">
-  import type { Runbook, RunbookDevice } from '$lib/api';
+  import type { Runbook, RunbookDevice, Rack, Device } from '$lib/api';
+  import RackFrontView from '$lib/components/RackFrontView.svelte';
 
   interface Props {
     runbook: Runbook;
+    affectedRacks?: Array<{ rack: Rack, rackDevices: Device[], highlightIds: number[] }>;
   }
 
-  let { runbook }: Props = $props();
+  let { runbook, affectedRacks = [] }: Props = $props();
 
   // Helper to format date strings
   function formatDate(dateStr: string | undefined): string {
@@ -129,6 +131,28 @@
         </div>
       </section>
     {/each}
+
+    {#if affectedRacks.length > 0}
+      <hr class="divider" style="margin-top: 30px; margin-bottom: 20px;" />
+      <h2 style="font-size: 14pt; color: #1e3a8a; border-bottom: 1.5px solid #1e3a8a; padding-bottom: 3px; margin-bottom: 20px;">
+        Zugehörige Rack-Ansichten
+      </h2>
+      <div class="racks-grid">
+        {#each affectedRacks as { rack, rackDevices, highlightIds }}
+          <div class="page-break-avoid rack-print-wrapper">
+            <h3 style="margin-bottom: 10px; font-size: 12pt;">Rack: {rack.name} ({rack.standort})</h3>
+            <div style="transform: scale(0.85); transform-origin: top left; width: 115%;">
+              <RackFrontView 
+                {rack} 
+                {rackDevices} 
+                readonly={true} 
+                highlightDeviceIds={highlightIds} 
+              />
+            </div>
+          </div>
+        {/each}
+      </div>
+    {/if}
   </main>
 
   <!-- Footer -->
@@ -218,6 +242,16 @@
     font-size: 9pt;
     margin-bottom: 12px;
     color: #475569;
+  }
+
+  .racks-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+  }
+
+  .rack-print-wrapper {
+    margin-bottom: 30px;
   }
 
   .devices-list {

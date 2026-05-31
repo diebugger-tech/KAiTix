@@ -12,7 +12,8 @@
     onEmptyClick = undefined,
     onEmptySideClick = undefined,
     readonly = false,
-    maxSlots = undefined
+    maxSlots = undefined,
+    highlightDeviceIds = []
   } = $props<{
     rack: Rack,
     rackDevices?: Device[],
@@ -23,7 +24,8 @@
     onEmptyClick?: (u: number, e: MouseEvent) => void,
     onEmptySideClick?: (side: 'left' | 'right', e: MouseEvent) => void,
     readonly?: boolean,
-    maxSlots?: number
+    maxSlots?: number,
+    highlightDeviceIds?: number[]
   }>();
 
   const sideDevices = $derived(rackDevices.filter(d => (d.u_hoehe ?? 0) === 0));
@@ -128,7 +130,7 @@
   }
 </script>
 
-<div class="flex border-b border-slate-900 max-h-[60vh]">
+<div class="flex border-b border-slate-900 max-h-[60vh] rack-front-view-container">
   
   <!-- Linke Seite (Zero-U) -->
   <div class="w-10 sm:w-12 bg-[#090d14] border-r border-slate-900 flex flex-col items-stretch p-1.5 min-h-0">
@@ -138,7 +140,7 @@
       {@const isIncompatible = isDeviceIncompatible(dev)}
       <button
         onclick={(e) => handleDeviceClick(dev, e)}
-        class="w-full flex-1 min-h-0 rounded border hover:brightness-110 transition flex items-center justify-center overflow-hidden {selectedDevice?.id === dev.id ? 'ring-1 ring-white/30' : ''} {isIncompatible ? 'ring-1 ring-red-500 border-red-500' : ''}"
+        class="w-full flex-1 min-h-0 rounded border hover:brightness-110 transition flex items-center justify-center overflow-hidden {(selectedDevice?.id === dev.id || highlightDeviceIds?.includes(dev.id)) ? 'ring-1 ring-white/30' : ''} {isIncompatible ? 'ring-1 ring-red-500 border-red-500' : ''}"
         style="background:{isIncompatible ? 'rgba(239,68,68,.22)' : c.bg}; border-color:{isIncompatible ? 'rgba(239,68,68,.7)' : c.border}; writing-mode: vertical-rl; transform: rotate(180deg);"
         title={isIncompatible ? '⚠ Höhenkonflikt: ' + getDeviceTooltip(dev) : getDeviceTooltip(dev)}
       >
@@ -171,7 +173,7 @@
           {@const isIncompatible = isDeviceIncompatible(dev)}
           <button
             onclick={(e) => handleDeviceClick(dev, e)}
-            class="w-full px-2 rounded border mb-0.5 text-left hover:brightness-110 transition {selectedDevice?.id === dev.id ? 'ring-1 ring-white/30' : ''} {isConflict || isIncompatible ? 'ring-1 ring-red-500' : ''}"
+            class="w-full px-2 rounded border mb-0.5 text-left hover:brightness-110 transition {(selectedDevice?.id === dev.id || highlightDeviceIds?.includes(dev.id)) ? 'ring-1 ring-white/30' : ''} {isConflict || isIncompatible ? 'ring-1 ring-red-500' : ''}"
             style="background:{isConflict || isIncompatible ? 'rgba(239,68,68,.22)' : c.bg}; border-color:{isConflict || isIncompatible ? 'rgba(239,68,68,.7)' : c.border}; min-height:{dev.u_hoehe * 22}px; display:flex; align-items:center; justify-content:space-between;"
             title={isConflict ? '⚠ U-Positions-Konflikt: ' + getDeviceTooltip(dev) : isIncompatible ? '⚠ Höhenkonflikt: ' + getDeviceTooltip(dev) : getDeviceTooltip(dev)}
           >
@@ -210,7 +212,7 @@
       {@const isIncompatible = isDeviceIncompatible(dev)}
       <button
         onclick={(e) => handleDeviceClick(dev, e)}
-        class="w-full flex-1 min-h-0 rounded border hover:brightness-110 transition flex items-center justify-center overflow-hidden {selectedDevice?.id === dev.id ? 'ring-1 ring-white/30' : ''} {isIncompatible ? 'ring-1 ring-red-500 border-red-500' : ''}"
+        class="w-full flex-1 min-h-0 rounded border hover:brightness-110 transition flex items-center justify-center overflow-hidden {(selectedDevice?.id === dev.id || highlightDeviceIds?.includes(dev.id)) ? 'ring-1 ring-white/30' : ''} {isIncompatible ? 'ring-1 ring-red-500 border-red-500' : ''}"
         style="background:{isIncompatible ? 'rgba(239,68,68,.22)' : c.bg}; border-color:{isIncompatible ? 'rgba(239,68,68,.7)' : c.border}; writing-mode: vertical-rl; transform: rotate(180deg);"
         title={isIncompatible ? '⚠ Höhenkonflikt: ' + getDeviceTooltip(dev) : getDeviceTooltip(dev)}
       >
@@ -219,16 +221,28 @@
       </button>
     {/each}
     {#if !readonly}
-      {#if !occupiedSides.right}
-      <button onclick={(e) => handleEmptySideClick('right', e)} class="w-full aspect-square mt-auto border border-dashed border-slate-800 rounded flex items-center justify-center text-slate-600 hover:text-blue-500 hover:border-[#1D9E75]/50 hover:bg-[#1D9E75]/10 transition shrink-0">
-        <Plus class="w-4 h-4" />
-      </button>
-      {:else}
-      <div class="w-full aspect-square mt-auto border border-dashed border-red-800/20 rounded flex items-center justify-center text-red-800/30 shrink-0" title="Seite bereits belegt">
-        <X class="w-4 h-4" />
+      <div class="flex-1 flex justify-center py-2 min-h-0">
+        <button
+          onclick={(e) => handleEmptySideClick('right', e)}
+          class="w-4 h-full border border-dashed border-slate-700/50 rounded flex flex-col items-center justify-center hover:bg-slate-800/50 hover:border-slate-500 transition-colors"
+          title="0-U Gerät rechts hinzufügen"
+          aria-label="0-U Gerät rechts hinzufügen"
+        >
+          <Plus class="w-3 h-3 text-slate-600" />
+        </button>
       </div>
-      {/if}
     {/if}
   </div>
 
 </div>
+
+<style>
+  @media print {
+    /* Print-Color-Fix exclusively for this component's containers and buttons */
+    .rack-front-view-container,
+    .rack-front-view-container * {
+      print-color-adjust: exact;
+      -webkit-print-color-adjust: exact;
+    }
+  }
+</style>

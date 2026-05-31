@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { page } from '$app/state';
-  import { api, type Runbook, type RunbookLayer, type RunbookDevice, type Device, type VirtualMachine, type RunbookExecution } from '$lib/api';
+  import { api, type Runbook, type RunbookLayer, type RunbookDevice, type Device, type VirtualMachine, type RunbookExecution, type Rack } from '$lib/api';
   import { BookOpen, Layers, Monitor, Server, Plus, ArrowLeft, Trash2, ArrowUp, ArrowDown, Play, CheckCircle2, Copy, FileText, Clock, User, XCircle, AlertCircle, Edit, Download, Printer } from '@lucide/svelte';
   import { goto } from '$app/navigation';
   import RunbookPrint from '$lib/components/RunbookPrint.svelte';
@@ -11,6 +11,8 @@
   let loading = $state(true);
   
   let allDevices = $state<Device[]>([]);
+  let allRawDevices = $state<Device[]>([]);
+  let allRacks = $state<Rack[]>([]);
   let allVms = $state<VirtualMachine[]>([]);
   let executions = $state<RunbookExecution[]>([]);
 
@@ -59,6 +61,51 @@
     return isStartup ? sorted.reverse() : sorted;
   });
 
+  // Calculate affected racks for printing
+  let affectedRacksInfo = $derived.by(() => {
+    if (!runbook || !runbook.layers) return [];
+    
+    // Map device IDs to rack IDs
+    const rackByDevice = new Map<number, number>();
+    for (const dev of allRawDevices) {
+      if (dev.rack_id) {
+        rackByDevice.set(dev.id, dev.rack_id);
+      }
+    }
+
+    // Collect targeted device IDs per rack
+    const targetIdsPerRack = new Map<number, Set<number>>();
+    for (const layer of runbook.layers) {
+      for (const rbd of layer.devices || []) {
+        if (rbd.device?.id) {
+          const rId = rackByDevice.get(rbd.device.id);
+          if (rId) {
+            if (!targetIdsPerRack.has(rId)) targetIdsPerRack.set(rId, new Set());
+            targetIdsPerRack.get(rId)!.add(rbd.device.id);
+          }
+        }
+        // If it's a VM, we could optionally highlight its host if we wanted, 
+        // but for now we stick to direct devices as they are physically in the rack.
+      }
+    }
+
+    // Build the final affected racks array
+    const result = [];
+    for (const [rackId, targetSet] of targetIdsPerRack) {
+      const rack = allRacks.find(r => r.id === rackId);
+      if (!rack) continue;
+      
+      const rackDevices = allRawDevices.filter(d => d.rack_id === rackId);
+      result.push({
+        rack,
+        rackDevices,
+        highlightIds: Array.from(targetSet)
+      });
+    }
+
+    return result;
+  });
+
   const getSortedDevices = (layer: RunbookLayer) => {
     const isStartup = currentExecution?.modus === 'startup';
     const sorted = [...(layer.devices || [])].sort((a, b) => a.position - b.position);
@@ -72,12 +119,15 @@
   async function loadData() {
     try {
       loading = true;
-      const [rb, devs, vmsList] = await Promise.all([
+      const [rb, devs, vmsList, racks] = await Promise.all([
         api.getRunbook(runbookId),
         api.getDevices(),
-        api.getVirtualMachines()
+        api.getVirtualMachines(),
+        api.getRacks()
       ]);
       runbook = rb;
+      allRawDevices = devs;
+      allRacks = racks;
       allDevices = devs.filter(d => ['server', 'pdu', 'switch', 'firewall', 'storage', 'sonstige'].includes(d.typ));
       allVms = vmsList;
       
@@ -1080,7 +1130,7 @@
     </div>
     <div class="print-only">
       {#if runbook}
-        <RunbookPrint {runbook} />
+        <RunbookPrint {runbook} affectedRacks={affectedRacksInfo} />
       {/if}
     </div>
   {/if}
