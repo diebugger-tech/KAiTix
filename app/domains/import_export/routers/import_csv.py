@@ -161,14 +161,33 @@ async def commit_devices(
     
     conflict_db = []
     conflict_csv = []
+    conflict_rack = []
     seen_in_payload = set()
+
+    # Build initial rack allocations
+    updating_hostnames = {r.hostname.lower() for r in payload.rows} if payload.update_mode else set()
+    rack_allocations = {}
+    for dev in existing_map.values():
+        if dev.hostname.lower() in updating_hostnames:
+            continue
+        if dev.rack_id and dev.u_position and dev.u_hoehe and dev.u_hoehe > 0:
+            if dev.rack_id not in rack_allocations:
+                rack_allocations[dev.rack_id] = []
+            rack_allocations[dev.rack_id].append((dev.u_position, dev.u_position + dev.u_hoehe - 1, dev.hostname))
 
     for row_data in payload.rows:
         row_num = row_data.row or "?"
         name = row_data.hostname.lower()
 
+        final_rack_id = row_data.rack_id
+        final_u_pos = row_data.u_position
+        final_u_hoehe = row_data.u_hoehe
+
         if payload.update_mode and name in existing_map:
             existing = existing_map[name]
+            final_rack_id = row_data.rack_id if row_data.rack_id is not None else existing.rack_id
+            final_u_pos = row_data.u_position if row_data.u_position is not None else existing.u_position
+            
             existing.typ = row_data.typ if row_data.typ in VALID_DEVICE_TYPES else "sonstige"
             if row_data.rack_id is not None:
                 existing.rack_id = row_data.rack_id
@@ -188,41 +207,60 @@ async def commit_devices(
             if row_data.bemerkung is not None:
                 existing.bemerkung = row_data.bemerkung
             updated += 1
-            continue
-            
-        if not payload.update_mode and name in existing_map:
-            conflict_db.append(f"Zeile {row_num}: '{row_data.hostname}' existiert bereits in der Datenbank")
-            continue
-            
-        if name in seen_in_payload:
-            conflict_csv.append(f"Zeile {row_num}: '{row_data.hostname}' mehrfach in Datei")
-            continue
-            
-        seen_in_payload.add(name)
+        else:
+            if not payload.update_mode and name in existing_map:
+                conflict_db.append(f"Zeile {row_num}: '{row_data.hostname}' existiert bereits in der Datenbank")
+                continue
+                
+            if name in seen_in_payload:
+                conflict_csv.append(f"Zeile {row_num}: '{row_data.hostname}' mehrfach in Datei")
+                continue
+                
+            seen_in_payload.add(name)
+    
+            dev = Device(
+                hostname=row_data.hostname,
+                typ=row_data.typ if row_data.typ in VALID_DEVICE_TYPES else "sonstige",
+                rack_id=row_data.rack_id,
+                u_position=row_data.u_position,
+                u_hoehe=row_data.u_hoehe,
+                hersteller=row_data.hersteller,
+                modell=row_data.modell,
+                seriennummer=row_data.seriennummer,
+                inventarnummer=row_data.inventarnummer,
+                ip_adresse=row_data.ip_adresse,
+                bemerkung=row_data.bemerkung,
+            )
+            db.add(dev)
+            created += 1
 
-        dev = Device(
-            hostname=row_data.hostname,
-            typ=row_data.typ if row_data.typ in VALID_DEVICE_TYPES else "sonstige",
-            rack_id=row_data.rack_id,
-            u_position=row_data.u_position,
-            u_hoehe=row_data.u_hoehe,
-            hersteller=row_data.hersteller,
-            modell=row_data.modell,
-            seriennummer=row_data.seriennummer,
-            inventarnummer=row_data.inventarnummer,
-            ip_adresse=row_data.ip_adresse,
-            bemerkung=row_data.bemerkung,
-        )
-        db.add(dev)
-        created += 1
+        # Check for rack collision
+        if final_rack_id and final_u_pos and final_u_hoehe and final_u_hoehe > 0:
+            start_u = final_u_pos
+            end_u = final_u_pos + final_u_hoehe - 1
+            overlap = False
+            for alloc_start, alloc_end, alloc_name in rack_allocations.get(final_rack_id, []):
+                if max(start_u, alloc_start) <= min(end_u, alloc_end):
+                    conflict_rack.append(f"Zeile {row_num}: '{row_data.hostname}' kollidiert mit '{alloc_name}' auf HE {max(start_u, alloc_start)}-{min(end_u, alloc_end)}")
+                    overlap = True
+                    break
+            
+            if not overlap:
+                if final_rack_id not in rack_allocations:
+                    rack_allocations[final_rack_id] = []
+                rack_allocations[final_rack_id].append((start_u, end_u, row_data.hostname))
 
-    if conflict_db or conflict_csv:
+    if conflict_db or conflict_csv or conflict_rack:
         await db.rollback()
         raise HTTPException(
             status_code=400,
             detail={
                 "message": "Import abgebrochen aufgrund von Konflikten",
-                "conflicts": {"db_duplicates": conflict_db, "csv_duplicates": conflict_csv}
+                "conflicts": {
+                    "db_duplicates": conflict_db, 
+                    "csv_duplicates": conflict_csv,
+                    "rack_collisions": conflict_rack
+                }
             }
         )
 

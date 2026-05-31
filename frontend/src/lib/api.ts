@@ -448,7 +448,18 @@ async function request(path: string, options: RequestInit = {}) {
       let msg = errText || response.statusText;
       try {
         const parsed = JSON.parse(errText);
-        if (parsed?.detail) msg = parsed.detail;
+        if (parsed?.detail) {
+          if (typeof parsed.detail === 'object' && parsed.detail.message && parsed.detail.conflicts) {
+            const c = parsed.detail.conflicts;
+            const msgs = [];
+            if (c.db_duplicates?.length) msgs.push(`DB-Duplikate: ${c.db_duplicates.join('; ')}`);
+            if (c.csv_duplicates?.length) msgs.push(`CSV-Duplikate: ${c.csv_duplicates.join('; ')}`);
+            if (c.rack_collisions?.length) msgs.push(`Rack-Kollisionen: ${c.rack_collisions.join('; ')}`);
+            msg = `${parsed.detail.message} - ${msgs.join(' | ')}`;
+          } else {
+            msg = parsed.detail;
+          }
+        }
       } catch { /* not JSON */ }
       throw new Error(msg);
     }

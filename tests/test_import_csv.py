@@ -101,3 +101,71 @@ async def test_csv_import_cables_empty_kabel_nr(client: AsyncClient, db: AsyncSe
     assert len(cables) == 2
     assert cables[0].kabel_nr is None
     assert cables[1].kabel_nr is None
+
+@pytest.mark.asyncio
+async def test_csv_import_rack_collisions(client: AsyncClient, db: AsyncSession):
+    from app.models import Rack
+    rack = Rack(name="R1", standort="standort", hoehe_u=42)
+    db.add(rack)
+    await db.commit()
+    await db.refresh(rack)
+    rack_id = rack.id
+
+    dev = Device(hostname="server-01", typ="server", rack_id=rack_id, u_position=10, u_hoehe=2)
+    db.add(dev)
+    await db.commit()
+
+    # 1. Test collision with existing device
+    payload1 = {
+        "rows": [{"row": 1, "hostname": "server-02", "typ": "server", "rack_id": rack_id, "u_position": 11, "u_hoehe": 1}],
+        "update_mode": False
+    }
+    resp1 = await client.post("/api/v1/import-csv/devices/commit", json=payload1)
+    assert resp1.status_code == 400
+    data1 = resp1.json()
+    assert len(data1["detail"]["conflicts"]["rack_collisions"]) == 1
+    assert "server-02" in data1["detail"]["conflicts"]["rack_collisions"][0]
+    assert "server-01" in data1["detail"]["conflicts"]["rack_collisions"][0]
+
+    # 2. Test intra-csv collision
+    payload2 = {
+        "rows": [
+            {"row": 1, "hostname": "server-03", "typ": "server", "rack_id": rack_id, "u_position": 20, "u_hoehe": 4},
+            {"row": 2, "hostname": "server-04", "typ": "server", "rack_id": rack_id, "u_position": 23, "u_hoehe": 1}
+        ],
+        "update_mode": False
+    }
+    resp2 = await client.post("/api/v1/import-csv/devices/commit", json=payload2)
+    assert resp2.status_code == 400
+    data2 = resp2.json()
+    assert len(data2["detail"]["conflicts"]["rack_collisions"]) == 1
+    assert "server-04" in data2["detail"]["conflicts"]["rack_collisions"][0]
+    assert "server-03" in data2["detail"]["conflicts"]["rack_collisions"][0]
+
+@pytest.mark.asyncio
+async def test_csv_import_rack_no_collision_stacked(client: AsyncClient, db: AsyncSession):
+    from app.models import Rack
+    rack = Rack(name="R2", standort="standort", hoehe_u=42)
+    db.add(rack)
+    await db.commit()
+    await db.refresh(rack)
+    rack_id = rack.id
+
+    dev = Device(hostname="stack-01", typ="server", rack_id=rack_id, u_position=10, u_hoehe=2)
+    db.add(dev)
+    await db.commit()
+
+    # Test stacked device (U10 height 2 = U10-U11, next is U12)
+    # Also test Zero-U device (u_hoehe=0)
+    payload = {
+        "rows": [
+            {"row": 1, "hostname": "stack-02", "typ": "server", "rack_id": rack_id, "u_position": 12, "u_hoehe": 1},
+            {"row": 2, "hostname": "zero-u-1", "typ": "pdu", "rack_id": rack_id, "u_position": 10, "u_hoehe": 0},
+            {"row": 3, "hostname": "zero-u-2", "typ": "pdu", "rack_id": rack_id, "u_position": 10, "u_hoehe": 0}
+        ],
+        "update_mode": False
+    }
+    resp = await client.post("/api/v1/import-csv/devices/commit", json=payload)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["created"] == 3
