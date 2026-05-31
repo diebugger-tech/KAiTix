@@ -142,6 +142,28 @@
     }
   }
 
+  function resetEplan() {
+    eplanFile = null;
+    eplanPreview = null;
+    eplanResult = null;
+    eplanError = '';
+  }
+
+  function getErrorSummary(preview: any): {msg: string, count: number}[] {
+    if (!preview || !preview.rows) return [];
+    const counts: Record<string, number> = {};
+    for (const row of preview.rows) {
+      if (row.errors && Array.isArray(row.errors)) {
+        for (const err of row.errors) {
+          counts[err] = (counts[err] || 0) + 1;
+        }
+      }
+    }
+    return Object.entries(counts)
+      .map(([msg, count]) => ({msg, count}))
+      .sort((a, b) => b.count - a.count);
+  }
+
   // ── Helpers ─────────────────────────────────────────────────────────────────
   function rowClass(status: string) {
     if (status === 'new') return 'bg-emerald-950/30 border-l-2 border-emerald-500';
@@ -273,28 +295,30 @@
       {#if devicePreview}
         <div class="bg-[#131615] border border-slate-800 rounded-xl overflow-hidden">
           <!-- Summary Bar -->
-          <div class="flex items-center gap-6 px-6 py-4 border-b border-slate-800">
-            <span class="text-sm text-slate-400">{devicePreview.total} Zeilen</span>
-            <span class="text-sm text-emerald-400">{devicePreview.new} neu</span>
-            {#if devicePreview.exists > 0}
-              <span class="text-sm text-amber-400">{devicePreview.exists} vorhanden</span>
-            {/if}
-            {#if devicePreview.error_count > 0}
-              <span class="text-sm text-red-400">{devicePreview.error_count} Fehler</span>
-            {/if}
-            <div class="ml-auto flex items-center gap-3">
+          <div class="flex flex-col border-b border-slate-800">
+            <div class="flex items-center gap-6 px-6 py-4">
+              <span class="text-sm text-slate-400">{devicePreview.total} Zeilen</span>
+              <span class="text-sm text-emerald-400">{devicePreview.new} neu</span>
+              {#if devicePreview.exists > 0}
+                <span class="text-sm text-amber-400">{devicePreview.exists} vorhanden</span>
+              {/if}
+              {#if devicePreview.error_count > 0}
+                <span class="text-sm text-red-400 font-semibold">{devicePreview.error_count} Fehler</span>
+              {/if}
+            </div>
+            <div class="px-6 pb-4 flex items-center gap-3">
               {#if devicePreview.exists > 0}
                 <label class="flex items-center gap-1.5 cursor-pointer text-xs text-slate-300 select-none">
                   <input type="checkbox" bind:checked={deviceUpdateMode} class="accent-amber-500" />
                   Vorhandene aktualisieren
                 </label>
               {/if}
-              <button onclick={resetDevices} class="px-3 py-1.5 text-xs text-slate-400 hover:text-slate-200 transition">
+              <button onclick={resetDevices} class="ml-auto px-3 py-1.5 text-xs text-slate-400 hover:text-slate-200 transition">
                 Abbrechen
               </button>
               <button
                 onclick={commitDevices}
-                disabled={deviceCommitting || (deviceUpdateMode ? devicePreview.new + devicePreview.exists === 0 : devicePreview.new === 0)}
+                disabled={deviceCommitting || devicePreview.error_count > 0 || (deviceUpdateMode ? devicePreview.new + devicePreview.exists === 0 : devicePreview.new === 0)}
                 class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white rounded-lg text-xs font-semibold transition"
               >
                 {deviceCommitting ? 'Importiere…' : deviceUpdateMode
@@ -302,6 +326,21 @@
                   : `${devicePreview.new} Gerät${devicePreview.new !== 1 ? 'e' : ''} importieren`}
               </button>
             </div>
+
+            <!-- Aggregated Errors -->
+            {#if devicePreview.error_count > 0}
+              <div class="px-6 pb-4">
+                <div class="bg-red-950/30 border border-red-900/50 rounded-lg p-3 flex flex-col gap-1.5">
+                  <span class="text-xs font-semibold text-red-400 mb-0.5">Zusammenfassung der Fehler:</span>
+                  {#each getErrorSummary(devicePreview) as errSum}
+                    <div class="text-xs text-red-300 flex items-center gap-2">
+                      <span class="bg-red-900/50 px-1.5 py-0.5 rounded text-center font-mono min-w-[24px]">{errSum.count}x</span>
+                      <span>{errSum.msg}</span>
+                    </div>
+                  {/each}
+                </div>
+              </div>
+            {/if}
           </div>
 
           <div class="overflow-x-auto">
@@ -416,16 +455,18 @@
 
       {#if cablePreview}
         <div class="bg-[#131615] border border-slate-800 rounded-xl overflow-hidden">
-          <div class="flex items-center gap-6 px-6 py-4 border-b border-slate-800">
-            <span class="text-sm text-slate-400">{cablePreview.total} Zeilen</span>
-            <span class="text-sm text-emerald-400">{cablePreview.new} neu</span>
-            {#if cablePreview.exists > 0}
-              <span class="text-sm text-amber-400">{cablePreview.exists} vorhanden</span>
-            {/if}
-            {#if cablePreview.error_count > 0}
-              <span class="text-sm text-red-400">{cablePreview.error_count} Fehler</span>
-            {/if}
-            <div class="ml-auto flex items-center gap-3">
+          <div class="flex flex-col border-b border-slate-800">
+            <div class="flex items-center gap-6 px-6 py-4">
+              <span class="text-sm text-slate-400">{cablePreview.total} Zeilen</span>
+              <span class="text-sm text-emerald-400">{cablePreview.new} neu</span>
+              {#if cablePreview.exists > 0}
+                <span class="text-sm text-amber-400">{cablePreview.exists} vorhanden</span>
+              {/if}
+              {#if cablePreview.error_count > 0}
+                <span class="text-sm text-red-400 font-semibold">{cablePreview.error_count} Fehler</span>
+              {/if}
+            </div>
+            <div class="px-6 pb-4 flex items-center gap-3">
               {#if cablePreview.exists > 0}
                 <label class="flex items-center gap-1.5 cursor-pointer text-xs text-slate-300 select-none">
                   <input type="checkbox" bind:checked={cableUpdateMode} class="accent-amber-500" />
@@ -437,7 +478,7 @@
               </button>
               <button
                 onclick={commitCables}
-                disabled={cableCommitting || (cableUpdateMode ? cablePreview.new + cablePreview.exists === 0 : cablePreview.new === 0)}
+                disabled={cableCommitting || cablePreview.error_count > 0 || (cableUpdateMode ? cablePreview.new + cablePreview.exists === 0 : cablePreview.new === 0)}
                 class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white rounded-lg text-xs font-semibold transition"
               >
                 {cableCommitting ? 'Importiere…' : cableUpdateMode
@@ -445,6 +486,21 @@
                   : `${cablePreview.new} Kabel importieren`}
               </button>
             </div>
+
+            <!-- Aggregated Errors -->
+            {#if cablePreview.error_count > 0}
+              <div class="px-6 pb-4">
+                <div class="bg-red-950/30 border border-red-900/50 rounded-lg p-3 flex flex-col gap-1.5">
+                  <span class="text-xs font-semibold text-red-400 mb-0.5">Zusammenfassung der Fehler:</span>
+                  {#each getErrorSummary(cablePreview) as errSum}
+                    <div class="text-xs text-red-300 flex items-center gap-2">
+                      <span class="bg-red-900/50 px-1.5 py-0.5 rounded text-center font-mono min-w-[24px]">{errSum.count}x</span>
+                      <span>{errSum.msg}</span>
+                    </div>
+                  {/each}
+                </div>
+              </div>
+            {/if}
           </div>
 
           <div class="overflow-x-auto">
