@@ -86,7 +86,7 @@
       </p>
       <button 
         onclick={() => showCreateModal = true}
-        class="mt-6 flex items-center space-x-2 bg-[var(--color-border)] hover:bg-[var(--color-border2)] text-slate-200 px-4 py-2 rounded-lg text-sm font-medium transition mx-auto"
+        class="mt-6 flex items-center space-x-2 bg-[var(--color-border)] hover:bg-[var(--color-border2)] text-[var(--color-text)] px-4 py-2 rounded-lg text-sm font-medium transition mx-auto"
       >
         <Plus class="w-4 h-4" />
         <span>Runbook anlegen</span>
@@ -112,7 +112,7 @@
               </span>
             {/if}
           </div>
-          <h3 class="text-lg font-bold text-slate-200 group-hover:text-blue-400 transition leading-tight mb-2">
+          <h3 class="text-lg font-bold text-[var(--color-text)] group-hover:text-blue-400 transition leading-tight mb-2">
             {runbook.name}
           </h3>
           {#if runbook.beschreibung}

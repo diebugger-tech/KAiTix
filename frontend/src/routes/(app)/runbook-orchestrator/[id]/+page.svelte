@@ -662,7 +662,7 @@
       {#each ['PLANER', 'AUSFÜHRUNG', 'PROTOKOLL'] as tab}
         <button
           onclick={() => activeTab = tab as any}
-          class={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === tab ? 'border-[#1D9E75] text-blue-400' : 'border-transparent text-[var(--color-text2)] hover:text-slate-200 hover:border-[var(--color-border2)]'}`}
+          class={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === tab ? 'border-[#1D9E75] text-blue-400' : 'border-transparent text-[var(--color-text2)] hover:text-[var(--color-text)] hover:border-[var(--color-border2)]'}`}
         >
           {tab}
         </button>
@@ -764,7 +764,7 @@
                           </div>
                           
                           <div>
-                            <div class="text-sm font-medium text-slate-200">{getDeviceName(dev)}</div>
+                            <div class="text-sm font-medium text-[var(--color-text)]">{getDeviceName(dev)}</div>
                             {#if dev.device && dev.device.connected_pdu_outlets && dev.device.connected_pdu_outlets.length > 0}
                               <div class="flex flex-wrap gap-1 mt-1">
                                 {#each dev.device.connected_pdu_outlets as outlet}
@@ -800,7 +800,7 @@
                         ondragover={(e) => { e.preventDefault(); draggedOverAddButtonLayerId = layer.id; }}
                         ondragleave={() => draggedOverAddButtonLayerId = null}
                         ondrop={(e) => { draggedOverAddButtonLayerId = null; handleDropLayer(e, layer.id); }}
-                        class={`w-full flex items-center justify-center gap-2 py-2 border-2 border-dashed rounded-lg text-xs transition ${draggedOverAddButtonLayerId === layer.id ? 'border-[#1D9E75] bg-blue-950/20 text-blue-300' : 'border-[var(--color-border)] hover:border-[var(--color-border2)] text-[var(--color-text2)] hover:text-slate-200'}`}
+                        class={`w-full flex items-center justify-center gap-2 py-2 border-2 border-dashed rounded-lg text-xs transition ${draggedOverAddButtonLayerId === layer.id ? 'border-[#1D9E75] bg-blue-950/20 text-blue-300' : 'border-[var(--color-border)] hover:border-[var(--color-border2)] text-[var(--color-text2)] hover:text-[var(--color-text)]'}`}
                       >
                         <Plus class="w-3.5 h-3.5" /> Gerät hinzufügen (oder hierher ziehen)
                       </button>
@@ -880,13 +880,13 @@
             <div class="flex border-b border-[var(--color-border)] mb-3 shrink-0">
               <button 
                 onclick={() => sidebarTab = 'vms'}
-                class={`flex-1 pb-2 text-xs font-semibold border-b-2 transition ${sidebarTab === 'vms' ? 'border-pink-500 text-pink-400' : 'border-transparent text-[var(--color-text2)] hover:text-slate-200'}`}
+                class={`flex-1 pb-2 text-xs font-semibold border-b-2 transition ${sidebarTab === 'vms' ? 'border-pink-500 text-pink-400' : 'border-transparent text-[var(--color-text2)] hover:text-[var(--color-text)]'}`}
               >
                 VMs ({allVms.length})
               </button>
               <button 
                 onclick={() => sidebarTab = 'devices'}
-                class={`flex-1 pb-2 text-xs font-semibold border-b-2 transition ${sidebarTab === 'devices' ? 'border-[#1D9E75] text-blue-400' : 'border-transparent text-[var(--color-text2)] hover:text-slate-200'}`}
+                class={`flex-1 pb-2 text-xs font-semibold border-b-2 transition ${sidebarTab === 'devices' ? 'border-[#1D9E75] text-blue-400' : 'border-transparent text-[var(--color-text2)] hover:text-[var(--color-text)]'}`}
               >
                 Geräte ({allDevices.length})
               </button>
@@ -925,7 +925,7 @@
                     <div class="flex items-center gap-2 min-w-0">
                       <Monitor class="w-3.5 h-3.5 text-pink-400 shrink-0" />
                       <div class="truncate text-xs">
-                        <div class="font-medium text-slate-200 truncate">{vm.name}</div>
+                        <div class="font-medium text-[var(--color-text)] truncate">{vm.name}</div>
                         <div class="text-[9px] text-[var(--color-text3)] mt-0.5">{vm.ip_adresse || 'Keine IP'}</div>
                       </div>
                     </div>
@@ -947,7 +947,7 @@
                     <div class="flex items-center gap-2 min-w-0">
                       <Server class="w-3.5 h-3.5 text-[var(--color-text2)] shrink-0" />
                       <div class="truncate text-xs">
-                        <div class="font-medium text-slate-200 truncate">{dev.hostname}</div>
+                        <div class="font-medium text-[var(--color-text)] truncate">{dev.hostname}</div>
                         <div class="text-[9px] text-[var(--color-text3)] mt-0.5 capitalize">{dev.typ} | {dev.ip_adresse || 'Keine IP'}</div>
                       </div>
                     </div>
@@ -1009,7 +1009,7 @@
                 {#if layer.markdown_note}
                   <div class="px-4 py-2 bg-blue-900/10 border-b border-blue-900/20 text-xs text-blue-200/80 italic">{layer.markdown_note}</div>
                 {/if}
-                <div class="divide-y divide-slate-800/50">
+                <div class="divide-y divide-[var(--color-border)]/50">
                   {#each getSortedDevices(layer) as dev}
                     {@const checked = isStepChecked(dev.id)}
                     {@const step = getStep(dev.id)}
@@ -1024,7 +1024,7 @@
                       <div class="flex-1">
                         <div class="flex justify-between items-start">
                           <div>
-                            <div class={`text-sm font-medium ${checked ? 'text-[var(--color-text2)] line-through' : 'text-slate-200'}`}>{getDeviceName(dev)}</div>
+                            <div class={`text-sm font-medium ${checked ? 'text-[var(--color-text2)] line-through' : 'text-[var(--color-text)]'}`}>{getDeviceName(dev)}</div>
                             {#if dev.device && dev.device.connected_pdu_outlets && dev.device.connected_pdu_outlets.length > 0}
                               <div class="flex flex-wrap gap-1 mt-1">
                                 {#each dev.device.connected_pdu_outlets as outlet}
@@ -1097,10 +1097,10 @@
                     <th class="px-4 py-3 text-right">Aktionen</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-800/40">
+                <tbody class="divide-y divide-[var(--color-border)]/40">
                   {#each executions as exec}
                     <tr class="hover:bg-[var(--color-border2)] transition group">
-                      <td class="px-4 py-3 text-slate-200 font-medium">
+                      <td class="px-4 py-3 text-[var(--color-text)] font-medium">
                         {new Date(exec.gestartet_am).toLocaleString('de-DE')}
                       </td>
                       <td class="px-4 py-3">
@@ -1160,9 +1160,9 @@
         <div class="bg-[var(--color-bg3)] border border-[var(--color-border)] rounded-lg overflow-hidden">
           <div class="bg-[var(--color-border2)] px-3 py-2 border-b border-[var(--color-border)] flex items-center gap-2">
             <span class="w-5 h-5 rounded bg-[var(--color-border)] flex items-center justify-center text-[10px] text-[var(--color-text2)] font-bold border border-[var(--color-border2)]">{layer.position}</span>
-            <span class="text-xs font-bold text-slate-200">{layer.name}</span>
+            <span class="text-xs font-bold text-[var(--color-text)]">{layer.name}</span>
           </div>
-          <div class="divide-y divide-slate-800/40">
+          <div class="divide-y divide-[var(--color-border)]/40">
             {#each selectedExecutionDetails.modus === 'startup' ? [...(layer.devices || [])].sort((a, b) => a.position - b.position).reverse() : [...(layer.devices || [])].sort((a, b) => a.position - b.position) as dev}
               {@const step = selectedExecutionDetails.steps?.find(s => s.runbook_device_id === dev.id)}
               <div class="p-3 flex items-start justify-between gap-4">

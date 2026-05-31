@@ -355,7 +355,7 @@
                 <Zap class="w-4 h-4" />
               </div>
               <div class="min-w-0 flex-1">
-                <div class="font-bold text-sm truncate {active ? 'text-[var(--color-text)]' : 'text-slate-200'}">{pdu.hostname}</div>
+                <div class="font-bold text-sm truncate {active ? 'text-[var(--color-text)]' : 'text-[var(--color-text)]'}">{pdu.hostname}</div>
                 <div class="text-[10px] text-[var(--color-text3)] truncate">
                   {pdu.hersteller || '—'} {pdu.modell || ''} · {getRackName(pdu.rack_id)}
                 </div>

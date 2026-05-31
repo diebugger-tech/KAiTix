@@ -90,9 +90,9 @@
     </button>
     <div class="hero-content">
       <div class="hero-left">
-        <div class="hero-eyebrow">Intranet · Single-User · Dokumentation</div>
-        <h1>Serverraum-Infrastruktur.<br><em>Dokumentiert.</em></h1>
-        <p class="hero-sub">KAiTix bündelt Rack-Verwaltung, Kabelliste, IPAM, USV-Berechnung und Runbook-Orchestrierung in einer einzigen, schlanken Oberfläche — Runbook-Orchestrierung, USV-Berechnung und strukturierte Infrastruktur-Dokumentation — kein Live-Monitoring von RZ-Daten.</p>
+        <div class="hero-eyebrow">Intranet · Single-User · Dokumentation & Simulation</div>
+        <h1>Serverraum-Infrastruktur.<br><em>Dokumentiert & Simuliert.</em></h1>
+        <p class="hero-sub">KAiTix bündelt Rack-Verwaltung, Kabelliste, IPAM, präzise USV-Berechnungen und Runbook-Orchestrierung in einer einzigen, schlanken Oberfläche. Plane Ausfälle im Voraus und dokumentiere deine Infrastruktur — ganz ohne Live-Monitoring von RZ-Daten.</p>
         <div class="hero-actions">
           <a href="/" class="btn-hero-primary">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -260,13 +260,13 @@
   <div id="prinzipien"></div>
   <section class="section" style="padding-top: 0;">
     <div class="section-label">// design-prinzipien</div>
-    <h2>Keine Automatisierung. Nur Dokumentation.</h2>
+    <h2>Dokumentation & Simulation.</h2>
     <p class="section-sub">KAiTix hat einen klaren Scope — und hält ihn konsequent ein.</p>
 
     <div class="principles">
       <div class="principle-card">
-        <h4>Dokumentation first</h4>
-        <p>PDUs und Kentix-Geräte werden dokumentiert — welcher Socket, welches Gerät. Nicht gesteuert, nicht automatisiert.</p>
+        <h4>Dokumentation & Simulation</h4>
+        <p>Infrastruktur wird präzise dokumentiert und Stromausfälle sowie Runbooks werden simuliert. Keine Steuerung, keine automatisierten Eingriffe in die Produktivsysteme.</p>
       </div>
       <div class="principle-card">
         <h4>Kein Echtzeit-Monitoring</h4>

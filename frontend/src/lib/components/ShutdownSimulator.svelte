@@ -220,13 +220,13 @@
     <div class="flex flex-wrap items-center justify-between gap-4">
       <div class="flex items-center space-x-2">
         <Server class="w-5 h-5 text-[#5DCAA5]" />
-        <h3 class="text-sm font-semibold text-slate-200">RZ-weiter Shutdown-Plan</h3>
+        <h3 class="text-sm font-semibold text-[var(--color-text)]">RZ-weiter Shutdown-Plan</h3>
         <span class="text-xs text-[var(--color-text3)] ml-2">Basierend auf Server-Priorität</span>
       </div>
 
       <div class="flex items-center gap-3">
         <button onclick={() => showConfig = !showConfig}
-          class="flex items-center space-x-1 text-xs text-[var(--color-text2)] hover:text-slate-200 transition px-3 py-2 border border-[var(--color-border2)] rounded-lg">
+          class="flex items-center space-x-1 text-xs text-[var(--color-text2)] hover:text-[var(--color-text)] transition px-3 py-2 border border-[var(--color-border2)] rounded-lg">
           <Battery class="w-3.5 h-3.5" />
           <span>Batterie-Konfiguration</span>
           <ChevronDown class="w-3 h-3 transition-transform {showConfig ? 'rotate-180' : ''}" />
@@ -250,7 +250,7 @@
       <div class="mt-4 pt-4 border-t border-[var(--color-border2)]/50 grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div>
           <label class="block text-xs text-[var(--color-text3)] mb-1">Batterietyp</label>
-          <select bind:value={batType} class="w-full bg-[var(--color-bg2)] border border-[var(--color-border2)] rounded px-2 py-1.5 text-xs text-slate-200">
+          <select bind:value={batType} class="w-full bg-[var(--color-bg2)] border border-[var(--color-border2)] rounded px-2 py-1.5 text-xs text-[var(--color-text)]">
             {#each batteryTypeOptions as opt}
               <option value={opt.value}>{opt.label}</option>
             {/each}
@@ -259,22 +259,22 @@
         <div>
           <label class="block text-xs text-[var(--color-text3)] mb-1">Seriell × Parallel</label>
           <div class="flex space-x-1">
-            <input type="number" bind:value={batSeries} min="1" class="w-1/2 bg-[var(--color-bg2)] border border-[var(--color-border2)] rounded px-2 py-1.5 text-xs text-slate-200" />
-            <input type="number" bind:value={batParallel} min="1" class="w-1/2 bg-[var(--color-bg2)] border border-[var(--color-border2)] rounded px-2 py-1.5 text-xs text-slate-200" />
+            <input type="number" bind:value={batSeries} min="1" class="w-1/2 bg-[var(--color-bg2)] border border-[var(--color-border2)] rounded px-2 py-1.5 text-xs text-[var(--color-text)]" />
+            <input type="number" bind:value={batParallel} min="1" class="w-1/2 bg-[var(--color-bg2)] border border-[var(--color-border2)] rounded px-2 py-1.5 text-xs text-[var(--color-text)]" />
           </div>
         </div>
         <div>
           <label class="block text-xs text-[var(--color-text3)] mb-1">Block V / Ah</label>
           <div class="flex space-x-1">
-            <input type="number" bind:value={batBlockV} min="1" class="w-1/2 bg-[var(--color-bg2)] border border-[var(--color-border2)] rounded px-2 py-1.5 text-xs text-slate-200" />
-            <input type="number" bind:value={batBlockAh} min="1" class="w-1/2 bg-[var(--color-bg2)] border border-[var(--color-border2)] rounded px-2 py-1.5 text-xs text-slate-200" />
+            <input type="number" bind:value={batBlockV} min="1" class="w-1/2 bg-[var(--color-bg2)] border border-[var(--color-border2)] rounded px-2 py-1.5 text-xs text-[var(--color-text)]" />
+            <input type="number" bind:value={batBlockAh} min="1" class="w-1/2 bg-[var(--color-bg2)] border border-[var(--color-border2)] rounded px-2 py-1.5 text-xs text-[var(--color-text)]" />
           </div>
         </div>
         <div>
           <label class="block text-xs text-[var(--color-text3)] mb-1">Alter / Temp</label>
           <div class="flex space-x-1">
-            <input type="number" bind:value={batAge} min="0" step="0.5" class="w-1/2 bg-[var(--color-bg2)] border border-[var(--color-border2)] rounded px-2 py-1.5 text-xs text-slate-200" />
-            <input type="number" bind:value={batTemp} min="-20" class="w-1/2 bg-[var(--color-bg2)] border border-[var(--color-border2)] rounded px-2 py-1.5 text-xs text-slate-200" />
+            <input type="number" bind:value={batAge} min="0" step="0.5" class="w-1/2 bg-[var(--color-bg2)] border border-[var(--color-border2)] rounded px-2 py-1.5 text-xs text-[var(--color-text)]" />
+            <input type="number" bind:value={batTemp} min="-20" class="w-1/2 bg-[var(--color-bg2)] border border-[var(--color-border2)] rounded px-2 py-1.5 text-xs text-[var(--color-text)]" />
           </div>
         </div>
       </div>
@@ -315,13 +315,13 @@
     <!-- SOC Timeline Chart -->
     <div class="bg-[var(--color-bg2)] border border-[var(--color-border2)]/50 rounded-xl p-4">
       <div class="flex items-center justify-between mb-3">
-        <h3 class="text-sm font-semibold text-slate-200">Batterie-Entladekurve & Shutdown-Ablauf</h3>
+        <h3 class="text-sm font-semibold text-[var(--color-text)]">Batterie-Entladekurve & Shutdown-Ablauf</h3>
         <div class="flex items-center space-x-2">
           <!-- Speed -->
           <div class="flex items-center space-x-1 text-xs text-[var(--color-text2)]">
             <FastForward class="w-3 h-3" />
             <select bind:value={playbackSpeed} onchange={() => { const was = isPlaying; stopPlayback(); if (was) startPlayback(); }}
-              class="bg-[var(--color-bg2)] border border-[var(--color-border2)] rounded px-1 py-0.5 text-xs text-slate-200">
+              class="bg-[var(--color-bg2)] border border-[var(--color-border2)] rounded px-1 py-0.5 text-xs text-[var(--color-text)]">
               <option value={0.5}>0.5×</option>
               <option value={1}>1×</option>
               <option value={2}>2×</option>
@@ -329,7 +329,7 @@
             </select>
           </div>
           <!-- Playback controls -->
-          <button onclick={resetPlayback} class="p-1.5 rounded-lg text-[var(--color-text2)] hover:text-slate-200 hover:bg-[var(--color-border2)] transition">
+          <button onclick={resetPlayback} class="p-1.5 rounded-lg text-[var(--color-text2)] hover:text-[var(--color-text)] hover:bg-[var(--color-border2)] transition">
             <RotateCcw class="w-4 h-4" />
           </button>
           <button onclick={togglePlayback}
@@ -417,7 +417,7 @@
 
     <!-- Device Status Cards -->
     <div class="bg-[var(--color-bg2)] border border-[var(--color-border2)]/50 rounded-xl p-4">
-      <h3 class="text-sm font-semibold text-slate-200 mb-3">Geräte-Status (Shutdown-Reihenfolge)</h3>
+      <h3 class="text-sm font-semibold text-[var(--color-text)] mb-3">Geräte-Status (Shutdown-Reihenfolge)</h3>
       <div class="grid gap-2">
         {#each simResult.device_statuses.sort((a, b) => a.shutdown_delay_seconds - b.shutdown_delay_seconds) as dev}
           {@const isActive = currentSnapshot ? currentSnapshot.active_device_ids.includes(dev.id) : true}
@@ -431,7 +431,7 @@
               <div class="w-2 h-2 rounded-full transition-colors duration-300
                 {dev.crashed ? 'bg-red-500 animate-pulse' : isActive ? 'bg-emerald-500' : 'bg-[var(--color-border2)]'}"></div>
               <div>
-                <span class="text-sm font-medium text-slate-200">{dev.hostname}</span>
+                <span class="text-sm font-medium text-[var(--color-text)]">{dev.hostname}</span>
                 <span class="text-xs text-[var(--color-text3)] ml-2">{dev.tdp_watt}W</span>
               </div>
             </div>

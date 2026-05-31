@@ -116,7 +116,7 @@
     if (f.includes('violett') || f.includes('erika')) return 'bg-fuchsia-500';
     if (f.includes('grau')) return 'bg-gray-400';
     if (f.includes('orange')) return 'bg-orange-500';
-    return 'bg-slate-500';
+    return 'bg-[var(--color-text3)]';
   }
 
   function getDeviceName(id?: number | null): string {
@@ -354,7 +354,7 @@
       {#each [{k:'all',l:'Alle'},{k:'lwl',l:'LWL'},{k:'copper',l:'Kupfer'},{k:'power',l:'Strom'},{k:'dac',l:'DAC'},{k:'sonstige',l:'Sonstige'}] as item}
         <button
           onclick={() => { filterCategory = item.k; filterTyp = 'all'; }}
-          class="px-3 py-1.5 rounded-lg text-xs font-medium border transition {filterCategory === item.k ? 'bg-emerald-600/20 text-emerald-400 border-emerald-600/40' : 'bg-[var(--color-bg2)] text-[var(--color-text2)] border-[var(--color-border2)] hover:bg-[var(--color-border)] hover:text-slate-200'}"
+          class="px-3 py-1.5 rounded-lg text-xs font-medium border transition {filterCategory === item.k ? 'bg-emerald-600/20 text-emerald-400 border-emerald-600/40' : 'bg-[var(--color-bg2)] text-[var(--color-text2)] border-[var(--color-border2)] hover:bg-[var(--color-border)] hover:text-[var(--color-text)]'}"
         >
           {item.l}
         </button>
@@ -395,7 +395,7 @@
               </div>
               <div class="min-w-0 flex-1">
                 <div class="flex items-center gap-2">
-                  <span class="font-mono text-xs font-bold {active ? 'text-[var(--color-text)]' : 'text-slate-200'}">{cable.kabel_nr}</span>
+                  <span class="font-mono text-xs font-bold {active ? 'text-[var(--color-text)]' : 'text-[var(--color-text)]'}">{cable.kabel_nr}</span>
                   {#if cable.farbe}
                     <div class="w-2.5 h-2.5 rounded-full {getFarbeDotClass(cable.farbe)}" title={cable.farbe}></div>
                   {/if}
@@ -728,7 +728,7 @@
               <th class="text-left px-4 py-2 text-[var(--color-text2)] font-semibold">Standard</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-800/60">
+          <tbody class="divide-y divide-[var(--color-border)]/60">
             {#each colorRules as rule}
               <tr class="hover:bg-[var(--color-border2)]">
                 <td class="px-4 py-2 text-[var(--color-text)] font-mono">{rule.typ}</td>

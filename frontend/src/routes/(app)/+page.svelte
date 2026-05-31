@@ -240,7 +240,7 @@
                     <span class="text-[10px] app-card-subtitle font-medium">L1</span>
                     <span class="text-xs font-bold text-blue-400">{ph.l1.toFixed(2)} kW</span>
                   </div>
-                  <div class="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden">
+                  <div class="w-full h-1.5 bg-[var(--color-border)] rounded-full overflow-hidden">
                     <div class="h-full bg-blue-500 rounded-full transition-all" style="width: {roomTotalKw > 0 ? Math.round(ph.l1 / roomTotalKw * 100) : 0}%"></div>
                   </div>
                 </div>
@@ -249,7 +249,7 @@
                     <span class="text-[10px] app-card-subtitle font-medium">L2</span>
                     <span class="text-xs font-bold text-cyan-400">{ph.l2.toFixed(2)} kW</span>
                   </div>
-                  <div class="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden">
+                  <div class="w-full h-1.5 bg-[var(--color-border)] rounded-full overflow-hidden">
                     <div class="h-full bg-cyan-500 rounded-full transition-all" style="width: {roomTotalKw > 0 ? Math.round(ph.l2 / roomTotalKw * 100) : 0}%"></div>
                   </div>
                 </div>
@@ -258,7 +258,7 @@
                     <span class="text-[10px] app-card-subtitle font-medium">L3</span>
                     <span class="text-xs font-bold text-orange-400">{ph.l3.toFixed(2)} kW</span>
                   </div>
-                  <div class="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden">
+                  <div class="w-full h-1.5 bg-[var(--color-border)] rounded-full overflow-hidden">
                     <div class="h-full bg-orange-500 rounded-full transition-all" style="width: {roomTotalKw > 0 ? Math.round(ph.l3 / roomTotalKw * 100) : 0}%"></div>
                   </div>
                 </div>
@@ -300,7 +300,7 @@
                         <span>Auslastung</span>
                         <span>{percent}%</span>
                       </div>
-                      <div class="w-full h-2 bg-slate-950 rounded-full overflow-hidden">
+                      <div class="w-full h-2 bg-[var(--color-border)] rounded-full overflow-hidden">
                         <div 
                           class="h-full bg-gradient-to-r from-[#1D9E75] to-[#5DCAA5] rounded-full" 
                           style="width: {percent}%"
@@ -323,7 +323,7 @@
                     {/if}
 
                     <!-- Vertical Rack View representation -->
-                    <div class="border border-slate-950 bg-[var(--color-bg3)] rounded p-1 select-none">
+                    <div class="border border-[var(--color-border)] bg-[var(--color-bg3)] rounded p-1 select-none">
                       <RackFrontView
                         rack={rack}
                         {rackDevices}
@@ -396,7 +396,7 @@
                         <span>Auslastung</span>
                         <span>{percent}%</span>
                       </div>
-                      <div class="w-full h-2 bg-slate-950 rounded-full overflow-hidden">
+                      <div class="w-full h-2 bg-[var(--color-border)] rounded-full overflow-hidden">
                         <div class="h-full bg-gradient-to-r from-amber-500 to-orange-400 rounded-full" style="width: {percent}%"></div>
                       </div>
                     </div>

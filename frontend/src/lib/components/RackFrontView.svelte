@@ -224,7 +224,7 @@
       <div class="flex-1 flex justify-center py-2 min-h-0">
         <button
           onclick={(e) => handleEmptySideClick('right', e)}
-          class="w-4 h-full border border-dashed border-[var(--color-border2)]/50 rounded flex flex-col items-center justify-center hover:bg-[var(--color-border2)] hover:border-slate-500 transition-colors"
+          class="w-4 h-full border border-dashed border-[var(--color-border2)]/50 rounded flex flex-col items-center justify-center hover:bg-[var(--color-border2)] hover:border-[var(--color-border)] transition-colors"
           title="0-U Gerät rechts hinzufügen"
           aria-label="0-U Gerät rechts hinzufügen"
         >

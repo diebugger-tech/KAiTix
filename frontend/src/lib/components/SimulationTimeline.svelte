@@ -40,15 +40,15 @@
 
     <!-- Tabs -->
     <div class="flex px-6 border-b border-[var(--color-border)]/80 bg-[var(--color-bg2)]/50">
-      <button class="px-6 py-3 text-sm font-semibold transition border-b-2 {activeTab === 'overview' ? 'text-[#5DCAA5] border-[#1D9E75]' : 'text-[var(--color-text2)] border-transparent hover:text-slate-200'}"
+      <button class="px-6 py-3 text-sm font-semibold transition border-b-2 {activeTab === 'overview' ? 'text-[#5DCAA5] border-[#1D9E75]' : 'text-[var(--color-text2)] border-transparent hover:text-[var(--color-text)]'}"
         onclick={() => activeTab = 'overview'}>
         Übersicht & Auswirkungen ({result.affected_devices.length})
       </button>
-      <button class="px-6 py-3 text-sm font-semibold transition border-b-2 {activeTab === 'shutdown' ? 'text-[#5DCAA5] border-[#1D9E75]' : 'text-[var(--color-text2)] border-transparent hover:text-slate-200'}"
+      <button class="px-6 py-3 text-sm font-semibold transition border-b-2 {activeTab === 'shutdown' ? 'text-[#5DCAA5] border-[#1D9E75]' : 'text-[var(--color-text2)] border-transparent hover:text-[var(--color-text)]'}"
         onclick={() => activeTab = 'shutdown'}>
         Shutdown-Sequenz ({result.shutdown_timeline.length})
       </button>
-      <button class="px-6 py-3 text-sm font-semibold transition border-b-2 {activeTab === 'boot' ? 'text-[#5DCAA5] border-[#1D9E75]' : 'text-[var(--color-text2)] border-transparent hover:text-slate-200'}"
+      <button class="px-6 py-3 text-sm font-semibold transition border-b-2 {activeTab === 'boot' ? 'text-[#5DCAA5] border-[#1D9E75]' : 'text-[var(--color-text2)] border-transparent hover:text-[var(--color-text)]'}"
         onclick={() => activeTab = 'boot'}>
         Boot-Sequenz ({result.boot_timeline.length})
       </button>
@@ -75,7 +75,7 @@
                 <div class="flex items-start justify-between">
                   <div class="flex items-center gap-2">
                     <Monitor class="w-4 h-4 {dev.state === 'red' ? 'text-red-400' : 'text-amber-400'}" />
-                    <span class="font-mono text-sm font-bold text-slate-200">Gerät ID: {dev.device_id}</span>
+                    <span class="font-mono text-sm font-bold text-[var(--color-text)]">Gerät ID: {dev.device_id}</span>
                   </div>
                   <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded {dev.state === 'red' ? 'bg-red-500/10 text-red-400' : 'bg-amber-500/10 text-amber-400'}">
                     {dev.state === 'red' ? 'Ausfall' : 'Degradiert'}
@@ -124,7 +124,7 @@
                     <Clock class="w-3 h-3" />
                     {ev.method}
                   </div>
-                  <div class="text-sm text-slate-200 font-medium leading-tight">
+                  <div class="text-sm text-[var(--color-text)] font-medium leading-tight">
                     {ev.message}
                   </div>
                   {#if ev.warning}

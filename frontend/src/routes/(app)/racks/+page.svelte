@@ -1020,8 +1020,8 @@
     'Cat6':           { desc: 'Netzwerk-Patch',          use: 'Switch ↔ Server, Switch ↔ Switch',          connector: 'RJ-45 · bis 1 Gbps',       badgeClass: 'bg-blue-500/10 text-blue-400 border-[#1D9E75]/30',       dotColor: 'bg-blue-400' },
     'Cat6A':          { desc: 'Netzwerk-Patch',          use: 'Switch ↔ Server, Switch ↔ Switch',          connector: 'RJ-45 · bis 10 Gbps',      badgeClass: 'bg-blue-500/10 text-blue-400 border-[#1D9E75]/30',       dotColor: 'bg-blue-400' },
     'Cat7':           { desc: 'Netzwerk-Patch',          use: 'Switch ↔ Server, Switch ↔ Switch',          connector: 'RJ-45 · bis 10 Gbps',      badgeClass: 'bg-blue-500/10 text-blue-400 border-[#1D9E75]/30',       dotColor: 'bg-blue-400' },
-    'DAC':            { desc: 'Direct-Attach-Kabel',     use: 'Switch ↔ Server, Uplink Switch ↔ Switch',   connector: 'SFP+ / QSFP · 10–100 Gbps',badgeClass: 'bg-[var(--color-border2)] text-[var(--color-text2)] border-[var(--color-border)]',     dotColor: 'bg-slate-400' },
-    'SFP+':           { desc: 'SFP+ Transceiver-Kabel',  use: 'Switch ↔ Server, Uplink',                  connector: 'SFP+ · 10 Gbps',           badgeClass: 'bg-[var(--color-border2)] text-[var(--color-text2)] border-[var(--color-border)]',     dotColor: 'bg-slate-400' },
+    'DAC':            { desc: 'Direct-Attach-Kabel',     use: 'Switch ↔ Server, Uplink Switch ↔ Switch',   connector: 'SFP+ / QSFP · 10–100 Gbps',badgeClass: 'bg-[var(--color-border2)] text-[var(--color-text2)] border-[var(--color-border)]',     dotColor: 'bg-[var(--color-text3)]' },
+    'SFP+':           { desc: 'SFP+ Transceiver-Kabel',  use: 'Switch ↔ Server, Uplink',                  connector: 'SFP+ · 10 Gbps',           badgeClass: 'bg-[var(--color-border2)] text-[var(--color-text2)] border-[var(--color-border)]',     dotColor: 'bg-[var(--color-text3)]' },
     'LC-LC':          { desc: 'Glasfaser LWL',           use: 'Langstrecke, RZ-übergreifend, Backbone',    connector: 'LC Duplex · OM3/OM4',      badgeClass: 'bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/30', dotColor: 'bg-fuchsia-400' },
     'SC-SC':          { desc: 'Glasfaser LWL',           use: 'Langstrecke, RZ-übergreifend',              connector: 'SC Duplex · OM2/OM3',      badgeClass: 'bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/30', dotColor: 'bg-fuchsia-400' },
     'Strom-C13':         { desc: 'Stromversorgung Standard',        use: 'PDU → Server, Switch, Firewall',        connector: 'IEC C13/C14 · max. 10A',              badgeClass: 'bg-red-500/10 text-red-400 border-red-500/30',       dotColor: 'bg-red-400' },
@@ -1055,7 +1055,7 @@
     </div>
     <div class="flex items-center space-x-2">
       <button onclick={downloadAllRacksPdf} disabled={pdfLoading}
-        class="flex items-center space-x-2 px-3 py-2 bg-[var(--color-border2)] hover:bg-[var(--color-border2)] text-slate-200 rounded-lg text-xs font-semibold transition disabled:opacity-50"
+        class="flex items-center space-x-2 px-3 py-2 bg-[var(--color-border2)] hover:bg-[var(--color-border2)] text-[var(--color-text)] rounded-lg text-xs font-semibold transition disabled:opacity-50"
         title="Alle Racks als PDF">
         <FileText class="w-3.5 h-3.5" /><span>{pdfLoading ? '…' : 'PDF Alle'}</span>
       </button>
@@ -1189,7 +1189,7 @@
                     <Wifi class="w-3 h-3 text-violet-400 shrink-0" />
                   {/if}
                   <div class="flex-1 min-w-0">
-                    <div class="text-xs text-slate-200 truncate">{loc.name}</div>
+                    <div class="text-xs text-[var(--color-text)] truncate">{loc.name}</div>
                     <div class="text-[9px] text-[var(--color-text3)]">{loc.typ === 'rechenzentrum' ? 'Rechenzentrum' : 'Dienstaußenstelle'}</div>
                   </div>
                   <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition">
@@ -1394,7 +1394,7 @@
                              'bg-orange-950 text-orange-400 border border-orange-900/40'}">
                             {outlet.phase ?? '–'}
                           </span>
-                          <span class="font-medium text-slate-200">{pduDev?.hostname ?? 'PDU'}</span>
+                          <span class="font-medium text-[var(--color-text)]">{pduDev?.hostname ?? 'PDU'}</span>
                           <span class="text-[var(--color-text3)] font-mono text-[10px]">{outlet.outlet_name}</span>
                         </div>
                         {#if outlet.steckdosentyp}
@@ -1436,7 +1436,7 @@
                         <span class="shrink-0 w-7 font-bold text-center {outlet.phase==='L1'?'text-blue-400':outlet.phase==='L2'?'text-cyan-400':'text-orange-400'}">
                           {outlet.phase ?? '–'}
                         </span>
-                        <span class="font-mono text-slate-200 w-16 truncate shrink-0">{outlet.outlet_name}</span>
+                        <span class="font-mono text-[var(--color-text)] w-16 truncate shrink-0">{outlet.outlet_name}</span>
                         <span class="text-[10px] text-[var(--color-text3)] w-8 shrink-0">{outlet.steckdosentyp ?? '–'}</span>
                         <select
                           class="flex-1 min-w-0 bg-[var(--color-border)] border border-[var(--color-border2)] rounded px-2 py-1 text-[10px] text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]"
@@ -1557,7 +1557,7 @@
                     <div class="bg-[var(--color-bg2)] border border-[var(--color-border)]/80 rounded-lg p-3 flex items-center justify-between text-xs">
                       <div class="flex items-center space-x-3 min-w-0">
                         <div class="shrink-0">
-                          <div class="font-mono font-bold text-slate-200">{iface.port_name}</div>
+                          <div class="font-mono font-bold text-[var(--color-text)]">{iface.port_name}</div>
                           <div class="text-[10px] text-[var(--color-text3)]">{iface.typ}</div>
                         </div>
                         {#if end}
@@ -1600,7 +1600,7 @@
                     <div class="bg-[var(--color-bg2)] border border-[var(--color-border)]/80 rounded-lg p-3 flex items-center justify-between text-xs">
                       <div class="flex items-center space-x-3 min-w-0">
                         <div class="shrink-0">
-                          <div class="font-mono font-bold text-slate-200">{port.port_name}</div>
+                          <div class="font-mono font-bold text-[var(--color-text)]">{port.port_name}</div>
                           <div class="text-[10px] text-[var(--color-text3)]">{port.typ}</div>
                         </div>
                         {#if end}

@@ -210,7 +210,7 @@
     {#each [['devices', 'Geräte CSV'], ['cables', 'Kabel CSV'], ['eplan', 'EPLAN']] as [tab, label]}
       <button
         onclick={() => activeTab = tab as Tab}
-        class="px-5 py-2 rounded-lg text-sm font-medium transition-all {activeTab === tab ? 'bg-[#1D9E75] text-[var(--color-text)] shadow-lg shadow-blue-600/20' : 'text-[var(--color-text2)] hover:text-slate-200'}"
+        class="px-5 py-2 rounded-lg text-sm font-medium transition-all {activeTab === tab ? 'bg-[#1D9E75] text-[var(--color-text)] shadow-lg shadow-blue-600/20' : 'text-[var(--color-text2)] hover:text-[var(--color-text)]'}"
       >
         {label}
       </button>
@@ -255,7 +255,7 @@
                 }}
               />
               <Upload class="w-5 h-5 text-[var(--color-text3)] group-hover:text-blue-400 transition" />
-              <span class="text-sm text-[var(--color-text2)] group-hover:text-slate-200 transition">
+              <span class="text-sm text-[var(--color-text2)] group-hover:text-[var(--color-text)] transition">
                 {deviceFile ? deviceFile.name : 'CSV-Datei auswählen oder hier ablegen'}
               </span>
             </label>
@@ -313,7 +313,7 @@
                   Vorhandene aktualisieren
                 </label>
               {/if}
-              <button onclick={resetDevices} class="ml-auto px-3 py-1.5 text-xs text-[var(--color-text2)] hover:text-slate-200 transition">
+              <button onclick={resetDevices} class="ml-auto px-3 py-1.5 text-xs text-[var(--color-text2)] hover:text-[var(--color-text)] transition">
                 Abbrechen
               </button>
               <button
@@ -367,7 +367,7 @@
                         {statusLabel(row.status)}
                       </span>
                     </td>
-                    <td class="px-4 py-2 text-slate-200 font-mono">{row.hostname || '—'}</td>
+                    <td class="px-4 py-2 text-[var(--color-text)] font-mono">{row.hostname || '—'}</td>
                     <td class="px-4 py-2 text-[var(--color-text)]">{row.typ}</td>
                     <td class="px-4 py-2 text-[var(--color-text)]">{row.rack || '—'}</td>
                     <td class="px-4 py-2 text-[var(--color-text)]">{row.u_position ?? '—'}</td>
@@ -419,7 +419,7 @@
                 }}
               />
               <Upload class="w-5 h-5 text-[var(--color-text3)] group-hover:text-blue-400 transition" />
-              <span class="text-sm text-[var(--color-text2)] group-hover:text-slate-200 transition">
+              <span class="text-sm text-[var(--color-text2)] group-hover:text-[var(--color-text)] transition">
                 {cableFile ? cableFile.name : 'CSV-Datei auswählen oder hier ablegen'}
               </span>
             </label>
@@ -473,7 +473,7 @@
                   Vorhandene aktualisieren
                 </label>
               {/if}
-              <button onclick={resetCables} class="px-3 py-1.5 text-xs text-[var(--color-text2)] hover:text-slate-200 transition">
+              <button onclick={resetCables} class="px-3 py-1.5 text-xs text-[var(--color-text2)] hover:text-[var(--color-text)] transition">
                 Abbrechen
               </button>
               <button
@@ -532,9 +532,9 @@
                     <td class="px-4 py-2 text-[var(--color-text)] font-mono">{row.kabel_nr || '—'}</td>
                     <td class="px-4 py-2 text-[var(--color-text)]">{row.typ}</td>
                     <td class="px-4 py-2 text-[var(--color-text)]">{row.laenge_m} m</td>
-                    <td class="px-4 py-2 text-slate-200 font-mono">{row.von_geraet || '—'}</td>
+                    <td class="px-4 py-2 text-[var(--color-text)] font-mono">{row.von_geraet || '—'}</td>
                     <td class="px-4 py-2 text-[var(--color-text2)]">{row.von_port || '—'}</td>
-                    <td class="px-4 py-2 text-slate-200 font-mono">{row.zu_geraet || '—'}</td>
+                    <td class="px-4 py-2 text-[var(--color-text)] font-mono">{row.zu_geraet || '—'}</td>
                     <td class="px-4 py-2 text-[var(--color-text2)]">{row.zu_port || '—'}</td>
                     <td class="px-4 py-2 text-[var(--color-text2)]">{row.farbe || '—'}</td>
                     <td class="px-4 py-2 text-red-400">{row.errors?.join(', ') || ''}</td>
@@ -571,7 +571,7 @@
                 }}
               />
               <Upload class="w-5 h-5 text-[var(--color-text3)] group-hover:text-blue-400 transition" />
-              <span class="text-sm text-[var(--color-text2)] group-hover:text-slate-200 transition">
+              <span class="text-sm text-[var(--color-text2)] group-hover:text-[var(--color-text)] transition">
                 {eplanFile ? eplanFile.name : 'EPLAN-Exportdatei auswählen'}
               </span>
             </label>
@@ -609,7 +609,7 @@
             <div class="ml-auto flex gap-2">
               <button
                 onclick={() => { eplanPreview = null; eplanFile = null; }}
-                class="px-3 py-1.5 text-xs text-[var(--color-text2)] hover:text-slate-200 transition"
+                class="px-3 py-1.5 text-xs text-[var(--color-text2)] hover:text-[var(--color-text)] transition"
               >
                 Abbrechen
               </button>
@@ -637,9 +637,9 @@
               <tbody>
                 {#each (eplanPreview.connections ?? []) as conn}
                   <tr class="border-b border-[var(--color-border)]/50 hover:bg-[var(--color-border2)]">
-                    <td class="px-4 py-2 text-slate-200 font-mono">{conn.von_geraet ?? '—'}</td>
+                    <td class="px-4 py-2 text-[var(--color-text)] font-mono">{conn.von_geraet ?? '—'}</td>
                     <td class="px-4 py-2 text-[var(--color-text2)]">{conn.von_port ?? '—'}</td>
-                    <td class="px-4 py-2 text-slate-200 font-mono">{conn.zu_geraet ?? '—'}</td>
+                    <td class="px-4 py-2 text-[var(--color-text)] font-mono">{conn.zu_geraet ?? '—'}</td>
                     <td class="px-4 py-2 text-[var(--color-text2)]">{conn.zu_port ?? '—'}</td>
                     <td class="px-4 py-2 text-[var(--color-text)]">{conn.typ ?? '—'}</td>
                     <td class="px-4 py-2 text-[var(--color-text)]">{conn.laenge_m != null ? conn.laenge_m + ' m' : '—'}</td>

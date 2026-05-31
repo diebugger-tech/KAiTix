@@ -562,7 +562,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
         <div class="flex items-center gap-1.5 bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-2 py-1 shrink-0">
           <Search size={11} class="text-[var(--color-text3)] shrink-0" />
           <input bind:value={searchQuery} placeholder="Suche…"
-            class="bg-transparent text-xs text-[var(--color-text)] placeholder-slate-600 outline-none w-28" />
+            class="bg-transparent text-xs text-[var(--color-text)] placeholder:text-[var(--color-text3)] outline-none w-28" />
           {#if searchQuery}
             <button onclick={() => searchQuery = ''} class="text-[var(--color-text3)] hover:text-[var(--color-text2)]"><X size={11} /></button>
           {/if}
@@ -593,7 +593,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
             <input type="checkbox" bind:checked={showCrossRack} class="accent-violet-500 w-3 h-3" /> XRack
           </label>
           <label class="flex items-center gap-1 cursor-pointer text-[11px] text-[var(--color-text)] select-none">
-            <input type="checkbox" bind:checked={showIntraRack} class="accent-slate-400 w-3 h-3" /> Intra
+            <input type="checkbox" bind:checked={showIntraRack} class="accent-[var(--color-text3)] w-3 h-3" /> Intra
           </label>
         </div>
 
@@ -1070,7 +1070,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
                   {#if item.node.ip_adresse}<span class="text-[10px] font-mono text-blue-400">{item.node.ip_adresse}</span>{/if}
                 </div>
               </div>
-              <div class="divide-y divide-slate-800/40">
+              <div class="divide-y divide-[var(--color-border)]/40">
                 {#each item.connections as conn}
                   {@const clStatus = crossLocationStatus(conn.edge)}
                   {@const [clA, clB] = edgeStandorts(conn.edge)}

@@ -137,14 +137,14 @@
       </button>
     <div class="flex items-center bg-[var(--color-bg3)] border border-[var(--color-border)] rounded-lg p-1">
       <button 
-        class="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-all {activeTab === 'block' ? 'bg-[var(--color-border)] text-[var(--color-text)] shadow' : 'text-[var(--color-text2)] hover:text-slate-200'}"
+        class="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-all {activeTab === 'block' ? 'bg-[var(--color-border)] text-[var(--color-text)] shadow' : 'text-[var(--color-text2)] hover:text-[var(--color-text)]'}"
         onclick={() => activeTab = 'block'}
       >
         <Grid class="w-4 h-4" />
         <span>Blockschaltbild</span>
       </button>
       <button
-        class="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-all {activeTab === 'cad' ? 'bg-[var(--color-border)] text-[var(--color-text)] shadow' : 'text-[var(--color-text2)] hover:text-slate-200'}"
+        class="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-all {activeTab === 'cad' ? 'bg-[var(--color-border)] text-[var(--color-text)] shadow' : 'text-[var(--color-text2)] hover:text-[var(--color-text)]'}"
         onclick={() => activeTab = 'cad'}
       >
         <FileText class="w-4 h-4" />

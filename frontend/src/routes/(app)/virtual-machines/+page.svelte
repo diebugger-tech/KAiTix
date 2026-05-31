@@ -216,13 +216,13 @@
       <div class="flex space-x-2">
         <button 
           onclick={() => activeTab = 'table'} 
-          class={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${activeTab === 'table' ? 'bg-[var(--color-border)] text-[var(--color-text)] border border-[var(--color-border2)]' : 'text-[var(--color-text2)] hover:text-slate-200'}`}
+          class={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${activeTab === 'table' ? 'bg-[var(--color-border)] text-[var(--color-text)] border border-[var(--color-border2)]' : 'text-[var(--color-text2)] hover:text-[var(--color-text)]'}`}
         >
           Tabelle
         </button>
         <button 
           onclick={() => activeTab = 'graph'} 
-          class={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${activeTab === 'graph' ? 'bg-[var(--color-border)] text-[var(--color-text)] border border-[var(--color-border2)]' : 'text-[var(--color-text2)] hover:text-slate-200'}`}
+          class={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${activeTab === 'graph' ? 'bg-[var(--color-border)] text-[var(--color-text)] border border-[var(--color-border2)]' : 'text-[var(--color-text2)] hover:text-[var(--color-text)]'}`}
         >
           Abhängigkeitsgraph
         </button>
@@ -250,7 +250,7 @@
               <th class="px-4 py-3 text-right">Aktionen</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-800/50">
+          <tbody class="divide-y divide-[var(--color-border)]/50">
             {#if loading}
               <tr><td colspan="8" class="text-center py-8 text-[var(--color-text3)]">Lade VMs...</td></tr>
             {:else if vms.length === 0}
@@ -258,7 +258,7 @@
             {:else}
               {#each vms as vm}
                 <tr class="hover:bg-[var(--color-border2)] transition group">
-                  <td class="px-4 py-3 font-medium text-slate-200">{vm.name}</td>
+                  <td class="px-4 py-3 font-medium text-[var(--color-text)]">{vm.name}</td>
                   <td class="px-4 py-3 text-xs">
                     <span class="bg-[var(--color-border)] border border-[var(--color-border2)] px-2 py-0.5 rounded text-[var(--color-text)]">
                       {vm.hypervisor_typ || '—'}
@@ -356,7 +356,7 @@
                   <div class="flex items-start justify-between gap-1.5 min-w-0">
                     <div class="flex items-center gap-1.5 min-w-0">
                       <Monitor class="w-4 h-4 text-pink-400 shrink-0" />
-                      <div class="truncate text-xs font-semibold text-slate-100" title={vm.name}>{vm.name}</div>
+                      <div class="truncate text-xs font-semibold text-[var(--color-text)]" title={vm.name}>{vm.name}</div>
                     </div>
                     <div class="flex items-center gap-1 shrink-0">
                       <span class={`inline-flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-bold ${vm.shutdown_priority === 1 ? 'bg-red-500/20 text-red-400' : vm.shutdown_priority === 2 ? 'bg-orange-500/20 text-orange-400' : 'bg-[var(--color-border)] text-[var(--color-text2)]'}`} title="Shutdown Priorität">

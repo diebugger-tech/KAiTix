@@ -77,6 +77,43 @@
     if (route.startsWith('/runbook-orchestrator')) return 'Runbook Orchestrator';
     return 'KAiTix';
   });
+
+  const navGroups = [
+    {
+      title: 'Infrastruktur',
+      links: [
+        { href: '/racks', icon: Layers, label: 'Racks' },
+        { href: '/hardware', icon: Cpu, label: 'Hardware' },
+        { href: '/cables', icon: Cable, label: 'Kabelliste' },
+        { href: '/topology', icon: Network, label: 'Topologie' }
+      ]
+    },
+    {
+      title: 'Stromversorgung',
+      links: [
+        { href: '/usv', icon: Zap, label: 'USV-Auslegung' },
+        { href: '/eplan', icon: Zap, label: 'E-Plan' }
+      ]
+    },
+    {
+      title: 'Virtualisierung',
+      links: [
+        { href: '/virtual-machines', icon: Monitor, label: 'Virtuelle Maschinen' }
+      ]
+    },
+    {
+      title: 'Betrieb',
+      links: [
+        { href: '/runbook-orchestrator', icon: BookOpen, label: 'Runbook Orchestrator', matchPrefix: true }
+      ]
+    },
+    {
+      title: 'Tools',
+      links: [
+        { href: '/import', icon: FileUp, label: 'Import' }
+      ]
+    }
+  ];
 </script>
 
 <div class="flex h-screen overflow-hidden app-root">
@@ -109,93 +146,21 @@
           <span>Dashboard</span>
         </a>
 
-        <!-- Group: Infrastruktur -->
-        <div class="pt-3 pb-1 px-4">
-          <span class="nav-group-title">Infrastruktur</span>
-        </div>
-        <a
-          href="/racks"
-          class="nav-link {page.url.pathname === '/racks' ? 'active' : ''}"
-        >
-          <Layers class="w-4.5 h-4.5" />
-          <span>Racks</span>
-        </a>
-        <a 
-          href="/hardware" 
-          class="nav-link {page.url.pathname === '/hardware' ? 'active' : ''}"
-        >
-          <Cpu class="w-4.5 h-4.5" />
-          <span>Hardware</span>
-        </a>
-        <a 
-          href="/cables" 
-          class="nav-link {page.url.pathname === '/cables' ? 'active' : ''}"
-        >
-          <Cable class="w-4.5 h-4.5" />
-          <span>Kabelliste</span>
-        </a>
-        <a
-          href="/topology"
-          class="nav-link {(page.url.pathname as string) === '/topology' ? 'active' : ''}"
-        >
-          <Network class="w-4.5 h-4.5" />
-          <span>Topologie</span>
-        </a>
-
-        <!-- Group: Stromversorgung -->
-        <div class="pt-3 pb-1 px-4 border-t border-[var(--color-border)]/60 mt-3">
-          <span class="nav-group-title">Stromversorgung</span>
-        </div>
-        <a
-          href="/usv" 
-          class="nav-link {page.url.pathname === '/usv' ? 'active' : ''}"
-        >
-          <Zap class="w-4.5 h-4.5" />
-          <span>USV-Auslegung</span>
-        </a>
-        <a
-          href="/eplan"
-          class="nav-link {(page.url.pathname as string) === '/eplan' ? 'active' : ''}"
-        >
-          <Zap class="w-4.5 h-4.5" />
-          <span>E-Plan</span>
-        </a>
-
-        <!-- Group: Virtualisierung -->
-        <div class="pt-3 pb-1 px-4 border-t border-[var(--color-border)]/60 mt-3">
-          <span class="nav-group-title">Virtualisierung</span>
-        </div>
-        <a 
-          href="/virtual-machines" 
-          class="nav-link {page.url.pathname === '/virtual-machines' ? 'active' : ''}"
-        >
-          <Monitor class="w-4.5 h-4.5" />
-          <span>Virtuelle Maschinen</span>
-        </a>
-
-        <!-- Group: Betrieb -->
-        <div class="pt-3 pb-1 px-4 border-t border-[var(--color-border)]/60 mt-3">
-          <span class="nav-group-title">Betrieb</span>
-        </div>
-        <a 
-          href="/runbook-orchestrator" 
-          class="nav-link {page.url.pathname.startsWith('/runbook-orchestrator') ? 'active' : ''}"
-        >
-          <BookOpen class="w-4.5 h-4.5" />
-          <span>Runbook Orchestrator</span>
-        </a>
-
-        <!-- Group: Tools -->
-        <div class="pt-3 pb-1 px-4 border-t border-[var(--color-border)]/60 mt-3">
-          <span class="nav-group-title">Tools</span>
-        </div>
-        <a
-          href="/import"
-          class="nav-link {(page.url.pathname as string) === '/import' ? 'active' : ''}"
-        >
-          <FileUp class="w-4.5 h-4.5" />
-          <span>Import</span>
-        </a>
+        {#each navGroups as group, i}
+          <!-- Group: {group.title} -->
+          <div class="pt-3 pb-1 px-4 {i > 0 ? 'border-t border-[var(--color-border)]/60 mt-3' : ''}">
+            <span class="nav-group-title">{group.title}</span>
+          </div>
+          {#each group.links as link}
+            <a
+              href={link.href}
+              class="nav-link {link.matchPrefix ? (page.url.pathname.startsWith(link.href) ? 'active' : '') : (page.url.pathname === link.href ? 'active' : '')}"
+            >
+              <svelte:component this={link.icon} class="w-4.5 h-4.5" />
+              <span>{link.label}</span>
+            </a>
+          {/each}
+        {/each}
       </nav>
 
       <!-- Quick Export -->
@@ -254,7 +219,7 @@
             <User class="w-4 h-4 text-[#5DCAA5]" />
             <div class="text-xs">
               <div class="text-[10px] text-[var(--color-text3)] uppercase tracking-wider font-mono">Bearbeiter</div>
-              <div class="font-medium text-slate-200 truncate max-w-[120px]">{appState.bearbeiter}</div>
+              <div class="font-medium text-[var(--color-text)] truncate max-w-[120px]">{appState.bearbeiter}</div>
             </div>
           </div>
           <button 
