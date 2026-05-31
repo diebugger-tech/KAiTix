@@ -4,6 +4,17 @@ Alle wesentlichen Änderungen am Projekt werden in dieser Datei dokumentiert.
 
 ## [Unreleased]
 
+### Hinzugefügt
+- Runbook Orchestrator: PDF Print-Laufzettel mit Rack Elevations und Zero-U Highlighting
+- CSV Import: Aggregierte Fehlerdarstellung (Zusammenfassung fehlerhafter Zeilen)
+
+### Geändert
+- CSV Import: "Importieren"-Button wird strikt gesperrt, sobald Fehler in der Preview-Tabelle existieren
+- CSV Import: Backend-Validierung um echte Rack-HE-Overlap-Logik erweitert
+
+### Entfernt
+- VDE Protokoll-Reiter im Rack-Detailmodal (wird in die eigene `/usv`-Route verschoben)
+
 ## [1.0.0] — 2026-05-22
 
 ### Hinzugefügt

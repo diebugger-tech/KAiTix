@@ -46,6 +46,14 @@ ServerFlow-Dateien dienen als Referenz für Domänenwissen (USV-Berechnung, Kent
 
 ### Zuletzt abgeschlossen (diese Session)
 
+**Phase 3 — Daten-Härtung (Import & Export) abgeschlossen:**
+- **Runbook Laufzettel / Print Export:** Sauberes `@media print`-Layout ohne störende App-UI. `RunbookPrint`-Komponente mit Checklisten und dynamisch generierten Rack Elevations für Zielgeräte. Zero-U PDUs und Geräte sind berücksichtigt und visuell markiert.
+- **CSV-Import Härtung:**
+  - Rack-Overlap-Validierung (echte HE-Intervall-Logik beim Import).
+  - Button-Locking via Preview: Import-Button wird gesperrt, sobald Fehler (Kollisionen, unauffindbare Racks etc.) in der Preview-Tabelle existieren.
+  - Gruppierte Fehlerdarstellung: Übersichtliche Aggregation der Fehlermeldungen oberhalb der CSV-Tabelle ("3x Rack-Kollision").
+- **Bug-Fix Rack-Detail:** `selectedDevice.typ === 'usv'` Check und der "VDE Protokoll"-Reiter wurden aus dem allgemeinen IT-Rack-Detailmodal entfernt, da USVs als Standalone-Einheiten in eigenen Schränken stehen und eigene Ansichten bekommen.
+
 **Dashboard, 3D & USV-Verbesserungen** — komplett implementiert und gepusht:
 - 3D-Orbit-Ansicht der Topologie (three.js, ADDITIV neben 2D-SVG; eigene Komponente Topology3D.svelte; MeshStandardMaterial + Licht; EdgesGeometry-Rackrahmen; CSS2DRenderer-Labels mit pointerEvents:none; OrbitControls enableDamping + controls.update() im Loop; Raycaster nur gegen deviceMeshes; SSR-Guard via onMount). RackFilterBar wirkt auch in 3D.
 - topologyColors.ts: zentrale Farbquelle für Gerätetypen/Phasen, von 2D-SVG UND 3D gemeinsam genutzt (Single Source).
@@ -81,19 +89,14 @@ ServerFlow-Dateien dienen als Referenz für Domänenwissen (USV-Berechnung, Kent
 
 ## Offene Punkte (priorisiert)
 
-### 🔴 Kritisch (funktional kaputt)
+### 🟡 Sprint 2 (Nächste Schritte: Power Audit Refactoring)
 
-**BUG: `selectedDevice.typ === 'usv'`** in `racks/+page.svelte` Zeile 187 + 1427
-- `'usv'` ist nicht im DB-Enum → VDE Protokoll-Tab kann nie erscheinen
-- Fix: Prüfung auf `hardware_type.kategorie === 'usv'` umstellen (+ API-Erweiterung)
+Das Ziel für den kommenden Schritt ist es, die USV-Prüfung und Dimensionierung aus den alten Script-Dateien in echte Backend-Services zu überführen und im USV-Bereich des Frontends sichtbar zu machen.
 
-### 🟡 Sprint 2
-
-- **Protokoll-Tab** für USV: historische `usv_calculations` anzeigen
-- `audit_vde_compliance()` aus `scripts/power_setup_generator.py` in Service extrahieren
-- `GET /api/v1/power/audit/{usv_unit_id}` Endpoint
-- `UsvCalculationResponse`, `VdeAuditResult`, `PowerAuditResponse` Pydantic-Schemas
-- Detail-Modal für Geräte in `racks/+page.svelte` (Layout-Änderung)
+- **Refactoring Service:** `audit_vde_compliance()` aus `scripts/power_setup_generator.py` in einen dedizierten FastAPI Service (z.B. `app/domains/power/services.py`) extrahieren.
+- **Backend API:** Neuer Endpoint `GET /api/v1/power/audit/{usv_unit_id}`.
+- **Pydantic Schemas:** `UsvCalculationResponse`, `VdeAuditResult`, `PowerAuditResponse` für saubere Typisierung anlegen.
+- **Frontend UI (`/usv`):** Ein "Protokoll"-Tab oder eine Detailansicht für die USV-Einheit bauen, wo historische `usv_calculations` und das Live-VDE-Audit (Compliance) übersichtlich visualisiert werden.
 
 ### 🟢 Backlog / Optional (Neue Ideen)
 
@@ -109,7 +112,7 @@ ServerFlow-Dateien dienen als Referenz für Domänenwissen (USV-Berechnung, Kent
 
 - USV-Dropdown im E-Plan (Schritt 5 der Batterie-Erweiterung)
 - Testdaten Seed-Script
-- PDF/Markdown Export
+- ~PDF/Markdown Export~ (In Print-Funktion von Runbook umgesetzt)
 - Phasen-Imbalance L1/L2/L3 Dokumentation
 - 26 verbleibende TypeScript-Fehler (kein Laufzeit-Impact)
 - E-Plan / Einlinienschaltbild Generator als SVG (langfristig)
