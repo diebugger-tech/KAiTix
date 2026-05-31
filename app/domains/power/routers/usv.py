@@ -26,6 +26,8 @@ from app.domains.power.schemas import (
     UsvModuleUpdate,
     UsvSimulationEventResponse,
     PowerAuditResponse,
+    UsvSystemSetupRequest,
+    UsvSystemSetupResponse,
 )
 from app.domains.power.services.usv_calc import (
     UsvCalculator,
@@ -33,10 +35,28 @@ from app.domains.power.services.usv_calc import (
     BatteryCabinetEngine,
     ShutdownSimulationEngine,
     PhaseBalancer,
-    audit_vde_compliance,
 )
+from app.domains.power.services.setup import setup_usv_system, UsvUnitExists
 
 router = APIRouter()
+
+@router.post(
+    "/setup",
+    response_model=UsvSystemSetupResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="USV-System schlüsselfertig anlegen (Simulation/Doku)",
+)
+async def usv_setup(
+    payload: UsvSystemSetupRequest,
+    db: AsyncSession = Depends(get_db),
+) -> UsvSystemSetupResponse:
+    try:
+        return await setup_usv_system(db, payload)
+    except UsvUnitExists as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        )
 
 
 class UsvSimulationRequest(BaseModel):
@@ -195,14 +215,8 @@ async def get_power_audit(usv_unit_id: int, db: AsyncSession = Depends(get_db)):
     )
     panel = panel_query.scalar_one_or_none()
 
-    # 2. VDE Audit durchführen (on the fly)
-    payload = {
-        "n1_safe": status_res.get("n1_safe", False),
-        "battery_redundant": usv_unit.battery_strings >= 2,
-        "epo_configured": panel.has_epo_contact if panel else False,
-        "mbs_configured": usv_unit.has_bypass_switch,
-    }
-    audit_results = audit_vde_compliance(payload)
+    # 2. VDE Audit durchführen (on the fly) - OBSOLETE (NUR-DOKU)
+    audit_results = []
 
     # 3. Berechnungen laden
     calc_query = await db.execute(

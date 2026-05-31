@@ -6,6 +6,7 @@ from httpx import AsyncClient, ASGITransport
 
 from app.main import app
 from app.core.database import Base, get_db
+from app.domains.hardware.models import Rack
 
 DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
@@ -54,3 +55,16 @@ async def client(db: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
         yield ac
 
     app.dependency_overrides.clear()
+
+
+@pytest_asyncio.fixture
+async def seed_rack(db: AsyncSession):
+    rack = Rack(
+        name="Test Rack",
+        standort="RZ 1",
+        hoehe_u=42,
+    )
+    db.add(rack)
+    await db.commit()
+    await db.refresh(rack)
+    return rack

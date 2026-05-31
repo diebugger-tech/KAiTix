@@ -42,6 +42,7 @@ class UsvUnit(Base):
     redundancy_path: Mapped[Optional[str]] = mapped_column(
         Enum("A", "B"), nullable=True
     )
+    geaendert_von: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     # Relationships
     rack: Mapped["Rack"] = relationship(back_populates="usv_units")
     modules: Mapped[List["UsvModule"]] = relationship(
@@ -65,6 +66,7 @@ class UsvModule(Base):
         Enum("aktiv", "reserve", "defekt"), nullable=False, default="aktiv"
     )
     seriennummer: Mapped[Optional[str]] = mapped_column(String(100))
+    geaendert_von: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
 
     # Relationships
     usv_unit: Mapped["UsvUnit"] = relationship(back_populates="modules")
@@ -120,6 +122,7 @@ class DistributionPanel(Base):
     redundancy_path: Mapped[Optional[str]] = mapped_column(
         Enum("A", "B"), nullable=True
     )
+    geaendert_von: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
 
     # Relationships
     circuits: Mapped[List["DistributionCircuit"]] = relationship(
