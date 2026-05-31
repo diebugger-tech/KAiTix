@@ -612,10 +612,12 @@
   }
 </script>
 
-<div class="h-full flex flex-col space-y-4">
-  {#if loading}
+{#if loading}
+  <div class="h-full flex flex-col space-y-4 screen-only">
     <div class="text-slate-500 py-12 text-center">Lade Runbook...</div>
-  {:else if runbook}
+  </div>
+{:else if runbook}
+  <div class="h-full flex flex-col space-y-4 screen-only">
     <!-- Header -->
     <div class="flex items-center justify-between bg-[#131615] border border-slate-800 rounded-xl p-4 shrink-0">
       <div class="flex items-center gap-4">
@@ -1127,14 +1129,12 @@
           {/if}
         </div>
       {/if}
-    </div>
-    <div class="print-only">
-      {#if runbook}
-        <RunbookPrint {runbook} affectedRacks={affectedRacksInfo} />
-      {/if}
-    </div>
-  {/if}
-</div>
+  </div>
+
+  <div class="print-only">
+    <RunbookPrint {runbook} affectedRacks={affectedRacksInfo} />
+  </div>
+{/if}
 
 <!-- Modal for Execution Details (Protocol View) -->
 {#if showExecutionDetailsModal && selectedExecutionDetails}
