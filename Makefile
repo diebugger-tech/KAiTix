@@ -2,7 +2,7 @@
 # KAiTix — Development Makefile
 # =============================================================================
 
-.PHONY: install dev dev-frontend dev-all status help test lint format migrate-create migrate-apply db-shell restart-all clean clean-bak check-branch
+.PHONY: install dev dev-frontend dev-all status help test lint format migrate-create migrate-apply db-shell restart-all clean clean-bak check-branch update
 
 # === UTILS & CHECKS ==========================================================
 check-branch:
@@ -25,6 +25,21 @@ install:
 	@echo ">>> Installiere Abhängigkeiten..."
 	python3 -m pip install -r requirements.txt
 	@echo ">>> Installation abgeschlossen."
+
+update:
+	@echo ">>> Hole neuesten Code von GitHub (main branch)..."
+	git checkout main
+	git pull origin main
+	@if [ -n "$$IN_NIX_SHELL" ] && [ -n "$$VIRTUAL_ENV" ]; then \
+		echo ">>> Installiere neue Abhängigkeiten..."; \
+		make install; \
+		echo ">>> Wende Datenbank-Migrationen an..."; \
+		make migrate-apply; \
+		echo ">>> Update erfolgreich! Starte den Server neu mit 'make restart-all'."; \
+	else \
+		echo ">>> Code aktualisiert! WICHTIG: Um das Update abzuschließen, aktiviere die nix-shell + venv und führe aus:"; \
+		echo "    make install && make migrate-apply"; \
+	fi
 
 # === DEVELOPMENT =============================================================
 dev:
