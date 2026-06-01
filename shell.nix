@@ -13,6 +13,7 @@ in pkgs.mkShell {
     echo "=== KAiTix Dev Shell ==="
     echo "Python: $(python3 --version)"
     echo "Node:   $(node --version)"
+    export PIP_NO_BINARY="greenlet"
     echo ""
     echo "Befehle:"
     echo "  source .venv/bin/activate   # venv aktivieren"
