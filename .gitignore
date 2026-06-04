@@ -121,3 +121,5 @@ gui_test_report.md
 .idea/
 fix_*.py
 patch_*.py
+future.md
+todo.md

@@ -54,6 +54,13 @@
 - Verbindungen können rack-übergreifend sein
 - PDUs dokumentieren Steckdosenbelegung pro Phase (L1/L2/L3)
 
+## Architektur-Entscheidungen (ADR)
+
+### ADR — Livedaten-Mustererkennung ist KEIN KAiTix-Feature
+- **Entscheidung:** Mustererkennung auf Livedaten (Messverläufe, ML, Predictive) lebt im separaten Projekt CabellistPro, dokumentiert in `future.md` (gitignored).
+- **Begründung:** NUR DOKU. KAiTix sammelt per Design keine Zeitreihen (`kentix_readings` aus ServerFlow bewusst entfallen). Der Schritt Simulation → Livedaten ist technisch klein — genau deshalb ist die Grenze eine bewusste Entscheidung, keine technische Hürde.
+- **Konsequenz:** KAiTix-seitig nur deterministische, erklärbare Simulation auf dokumentierter Konfig. Kein Live-Feed, kein Polling, kein externer Schreibzugriff.
+
 ## Modell-Routing-Tabelle
 
 | Modell | Aufgabe | Begründung | Kontextgröße |
