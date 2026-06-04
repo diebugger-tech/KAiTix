@@ -1,0 +1,56 @@
+# =============================================================================
+# KAiTix — Containerignore
+# =============================================================================
+# Verhindert, dass lokale Build-Artefakte, Secrets und
+# Entwicklungs-Abhängigkeiten ins Image gelangen.
+# =============================================================================
+
+# Git
+.git
+.gitignore
+
+# Python
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+.pytest_cache
+.mypy_cache
+.ruff_cache
+
+# Node.js
+node_modules
+frontend/node_modules
+frontend/.svelte-kit
+
+# Umgebungsvariablen / Secrets
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+
+# IDE / Editor
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Datenbank-Dumps / lokale Daten
+data/*.db
+*.sqlite
+*.sqlite3
+
+# Backup-Dateien
+*.bak
+*.tmp

@@ -1,0 +1,69 @@
+# =============================================================================
+# KAiTix — Podman Compose (Single-Image-Variante)
+# =============================================================================
+# Nutzt das All-in-One Containerfile (Backend + Frontend + nginx).
+# Einzelner externer Port 8080.
+#
+# Start:  podman compose -f compose.yml up --build
+# Stop:   podman compose -f compose.yml down
+# =============================================================================
+
+services:
+  db:
+    image: docker.io/library/mysql:8
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-kaitix}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-kaitix}
+      MYSQL_USER: ${MYSQL_USER:-kaitix}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-kaitix}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_PASSWORD:-kaitix}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - kaitix
+
+  app:
+    build:
+      context: .
+      dockerfile: Containerfile
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-mysql+aiomysql://kaitix:kaitix@db:3306/kaitix}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:8080}
+    depends_on:
+      - db
+    # Migrationen vor dem Start ausführen, dann die App starten
+    command: >
+      sh -c "/app/.venv/bin/python -m alembic upgrade head && /app/start.sh"
+    networks:
+      - kaitix
+
+  # Seed-Service: Einmalig Demo-Daten laden
+  # Aufruf: podman compose -f compose.yml run --rm seed
+  seed:
+    build:
+      context: .
+      dockerfile: Containerfile
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-mysql+aiomysql://kaitix:kaitix@db:3306/kaitix}
+    depends_on:
+      - db
+    command: >
+      sh -c "/app/.venv/bin/python -m alembic upgrade head && PYTHONPATH=. /app/.venv/bin/python scripts/seed_testdata.py"
+    profiles:
+      - seed
+    networks:
+      - kaitix
+
+volumes:
+  db_data:
+
+networks:
+  kaitix:

@@ -3,7 +3,6 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.models import Device, Cable
-import json
 
 @pytest.mark.asyncio
 async def test_csv_import_db_duplicate_no_update(client: AsyncClient, db: AsyncSession):

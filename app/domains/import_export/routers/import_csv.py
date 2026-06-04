@@ -6,7 +6,6 @@ from fastapi import APIRouter, Depends, UploadFile, HTTPException
 from pydantic import BaseModel, field_validator
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
 
 from app.core.database import get_db
 from app.models import Rack, Device, Cable

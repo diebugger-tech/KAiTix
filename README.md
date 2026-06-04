@@ -146,7 +146,12 @@ Falls Sie die Anwendung direkt auf Ihrem System installieren und ausführen möc
    *Wichtig:* Passen Sie `DATABASE_URL` in der `.env`-Datei an Ihre lokale MySQL-Datenbankverbindung an (z. B. `DATABASE_URL=mysql+aiomysql://user:password@localhost:3306/kaitix`).
 
 2. **Python-Abhängigkeiten installieren**
+
+   > **Hinweis für Ubuntu 24.04+ / Debian 12+:** Aufgrund von PEP 668 muss ein virtuelles Environment angelegt werden. Systemweises `pip install` wird blockiert.
+
    ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate
    pip install -r requirements.txt
    ```
 
@@ -155,7 +160,16 @@ Falls Sie die Anwendung direkt auf Ihrem System installieren und ausführen möc
    alembic upgrade head
    ```
 
-4. **Frontend einrichten & starten**
+4. **Node.js 20+ installieren (falls noch nicht vorhanden)**
+
+   > **Hinweis für Ubuntu / Debian:** Node.js ist nicht im Standard-Repository enthalten. Verwenden Sie NodeSource:
+
+   ```bash
+   curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+   sudo apt-get install -y nodejs
+   ```
+
+5. **Frontend einrichten & starten**
    ```bash
    cd frontend
    npm install
@@ -163,9 +177,10 @@ Falls Sie die Anwendung direkt auf Ihrem System installieren und ausführen möc
    ```
    *(Das Svelte5-Frontend läuft standardmäßig unter http://localhost:5175)*
 
-5. **Backend starten (in einem separaten Terminal)**
+6. **Backend starten (in einem separaten Terminal)**
    ```bash
    # Zurück im Hauptverzeichnis
+   source .venv/bin/activate
    uvicorn app.main:app --reload
    ```
    *(Das FastAPI-Backend läuft standardmäßig unter http://localhost:8003)*
