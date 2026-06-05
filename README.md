@@ -113,41 +113,56 @@ Alle Abhängigkeiten werden automatisch im Container installiert:
 #### Einzige Voraussetzung
 
 Auf einem frischen System wird **nur die Container-Engine** benötigt — sie ist das einzige,
-was sich nicht selbst installieren kann:
+was sich nicht selbst installieren kann. Einmalig unter Ubuntu / Debian:
 
 ```bash
-# Ubuntu / Debian (einmalig):
 sudo apt install -y podman docker-compose
 ```
 *(Alternativ Docker Desktop. Podman wird empfohlen: rootless, kein privilegierter Daemon.)*
 
 #### Starten in 3 Befehlen
+
+> [!TIP]
+> Jeden Befehl **einzeln** kopieren. Die Zeilen sind bewusst kommentarfrei, damit das
+> Einfügen in zsh/bash sauber durchläuft (zsh meldet sonst `command not found: #`).
+
+**1. Repository klonen**
 ```bash
-# 1. Repository klonen
 git clone https://github.com/diebugger-tech/KAiTix.git
 cd KAiTix
+```
 
-# 2. Umgebungsvariablen kopieren (Defaults reichen für den Erststart)
+**2. Umgebungsvariablen kopieren** (Defaults reichen für den Erststart)
+```bash
 cp .env.example .env
+```
 
-# 3. Stack bauen & starten
-podman compose up --build    # empfohlen (rootless)
-# oder:  docker compose up --build
+**3. Stack bauen & starten** (rootless empfohlen; alternativ `docker compose up --build`)
+```bash
+podman compose up --build
 ```
 
 Danach ist die Anwendung im Browser erreichbar unter: **http://localhost:8080**
 
+> [!IMPORTANT]
+> Im Browser **`http://localhost:8080`** öffnen. **Nicht** `0.0.0.0` und **nicht** die
+> internen Ports `:3000` (Frontend) oder `:8003` (Backend) — das sind containerinterne
+> Adressen, die der Browser nicht erreicht (`ERR_CONNECTION_REFUSED`). Alles läuft
+> gebündelt über Port **8080**.
+
 > [!NOTE]
-> Beim **ersten** Start werden automatisch Demo-Daten geladen (2 Racks, Geräte, VMs,
+> Beim **ersten** Start werden automatisch Demo-Daten geladen (Racks, Geräte, VMs,
 > Runbooks). Das passiert nur, solange die Datenbank leer ist — bestehende Daten werden
 > nie überschrieben. Abschaltbar via `SEED_DEMO_DATA=false` in der `.env`.
 
-**Nützliche Befehle:**
-```bash
-podman compose -f compose.yml down       # Stoppen (Daten bleiben im Volume erhalten)
-podman compose -f compose.yml down -v    # Stoppen + Datenbank-Volume löschen (Reset)
-podman compose -f compose.yml logs -f    # Logs verfolgen
-```
+**Nützliche Befehle** (jeweils einzeln einfügen):
+
+| Befehl | Wirkung |
+|---|---|
+| `podman compose down` | Stoppen (Daten bleiben im Volume erhalten) |
+| `podman compose down -v` | Stoppen **und** Datenbank-Volume löschen (Reset) |
+| `podman compose logs -f` | Logs live verfolgen |
+| `podman compose watch` | Auto-Rebuild bei Quelländerungen (Entwicklung) |
 
 ---
 
