@@ -128,6 +128,13 @@ RUN echo '#!/bin/bash' > /app/start.sh && \
     echo 'nginx -g "daemon off;" &' >> /app/start.sh && \
     echo 'NGINX_PID=$!' >> /app/start.sh && \
     echo '' >> /app/start.sh && \
+    echo 'sleep 2' >> /app/start.sh && \
+    echo 'echo ""' >> /app/start.sh && \
+    echo 'echo "=================================================================="' >> /app/start.sh && \
+    echo 'echo "  KAiTix laeuft!  Im Browser oeffnen:   http://localhost:8080"' >> /app/start.sh && \
+    echo 'echo "  NICHT 0.0.0.0 und NICHT :3000 / :8003 (das sind interne Ports)."' >> /app/start.sh && \
+    echo 'echo "=================================================================="' >> /app/start.sh && \
+    echo 'echo ""' >> /app/start.sh && \
     echo 'cleanup() {' >> /app/start.sh && \
     echo '    echo ">>> Stoppe Services..."' >> /app/start.sh && \
     echo '    kill $FRONTEND_PID $BACKEND_PID $NGINX_PID 2>/dev/null || true' >> /app/start.sh && \
