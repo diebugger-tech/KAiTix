@@ -59,7 +59,8 @@ credentials/
 # === NODE / SVELTEKIT (falls Frontend genutzt) ================================
 node_modules/
 .svelte-kit/
-package-lock.json
+# package-lock.json wird BEWUSST committet — npm ci (Containerfile/Dockerfile.frontend)
+# braucht die Lockfile für reproduzierbare Builds beim frischen Clone.
 yarn.lock
 pnpm-lock.yaml
 .vite/
