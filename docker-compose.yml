@@ -10,10 +10,11 @@ services:
     volumes:
       - db_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_PASSWORD:-kaitix}"]
-      interval: 10s
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-kaitix}"]
+      interval: 5s
       timeout: 5s
-      retries: 10
+      retries: 20
+      start_period: 40s
 
   backend:
     build:
@@ -21,12 +22,17 @@ services:
       dockerfile: Dockerfile.backend
     restart: unless-stopped
     environment:
-      DATABASE_URL: ${DATABASE_URL:-mysql+aiomysql://kaitix:kaitix@db:3306/kaitix}
+      # Host im Compose-Netz = Service 'db' (bewusst nicht aus ${DATABASE_URL}).
+      DATABASE_URL: mysql+aiomysql://${MYSQL_USER:-kaitix}:${MYSQL_PASSWORD:-kaitix}@db:3306/${MYSQL_DATABASE:-kaitix}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost}
+      SEED_DEMO_DATA: ${SEED_DEMO_DATA:-true}
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     command: >
-      sh -c "python -m alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8003"
+      sh -c "PYTHONPATH=. python scripts/db_init.py &&
+             if [ \"$$SEED_DEMO_DATA\" = \"true\" ]; then PYTHONPATH=. python scripts/seed_testdata.py --if-empty; fi &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8003"
 
   frontend:
     build:
@@ -54,13 +60,14 @@ services:
       context: .
       dockerfile: Dockerfile.backend
     environment:
-      DATABASE_URL: ${DATABASE_URL:-mysql+aiomysql://kaitix:kaitix@db:3306/kaitix}
+      DATABASE_URL: mysql+aiomysql://${MYSQL_USER:-kaitix}:${MYSQL_PASSWORD:-kaitix}@db:3306/${MYSQL_DATABASE:-kaitix}
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     volumes:
       - ./scripts:/app/scripts:ro
     command: >
-      sh -c "python -m alembic upgrade head && PYTHONPATH=. python3 scripts/seed_testdata.py"
+      sh -c "PYTHONPATH=. python scripts/db_init.py && PYTHONPATH=. python3 scripts/seed_testdata.py"
     profiles:
       - seed
 

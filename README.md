@@ -101,12 +101,25 @@ KAiTix folgt einem bewusst einfachen und fokussierten Design. Diese Prinzipien s
 
 ## Installationsanleitung
 
-### VARIANTE A — Docker (Empfohlen)
+### VARIANTE A — Container (Empfohlen)
 
-Mit Docker und Docker Compose müssen Sie Python, Node und MySQL nicht lokal installieren. Alles läuft in isolierten Containern.
+Mit Podman/Docker müssen Sie **weder Python noch Node noch MySQL lokal installieren**.
+Alle Abhängigkeiten werden automatisch im Container installiert:
 
-#### Voraussetzungen
-* Docker + Docker Compose installiert (z. B. über Docker Desktop)
+* Das **`Containerfile`** installiert Python 3, Node 22, nginx und baut Backend + Frontend.
+* **`compose.yml`** zieht das MySQL-8-Image, baut das App-Image, wendet die Migrationen an
+  und lädt beim allerersten Start automatisch Demo-Daten (nur in eine leere DB).
+
+#### Einzige Voraussetzung
+
+Auf einem frischen System wird **nur die Container-Engine** benötigt — sie ist das einzige,
+was sich nicht selbst installieren kann:
+
+```bash
+# Ubuntu / Debian (einmalig):
+sudo apt install -y podman docker-compose
+```
+*(Alternativ Docker Desktop. Podman wird empfohlen: rootless, kein privilegierter Daemon.)*
 
 #### Starten in 3 Befehlen
 ```bash
@@ -114,17 +127,27 @@ Mit Docker und Docker Compose müssen Sie Python, Node und MySQL nicht lokal ins
 git clone https://github.com/diebugger-tech/KAiTix.git
 cd KAiTix
 
-# 2. Umgebungsvariablen kopieren (ggf. anpassen)
+# 2. Umgebungsvariablen kopieren (Defaults reichen für den Erststart)
 cp .env.example .env
 
-# 3. Docker Compose Stack starten
-docker compose up    # oder
-podman compose up    # Empfohlen bei KI-assistierter Entwicklung — läuft rootless ohne privilegierten Daemon
+# 3. Stack bauen & starten
+podman compose up --build    # empfohlen (rootless)
+# oder:  docker compose up --build
 ```
 
-*Hinweis:* Podman läuft rootless (kein Root-Daemon) und ist die empfohlene Option für KI-assistierte Entwicklung sowie sicherheitskritische Umgebungen.
+Danach ist die Anwendung im Browser erreichbar unter: **http://localhost:8080**
 
-Danach ist die Anwendung im Browser erreichbar unter: **http://localhost**
+> [!NOTE]
+> Beim **ersten** Start werden automatisch Demo-Daten geladen (2 Racks, Geräte, VMs,
+> Runbooks). Das passiert nur, solange die Datenbank leer ist — bestehende Daten werden
+> nie überschrieben. Abschaltbar via `SEED_DEMO_DATA=false` in der `.env`.
+
+**Nützliche Befehle:**
+```bash
+podman compose -f compose.yml down       # Stoppen (Daten bleiben im Volume erhalten)
+podman compose -f compose.yml down -v    # Stoppen + Datenbank-Volume löschen (Reset)
+podman compose -f compose.yml logs -f    # Logs verfolgen
+```
 
 ---
 

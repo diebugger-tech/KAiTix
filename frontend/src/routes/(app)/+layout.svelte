@@ -152,11 +152,12 @@
             <span class="nav-group-title">{group.title}</span>
           </div>
           {#each group.links as link}
+            {@const Icon = link.icon}
             <a
               href={link.href}
               class="nav-link {link.matchPrefix ? (page.url.pathname.startsWith(link.href) ? 'active' : '') : (page.url.pathname === link.href ? 'active' : '')}"
             >
-              <svelte:component this={link.icon} class="w-4.5 h-4.5" />
+              <Icon class="w-4.5 h-4.5" />
               <span>{link.label}</span>
             </a>
           {/each}

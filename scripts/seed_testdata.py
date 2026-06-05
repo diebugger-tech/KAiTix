@@ -7,7 +7,9 @@ um KAiTix auf GitHub eindrucksvoll präsentieren zu können.
 
 import asyncio
 import json
+import sys
 from datetime import datetime, timezone
+from sqlalchemy import func, select
 from app.core.database import AsyncSessionLocal, engine, Base
 from app.domains.hardware.models import Rack, Device, PduOutlet, VirtualMachine
 from app.domains.network.models import Vlan, Subnet
@@ -16,7 +18,24 @@ from app.domains.power.models import UsvUnit, UsvModule, UsvSimulationEvent
 from app.domains.runbooks.models import Runbook, RunbookLayer, RunbookDevice
 
 
-async def main():
+async def _rack_count() -> int:
+    """Zählt vorhandene Racks. Gibt 0 zurück, falls die Tabelle noch fehlt."""
+    try:
+        async with AsyncSessionLocal() as db:
+            return await db.scalar(select(func.count()).select_from(Rack)) or 0
+    except Exception:
+        return 0
+
+
+async def main(if_empty: bool = False):
+    # Guard für Auto-Seeding beim Container-Start: nur in eine leere DB
+    # schreiben, sonst würde der nachfolgende drop_all bestehende Daten löschen.
+    if if_empty:
+        count = await _rack_count()
+        if count > 0:
+            print(f"DB enthält bereits {count} Racks — Seed übersprungen.")
+            return
+
     # 1. Clean Slate: Wipe and recreate all tables
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
@@ -1064,6 +1083,10 @@ async def main():
         await db.commit()
         print("Showcase Testdaten erfolgreich in die Datenbank geschrieben!")
 
+    # Engine sauber schließen, sonst wirft aiomysql beim Schließen des
+    # Event-Loops ein harmloses "RuntimeError: Event loop is closed".
+    await engine.dispose()
+
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(main(if_empty="--if-empty" in sys.argv))
