@@ -140,7 +140,7 @@
       {@const isIncompatible = isDeviceIncompatible(dev)}
       <button
         onclick={(e) => handleDeviceClick(dev, e)}
-        class="w-full flex-1 min-h-0 rounded border hover:brightness-110 transition flex items-center justify-center overflow-hidden {(selectedDevice?.id === dev.id || highlightDeviceIds?.includes(dev.id)) ? 'ring-1 ring-white/30' : ''} {isIncompatible ? 'ring-1 ring-red-500 border-red-500' : ''}"
+        class="{(dev.absicherung_a && dev.absicherung_a <= 16) ? 'w-1/2' : 'w-full'} mx-auto flex-1 min-h-0 rounded border hover:brightness-110 transition flex items-center justify-center overflow-hidden {(selectedDevice?.id === dev.id || highlightDeviceIds?.includes(dev.id)) ? 'ring-1 ring-white/30' : ''} {isIncompatible ? 'ring-1 ring-red-500 border-red-500' : ''}"
         style="background:{isIncompatible ? 'rgba(239,68,68,.22)' : c.bg}; border-color:{isIncompatible ? 'rgba(239,68,68,.7)' : c.border}; writing-mode: vertical-rl; transform: rotate(180deg);"
         title={isIncompatible ? '⚠ Höhenkonflikt: ' + getDeviceTooltip(dev) : getDeviceTooltip(dev)}
       >
@@ -148,16 +148,17 @@
         <span class="text-[7px] opacity-60">{dev.typ.toUpperCase()}{dev.absicherung_a ? ' ' + dev.absicherung_a + 'A' : ''}</span>
       </button>
     {/each}
-    {#if !readonly}
-      {#if !occupiedSides.left}
-      <button onclick={(e) => handleEmptySideClick('left', e)} class="w-full aspect-square mt-auto border border-dashed border-[var(--color-border)] rounded flex items-center justify-center text-[var(--color-text3)] hover:text-blue-500 hover:border-[#1D9E75]/50 hover:bg-[#1D9E75]/10 transition shrink-0">
-        <Plus class="w-4 h-4" />
-      </button>
-      {:else}
-      <div class="w-full aspect-square mt-auto border border-dashed border-red-800/20 rounded flex items-center justify-center text-red-800/30 shrink-0" title="Seite bereits belegt">
-        <X class="w-4 h-4" />
+    {#if !readonly && !occupiedSides.left}
+      <div class="flex-1 flex justify-center py-2 min-h-0">
+        <button
+          onclick={(e) => handleEmptySideClick('left', e)}
+          class="w-4 h-full border border-dashed border-[var(--color-border2)]/50 rounded flex flex-col items-center justify-center hover:bg-[#1D9E75]/10 hover:border-[#1D9E75]/50 hover:text-[#1D9E75] transition-colors text-[var(--color-text3)]"
+          title="0-U Gerät links hinzufügen"
+          aria-label="0-U Gerät links hinzufügen"
+        >
+          <Plus class="w-3 h-3" />
+        </button>
       </div>
-      {/if}
     {/if}
   </div>
 
@@ -219,7 +220,7 @@
       {@const isIncompatible = isDeviceIncompatible(dev)}
       <button
         onclick={(e) => handleDeviceClick(dev, e)}
-        class="w-full flex-1 min-h-0 rounded border hover:brightness-110 transition flex items-center justify-center overflow-hidden {(selectedDevice?.id === dev.id || highlightDeviceIds?.includes(dev.id)) ? 'ring-1 ring-white/30' : ''} {isIncompatible ? 'ring-1 ring-red-500 border-red-500' : ''}"
+        class="{(dev.absicherung_a && dev.absicherung_a <= 16) ? 'w-1/2' : 'w-full'} mx-auto flex-1 min-h-0 rounded border hover:brightness-110 transition flex items-center justify-center overflow-hidden {(selectedDevice?.id === dev.id || highlightDeviceIds?.includes(dev.id)) ? 'ring-1 ring-white/30' : ''} {isIncompatible ? 'ring-1 ring-red-500 border-red-500' : ''}"
         style="background:{isIncompatible ? 'rgba(239,68,68,.22)' : c.bg}; border-color:{isIncompatible ? 'rgba(239,68,68,.7)' : c.border}; writing-mode: vertical-rl; transform: rotate(180deg);"
         title={isIncompatible ? '⚠ Höhenkonflikt: ' + getDeviceTooltip(dev) : getDeviceTooltip(dev)}
       >
@@ -227,15 +228,15 @@
         <span class="text-[7px] opacity-60">{dev.typ.toUpperCase()}{dev.absicherung_a ? ' ' + dev.absicherung_a + 'A' : ''}</span>
       </button>
     {/each}
-    {#if !readonly}
+    {#if !readonly && !occupiedSides.right}
       <div class="flex-1 flex justify-center py-2 min-h-0">
         <button
           onclick={(e) => handleEmptySideClick('right', e)}
-          class="w-4 h-full border border-dashed border-[var(--color-border2)]/50 rounded flex flex-col items-center justify-center hover:bg-[var(--color-border2)] hover:border-[var(--color-border)] transition-colors"
+          class="w-4 h-full border border-dashed border-[var(--color-border2)]/50 rounded flex flex-col items-center justify-center hover:bg-[#1D9E75]/10 hover:border-[#1D9E75]/50 hover:text-[#1D9E75] transition-colors text-[var(--color-text3)]"
           title="0-U Gerät rechts hinzufügen"
           aria-label="0-U Gerät rechts hinzufügen"
         >
-          <Plus class="w-3 h-3 text-[var(--color-text3)]" />
+          <Plus class="w-3 h-3" />
         </button>
       </div>
     {/if}

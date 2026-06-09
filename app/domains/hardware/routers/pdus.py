@@ -147,7 +147,9 @@ async def delete_pdu(pdu_id: int, db: AsyncSession = Depends(get_db)):
 @router.get("/{pdu_id}/outlets", response_model=List[PduOutlet])
 async def list_pdu_outlets(pdu_id: int, db: AsyncSession = Depends(get_db)):
     result = await db.execute(
-        select(PduOutletModel).where(PduOutletModel.pdu_id == pdu_id)
+        select(PduOutletModel)
+        .options(selectinload(PduOutletModel.pdu))
+        .where(PduOutletModel.pdu_id == pdu_id)
     )
     return result.scalars().all()
 
@@ -164,7 +166,8 @@ async def create_pdu_outlet(
     pdu = await db.execute(
         select(DeviceModel).where(DeviceModel.id == pdu_id, DeviceModel.typ == "pdu")
     )
-    if not pdu.scalar_one_or_none():
+    pdu_obj = pdu.scalar_one_or_none()
+    if not pdu_obj:
         raise HTTPException(status_code=404, detail="PDU not found")
 
     data = outlet_in.model_dump()
@@ -173,6 +176,10 @@ async def create_pdu_outlet(
     db.add(db_outlet)
     await db.commit()
     await db.refresh(db_outlet)
+    
+    # Pre-populate the relationship to avoid MissingGreenlet on Pydantic serialization
+    db_outlet.pdu = pdu_obj
+    
     return db_outlet
 
 
@@ -184,7 +191,9 @@ async def update_pdu_outlet(
     db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(
-        select(PduOutletModel).where(
+        select(PduOutletModel)
+        .options(selectinload(PduOutletModel.pdu))
+        .where(
             PduOutletModel.id == outlet_id, PduOutletModel.pdu_id == pdu_id
         )
     )
@@ -231,7 +240,9 @@ async def get_pdu_phase_overview(pdu_id: int, db: AsyncSession = Depends(get_db)
         raise HTTPException(status_code=404, detail="PDU not found")
 
     result = await db.execute(
-        select(PduOutletModel).where(PduOutletModel.pdu_id == pdu_id)
+        select(PduOutletModel)
+        .options(selectinload(PduOutletModel.pdu))
+        .where(PduOutletModel.pdu_id == pdu_id)
     )
     outlets = result.scalars().all()
 

@@ -1223,7 +1223,12 @@
             <!-- Rack Header -->
             <div class="px-4 py-3 border-b border-[var(--color-border)] flex items-center justify-between">
               <div>
-                <div class="font-bold text-[var(--color-text)] text-sm">{selectedRack.name}</div>
+                <div class="font-bold text-[var(--color-text)] text-sm flex items-baseline gap-2">
+                  {selectedRack.name}
+                  {#if selectedRack.hersteller || selectedRack.modell}
+                    <span class="font-normal text-[10px] text-[var(--color-text3)]">{(selectedRack.hersteller || '') + (selectedRack.hersteller && selectedRack.modell ? ' ' : '') + (selectedRack.modell || '')}</span>
+                  {/if}
+                </div>
                 <div class="text-[10px] text-[var(--color-text3)]">{occupiedU}/{selectedRack.hoehe_u} HE{selectedRack.breite_mm ? ' · ' + selectedRack.breite_mm + 'mm' : ''} · {(phaseLoads().L1/1000 + phaseLoads().L2/1000 + phaseLoads().L3/1000).toFixed(1)} kW</div>
               </div>
               <div class="flex items-center space-x-2">
@@ -1821,12 +1826,12 @@
         <div>
           <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Seite</label>
           <div class="grid grid-cols-2 gap-2">
-            <button type="button" onclick={() => devSide = 'left'}
+              <button type="button" onclick={() => devSide = 'left'}
               disabled={occupiedSides.left}
               class="px-3 py-2 rounded-lg text-sm transition border {devSide === 'left' ? 'bg-[#1D9E75]/20 border-[#1D9E75]/40 text-[var(--color-text)]' : 'text-[var(--color-text2)] hover:bg-[var(--color-border2)] border-[var(--color-border2)]'} disabled:opacity-40 disabled:cursor-not-allowed">
               Links (0UL)
             </button>
-            <button type="button" onclick={() => devSide = 'right'}
+              <button type="button" onclick={() => devSide = 'right'}
               disabled={occupiedSides.right}
               class="px-3 py-2 rounded-lg text-sm transition border {devSide === 'right' ? 'bg-[#1D9E75]/20 border-[#1D9E75]/40 text-[var(--color-text)]' : 'text-[var(--color-text2)] hover:bg-[var(--color-border2)] border-[var(--color-border2)]'} disabled:opacity-40 disabled:cursor-not-allowed">
               Rechts (0UR)

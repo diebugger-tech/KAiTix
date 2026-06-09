@@ -359,7 +359,7 @@
     "anschluss_stecker": "CEE-32A-3P",
     "strom_typ": "3-phasig",
     "spannung_v": 400,
-    "bemerkung": "3-phasig 32A / 22 kVA, 24x C13 + 24x Cx, seitliche Montage 47HE, schaltbar, RCM, THD-Messung",
+    "bemerkung": "3-phasig 32A / 22 kVA, 24x C13 + 24x Cx, seitliche Montage 47HE, schaltbar, RCM, THD-Messung, Überspannungsschutz",
     "psu_count": null,
     "psu_nennwatt": null
   },
@@ -709,7 +709,7 @@
     "anschluss_stecker": "CEE-16A-3P",
     "strom_typ": "3-phasig",
     "spannung_v": 400,
-    "bemerkung": "3-phasig 16A / 11 kVA, 24x C13 + 24x Cx, seitliche Montage 47HE, schaltbar, RCM, THD-Messung",
+    "bemerkung": "3-phasig 16A / 11 kVA, 24x C13 + 24x Cx, seitliche Montage 47HE, schaltbar, RCM, THD-Messung, Überspannungsschutz",
     "psu_count": null,
     "psu_nennwatt": null
   },
