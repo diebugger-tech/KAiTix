@@ -403,6 +403,9 @@
             <path d="M 305 280 L 305 320 L 320 320 L 320 350" fill="none" stroke="#78350f" stroke-width="1"/>
             <path d="M 325 280 L 325 315 L 340 315 L 340 350" fill="none" stroke="#0f172a" stroke-width="1"/>
             <path d="M 345 280 L 345 310 L 360 310 L 360 350" fill="none" stroke="#475569" stroke-width="1"/>
+            <!-- N connection to -Q2 -->
+            <path d="M 260 305 L 380 305 L 380 350" fill="none" stroke="#2563eb" stroke-width="1"/>
+            <circle cx="260" cy="305" r="2" fill="#0f172a"/>
 
             <!-- -Q2 Leistungsschalter 63A im UV (Bypass) -->
             <g stroke="#0f172a" stroke-width="1.5" fill="none">
