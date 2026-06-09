@@ -19,23 +19,23 @@ KAiTix ist ein hochspezialisiertes Planungs-, Simulations- und Dokumentationswer
 
 ## Screenshots
 
-![Dashboard](docs/screenshots/dashboard.png)
-*Dashboard — Serverraum-Infrastruktur. Dokumentiert & Simuliert.*
+![Landingpage](docs/screenshots/Landingpage.png)
+*Landingpage — Serverraum-Infrastruktur. Dokumentiert & Simuliert.*
 
-![Racks Übersicht](docs/screenshots/racks-uebersicht.png)
-*Racks Übersicht — Die RZ-Infrastruktur auf einen Blick*
+![Rack-Ansicht](docs/screenshots/Rack-Ansicht.png)
+*Rechenzentrum Racks — Detaillierte Ansicht der Hardware, Rack-Belegung und PDU-Steckdosen*
 
-![Rack-Detail](docs/screenshots/racks-detail.png)
-*Rack-Detail — Detaillierte Ansicht der Hardware, Rack-Belegung und PDU-Steckdosen*
+![Topologie 3D](docs/screenshots/Topologie%203D.png)
+*Topologie 3D — Interaktive 3D-Orbit-Ansicht zur rack-übergreifenden Visualisierung von Strom und Netzwerk*
 
-![Topologie](docs/screenshots/topologie.png)
-*Topologie — Visualisierung von Netzwerk und Strom*
+![USV-Auslegungsplanung](docs/screenshots/USV-Auslegungsplanung%20.png)
+*USV-Auslegungsplanung — N+1 Simulator für Batterie- und Stromausfall-Szenarien*
 
-![E-Plan Stromlaufplan 1](docs/screenshots/eplan-stromlaufplan-1.png)
-*E-Plan — Dynamisch generierter allpoliger Stromlaufplan*
+![Runbook Orchestrator Planer](docs/screenshots/Runbook%20Orchestrator%20Planer%20.png)
+*Runbook Orchestrator — Drag & Drop Planer für Shutdown- und Startup-Sequenzen*
 
-![E-Plan Stromlaufplan 2](docs/screenshots/eplan-stromlaufplan-2.png)
-*E-Plan — Detailansicht der Unterverteilung*
+![E-Plan Stromlaufplan](docs/screenshots/E-Plan.png)
+*E-Plan — Dynamisch generierter allpoliger Stromlaufplan mit PDF-Export*
 
 ---
 
