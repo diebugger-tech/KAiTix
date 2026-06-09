@@ -211,3 +211,18 @@ pytest -m integration tests/test_mysql_integration.py
 
 #### Kurz (5–15 Minuten) — 🕐 In Arbeit
 **README um `venv` + NodeSource ergänzen**
+
+---
+
+## 5. Analyse: Live-Daten & Telemetrie
+
+### Gefundenes Ergebnis
+Es wurde eine vollständige Code-Analyse (Backend & Frontend) bezüglich der Integration von Echtzeitdaten (Live-Monitoring, SNMP-Polling, Modbus, WebSockets) durchgeführt.
+
+**Resultat:**
+Es sind aktuell **keine** Live-Daten-Schnittstellen oder Polling-Mechanismen im Code eingebaut.
+- **Backend:** Es gibt keine Background-Tasks, Celery-Worker oder asynchronen Loops, die Daten von echten physischen Geräten abrufen.
+- **Frontend:** Es existieren keine WebSockets oder zyklischen Intervall-Abfragen (`setInterval`), die das Dashboard mit Echtzeitwerten aktualisieren.
+- **Berechnungen (AnomalyScorer):** Die in `app/domains/simulation/services.py` durchgeführten Heatmap- und Anomalie-Berechnungen stützen sich ausschließlich auf **statisch in der Datenbank dokumentierte** Werte (z.B. hinterlegte Nennleistung, theoretische Last-Prozentsätze).
+
+**Fazit:** KAiTix operiert vollständig als Planungs- und Simulationswerkzeug, ohne externe Geräte in Echtzeit anzupingen. Es wurden keine Code-Löschungen vorgenommen.
