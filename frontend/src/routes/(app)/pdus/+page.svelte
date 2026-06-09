@@ -41,8 +41,8 @@
   let u_hoehe = $state(2);
   let strom_typ = $state('3-phasig');
   let spannung_v = $state(400);
-  let anschlussleistung_a = $state(32.0);
-  let anschluss_stecker = $state('CEE-32A-3P');
+  let absicherung_a = $state(16.0);
+  let anschluss_stecker = $state('CEE-16A-3P');
   let bemerkung = $state('');
 
   // Outlet Form fields
@@ -145,8 +145,8 @@
     u_hoehe = 2;
     strom_typ = '3-phasig';
     spannung_v = 400;
-    anschlussleistung_a = 32.0;
-    anschluss_stecker = 'CEE-32A-3P';
+    absicherung_a = 16.0;
+    anschluss_stecker = 'CEE-16A-3P';
     bemerkung = '';
   }
 
@@ -171,8 +171,8 @@
     u_hoehe = selectedPdu.u_hoehe || 2;
     strom_typ = (selectedPdu as any).strom_typ || '3-phasig';
     spannung_v = (selectedPdu as any).spannung_v || 400;
-    anschlussleistung_a = (selectedPdu as any).anschlussleistung_a || 32.0;
-    anschluss_stecker = (selectedPdu as any).anschluss_stecker || 'CEE-32A-3P';
+    absicherung_a = selectedPdu.absicherung_a ?? (selectedPdu as any).anschlussleistung_a ?? 16.0;
+    anschluss_stecker = (selectedPdu as any).anschluss_stecker || 'CEE-16A-3P';
     bemerkung = selectedPdu.bemerkung || '';
     showEditPdu = true;
   }
@@ -197,7 +197,7 @@
         hostname: hostname.trim(),
         hersteller, modell, seriennummer, rack_id,
         u_position, u_hoehe, strom_typ, spannung_v,
-        anschlussleistung_a, anschluss_stecker, bemerkung
+        absicherung_a, anschluss_stecker, bemerkung
       } as any);
       showAddPdu = false;
       resetPduForm();
@@ -215,7 +215,7 @@
         hostname: hostname.trim(),
         hersteller, modell, seriennummer, rack_id,
         u_position, u_hoehe, strom_typ, spannung_v,
-        anschlussleistung_a, anschluss_stecker, bemerkung
+        absicherung_a, anschluss_stecker, bemerkung
       } as any);
       showEditPdu = false;
       resetPduForm();
@@ -413,7 +413,7 @@
               </div>
               <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl p-4">
                 <div class="text-[10px] text-[var(--color-text3)] uppercase font-bold tracking-wider font-mono">Absicherung</div>
-                <div class="text-sm font-bold text-[var(--color-text)] mt-0.5">{(selectedPdu as any).anschlussleistung_a || '—'} A</div>
+                <div class="text-sm font-bold text-[var(--color-text)] mt-0.5">{selectedPdu.absicherung_a ?? (selectedPdu as any).anschlussleistung_a ?? '—'} A</div>
               </div>
               <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl p-4">
                 <div class="text-[10px] text-[var(--color-text3)] uppercase font-bold tracking-wider font-mono">Stecker</div>
@@ -503,9 +503,9 @@
                   </div>
                   <div class="text-xs text-[var(--color-text3)]">
                     Max. Leistung: <span class="font-bold text-[var(--color-text)]">{phaseOverview.total_max_watt}W</span>
-                    {#if (selectedPdu as any).spannung_v && (selectedPdu as any).anschlussleistung_a}
+                    {#if (selectedPdu as any).spannung_v && (selectedPdu.absicherung_a ?? (selectedPdu as any).anschlussleistung_a)}
                       <span class="ml-2 text-[var(--color-text3)]">
-                        ({Math.round(phaseOverview.total_max_watt / ((selectedPdu as any).spannung_v * Math.sqrt(3)) * 100) / 100}% Auslastung)
+                        ({Math.round(phaseOverview.total_max_watt / ((selectedPdu as any).spannung_v * Math.sqrt(3)) * (selectedPdu.absicherung_a ?? (selectedPdu as any).anschlussleistung_a ?? 32) * 100) / 100}% Auslastung)
                       </span>
                     {/if}
                   </div>
@@ -586,7 +586,7 @@
         </div>
         <div>
           <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Absicherung (A)</label>
-          <input type="number" step="0.1" bind:value={anschlussleistung_a}
+          <input type="number" step="0.1" bind:value={absicherung_a}
             class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]" />
         </div>
         <div>
@@ -678,7 +678,7 @@
         </div>
         <div>
           <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Absicherung (A)</label>
-          <input type="number" step="0.1" bind:value={anschlussleistung_a}
+          <input type="number" step="0.1" bind:value={absicherung_a}
             class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]" />
         </div>
         <div>

@@ -17,7 +17,7 @@ export interface OptimizeResult {
 export interface Device {
   id: number;
   hostname: string;
-  typ: 'server' | 'switch' | 'pdu' | 'storage' | 'firewall' | 'kentix_raconode' | 'kentix_doormaster' | 'kentix_multisensor' | 'usv' | 'sonstige';
+  typ: 'server' | 'switch' | 'pdu' | 'storage' | 'firewall' | 'kentix_raconode' | 'kentix_doormaster' | 'kentix_multisensor' | 'usv' | 'patchpanel' | 'sonstige';
   ip_adresse?: string;
   hersteller?: string;
   modell?: string;
@@ -40,9 +40,13 @@ export interface Device {
   bemerkung?: string;
   strom_typ?: string;
   spannung_v?: number;
+  absicherung_a?: number;
   anschlussleistung_a?: number;
   anschluss_stecker?: string;
+  min_rack_hoehe?: number;
+  redundancy_path?: 'A' | 'B';
   device_ports?: DevicePort[];
+
   pdu_outlets?: PduOutlet[];
   server_interfaces?: any[];
   connected_pdu_outlets?: PduOutlet[];
@@ -146,6 +150,10 @@ export interface HardwareType {
   port_count_lwl: number;
   port_count_sfp: number;
   min_rack_hoehe?: number;
+  absicherung_a?: number;
+  anschluss_stecker?: string;
+  strom_typ?: string;
+  spannung_v?: number;
   bemerkung: string;
 }
 

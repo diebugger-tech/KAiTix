@@ -966,13 +966,13 @@
             <rect x="210" y="650" width="280" height="60" rx="6" fill="#14532d" stroke="#16a34a" stroke-width="1.5" />
             <text x="350" y="672" fill="#f0fdf4" font-size="12" font-weight="bold" text-anchor="middle">Unterverteilung UV-USV-01</text>
             <text x="350" y="688" fill="#bbf7d0" font-size="9" text-anchor="middle">Gepufferte USV-Schiene</text>
-            <text x="350" y="702" fill="#4ade80" font-size="8" text-anchor="middle">LS 1P 32A Abgänge</text>
+            <text x="350" y="702" fill="#4ade80" font-size="8" text-anchor="middle">LS 1P 16A Abgänge</text>
 
             <!-- PDU L1 -->
             <g class="cursor-pointer group" onclick={() => triggerScenario('pdu', 'A-0UL')}>
               <rect x="30" y="760" width="200" height="60" rx="6" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5" class="group-hover:fill-blue-900/40 group-hover:stroke-blue-400 transition" />
               <text x="130" y="780" fill="#f8fafc" font-size="10" font-weight="bold" text-anchor="middle" class="pointer-events-none">SmartPDU A-0UL</text>
-              <text x="130" y="794" fill="#94a3b8" font-size="8" text-anchor="middle" class="pointer-events-none">Phase L1 | Zuleitung: 3x10 mm²</text>
+              <text x="130" y="794" fill="#94a3b8" font-size="8" text-anchor="middle" class="pointer-events-none">Phase L1 | Zuleitung: 3x2.5 mm²</text>
               <text x="130" y="808" fill="#60a5fa" font-size="8" text-anchor="middle" class="pointer-events-none">Klick für Ausfall (Server A)</text>
             </g>
 
@@ -980,7 +980,7 @@
             <g class="cursor-pointer group" onclick={() => triggerScenario('pdu', 'A-0UR')}>
               <rect x="250" y="760" width="200" height="60" rx="6" fill="#1e293b" stroke="#eab308" stroke-width="1.5" class="group-hover:fill-yellow-900/40 group-hover:stroke-yellow-400 transition" />
               <text x="350" y="780" fill="#f8fafc" font-size="10" font-weight="bold" text-anchor="middle" class="pointer-events-none">SmartPDU A-0UR</text>
-              <text x="350" y="794" fill="#94a3b8" font-size="8" text-anchor="middle" class="pointer-events-none">Phase L2 | Zuleitung: 3x10 mm²</text>
+              <text x="350" y="794" fill="#94a3b8" font-size="8" text-anchor="middle" class="pointer-events-none">Phase L2 | Zuleitung: 3x2.5 mm²</text>
               <text x="350" y="808" fill="#facc15" font-size="8" text-anchor="middle" class="pointer-events-none">Klick für Ausfall (Server B)</text>
             </g>
 
@@ -988,7 +988,7 @@
             <g class="cursor-pointer group" onclick={() => triggerScenario('pdu', 'B-0UL')}>
               <rect x="470" y="760" width="200" height="60" rx="6" fill="#1e293b" stroke="#a855f7" stroke-width="1.5" class="group-hover:fill-purple-900/40 group-hover:stroke-purple-400 transition" />
               <text x="570" y="780" fill="#f8fafc" font-size="10" font-weight="bold" text-anchor="middle" class="pointer-events-none">SmartPDU B-0UL</text>
-              <text x="570" y="794" fill="#94a3b8" font-size="8" text-anchor="middle" class="pointer-events-none">Phase L3 | Zuleitung: 3x10 mm²</text>
+              <text x="570" y="794" fill="#94a3b8" font-size="8" text-anchor="middle" class="pointer-events-none">Phase L3 | Zuleitung: 3x2.5 mm²</text>
               <text x="570" y="808" fill="#c084fc" font-size="8" text-anchor="middle" class="pointer-events-none">Klick für Ausfall (Redundanz)</text>
             </g>
           </svg>
@@ -1014,7 +1014,7 @@
               <div class="pt-3 border-t border-[var(--color-border2)]/50 space-y-2">
                 <p class="text-[11px] text-[var(--color-text2)]"><strong>Zuleitung HV ──► UV:</strong><br />NYY-J 5x25 mm² (NH 80A)</p>
                 <p class="text-[11px] text-[var(--color-text2)]"><strong>Verbindungen USV/MBS:</strong><br />NYY-J 5x16 mm² (LS 63A)</p>
-                <p class="text-[11px] text-[var(--color-text2)]"><strong>Zuleitung PDU:</strong><br />NYY-J 3x10 mm² (LS 32A)</p>
+                <p class="text-[11px] text-[var(--color-text2)]"><strong>Zuleitung PDU:</strong><br />NYY-J 3x2.5 mm² (LS 16A)</p>
               </div>
             </div>
           </div>

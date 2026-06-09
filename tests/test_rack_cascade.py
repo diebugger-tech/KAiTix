@@ -7,7 +7,7 @@ from app.models import (
     UsvUnit,
     Device,
     PduOutlet,
-    ServerInterface,
+    Interface,
     DevicePort,
     Cable,
     CableStrand,
@@ -44,7 +44,7 @@ async def test_rack_delete_cascade(db: AsyncSession):
     )
     db.add(outlet)
 
-    interface = ServerInterface(device_id=device.id, port_name="eth0", typ="1GbE")
+    interface = Interface(device_id=device.id, port_name="eth0", typ="1GbE")
     db.add(interface)
 
     port = DevicePort(device_id=device.id, port_name="port1", typ="RJ45")
@@ -88,9 +88,9 @@ async def test_rack_delete_cascade(db: AsyncSession):
     res = await db.execute(select(Device).where(Device.id == device.id))
     assert res.scalar_one_or_none() is None
 
-    # ServerInterface should be gone
+    # Interface should be gone
     res = await db.execute(
-        select(ServerInterface).where(ServerInterface.id == interface.id)
+        select(Interface).where(Interface.id == interface.id)
     )
     assert res.scalar_one_or_none() is None
 

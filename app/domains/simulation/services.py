@@ -64,7 +64,7 @@ async def run_simulation(
 
     # 1. Fetch devices with outlets, dependencies, cables, and VMs
     stmt = select(Device).options(
-        selectinload(Device.connected_pdu_outlets),
+        selectinload(Device.connected_pdu_outlets).selectinload(PduOutlet.pdu),
         selectinload(Device.dependencies),
         selectinload(Device.virtual_machines),
         selectinload(Device.cables_from),
@@ -82,6 +82,13 @@ async def run_simulation(
         device_states[scenario.target_id] = "red"
         device_reasons[scenario.target_id].append("Primary failure target")
         messages.append(f"Simulating failure of device {scenario.target_id}")
+    elif scenario.target_type == "pdu_path" and scenario.target_name:
+        path_name = scenario.target_name
+        messages.append(f"Simulating failure of power path {path_name}")
+        for dev in devices:
+            if dev.typ == "pdu" and dev.redundancy_path == path_name:
+                device_states[dev.id] = "red"
+                device_reasons[dev.id].append(f"PDU belongs to failed path {path_name}")
 
     # 2. Iterative cascading failure resolution
     changed = True
@@ -100,17 +107,20 @@ async def run_simulation(
                 active_psus = 0
                 lost_psus = 0
                 for outlet in outlets:
-                    if (
-                        (
-                            scenario.target_type == "phase"
-                            and outlet.phase == scenario.target_name
-                        )
-                        or (
-                            scenario.target_type == "pdu_outlet"
-                            and outlet.id == scenario.target_id
-                        )
-                        or (outlet.pdu_id and device_states.get(outlet.pdu_id) == "red")
+                    outlet_lost = False
+                    if scenario.target_type == "phase" and outlet.phase == scenario.target_name:
+                        outlet_lost = True
+                    elif scenario.target_type == "pdu_outlet" and outlet.id == scenario.target_id:
+                        outlet_lost = True
+                    elif outlet.pdu_id and device_states.get(outlet.pdu_id) == "red":
+                        outlet_lost = True
+                    elif scenario.target_type == "pdu_path" and (
+                        outlet.redundancy_path == scenario.target_name
+                        or (outlet.pdu and outlet.pdu.redundancy_path == scenario.target_name)
                     ):
+                        outlet_lost = True
+
+                    if outlet_lost:
                         lost_psus += 1
                     else:
                         active_psus += 1
@@ -344,6 +354,7 @@ _W_OVERLOAD = 0.30
 _W_NO_USV = 0.20
 _W_SHUTDOWN = 0.15
 _W_NO_PDU = 0.10
+_W_PDU_REDUNDANCY = 0.20
 
 
 def _level(score: float) -> str:
@@ -398,6 +409,12 @@ class AnomalyScorer:
         connected_device_ids: set[int] = {
             o.connected_device_id for o in outlets if o.connected_device_id is not None
         }
+
+        # Outlets pro Gerät indexieren
+        dev_outlets: dict[int, list[PduOutlet]] = {}
+        for o in outlets:
+            if o.connected_device_id is not None:
+                dev_outlets.setdefault(o.connected_device_id, []).append(o)
 
         results: list[dict] = []
 
@@ -501,6 +518,99 @@ class AnomalyScorer:
                     )
             else:
                 partial_scores.append(0.0)
+
+            # ── 6. PDU-Spezifische Prüfungen (Höhe, Kapazität, Redundanz, Schieflast) ─
+            rack_pdus = [d for d in devs if d.typ == "pdu"]
+            pdu_redundancy_score = 0.0
+
+            # 6a - Falsche PDU für Rack-Höhe
+            for pdu in rack_pdus:
+                if pdu.min_rack_hoehe and pdu.min_rack_hoehe > rack.hoehe_u:
+                    pdu_redundancy_score = max(pdu_redundancy_score, 0.3)
+                    issues.append(
+                        f"PDU {pdu.hostname} inkompatibel: Benötigt min. {pdu.min_rack_hoehe} HE, Rack hat nur {rack.hoehe_u} HE"
+                    )
+
+            # 6b - PDU-Kapazität vs. Rack-Last (Pfadausfall)
+            pdu_a = next((p for p in rack_pdus if p.redundancy_path == "A"), None)
+            pdu_b = next((p for p in rack_pdus if p.redundancy_path == "B"), None)
+
+            # 6d - Pfad-Schieflast (A vs B)
+            a_load = 0.0
+            b_load = 0.0
+            for d in devs:
+                if d.typ in ("server", "switch", "storage", "firewall"):
+                    connected_outlets = dev_outlets.get(d.id, [])
+                    paths = [o.redundancy_path for o in connected_outlets if o.redundancy_path in ("A", "B")]
+                    if paths:
+                        d_watt = _effective_watt(d)
+                        for path in paths:
+                            if path == "A":
+                                a_load += d_watt / len(paths)
+                            elif path == "B":
+                                b_load += d_watt / len(paths)
+
+            def get_pdu_capacity_watts(pdu):
+                if not pdu.absicherung_a:
+                    return 0.0
+                amps = float(pdu.absicherung_a)
+                volts = float(pdu.spannung_v or 230)
+                phases = 3 if pdu.strom_typ == "3-phasig" else 1
+                factor = 1.73205 if phases == 3 else 1.0
+                return amps * volts * factor * 0.8  # 80% continuous load limit
+
+            if pdu_a:
+                cap_a = get_pdu_capacity_watts(pdu_a)
+                if cap_a > 0.0:
+                    if total_watt > cap_a:
+                        pdu_redundancy_score = max(pdu_redundancy_score, 0.8)
+                        issues.append(
+                            f"Überlast-Risiko: Last ({round(total_watt/1000, 2)} kW) überschreitet PDU-A Kapazität ({round(cap_a/1000, 2)} kW) bei Ausfall von Pfad B"
+                        )
+                    elif a_load > cap_a * 0.5:
+                        pdu_redundancy_score = max(pdu_redundancy_score, 0.4)
+                        issues.append(
+                            f"Pfad A Auslastung: {round(a_load/1000, 2)} kW überschreitet 50% der PDU-Kapazität ({round(cap_a/1000, 2)} kW) - Überlast bei Umschaltung droht"
+                        )
+            if pdu_b:
+                cap_b = get_pdu_capacity_watts(pdu_b)
+                if cap_b > 0.0:
+                    if total_watt > cap_b:
+                        pdu_redundancy_score = max(pdu_redundancy_score, 0.8)
+                        issues.append(
+                            f"Überlast-Risiko: Last ({round(total_watt/1000, 2)} kW) überschreitet PDU-B Kapazität ({round(cap_b/1000, 2)} kW) bei Ausfall von Pfad A"
+                        )
+                    elif b_load > cap_b * 0.5:
+                        pdu_redundancy_score = max(pdu_redundancy_score, 0.4)
+                        issues.append(
+                            f"Pfad B Auslastung: {round(b_load/1000, 2)} kW überschreitet 50% der PDU-Kapazität ({round(cap_b/1000, 2)} kW) - Überlast bei Umschaltung droht"
+                        )
+
+            # 6c - Dual-PSU Redundanz
+            redundant_failures = 0
+            for server in servers:
+                if server.psu_count and server.psu_count >= 2:
+                    connected_outlets = dev_outlets.get(server.id, [])
+                    paths = {o.redundancy_path for o in connected_outlets if o.redundancy_path in ("A", "B")}
+                    if len(paths) < 2:
+                        redundant_failures += 1
+                        issues.append(
+                            f"Redundanz-Fehler: Server {server.hostname} hat {server.psu_count} PSUs, aber keine A/B-Redundanz"
+                        )
+            if redundant_failures > 0:
+                pdu_redundancy_score = max(pdu_redundancy_score, 0.6)
+
+            # 6d - Pfad-Schieflast (A vs B)
+            if a_load > 0.0 and b_load > 0.0:
+                max_l = max(a_load, b_load)
+                imbalance = abs(a_load - b_load) / max_l if max_l > 0 else 0.0
+                if imbalance > 0.20:
+                    pdu_redundancy_score = max(pdu_redundancy_score, 0.3)
+                    issues.append(
+                        f"Pfad-Schieflast: Pfad A ({round(a_load/1000, 2)} kW) vs Pfad B ({round(b_load/1000, 2)} kW) weicht um {round(imbalance * 100)}% ab"
+                    )
+
+            partial_scores.append(pdu_redundancy_score * _W_PDU_REDUNDANCY)
 
             total_score = round(sum(partial_scores), 3)
             total_score = max(0.0, min(1.0, total_score))

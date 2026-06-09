@@ -425,7 +425,7 @@
                           {@const oL3 = outlets.filter(o => o.phase === 'L3').length}
                           <div class="flex items-center gap-1.5 bg-[var(--color-bg3)] border border-[var(--color-border2)]/50 rounded-md px-2 py-1">
                             <Zap class="w-2.5 h-2.5 text-yellow-500 shrink-0" />
-                            <span class="text-[9px] text-[var(--color-text)] font-medium truncate max-w-[80px]">{pdu.hostname}</span>
+                            <span class="text-[9px] text-[var(--color-text)] font-medium truncate max-w-[120px]" title="{(pdu.hersteller || '') + ' ' + (pdu.modell || '')}">{pdu.hostname}{pdu.absicherung_a ? ` (${pdu.absicherung_a}A)` : ''}</span>
                             <div class="flex gap-1">
                               {#if oL1 > 0}<span class="text-[8px] bg-blue-500/15 text-blue-400 px-1 rounded">{oL1}×L1</span>{/if}
                               {#if oL2 > 0}<span class="text-[8px] bg-cyan-500/15 text-cyan-400 px-1 rounded">{oL2}×L2</span>{/if}

@@ -857,9 +857,13 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
                       transform="rotate(-90, {box.cx}, {box.cy})"
                       class="pointer-events-none select-none">{box.node.hostname.slice(0, 10)}</text>
                   {:else}
-                    <text x={box.cx} y={box.cy+3.5} text-anchor="middle" font-size="8" font-weight="600"
+                    <text x={box.cx} y={box.cy + (box.node.modell ? 1 : 3.5)} text-anchor="middle" font-size="8" font-weight="600"
                       fill={isSel || isMatch ? '#e2e8f0' : '#94a3b8'}
                       class="pointer-events-none select-none">{box.node.hostname}</text>
+                    {#if box.node.modell}
+                      <text x={box.cx} y={box.cy + 9} text-anchor="middle" font-size="5" font-weight="500"
+                        fill="#64748b" class="pointer-events-none select-none">{(box.node.hersteller || '') + ' ' + box.node.modell}</text>
+                    {/if}
                   {/if}
                 </g>
               {/if}

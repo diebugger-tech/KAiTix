@@ -76,7 +76,7 @@ KAiTix ist ein hochspezialisiertes Planungs-, Simulations- und Dokumentationswer
 
 ### 8. Stromlaufplan & Topologie
 * **Grafische Darstellung:** Interaktiver 2D-SVG Topologie-Graph zur rack-übergreifenden Visualisierung **sowie eine 3D-Orbit-Ansicht (three.js)** für komplexe RZ-Standorte.
-* **Allpoliger Stromlaufplan:** Darstellung der PDU- und USV-Verbindungspfade als SVG mit direktem PDF-Export.
+* **Allpoliger Stromlaufplan:** Darstellung der PDU- und USV-Verbindungspfade als SVG mit direktem PDF-Export. Normgerecht gezeichnet mit 4-poligen Leistungsschaltern (MCCB), voreilenden Neutralleitern zur Vermeidung von Sternpunktverschiebungen und korrekter DC-Batterieabsicherung.
 
 ---
 

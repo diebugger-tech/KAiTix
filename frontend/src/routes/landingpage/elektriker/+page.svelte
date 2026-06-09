@@ -173,14 +173,14 @@
       <div class="bp-card">
         <div class="bp-card-nr">Blatt 1</div>
         <h3 class="bp-card-title">USV-Einspeisung RZ</h3>
-        <p class="bp-card-body">L1/L2/L3/N/PE Sammelschienen · UV-RZ-01 mit NH-Sicherung F1 80A · Leistungsschalter Q1 63A · Klemmleiste X1 · USV-Anlage =T1 (GR/WR/Bypass/Batterie) · MBS-Schalter · Kabelkennzeichnung W1/W2 (NYY-J 5×25 mm²)</p>
-        <div class="bp-card-tags"><span>DIN A3</span><span>NH 80A</span><span>NYY-J 5×25</span></div>
+        <p class="bp-card-body">L1/L2/L3/N/PE Sammelschienen · UV-RZ-01 mit NH-Sicherung F1 63A · Leistungsschalter Q1 &amp; Q2 (je 63A) · Klemmleiste X1 · USV-Anlage =T1 (GR/WR/Bypass/Batterie) · MBS-Schalter · Kabelkennzeichnung W1/W2 (NYY-J 5×25 mm²)</p>
+        <div class="bp-card-tags"><span>DIN A3</span><span>NH 63A</span><span>NYY-J 5×25</span></div>
       </div>
       <div class="bp-card">
         <div class="bp-card-nr">Blatt 2</div>
         <h3 class="bp-card-title">UV-USV-01 Abgänge</h3>
-        <p class="bp-card-body">USV-gepufferte Schiene · 7 Abgänge je LS Q3.1–Q3.7 (32A) · Klemmleisten X1–X7 · Kabel W3.1–W3.7 (5×16 mm²) · Kentix SmartPDU je Rack · N/PE Durchverdrahtung</p>
-        <div class="bp-card-tags"><span>LS 32A</span><span>5×16 mm²</span><span>Kentix PDU</span></div>
+        <p class="bp-card-body">USV-gepufferte Schiene · 14 Abgänge je LS Q3.1A–Q3.7B (C16A, 3P+N) · Klemmleisten X1A–X7B · Kabel W3.1A–W3.7B (5×2.5 mm²) · 2 Kentix SmartPDUs (A/B) je Rack · N/PE Durchverdrahtung</p>
+        <div class="bp-card-tags"><span>LS C16A (3P+N)</span><span>5×2.5 mm²</span><span>2x PDU pro Rack</span></div>
       </div>
       <div class="bp-card bp-card-highlight">
         <div class="bp-card-nr">Blatt 3 <span class="bp-new">NEU</span></div>

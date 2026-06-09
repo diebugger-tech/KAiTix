@@ -79,6 +79,7 @@ class Device(Base):
             "kentix_doormaster",
             "kentix_multisensor",
             "usv",
+            "patchpanel",
             "sonstige",
         ),
         nullable=False,
@@ -128,12 +129,19 @@ class Device(Base):
         Enum("1-phasig", "3-phasig"), nullable=True
     )
     spannung_v: Mapped[Optional[int]] = mapped_column(Integer)  # 230 or 400
-    anschlussleistung_a: Mapped[Optional[float]] = mapped_column(
+    absicherung_a: Mapped[Optional[float]] = mapped_column(
         DECIMAL(5, 1)
-    )  # e.g. 32.0
+    )  # Absicherung je Stromkreis in A, z.B. 16.0 oder 32.0
     anschluss_stecker: Mapped[Optional[str]] = mapped_column(
-        String(50)
-    )  # e.g. "CEE-32A-3P", "C20"
+        Enum("CEE-16A-3P", "CEE-32A-3P", "CEE-63A-3P", "C14", "C20", "Schuko", "sonstige"),
+        nullable=True,
+    )  # z.B. "CEE-16A-3P" (Kentix SmartPDU 16A), "CEE-32A-3P"
+    redundancy_path: Mapped[Optional[str]] = mapped_column(
+        Enum("A", "B"), nullable=True
+    )  # Stromversorgungspfad A oder B (für A/B-Redundanzprüfung)
+    min_rack_hoehe: Mapped[Optional[int]] = mapped_column(
+        Integer, nullable=True
+    )  # Minimale Rack-Höhe in HE für PDU-Kompatibilitätsprüfung (z.B. 40 für 40HE PDU)
 
     # Relationships
     rack: Mapped[Optional["Rack"]] = relationship(back_populates="devices")
@@ -208,6 +216,9 @@ class PduOutlet(Base):
     )
     max_watt: Mapped[Optional[float]] = mapped_column(DECIMAL(8, 2))
     schaltbar: Mapped[bool] = mapped_column(default=False)
+    redundancy_path: Mapped[Optional[str]] = mapped_column(
+        Enum("A", "B"), nullable=True
+    )  # Pfad-Zugehörigkeit der Steckdose: A = Primärpfad, B = Redundanzpfad
     connected_device_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("devices.id", ondelete="SET NULL")
     )

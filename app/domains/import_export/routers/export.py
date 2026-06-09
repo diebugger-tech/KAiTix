@@ -82,6 +82,8 @@ async def _load_data(db: AsyncSession) -> dict:
             "watt": float(d.anschlussleistung_watt or d.tdp_watt or 0),
             "hersteller": d.hersteller or "–",
             "modell": d.modell or "–",
+            "seriennummer": d.seriennummer or "–",
+            "inventarnummer": d.inventarnummer or "–",
             "bemerkung": d.bemerkung or "",
         }
 

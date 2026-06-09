@@ -20,6 +20,7 @@ VALID_DEVICE_TYPES = {
     "kentix_raconode",
     "kentix_doormaster",
     "kentix_multisensor",
+    "patchpanel",
 }
 
 VALID_CABLE_TYPES = {

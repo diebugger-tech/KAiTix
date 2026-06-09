@@ -30,6 +30,11 @@
   let port_count_sfp = $state(0);
   let leistung_kw = $state<number | null>(null);
   let n1_faehig = $state(false);
+  let absicherung_a = $state<number | null>(null);
+  let anschluss_stecker = $state('');
+  let strom_typ = $state('');
+  let spannung_v = $state<number | null>(null);
+  let min_rack_hoehe = $state<number | null>(null);
   let bemerkung = $state('');
 
   const categories = [
@@ -78,6 +83,8 @@
     breite_mm = null; tiefe_mm = null;
     port_count_rj45 = 0; port_count_lwl = 0; port_count_sfp = 0; bemerkung = '';
     leistung_kw = null; n1_faehig = false;
+    absicherung_a = null; anschluss_stecker = ''; strom_typ = '';
+    spannung_v = null; min_rack_hoehe = null;
     editMode = false; editId = null;
   }
 
@@ -105,6 +112,11 @@
     port_count_sfp = item.port_count_sfp;
     leistung_kw = item.leistung_kw ?? null;
     n1_faehig = item.n1_faehig ?? false;
+    absicherung_a = item.absicherung_a ?? null;
+    anschluss_stecker = item.anschluss_stecker ?? '';
+    strom_typ = item.strom_typ ?? '';
+    spannung_v = item.spannung_v ?? null;
+    min_rack_hoehe = item.min_rack_hoehe ?? null;
     bemerkung = item.bemerkung;
     showModal = true;
   }
@@ -128,6 +140,11 @@
       port_count_sfp,
       leistung_kw: leistung_kw ?? undefined,
       n1_faehig: kategorie === 'usv_modul' ? n1_faehig : undefined,
+      absicherung_a: absicherung_a ?? undefined,
+      anschluss_stecker: anschluss_stecker ? anschluss_stecker : undefined,
+      strom_typ: strom_typ ? strom_typ : undefined,
+      spannung_v: spannung_v ?? undefined,
+      min_rack_hoehe: min_rack_hoehe ?? undefined,
       bemerkung: bemerkung.trim()
     };
     try {
@@ -238,15 +255,31 @@
               </div>
             </div>
           {:else if item.kategorie === 'pdu'}
-            <div class="grid grid-cols-2 gap-2 text-center">
+            <div class="grid grid-cols-2 gap-2 text-center mb-3">
               <div class="bg-[var(--color-bg3)] rounded-lg p-2">
                 <div class="text-[10px] text-[var(--color-text2)]">Höhe</div>
-                <div class="text-sm font-bold text-[var(--color-text)]">{item.u_hoehe === 0 ? 'Zero-U' : item.u_hoehe + ' HE'}</div>
+                <div class="text-xs font-bold text-[var(--color-text)]">{item.u_hoehe === 0 ? 'Zero-U' : item.u_hoehe + ' HE'}</div>
               </div>
               <div class="bg-[var(--color-bg3)] rounded-lg p-2">
                 <div class="text-[10px] text-[var(--color-text2)]">Mind. Rack</div>
-                <div class="text-sm font-bold text-[var(--color-text)]">{item.min_rack_hoehe ?? '—'} HE</div>
+                <div class="text-xs font-bold text-[var(--color-text)]">{item.min_rack_hoehe ?? '—'} HE</div>
               </div>
+              <div class="bg-[var(--color-bg3)] rounded-lg p-2">
+                <div class="text-[10px] text-[var(--color-text2)]">Absicherung</div>
+                <div class="text-xs font-bold text-[var(--color-text)]">{item.absicherung_a ?? '—'} A</div>
+              </div>
+              <div class="bg-[var(--color-bg3)] rounded-lg p-2">
+                <div class="text-[10px] text-[var(--color-text2)]">Spannung</div>
+                <div class="text-xs font-bold text-[var(--color-text)]">{item.spannung_v ?? '—'} V</div>
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-1.5 mt-2 justify-center">
+              {#if item.strom_typ}
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/10 border border-purple-500/30 text-purple-400 font-semibold">{item.strom_typ}</span>
+              {/if}
+              {#if item.anschluss_stecker}
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/30 text-blue-400 font-semibold">{item.anschluss_stecker}</span>
+              {/if}
             </div>
           {:else if item.kategorie === 'usv'}
             <div class="grid grid-cols-3 gap-2 text-center">
@@ -415,6 +448,58 @@
           <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">PSU Nennleistung (W)</label>
           <input type="number" bind:value={psu_nennwatt} min="0"
             class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-purple-500" />
+        </div>
+      </div>
+      {/if}
+
+      {#if kategorie === 'pdu'}
+      <div class="space-y-4 border-t border-[var(--color-border)] pt-4">
+        <h4 class="text-xs font-bold text-purple-400 uppercase tracking-wider">PDU Spezifikationen</h4>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Absicherung (A)</label>
+            <input type="number" bind:value={absicherung_a} min="0" step="0.1"
+              class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-purple-500"
+              placeholder="z.B. 16.0" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Spannung (V)</label>
+            <input type="number" bind:value={spannung_v} min="0"
+              class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-purple-500"
+              placeholder="z.B. 400 oder 230" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Phasen (Stromtyp)</label>
+            <select bind:value={strom_typ}
+              class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-purple-500">
+              <option value="">-- Typ wählen --</option>
+              <option value="1-phasig">1-phasig</option>
+              <option value="3-phasig">3-phasig</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Anschluss-Stecker</label>
+            <select bind:value={anschluss_stecker}
+              class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-purple-500">
+              <option value="">-- Stecker wählen --</option>
+              <option value="CEE-16A-3P">CEE 16A (3P/5-polig)</option>
+              <option value="CEE-32A-3P">CEE 32A (3P/5-polig)</option>
+              <option value="CEE-63A-3P">CEE 63A (3P/5-polig)</option>
+              <option value="Schuko">Schuko</option>
+              <option value="C14">C14</option>
+              <option value="C20">C20</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Mindest-Rackhöhe (HE)</label>
+          <input type="number" bind:value={min_rack_hoehe} min="0" max="60"
+            class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-purple-500"
+            placeholder="z.B. 42" />
         </div>
       </div>
       {/if}

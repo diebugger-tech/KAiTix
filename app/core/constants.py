@@ -31,6 +31,7 @@ KATEGORIE_COLOR = {
     "kentix_raconode": C_KENTIX,
     "kentix_doormaster": C_KENTIX,
     "kentix_multisensor": C_KENTIX,
+    "patchpanel": C_SWITCH,
     "sonstige": C_KENTIX,
 }
 
@@ -86,7 +87,8 @@ def typ_label(typ: str) -> str:
         "kentix_raconode": "KTIX",
         "kentix_doormaster": "KTIX",
         "kentix_multisensor": "KTIX",
-        "sonstige": "\u2013",
+        "patchpanel": "PP",
+        "sonstige": "–",
     }.get(typ, typ.upper()[:4])
 
 

@@ -44,6 +44,10 @@ class HardwareType(BaseModel):
     min_rack_hoehe: int = Field(0, ge=0)
     leistung_kw: Optional[float] = Field(None, ge=0)
     n1_faehig: Optional[bool] = None
+    absicherung_a: Optional[float] = Field(None, ge=0)
+    anschluss_stecker: Optional[str] = None
+    strom_typ: Optional[str] = None
+    spannung_v: Optional[int] = Field(None, ge=0)
     bemerkung: str = ""
 
     model_config = ConfigDict(from_attributes=True)
@@ -66,6 +70,10 @@ class HardwareTypeCreate(BaseModel):
     min_rack_hoehe: int = Field(0, ge=0)
     leistung_kw: Optional[float] = Field(None, ge=0)
     n1_faehig: Optional[bool] = None
+    absicherung_a: Optional[float] = Field(None, ge=0)
+    anschluss_stecker: Optional[str] = None
+    strom_typ: Optional[str] = None
+    spannung_v: Optional[int] = Field(None, ge=0)
     bemerkung: str = ""
 
 
@@ -86,6 +94,10 @@ class HardwareTypeUpdate(BaseModel):
     min_rack_hoehe: Optional[int] = Field(None, ge=0)
     leistung_kw: Optional[float] = Field(None, ge=0)
     n1_faehig: Optional[bool] = None
+    absicherung_a: Optional[float] = Field(None, ge=0)
+    anschluss_stecker: Optional[str] = None
+    strom_typ: Optional[str] = None
+    spannung_v: Optional[int] = Field(None, ge=0)
     bemerkung: Optional[str] = None
 
 
@@ -286,6 +298,10 @@ def _load_hardware() -> List[dict]:
                 "port_count_rj45": 1,
                 "port_count_lwl": 0,
                 "port_count_sfp": 0,
+                "absicherung_a": 16.0,
+                "anschluss_stecker": "CEE-16A-3P",
+                "strom_typ": "3-phasig",
+                "spannung_v": 400,
                 "bemerkung": "Stromleiste mit Netzwerk-Controller",
             },
         ]

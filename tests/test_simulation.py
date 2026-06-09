@@ -259,3 +259,105 @@ async def test_simulation_ha_grouping(client: AsyncClient, db: AsyncSession):
 
     # app_srv must NOT be affected (green) because db_b is still active
     assert app_srv.id not in affected_ids
+
+
+@pytest.mark.asyncio
+async def test_simulation_pdu_path_failure(client: AsyncClient, db: AsyncSession):
+    rack = Rack(name="Redundancy Rack", standort="Room 1")
+    db.add(rack)
+    await db.flush()
+
+    # Create PDUs
+    pdu_a = Device(
+        hostname="pdu-a",
+        typ="pdu",
+        rack_id=rack.id,
+        redundancy_path="A",
+        absicherung_a=16.0,
+        strom_typ="3-phasig",
+        spannung_v=400,
+    )
+    pdu_b = Device(
+        hostname="pdu-b",
+        typ="pdu",
+        rack_id=rack.id,
+        redundancy_path="B",
+        absicherung_a=16.0,
+        strom_typ="3-phasig",
+        spannung_v=400,
+    )
+    db.add_all([pdu_a, pdu_b])
+    await db.flush()
+
+    # Create Outlets
+    o_a = PduOutlet(pdu_id=pdu_a.id, outlet_name="Outlet-A", redundancy_path="A")
+    o_b = PduOutlet(pdu_id=pdu_b.id, outlet_name="Outlet-B", redundancy_path="B")
+    db.add_all([o_a, o_b])
+    await db.flush()
+
+    # Create Servers
+    srv_single = Device(hostname="srv-single", typ="server", rack_id=rack.id, psu_count=1)
+    srv_dual = Device(hostname="srv-dual", typ="server", rack_id=rack.id, psu_count=2)
+    db.add_all([srv_single, srv_dual])
+    await db.flush()
+
+    # Connect Servers to Outlets
+    o_a.connected_device_id = srv_single.id
+    
+    # Dual server connects to both
+    o_a_dual = PduOutlet(pdu_id=pdu_a.id, outlet_name="Outlet-A2", redundancy_path="A", connected_device_id=srv_dual.id)
+    o_b_dual = PduOutlet(pdu_id=pdu_b.id, outlet_name="Outlet-B2", redundancy_path="B", connected_device_id=srv_dual.id)
+    db.add_all([o_a_dual, o_b_dual])
+
+    await db.commit()
+
+    # Simulate path A failure
+    payload = {"target_type": "pdu_path", "target_name": "A"}
+
+    response = await client.post("/api/v1/simulation/run", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+
+    # Verify device states:
+    # pdu-a: red
+    # srv-single: red
+    # srv-dual: yellow
+    affected = {item["device_id"]: item for item in data["affected_devices"]}
+
+    assert affected[pdu_a.id]["state"] == "red"
+    assert affected[srv_single.id]["state"] == "red"
+    assert affected[srv_dual.id]["state"] == "yellow"
+    assert pdu_b.id not in affected
+
+
+@pytest.mark.asyncio
+async def test_scorer_pdu_anomalies(db: AsyncSession):
+    from app.domains.simulation.services import AnomalyScorer
+
+    rack = Rack(name="Scorer Rack", standort="Room 2", hoehe_u=42)
+    db.add(rack)
+    await db.flush()
+
+    # 1. PDU with incompatible height (min_rack_hoehe=47 in a 42 HE rack)
+    pdu_inc = Device(
+        hostname="pdu-incompatible",
+        typ="pdu",
+        rack_id=rack.id,
+        min_rack_hoehe=47,
+        redundancy_path="A",
+        absicherung_a=16.0,
+        strom_typ="3-phasig",
+        spannung_v=400,
+    )
+    db.add(pdu_inc)
+    await db.commit()
+
+    # Check anomaly scores
+    res = AnomalyScorer.score_all_racks([rack], [pdu_inc], [], set())
+    assert len(res) == 1
+    # Should flag height incompatibility
+    issues = res[0]["issues"]
+    assert any("inkompatibel" in i for i in issues)
+    # Check score contributes to total
+    assert res[0]["score"] > 0.0
+

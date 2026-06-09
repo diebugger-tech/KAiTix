@@ -145,7 +145,7 @@
         title={isIncompatible ? '⚠ Höhenkonflikt: ' + getDeviceTooltip(dev) : getDeviceTooltip(dev)}
       >
         <span class="font-semibold text-[var(--color-text)] text-[9px] leading-none">{isIncompatible ? '⚠ ' : ''}{dev.hostname}</span>
-        <span class="text-[7px] opacity-60">{dev.typ.toUpperCase()}</span>
+        <span class="text-[7px] opacity-60">{dev.typ.toUpperCase()}{dev.absicherung_a ? ' ' + dev.absicherung_a + 'A' : ''}</span>
       </button>
     {/each}
     {#if !readonly}
@@ -173,12 +173,19 @@
           {@const isIncompatible = isDeviceIncompatible(dev)}
           <button
             onclick={(e) => handleDeviceClick(dev, e)}
-            class="w-full px-2 rounded border mb-0.5 text-left hover:brightness-110 transition {(selectedDevice?.id === dev.id || highlightDeviceIds?.includes(dev.id)) ? 'ring-1 ring-white/30' : ''} {isConflict || isIncompatible ? 'ring-1 ring-red-500' : ''}"
-            style="background:{isConflict || isIncompatible ? 'rgba(239,68,68,.22)' : c.bg}; border-color:{isConflict || isIncompatible ? 'rgba(239,68,68,.7)' : c.border}; min-height:{dev.u_hoehe * 22}px; display:flex; align-items:center; justify-content:space-between;"
+            class="w-full px-2 py-0.5 rounded border mb-0.5 text-left hover:brightness-110 transition {(selectedDevice?.id === dev.id || highlightDeviceIds?.includes(dev.id)) ? 'ring-1 ring-white/30' : ''} {isConflict || isIncompatible ? 'ring-1 ring-red-500' : ''}"
+            style="background:{isConflict || isIncompatible ? 'rgba(239,68,68,.22)' : c.bg}; border-color:{isConflict || isIncompatible ? 'rgba(239,68,68,.7)' : c.border}; min-height:{dev.u_hoehe * 22}px; display:flex; flex-direction:column; justify-content:center;"
             title={isConflict ? '⚠ U-Positions-Konflikt: ' + getDeviceTooltip(dev) : isIncompatible ? '⚠ Höhenkonflikt: ' + getDeviceTooltip(dev) : getDeviceTooltip(dev)}
           >
-            <span class="font-semibold {isConflict || isIncompatible ? 'text-red-300' : 'text-[var(--color-text)]'} truncate">{isIncompatible ? '⚠ ' : ''}{dev.hostname}</span>
-            <span class="text-[8px] opacity-60 shrink-0 ml-1">{isConflict || isIncompatible ? '⚠ ' : ''}{dev.typ.toUpperCase()} {dev.u_hoehe}U</span>
+            <div class="flex items-center justify-between w-full">
+              <span class="font-semibold {isConflict || isIncompatible ? 'text-red-300' : 'text-[var(--color-text)]'} truncate">{isIncompatible ? '⚠ ' : ''}{dev.hostname}</span>
+              <span class="text-[8px] opacity-60 shrink-0 ml-1">{isConflict || isIncompatible ? '⚠ ' : ''}{dev.typ.toUpperCase()} {dev.u_hoehe}U</span>
+            </div>
+            {#if dev.hersteller || dev.modell}
+              <div class="text-[8px] opacity-75 truncate w-full" title="{dev.hersteller} {dev.modell}">
+                {(dev.hersteller || '') + ' ' + (dev.modell || '')}
+              </div>
+            {/if}
           </button>
         {/if}
       {:else}
@@ -217,7 +224,7 @@
         title={isIncompatible ? '⚠ Höhenkonflikt: ' + getDeviceTooltip(dev) : getDeviceTooltip(dev)}
       >
         <span class="font-semibold text-[var(--color-text)] text-[9px] leading-none">{isIncompatible ? '⚠ ' : ''}{dev.hostname}</span>
-        <span class="text-[7px] opacity-60">{dev.typ.toUpperCase()}</span>
+        <span class="text-[7px] opacity-60">{dev.typ.toUpperCase()}{dev.absicherung_a ? ' ' + dev.absicherung_a + 'A' : ''}</span>
       </button>
     {/each}
     {#if !readonly}

@@ -52,6 +52,7 @@ class PduOutletBase(BaseModel):
     steckdosentyp: Optional[str] = None
     max_watt: Optional[Decimal] = None
     schaltbar: bool = False
+    redundancy_path: Optional[str] = None  # "A" oder "B" — Pfad-Zugehörigkeit
     connected_device_id: Optional[int] = None
     connected_port: Optional[str] = None
 
@@ -66,6 +67,7 @@ class PduOutletUpdate(BaseModel):
     steckdosentyp: Optional[str] = None
     max_watt: Optional[Decimal] = None
     schaltbar: Optional[bool] = None
+    redundancy_path: Optional[str] = None
     connected_device_id: Optional[int] = None
     connected_port: Optional[str] = None
 
@@ -118,8 +120,10 @@ class DeviceBase(BaseModel):
     bemerkung: Optional[str] = None
     strom_typ: Optional[str] = None
     spannung_v: Optional[int] = Field(None, ge=0)
-    anschlussleistung_a: Optional[Decimal] = Field(None, ge=0)
-    anschluss_stecker: Optional[str] = None
+    absicherung_a: Optional[Decimal] = Field(None, ge=0)  # Absicherung in A (z.B. 16.0 für CEE-16A)
+    anschluss_stecker: Optional[str] = None  # z.B. "CEE-16A-3P", "CEE-32A-3P"
+    redundancy_path: Optional[str] = None  # "A" oder "B"
+    min_rack_hoehe: Optional[int] = None  # PDU-Filter: nur in Racks mit >= dieser HE-Anzahl
 
 
 class DeviceCreate(DeviceBase):
@@ -151,8 +155,10 @@ class DeviceUpdate(BaseModel):
     bemerkung: Optional[str] = None
     strom_typ: Optional[str] = None
     spannung_v: Optional[int] = Field(None, ge=0)
-    anschlussleistung_a: Optional[Decimal] = Field(None, ge=0)
+    absicherung_a: Optional[Decimal] = Field(None, ge=0)
     anschluss_stecker: Optional[str] = None
+    redundancy_path: Optional[str] = None
+    min_rack_hoehe: Optional[int] = None
 
 
 class Device(DeviceBase):

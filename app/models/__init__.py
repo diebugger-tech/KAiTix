@@ -12,7 +12,6 @@ from app.domains.runbooks.models import (
 from app.domains.network.models import Vlan, Subnet
 
 # Legacy aliases for unified Interface model
-ServerInterface = Interface
 DevicePort = Interface
 
 __all__ = [
@@ -22,7 +21,6 @@ __all__ = [
     "Cable",
     "CableStrand",
     "Interface",
-    "ServerInterface",
     "DevicePort",
     "UsvUnit",
     "UsvModule",

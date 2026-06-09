@@ -135,11 +135,22 @@ async def commit_eplan(
             if s_dev_key in devices_cache:
                 s_dev = devices_cache[s_dev_key]
             else:
+                s_dev_lower = conn.source_device.lower()
+                dev_typ = "server"
+                if "sw" in s_dev_lower or "switch" in s_dev_lower:
+                    dev_typ = "switch"
+                elif "pdu" in s_dev_lower:
+                    dev_typ = "pdu"
+                elif "usv" in s_dev_lower:
+                    dev_typ = "usv"
+                elif "patchpanel" in s_dev_lower or "pp" in s_dev_lower:
+                    dev_typ = "patchpanel"
+
                 s_dev = Device(
                     hostname=conn.source_device,
-                    typ="switch" if "sw" in conn.source_device.lower() else "server",
+                    typ=dev_typ,
                     rack_id=s_rack.id if s_rack else None,
-                    u_hoehe=1,
+                    u_hoehe=0 if dev_typ == "pdu" else 1,
                 )
                 db.add(s_dev)
                 await db.flush()
@@ -154,11 +165,22 @@ async def commit_eplan(
             if t_dev_key in devices_cache:
                 t_dev = devices_cache[t_dev_key]
             else:
+                t_dev_lower = conn.target_device.lower()
+                dev_typ = "server"
+                if "sw" in t_dev_lower or "switch" in t_dev_lower:
+                    dev_typ = "switch"
+                elif "pdu" in t_dev_lower:
+                    dev_typ = "pdu"
+                elif "usv" in t_dev_lower:
+                    dev_typ = "usv"
+                elif "patchpanel" in t_dev_lower or "pp" in t_dev_lower:
+                    dev_typ = "patchpanel"
+
                 t_dev = Device(
                     hostname=conn.target_device,
-                    typ="switch" if "sw" in conn.target_device.lower() else "server",
+                    typ=dev_typ,
                     rack_id=t_rack.id if t_rack else None,
-                    u_hoehe=1,
+                    u_hoehe=0 if dev_typ == "pdu" else 1,
                 )
                 db.add(t_dev)
                 await db.flush()
@@ -308,6 +330,72 @@ async def commit_eplan(
                 cable.nach_device_id = t_dev.id if t_dev else cable.nach_device_id
                 cable.nach_port = conn.target_port or cable.nach_port
                 imported_cables_count += 1
+
+            # If this is a power cable, configure PDU / USV properties on the target device
+            if db_typ.startswith("Strom-") and t_dev:
+                # Force typ to pdu if the device hostname indicates it is a PDU
+                if "pdu" in t_dev.hostname.lower() and t_dev.typ != "pdu":
+                    t_dev.typ = "pdu"
+                    t_dev.u_hoehe = 0
+                elif "usv" in t_dev.hostname.lower() and t_dev.typ != "usv":
+                    t_dev.typ = "usv"
+
+                # Extract redundancy path
+                red_path = None
+                if conn.cable_number and "-PDU-A-" in conn.cable_number.upper():
+                    red_path = "A"
+                elif conn.cable_number and "-PDU-B-" in conn.cable_number.upper():
+                    red_path = "B"
+                elif "-A-" in t_dev.hostname.upper() or t_dev.hostname.upper().endswith("-A"):
+                    red_path = "A"
+                elif "-B-" in t_dev.hostname.upper() or t_dev.hostname.upper().endswith("-B"):
+                    red_path = "B"
+
+                if red_path:
+                    t_dev.redundancy_path = red_path
+                    if t_dev.typ == "pdu" and t_dev.side is None:
+                        t_dev.side = "left" if red_path == "A" else "right"
+
+                # Parse and set power values based on cable type
+                if "cee-16a" in db_typ.lower():
+                    t_dev.absicherung_a = Decimal("16.0")
+                    t_dev.strom_typ = "3-phasig"
+                    t_dev.anschluss_stecker = "CEE-16A-3P"
+                    t_dev.spannung_v = 400
+                elif "cee-32a" in db_typ.lower():
+                    t_dev.absicherung_a = Decimal("32.0")
+                    t_dev.strom_typ = "3-phasig"
+                    t_dev.anschluss_stecker = "CEE-32A-3P"
+                    t_dev.spannung_v = 400
+                elif "cee-63a" in db_typ.lower():
+                    t_dev.absicherung_a = Decimal("63.0")
+                    t_dev.strom_typ = "3-phasig"
+                    t_dev.anschluss_stecker = "CEE-63A-3P"
+                    t_dev.spannung_v = 400
+                elif "c13" in db_typ.lower():
+                    t_dev.absicherung_a = Decimal("10.0")
+                    t_dev.strom_typ = "1-phasig"
+                    t_dev.anschluss_stecker = "C14"
+                    t_dev.spannung_v = 230
+                elif "c19" in db_typ.lower():
+                    t_dev.absicherung_a = Decimal("16.0")
+                    t_dev.strom_typ = "1-phasig"
+                    t_dev.anschluss_stecker = "C20"
+                    t_dev.spannung_v = 230
+                elif "schuko" in db_typ.lower():
+                    t_dev.absicherung_a = Decimal("16.0")
+                    t_dev.strom_typ = "1-phasig"
+                    t_dev.anschluss_stecker = "Schuko"
+                    t_dev.spannung_v = 230
+
+                # Set min_rack_hoehe for vertical Kentix PDUs
+                if t_dev.typ == "pdu" and t_dev.min_rack_hoehe is None:
+                    if "40he" in t_dev.hostname.lower():
+                        t_dev.min_rack_hoehe = 40
+                    elif "42he" in t_dev.hostname.lower():
+                        t_dev.min_rack_hoehe = 42
+                    elif "47he" in t_dev.hostname.lower():
+                        t_dev.min_rack_hoehe = 47
 
             # Update port occupancy and link cable
             if s_port:

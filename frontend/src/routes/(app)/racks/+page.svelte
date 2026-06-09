@@ -412,6 +412,11 @@
         seriennummer: devSeriennummer || undefined,
         inventarnummer: devInventarnummer || undefined,
         bemerkung: devBemerkung || undefined,
+        absicherung_a: selectedHW?.absicherung_a ?? undefined,
+        anschluss_stecker: selectedHW?.anschluss_stecker || undefined,
+        strom_typ: selectedHW?.strom_typ || undefined,
+        spannung_v: selectedHW?.spannung_v ?? undefined,
+        min_rack_hoehe: selectedHW?.min_rack_hoehe ?? undefined,
       });
       showAddDevice = false; pduOnlyMode = false;
       await loadAll();
@@ -880,7 +885,7 @@
     const rackPdus = rackDevices.filter(d => d.typ === 'pdu');
     if (rackPdus.length > 0) {
       const pdu = rackPdus[0];
-      const amps = Number(pdu.anschlussleistung_a ?? 16);
+      const amps = Number(pdu.absicherung_a ?? pdu.anschlussleistung_a ?? 16);
       const volts = Number(pdu.spannung_v ?? 230);
       if (pdu.strom_typ === '1-phasig') {
         return pdu.phase === ph ? volts * amps : 0;
@@ -1325,8 +1330,12 @@
                     <span class="capitalize px-1.5 py-0.5 rounded text-[10px]" style="background:{c.bg};color:white">{selectedDevice.typ}</span>
                   </h3>
                   <div class="flex flex-wrap gap-3 text-xs text-[var(--color-text3)] mt-1">
+                    {#if selectedDevice.hersteller || selectedDevice.modell}
+                      <span class="font-semibold text-[var(--color-text2)]">{(selectedDevice.hersteller || '') + ' ' + (selectedDevice.modell || '')}</span>
+                      <span>·</span>
+                    {/if}
                     <span>{racks.find(r=>r.id===selectedDevice!.rack_id)?.name ?? '–'} · HE {selectedDevice.u_position ?? '?'}</span>
-                    {#if selectedDevice.ip_adresse}<span class="font-mono">{selectedDevice.ip_adresse}</span>{/if}
+                    {#if selectedDevice.ip_adresse}<span>·</span><span class="font-mono">{selectedDevice.ip_adresse}</span>{/if}
                   </div>
                 </div>
                 <div class="flex space-x-1.5">

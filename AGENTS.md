@@ -47,13 +47,6 @@
 - Verbindungen können rack-übergreifend sein
 - PDUs dokumentieren Steckdosenbelegung pro Phase (L1/L2/L3)
 
-**Kerndatenmodell:**
-- Racks enthalten Geräte an definierten U-Positionen
-- Geräte haben Interfaces (RJ45, LC/LWL, SFP+, SC, IPMI, FC usw.)
-- Interfaces sind über Kabel verbunden — mit Quelle (Von-Gerät + Port) und Ziel (Nach-Gerät + Port)
-- Verbindungen können rack-übergreifend sein
-- PDUs dokumentieren Steckdosenbelegung pro Phase (L1/L2/L3)
-
 ## Architektur-Entscheidungen (ADR)
 
 ### ADR — Livedaten-Mustererkennung ist KEIN KAiTix-Feature
@@ -176,6 +169,7 @@ Dieses Repository dokumentiert und verwaltet die Hardware- und Strominfrastruktu
 - **1 PDU pro Seite pro Rack**: Pro 0U-Seite (left/right) maximal eine vertikale PDU. Backend: `_check_side_conflict()` in `devices.py` + `pdus.py`. Frontend: Side-Buttons deaktiviert wenn belegt (`occupiedSides`).
 - **min_rack_hoehe Filter**: `filteredHW` im Frontend filtert PDUs mit `min_rack_hoehe > rack.hoehe_u` aus. Backend validiert in `_check_rack_height_compatibility()`. 42HE-Rack → nur PDUs mit `min_rack_hoehe <= 42` (keine 47HE-PDUs).
 - **0U-PDU füllt Rack-Höhe**: Die 0U-Spalte im Rack-Diagramm wird immer in voller `rack.hoehe_u` Höhe gezeichnet, unabhängig von der physischen PDU-Höhe. `flex-1` auf PDU-Button, `overflow-y-auto` entfernt.
+- **Standard-Absicherung 16A**: Für 7 Racks sind standardmäßig 14x 16A Kentix-PDUs (A/B pro Rack) mit CEE-16A-3P Stecker konfiguriert. 3P+N Absicherung (C16A) in der UV zwingend erforderlich zur Vermeidung von Sternpunktverschiebungen.
 
 ### 6. Port-Konfiguration & Standard-Ports
 - **FastAPI Backend**: Standardmäßig auf Port `8003` (`make dev`).
@@ -201,34 +195,43 @@ Dieses Repository dokumentiert und verwaltet die Hardware- und Strominfrastruktu
 ## Feature-Roadmap
 
 ### Phase 1 — Datenmodell bereinigen (PRIORITÄT)
-- [ ] `ServerInterface` + `DevicePort` zu einem einheitlichen `Interface`-Modell zusammenführen
-- [ ] Tote Modelle entfernen: `KentixReading`, `UsvCalculation`, `DistributionPanel`, `DistributionCircuit`
-- [ ] Tote Device-Felder entfernen: `api_url`, `api_key`, `circuit_id`
-- [ ] Alembic-Migration für DROP TABLE + Column
+- [x] `api_url`, `api_key` aus Device entfernt — nicht mehr im ORM/Schemas vorhanden
+- [x] `KentixReading` entfernt — kein Treffer im app/-Code
+- [ ] `ServerInterface`-Alias in `models/__init__.py` aufräumen — aktuell als `ServerInterface = Interface` weitergeleitet, Tests nutzen noch den alten Namen
+- [ ] `UsvCalculation` + `DistributionPanel` + `DistributionCircuit` evaluieren — noch aktiv im USV-Flow genutzt, kein toter Code; ggf. bewusst behalten
+- [ ] Alembic-Migration für ggf. verbleibende DROP TABLE + Column
 
-### Phase 2 — Export-Vollständigkeit
-Bestehend: `/export/cables` (CSV, XLSX, ODS) — ExportService bereits vollständig implementiert.
+### Phase 2 — Export-Vollständigkeit ✅
+Vollständig implementiert in `app/domains/import_export/routers/export.py`:
 
-Fehlend:
-- [ ] `GET /api/v1/export/racks` — Rack-Inventar (Rack → Gerät, U-Position, Hersteller, Modell, SN, TDP)
-- [ ] `GET /api/v1/export/interfaces` — Geräte-Interfaces (Gerät → Port → Verbunden mit → Zielgerät)
-- [ ] `GET /api/v1/export/pdus` — PDU-Belegung (PDU → Steckdose → Phase → Gerät)
-- [ ] `GET /api/v1/export/full` — Multi-Sheet XLSX (alle Sheets in einer Datei via openpyxl)
+- [x] `GET /export/cables` — Kabellisten (CSV, XLSX, ODS)
+- [x] `GET /export/racks` — Rack-Inventar
+- [x] `GET /export/interfaces` — Geräte-Interfaces
+- [x] `GET /export/pdus` — PDU-Belegung
+- [x] `GET /racks/{rack_id}/pdf` — Rack-PDF-Export (rack_export.py)
+- [x] `GET /export/racks-pdf` — Alle Racks als PDF
 
-### Phase 3 — Visualisierung
-- [ ] Rack-Diagramm: U-Positions-Ansicht, Geräte als farbige Blöcke (1U/2U/4U Höhe)
-- [ ] Topologie-Graph: Geräte als Knoten, Kabel als Kanten (D3.js oder Cytoscape.js), rack-übergreifend
-- [ ] Interface-Matrix: Tabelle Gerät × Port mit Status (frei/belegt/defekt) und Zielgerät
-- [ ] Kabelverfolgung (Trace): Interface A → kompletter Pfad bis Ziel B inkl. Patchpanel
+### Phase 3 — Visualisierung ✅
+Vollständig implementiert:
 
-### Phase 4 — Erweiterte Dokumentation
-- [ ] PDF-Export: Rack-Diagramm + Kabelliste + Interface-Beschreibung (druckbar)
-- [ ] Patch-Panel Support: Zwischenstation im Kabelweg (Switch → Patch → Server)
-- [ ] Volltext-Suche: "Welches Gerät hängt an Switch-01 Port 24?"
-- [ ] Asset-Export: XLSX mit Geräten, Seriennummern, Positionen (für Asset-Management)
+- [x] Rack-Diagramm: `frontend/src/routes/(app)/racks/+page.svelte` (134k — vollständige U-Positions-Ansicht)
+- [x] Topologie-Graph: `frontend/src/routes/(app)/topology/+page.svelte` mit SVG-Graph, Pan/Zoom, Drag, View-Modi (`rack`, `netzplan`, `stromlauf`, `3d`)
+- [x] `Topology3D`-Komponente vorhanden (`$lib/components/Topology3D.svelte`)
+- [x] Heatmap-Overlay, Cross-Rack-Verbindungen, Kabelfilter, Gerätetyp-Filter
+- [x] E-Plan CAD Stromlaufplan: `frontend/src/routes/(app)/eplan/+page.svelte` normgerecht gezeichnet:
+  - **Blatt 1 (USV-Zuleitung):** Leistungsschalter (MCCB 3P+N) statt einfacher Schütze; mechanische Verriegelung der Bypass-Schalter (MBS nur bei Synchronität); NH-Sicherungen dimensioniert auf Leitungsquerschnitte (NH 63A für 16mm²).
+  - **Blatt 2 (UV-USV-01):** Zentraler Lasttrennschalter (-Q0) vor den Rack-Abgängen; Rack-Sicherungen als RCBO (Typ B, 30mA, C16A, kurzzeitverzögert) mit Summenstromwandler und voreilendem Neutralleiter gezeichnet, um Personenschutz zu gewährleisten und Sternpunktverschiebung/Fehlauslösungen durch Servernetzteile auszuschließen.
+  - **Blatt 3 (Batterie):** DC+ und DC- Trenner als NH00 125A gG 440VDC dimensioniert; saubere Leitungsführung ohne Kreuzungs-Kurzschlüsse an den Hauptsammelschienen.
+
+### Phase 4 — Erweiterte Dokumentation ✅
+- [x] Volltext-Suche: Backend `/api/v1/search?q=` + Frontend-Suchleiste im Header (Geräte, Kabel, Racks)
+- [x] Asset-Export: Rack-Export (XLSX/ODS/CSV) enthält jetzt Seriennummer + Inventarnummer
+- [x] Patch-Panel: `patchpanel` als Device-Typ im ORM-Enum, constants.py, import_csv, api.ts — Alembic-Migration ausstehend
+- [ ] Patch-Panel Trace: Kabelverfolgung Switch → Patch → Server als explizite UI-Funktion
 
 ### Phase 5 — Daten & Integration
 - [ ] Seed-Script: Die hartcodierten USV-Vorlagen (Wöhrle 40kW, Eaton 93PM etc.) aus dem N+1 Simulator als echte `usv_units`-Einträge in die DB überführen, damit sie im E-Plan-Dropdown global wählbar sind.
+
 
 ## Bekannte Bugs
 
