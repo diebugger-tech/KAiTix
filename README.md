@@ -26,7 +26,7 @@ KAiTix ist ein hochspezialisiertes Planungs-, Simulations- und Dokumentationswer
 *Rechenzentrum Racks — Detaillierte Ansicht der Hardware, Rack-Belegung und PDU-Steckdosen*
 
 ![Topologie 3D](docs/screenshots/Topologie%203D.png)
-*Topologie 3D — Interaktive 3D-Orbit-Ansicht zur rack-übergreifenden Visualisierung von Strom und Netzwerk*
+*Topologie 3D — Interaktive 3D-Orbit-Ansicht mit Raycasting (klickbaren Geräten) und gebogenen 3D-Kabeln (Bezier Curves) zur rack-übergreifenden Visualisierung*
 
 ![USV-Auslegungsplanung](docs/screenshots/USV-Auslegungsplanung%20.png)
 *USV-Auslegungsplanung — N+1 Simulator für Batterie- und Stromausfall-Szenarien*
@@ -63,8 +63,9 @@ KAiTix ist ein hochspezialisiertes Planungs-, Simulations- und Dokumentationswer
 * **Neue Endpoints:** `POST /api/v1/power/phase/optimize/{rack_id}` und `/apply`
 * **Frontend:** Imbalance-Badge, Optimizer-Button, Dropdown-Warn-Icon
 
-### 5. Predictive Analytics: Blast Radius (Ausfall-Simulation)
-* **Kaskadierende Ausfälle:** Was passiert, wenn ein Core-Switch oder eine PDU ausfällt?
+### 5. Predictive Analytics & Konsistenz-Validierung
+* **Konsistenz-Validator:** Erkennt vollautomatisch logische Doku-Fehler wie U-Slot-Überlappungen, fehlende Phasen-Zuordnungen für Stromverbraucher und Netzwerk-Port-Doppelbelegungen.
+* **Kaskadierende Ausfälle (Blast Radius):** Was passiert, wenn ein Core-Switch oder eine PDU ausfällt?
 * **Redundanz-Check:** Erkennung isolierter oder stromloser Server sowie mitgerissener VMs und betroffener Runbook-Sequenzen.
 
 ### 6. EPLAN CSV Import & Kabeltyp-Mapping
