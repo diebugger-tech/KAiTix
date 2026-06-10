@@ -36,6 +36,7 @@
   let hoehe_u = $state(42); // will be overridden by defaultHeight in $effect
   let breite_mm = $state(600);
   let bemerkung = $state('');
+  let cooling_capacity_w = $state<number | null>(null);
   let namePlaceholder = $state('z.B. RACK-01');
 
   let availableReihen = $derived(
@@ -53,6 +54,7 @@
           hoehe_u = initialData.hoehe_u || defaultHeight;
           breite_mm = initialData.breite_mm || 600;
           bemerkung = initialData.bemerkung || '';
+          cooling_capacity_w = initialData.cooling_capacity_w || null;
           selectedRackHWId = initialData.hardware_type_id || null;
         } else {
           // Reset for addition
@@ -62,6 +64,7 @@
           hoehe_u = defaultHeight;
           breite_mm = 600;
           bemerkung = '';
+          cooling_capacity_w = null;
           selectedRackHWId = null;
         }
       });
@@ -107,7 +110,8 @@
       hoehe_u: Number(hoehe_u),
       breite_mm: Number(breite_mm),
       bemerkung: bemerkung.trim() || undefined,
-      hardware_type_id: selectedRackHWId || undefined
+      hardware_type_id: selectedRackHWId || undefined,
+      cooling_capacity_w: cooling_capacity_w ? Number(cooling_capacity_w) : undefined
     };
 
     try {
@@ -194,6 +198,14 @@
           </button>
         </div>
       </div>
+      
+      <div>
+        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Max. Kühlleistung (Watt)</label>
+        <input type="number" bind:value={cooling_capacity_w} min="0" placeholder="z.B. 10000"
+          class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]" />
+        <p class="text-[10px] text-[var(--color-text3)] mt-1">Gibt die maximale Abwärme (TDP) an, die dieses Rack abführen kann.</p>
+      </div>
+
       {#if selectedRackHWId !== null}
       <div>
         <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Höheneinheiten</label>

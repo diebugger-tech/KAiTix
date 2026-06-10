@@ -2,11 +2,12 @@
   import { onMount } from 'svelte';
   import { page } from '$app/state';
   import { api, type Rack, type Device, type HardwareType, type Cable, type DevicePort, type PduOutlet } from '$lib/api';
-  import { Server, Layers, Plus, HardDrive, Zap, LogOut, Check, X, ShieldAlert, Cpu, Network, Edit2, Trash2, ShieldCheck, ChevronRight, Activity, ZapOff, Play, Clock, Building, MapPin, Wifi, Box, ChevronDown, FileText, Cable as CableIcon } from '@lucide/svelte';
+  import { Server, Layers, Plus, HardDrive, Zap, LogOut, Check, X, ShieldAlert, Cpu, Network, Edit2, Trash2, ShieldCheck, ChevronRight, Activity, ZapOff, Play, Clock, Building, MapPin, Wifi, Box, ChevronDown, FileText, Cable as CableIcon, Thermometer, AlertTriangle } from '@lucide/svelte';
   import RackModal from '$lib/components/RackModal.svelte';
   import RackFilterBar from '$lib/components/RackFilterBar.svelte';
   import RackFrontView from '$lib/components/RackFrontView.svelte';
   import { locationStore, type LocationType } from '$lib/locations.svelte';
+  import { calculateRackMetrics } from '$lib/utils/rackMetrics';
 
   // ── State ─────────────────────────────────────────────────
   let racks       = $state<Rack[]>([]);
@@ -51,13 +52,37 @@
 
   let existingReihen = $derived([...new Set(racks.map(r => r.rackreihe).filter(r => Boolean(r) && r !== '__ALL__'))].sort());
 
-  // Sync dropdown selected rack to main selectedRack object
+  // Sync dropdown -> selectedRack
   $effect(() => {
-    if (dropdownSelectedRackId !== '__ALL__' && String(selectedRack?.id) !== String(dropdownSelectedRackId)) {
+    if (dropdownSelectedRackId === '__ALL__') {
+      if (selectedRack !== null) {
+        selectedRack = null;
+        selectedDevice = null;
+      }
+    } else if (String(selectedRack?.id) !== String(dropdownSelectedRackId)) {
       const found = racks.find(r => String(r.id) === String(dropdownSelectedRackId));
       if (found) {
         selectedRack = found;
         selectedDevice = null;
+      }
+    }
+  });
+
+  // Sync selectedRack -> dropdown and filters
+  $effect(() => {
+    if (selectedRack === null) {
+      if (dropdownSelectedRackId !== '__ALL__') {
+        dropdownSelectedRackId = '__ALL__';
+      }
+    } else {
+      if (String(dropdownSelectedRackId) !== String(selectedRack.id)) {
+        dropdownSelectedRackId = selectedRack.id;
+      }
+      if (selectedRack.standort && filterStandort !== selectedRack.standort) {
+        filterStandort = selectedRack.standort;
+      }
+      if (selectedRack.rackreihe && filterReihe !== selectedRack.rackreihe) {
+        filterReihe = selectedRack.rackreihe;
       }
     }
   });
@@ -69,19 +94,6 @@
       if (!isStillInFilter) {
         selectedRack = null;
         selectedDevice = null;
-      }
-    }
-  });
-
-  // Sync main selectedRack object back to dropdown selection
-  $effect(() => {
-    if (selectedRack) {
-      if (String(dropdownSelectedRackId) !== String(selectedRack.id)) {
-        dropdownSelectedRackId = selectedRack.id;
-      }
-    } else {
-      if (dropdownSelectedRackId !== '__ALL__') {
-        dropdownSelectedRackId = '__ALL__';
       }
     }
   });
@@ -907,47 +919,12 @@
     right: rightSide.length > 0,
   });
 
-  const occupiedU = $derived(
-    rackDevices
-      .filter(d => (d.u_hoehe ?? 0) > 0)
-      .reduce((s, d) => s + d.u_hoehe, 0)
-  );
-
-  const phaseLoads = $derived(() => {
-    const ph = { L1: 0, L2: 0, L3: 0 };
-    for (const d of rackDevices) {
-      const effectivePhases: Array<'L1' | 'L2' | 'L3'> = [];
-      if (d.connected_pdu_outlets && d.connected_pdu_outlets.length > 0) {
-        for (const o of d.connected_pdu_outlets) {
-          if (o.phase === 'L1' || o.phase === 'L2' || o.phase === 'L3') effectivePhases.push(o.phase);
-        }
-      } else if (d.phase === 'L1' || d.phase === 'L2' || d.phase === 'L3') {
-        effectivePhases.push(d.phase);
-      }
-      
-      const power = Number(d.anschlussleistung_watt ?? d.tdp_watt ?? 0);
-      if (effectivePhases.length > 0) {
-        const primaryPhase = effectivePhases[0] as 'L1'|'L2'|'L3';
-        if (ph[primaryPhase] !== undefined) {
-          ph[primaryPhase] += power;
-        }
-      }
-    }
-    return ph;
-  });
-
+  const metrics = $derived(selectedRack ? calculateRackMetrics(selectedRack, devices) : null);
+  const occupiedU = $derived(metrics?.occupiedU ?? 0);
+  const phaseLoads = $derived(() => ({ L1: (metrics?.L1kw ?? 0)*1000, L2: (metrics?.L2kw ?? 0)*1000, L3: (metrics?.L3kw ?? 0)*1000 }));
   const imbalanceInfo = $derived.by(() => {
-    const loads = phaseLoads();
-    const total = loads.L1 + loads.L2 + loads.L3;
-    if (total === 0) return { pct: 0, severity: 'ok' as const };
-    const ideal = total / 3;
-    const maxDev = Math.max(
-      Math.abs(loads.L1 - ideal),
-      Math.abs(loads.L2 - ideal),
-      Math.abs(loads.L3 - ideal)
-    );
-    const pct = (maxDev / ideal) * 100;
-    return { pct, severity: pct > 25 ? 'critical' as const : pct > 10 ? 'warning' as const : 'ok' as const };
+    const pct = metrics?.imbalancePct ?? 0;
+    return { pct, severity: pct > 25 ? 'critical' : pct > 10 ? 'warning' : 'ok' };
   });
 
   const getDeviceTooltip = $derived((dev: Device) => {
@@ -1302,36 +1279,80 @@
           </div>
         </div>
 
-        <h3 class="text-xs font-bold text-[var(--color-text3)] uppercase tracking-wider px-1 pt-2 border-t border-[var(--color-border)] mt-2">Racks ({filteredRacks.length})</h3>
-        <div class="space-y-1.5 max-h-[calc(100vh-530px)] overflow-y-auto pr-1">
-          {#each filteredRacks as rack}
-            {@const active = selectedRack?.id === rack.id}
-            <button onclick={() => { selectedRack = rack; selectedDevice = null; }}
-              class="w-full text-left p-3 rounded-xl border transition {active ? 'bg-[#1D9E75]/10 border-[#1D9E75]/50' : 'bg-[var(--color-bg2)] border-[var(--color-border)] hover:border-[var(--color-border2)]'}">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-2 min-w-0">
-                  <Layers class="w-3.5 h-3.5 shrink-0 {active ? 'text-[#5DCAA5]' : 'text-[var(--color-text3)]'}" />
-                  <div class="min-w-0">
-                    <div class="font-bold text-xs truncate {active ? 'text-[var(--color-text)]' : 'text-[var(--color-text)]'}">{rack.name}</div>
-                    <div class="text-[10px] text-[var(--color-text3)] truncate">
-                      {rack.standort || '–'}
-                      {#if rack.rackreihe} <span class="opacity-50">·</span> {rack.rackreihe}{/if}
-                    </div>
-                  </div>
-                </div>
-                <ChevronRight class="w-3 h-3 text-[var(--color-text3)] shrink-0" />
-              </div>
-            </button>
-          {/each}
-        </div>
+
 
 
       </div>
 
       <!-- Rack-Visualisierung (mitte) -->
-      <div class="lg:col-span-3">
+      <div class="lg:col-span-3 flex flex-col h-full min-h-[500px]">
         {#if !selectedRack}
-          <div class="p-8 text-center text-[var(--color-text3)] text-sm bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl">Rack auswählen</div>
+          <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl p-6 flex-1 flex flex-col">
+            {#if filteredRacks.length === 0}
+              <div class="flex flex-col items-center justify-center flex-1 text-[var(--color-text3)] opacity-70">
+                <Layers class="w-12 h-12 mb-3" />
+                <p>Keine Racks für diese Filterkriterien gefunden.</p>
+              </div>
+            {:else}
+              <div class="mb-4">
+                <h2 class="text-lg font-bold text-[var(--color-text)]">Racks Übersicht ({filteredRacks.length})</h2>
+                <p class="text-xs text-[var(--color-text3)]">Wähle ein Rack aus der Liste oder nutze die Filter, um die Auswahl einzugrenzen.</p>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 overflow-y-auto pr-2 pb-4">
+                {#each filteredRacks as rack}
+                  {@const rMet = calculateRackMetrics(rack, devices)}
+                  <button onclick={() => { selectedRack = rack; selectedDevice = null; dropdownSelectedRackId = rack.id; }} class="text-left bg-[var(--color-bg3)] border border-[var(--color-border2)] hover:border-[#1D9E75] hover:shadow-lg transition rounded-xl p-4 flex flex-col gap-2 group">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-2">
+                        <Layers class="w-5 h-5 text-[var(--color-text3)] group-hover:text-[#5DCAA5] transition shrink-0" />
+                        <div class="min-w-0">
+                          <div class="font-bold text-[var(--color-text)] truncate">{rack.name}</div>
+                          <div class="text-[10px] text-[var(--color-text3)] truncate">{rack.standort || 'Kein Standort'} {rack.rackreihe ? `• ${rack.rackreihe}` : ''}</div>
+                        </div>
+                      </div>
+                      <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded border border-[var(--color-border2)] bg-[var(--color-bg2)] text-[var(--color-text2)] shrink-0">
+                        {rMet.occupiedU} / {rack.hoehe_u} HE
+                      </span>
+                    </div>
+                    <div class="mt-2 space-y-1.5">
+                      <div class="flex justify-between text-[10px] text-[var(--color-text3)] font-mono">
+                        <span>Auslastung</span>
+                        <span>{rMet.percent}%</span>
+                      </div>
+                      <div class="w-full h-1 bg-[var(--color-border)] rounded-full overflow-hidden">
+                        <div class="h-full bg-[#1D9E75] rounded-full transition-all" style="width: {rMet.percent}%"></div>
+                      </div>
+                      
+                      <!-- Thermal Simulation -->
+                      {#if rack.cooling_capacity_w && rack.total_tdp_w !== undefined}
+                        {@const tdpKw = rack.total_tdp_w / 1000}
+                        {@const coolKw = rack.cooling_capacity_w / 1000}
+                        {@const overheat = rack.total_tdp_w > rack.cooling_capacity_w}
+                        <div class="flex justify-between text-[10px] font-mono mt-2 {overheat ? 'text-red-400 font-bold' : 'text-[var(--color-text3)]'}">
+                          <span class="flex items-center gap-1">
+                            {#if overheat}
+                              <AlertTriangle class="w-3 h-3" />
+                            {:else}
+                              <Thermometer class="w-3 h-3" />
+                            {/if}
+                            Therm. Last
+                          </span>
+                          <span>{tdpKw.toFixed(1)} / {coolKw.toFixed(1)} kW</span>
+                        </div>
+                        <div class="w-full h-1 bg-[var(--color-border)] rounded-full overflow-hidden">
+                          <div class="h-full rounded-full transition-all {overheat ? 'bg-red-500' : 'bg-orange-400'}" style="width: {Math.min((rack.total_tdp_w / rack.cooling_capacity_w) * 100, 100)}%"></div>
+                        </div>
+                      {/if}
+
+                      <div class="text-[10px] text-[var(--color-text3)] text-right font-mono mt-1">
+                        {rMet.totalKw.toFixed(2)} kW Gesamt
+                      </div>
+                    </div>
+                  </button>
+                {/each}
+              </div>
+            {/if}
+          </div>
         {:else}
           <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl overflow-hidden">
             <!-- Rack Header -->
@@ -1343,7 +1364,19 @@
                     <span class="font-normal text-[10px] text-[var(--color-text3)]">{(selectedRack.hersteller || '') + (selectedRack.hersteller && selectedRack.modell ? ' ' : '') + (selectedRack.modell || '')}</span>
                   {/if}
                 </div>
-                <div class="text-[10px] text-[var(--color-text3)]">{occupiedU}/{selectedRack.hoehe_u} HE{selectedRack.breite_mm ? ' · ' + selectedRack.breite_mm + 'mm' : ''} · {(phaseLoads().L1/1000 + phaseLoads().L2/1000 + phaseLoads().L3/1000).toFixed(1)} kW</div>
+                <div class="text-[10px] text-[var(--color-text3)] mt-1 flex items-center gap-2">
+                  <span>{#if selectedRack.standort}{selectedRack.standort}{/if}{#if selectedRack.rackreihe} · {selectedRack.rackreihe}{/if}{#if selectedRack.standort || selectedRack.rackreihe} | {/if}
+                  {occupiedU}/{selectedRack.hoehe_u} HE{selectedRack.breite_mm ? ' · ' + selectedRack.breite_mm + 'mm' : ''} · {(phaseLoads().L1/1000 + phaseLoads().L2/1000 + phaseLoads().L3/1000).toFixed(1)} kW Strom</span>
+                  
+                  {#if selectedRack.cooling_capacity_w && selectedRack.total_tdp_w !== undefined}
+                    {@const overheat = selectedRack.total_tdp_w > selectedRack.cooling_capacity_w}
+                    <span class="px-1.5 py-0.5 rounded {overheat ? 'bg-red-500/20 text-red-400 font-bold border border-red-500/50' : 'bg-orange-500/20 text-orange-400 border border-orange-500/50'} flex items-center gap-1">
+                      <Thermometer class="w-3 h-3" />
+                      TDP: {(selectedRack.total_tdp_w / 1000).toFixed(1)} kW / Kühlung: {(selectedRack.cooling_capacity_w / 1000).toFixed(1)} kW
+                      {#if overheat} <AlertTriangle class="w-3 h-3 ml-1" /> Überhitzungsgefahr {/if}
+                    </span>
+                  {/if}
+                </div>
               </div>
               <div class="flex items-center space-x-2">
                 {#if selectedRack.breite_mm}

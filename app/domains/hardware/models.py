@@ -25,6 +25,9 @@ class Rack(Base):
     max_watt: Mapped[Optional[float]] = mapped_column(
         DECIMAL(10, 2), nullable=True
     )  # Max. Gesamtleistung für Overload-Check
+    cooling_capacity_w: Mapped[Optional[float]] = mapped_column(
+        DECIMAL(10, 2), nullable=True
+    )  # Max. Kühlleistung für das Rack in Watt
     usv_n1_redundant: Mapped[bool] = mapped_column(
         Boolean, default=False
     )  # USV N+1-Redundanz aktiviert
@@ -39,6 +42,12 @@ class Rack(Base):
     devices: Mapped[List["Device"]] = relationship(
         back_populates="rack", cascade="all, delete-orphan", passive_deletes=True
     )
+
+    @property
+    def total_tdp_w(self) -> float:
+        if not self.devices:
+            return 0.0
+        return sum(float(dev.tdp_watt) for dev in self.devices if dev.tdp_watt is not None)
 
 
 class DeviceDependency(Base):

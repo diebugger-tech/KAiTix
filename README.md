@@ -78,6 +78,10 @@ KAiTix ist ein hochspezialisiertes Planungs-, Simulations- und Dokumentationswer
 * **Grafische Darstellung:** Interaktiver 2D-SVG Topologie-Graph zur rack-übergreifenden Visualisierung **sowie eine 3D-Orbit-Ansicht (three.js)** für komplexe RZ-Standorte.
 * **Allpoliger Stromlaufplan:** Darstellung der PDU- und USV-Verbindungspfade als SVG mit direktem PDF-Export. Normgerecht gezeichnet mit 4-poligen Leistungsschaltern (MCCB), voreilenden Neutralleitern zur Vermeidung von Sternpunktverschiebungen und korrekter DC-Batterieabsicherung.
 
+### 9. UX & Interface Design
+* **Slate & Emerald Dark Theme:** KAiTix nutzt eine hochkontrastige, augenschonende "Slate & Emerald" Farbpalette, die speziell auf die Anforderungen in dunklen RZ-Umgebungen und auf maximale Lesbarkeit bei dichten Datentabellen und Metriken ausgelegt ist.
+* **Effiziente Filter:** Schnelle 2-Wege-Synchronisation von Standort-, Reihen- und Rack-Filtern zum sofortigen Wechseln zwischen Rechenzentren.
+
 ---
 
 ## Architektur & Design-Prinzipien

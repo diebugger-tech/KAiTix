@@ -16,6 +16,7 @@ class RackBase(BaseModel):
     modell: Optional[str] = None
     hardware_type_id: Optional[int] = None
     max_watt: Optional[Decimal] = None
+    cooling_capacity_w: Optional[Decimal] = None
     usv_n1_redundant: bool = False
 
 
@@ -34,11 +35,13 @@ class RackUpdate(BaseModel):
     modell: Optional[str] = None
     hardware_type_id: Optional[int] = None
     max_watt: Optional[Decimal] = None
+    cooling_capacity_w: Optional[Decimal] = None
     usv_n1_redundant: Optional[bool] = None
 
 
 class Rack(RackBase):
     id: int
+    total_tdp_w: Optional[Decimal] = None
     geaendert_von: Optional[str] = None
     geaendert_am: Optional[datetime] = None
     model_config = ConfigDict(from_attributes=True)
@@ -115,7 +118,7 @@ class DeviceBase(BaseModel):
     anschlussleistung_watt: Optional[Decimal] = Field(None, ge=0)
     einschaltstrom_faktor: Optional[Decimal] = Field(Decimal("2.5"), ge=0)
     shutdown_delay_seconds: Optional[int] = Field(0, ge=0)
-    shutdown_priority: Optional[int] = Field(2, ge=1, le=4)
+    shutdown_priority: Optional[int] = Field(2, ge=1)
     shutdown_method: Optional[str] = "ACPI_Graceful"
     bemerkung: Optional[str] = None
     strom_typ: Optional[str] = None
@@ -154,7 +157,7 @@ class DeviceUpdate(BaseModel):
     anschlussleistung_watt: Optional[Decimal] = Field(None, ge=0)
     einschaltstrom_faktor: Optional[Decimal] = Field(None, ge=0)
     shutdown_delay_seconds: Optional[int] = Field(None, ge=0)
-    shutdown_priority: Optional[int] = Field(None, ge=1, le=4)
+    shutdown_priority: Optional[int] = Field(None, ge=1)
     shutdown_method: Optional[str] = None
     bemerkung: Optional[str] = None
     strom_typ: Optional[str] = None
@@ -207,6 +210,12 @@ class VirtualMachineUpdate(BaseModel):
     shutdown_priority: Optional[int] = Field(None, ge=1)
     responsible: Optional[str] = None
     bemerkung: Optional[str] = None
+
+
+class VirtualMachineReorder(BaseModel):
+    id: int
+    shutdown_priority: int
+
 
 
 class VirtualMachine(VirtualMachineBase):

@@ -606,15 +606,17 @@
 
             <!-- Abzweig 2 (Bypass) entfällt, da direkt nach -F1 abgezweigt -->
 
-            <!-- -X1 Klemmenleiste Abgang MBS (Bypass Klemmen 6-8) -->
+            <!-- -X1 Klemmenleiste Abgang MBS (Bypass Klemmen 6-9) -->
             <g fill="#ffffff" stroke="#0f172a" stroke-width="1.5">
               <circle cx="320" cy="450" r="4.5"/>
               <circle cx="340" cy="450" r="4.5"/>
               <circle cx="360" cy="450" r="4.5"/>
+              <circle cx="380" cy="450" r="4.5"/>
             </g>
             <text x="326" y="452" font-size="7" fill="#64748b" font-weight="bold">6</text>
             <text x="346" y="452" font-size="7" fill="#64748b" font-weight="bold">7</text>
             <text x="366" y="452" font-size="7" fill="#64748b" font-weight="bold">8</text>
+            <text x="386" y="452" font-size="7" fill="#64748b" font-weight="bold">9</text>
 
             <!-- Cable -W2 from -X1 to MBS -->
             <path d="M 310 475 C 320 465, 410 465, 420 475" fill="none" stroke="#64748b" stroke-width="1" stroke-dasharray="2,2"/>
@@ -624,6 +626,9 @@
             <path d="M 320 453 L 320 490 L 450 490 L 450 520" fill="none" stroke="#78350f" stroke-width="1"/>
             <path d="M 340 453 L 340 485 L 470 485 L 470 520" fill="none" stroke="#0f172a" stroke-width="1"/>
             <path d="M 360 453 L 360 480 L 490 480 L 490 520" fill="none" stroke="#475569" stroke-width="1"/>
+            <!-- Bypass N goes down to join N path at y=475 -->
+            <path d="M 380 453 L 380 475" fill="none" stroke="#2563eb" stroke-width="1"/>
+            <circle cx="380" cy="475" r="2" fill="#0f172a"/>
             <!-- N and PE von USV Klemmen (4:2, 5:2) zum MBS (im 5-adrigen Kabel -W2) -->
             <path d="M 270 453 L 270 475 L 510 475 L 510 654" fill="none" stroke="#2563eb" stroke-width="1"/>
             <path d="M 290 453 L 290 470 L 530 470 L 530 652" fill="none" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>

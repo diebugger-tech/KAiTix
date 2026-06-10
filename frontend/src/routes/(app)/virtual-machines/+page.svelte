@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { api, type VirtualMachine, type Device } from '$lib/api';
-  import { Monitor, Plus, Server, CheckCircle2, AlertCircle } from '@lucide/svelte';
+  import { Monitor, Plus, Server, CheckCircle2, AlertCircle, ArrowUp, ArrowDown, GripVertical } from '@lucide/svelte';
 
   let vms = $state<VirtualMachine[]>([]);
   let devices = $state<Device[]>([]);
@@ -12,6 +12,69 @@
   let currentVm = $state<Partial<VirtualMachine>>({ shutdown_priority: 5 });
   let activeTab = $state<'table' | 'graph'>('table');
   let hoveredVmId = $state<number | null>(null);
+
+  let sortColumn = $state<'name' | 'hypervisor_typ' | 'host' | 'dienst' | 'ip_adresse' | 'priority' | 'responsible'>('priority');
+  let sortDirection = $state<'asc' | 'desc'>('asc');
+
+  let draggedVmId = $state<number | null>(null);
+  let dragOverVmId = $state<number | null>(null);
+
+  const sortedVms = $derived([...vms].sort((a, b) => {
+    let cmp = 0;
+    if (sortColumn === 'priority') cmp = (a.shutdown_priority || 0) - (b.shutdown_priority || 0);
+    else if (sortColumn === 'name') cmp = (a.name || '').localeCompare(b.name || '');
+    else if (sortColumn === 'hypervisor_typ') cmp = (a.hypervisor_typ || '').localeCompare(b.hypervisor_typ || '');
+    else if (sortColumn === 'host') cmp = getHostName(a.host_device_id).localeCompare(getHostName(b.host_device_id));
+    else if (sortColumn === 'dienst') cmp = (a.dienst || '').localeCompare(b.dienst || '');
+    else if (sortColumn === 'ip_adresse') cmp = (a.ip_adresse || '').localeCompare(b.ip_adresse || '');
+    else if (sortColumn === 'responsible') cmp = (a.responsible || '').localeCompare(b.responsible || '');
+    return sortDirection === 'asc' ? cmp : -cmp;
+  }));
+
+  function handleSort(col: typeof sortColumn) {
+    if (sortColumn === col) {
+      sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      sortColumn = col;
+      sortDirection = 'asc';
+    }
+  }
+
+  async function handleDrop(e: DragEvent, targetVmId: number) {
+    e.preventDefault();
+    if (!draggedVmId || draggedVmId === targetVmId) {
+      dragOverVmId = null;
+      return;
+    }
+    
+    // Wir sortieren für das Reordering streng nach der alten Priorität
+    const sortedByPrio = [...vms].sort((a, b) => (a.shutdown_priority || 0) - (b.shutdown_priority || 0));
+    
+    const draggedIdx = sortedByPrio.findIndex(v => v.id === draggedVmId);
+    const targetIdx = sortedByPrio.findIndex(v => v.id === targetVmId);
+    
+    if (draggedIdx === -1 || targetIdx === -1) return;
+    
+    const [removed] = sortedByPrio.splice(draggedIdx, 1);
+    sortedByPrio.splice(targetIdx, 0, removed);
+    
+    const reorders = sortedByPrio.map((vm, i) => ({
+      id: vm.id,
+      shutdown_priority: i + 1
+    }));
+
+    try {
+      vms = await api.reorderVirtualMachines(reorders);
+      // Ansicht auf Prio-Sortierung zurücksetzen, damit der User das Ergebnis sieht
+      sortColumn = 'priority';
+      sortDirection = 'asc';
+    } catch (err: any) {
+      alert("Fehler beim Speichern der Reihenfolge: " + err.message);
+    }
+    
+    draggedVmId = null;
+    dragOverVmId = null;
+  }
 
   onMount(async () => {
     try {
@@ -63,7 +126,11 @@
       showModal = false;
       vms = await api.getVirtualMachines();
     } catch (e: any) {
-      alert("Fehler beim Speichern: " + e.message);
+      if (e.message?.includes('Zirkuläre Abhängigkeit')) {
+        alert("Fehler: " + e.message);
+      } else {
+        alert("Fehler beim Speichern: " + e.message);
+      }
     }
   }
 
@@ -238,15 +305,29 @@
     {#if activeTab === 'table'}
       <div class="overflow-x-auto flex-1">
         <table class="w-full text-left text-sm text-[var(--color-text)]">
-          <thead class="text-xs uppercase bg-[var(--color-border2)] text-[var(--color-text2)] sticky top-0 z-10">
+          <thead class="text-xs uppercase bg-[var(--color-border2)] text-[var(--color-text2)] sticky top-0 z-10 select-none">
             <tr>
-              <th class="px-4 py-3 font-semibold">Name</th>
-              <th class="px-4 py-3 font-semibold">Hypervisor</th>
-              <th class="px-4 py-3 font-semibold">Läuft auf (Host)</th>
-              <th class="px-4 py-3 font-semibold">Dienst</th>
-              <th class="px-4 py-3 font-semibold">IP-Adresse</th>
-              <th class="px-4 py-3 font-semibold text-center">Prio</th>
-              <th class="px-4 py-3 font-semibold">Verantwortlich</th>
+              <th class="px-4 py-3 font-semibold cursor-pointer hover:bg-[var(--color-border)] transition" onclick={() => handleSort('name')}>
+                <div class="flex items-center gap-1">Name {#if sortColumn === 'name'}{#if sortDirection === 'asc'}<ArrowUp class="w-3 h-3"/>{:else}<ArrowDown class="w-3 h-3"/>{/if}{/if}</div>
+              </th>
+              <th class="px-4 py-3 font-semibold cursor-pointer hover:bg-[var(--color-border)] transition" onclick={() => handleSort('hypervisor_typ')}>
+                <div class="flex items-center gap-1">Hypervisor {#if sortColumn === 'hypervisor_typ'}{#if sortDirection === 'asc'}<ArrowUp class="w-3 h-3"/>{:else}<ArrowDown class="w-3 h-3"/>{/if}{/if}</div>
+              </th>
+              <th class="px-4 py-3 font-semibold cursor-pointer hover:bg-[var(--color-border)] transition" onclick={() => handleSort('host')}>
+                <div class="flex items-center gap-1">Läuft auf (Host) {#if sortColumn === 'host'}{#if sortDirection === 'asc'}<ArrowUp class="w-3 h-3"/>{:else}<ArrowDown class="w-3 h-3"/>{/if}{/if}</div>
+              </th>
+              <th class="px-4 py-3 font-semibold cursor-pointer hover:bg-[var(--color-border)] transition" onclick={() => handleSort('dienst')}>
+                <div class="flex items-center gap-1">Dienst {#if sortColumn === 'dienst'}{#if sortDirection === 'asc'}<ArrowUp class="w-3 h-3"/>{:else}<ArrowDown class="w-3 h-3"/>{/if}{/if}</div>
+              </th>
+              <th class="px-4 py-3 font-semibold cursor-pointer hover:bg-[var(--color-border)] transition" onclick={() => handleSort('ip_adresse')}>
+                <div class="flex items-center gap-1">IP-Adresse {#if sortColumn === 'ip_adresse'}{#if sortDirection === 'asc'}<ArrowUp class="w-3 h-3"/>{:else}<ArrowDown class="w-3 h-3"/>{/if}{/if}</div>
+              </th>
+              <th class="px-4 py-3 font-semibold text-center cursor-pointer hover:bg-[var(--color-border)] transition" onclick={() => handleSort('priority')}>
+                <div class="flex items-center justify-center gap-1">Prio {#if sortColumn === 'priority'}{#if sortDirection === 'asc'}<ArrowUp class="w-3 h-3"/>{:else}<ArrowDown class="w-3 h-3"/>{/if}{/if}</div>
+              </th>
+              <th class="px-4 py-3 font-semibold cursor-pointer hover:bg-[var(--color-border)] transition" onclick={() => handleSort('responsible')}>
+                <div class="flex items-center gap-1">Verantwortlich {#if sortColumn === 'responsible'}{#if sortDirection === 'asc'}<ArrowUp class="w-3 h-3"/>{:else}<ArrowDown class="w-3 h-3"/>{/if}{/if}</div>
+              </th>
               <th class="px-4 py-3 text-right">Aktionen</th>
             </tr>
           </thead>
@@ -256,17 +337,39 @@
             {:else if vms.length === 0}
               <tr><td colspan="8" class="text-center py-8 text-[var(--color-text3)]">Keine VMs dokumentiert.</td></tr>
             {:else}
-              {#each vms as vm}
-                <tr class="hover:bg-[var(--color-border2)] transition group">
-                  <td class="px-4 py-3 font-medium text-[var(--color-text)]">{vm.name}</td>
+              {#each sortedVms as vm (vm.id)}
+                <tr 
+                  class="hover:bg-[var(--color-border2)] transition group cursor-grab active:cursor-grabbing {draggedVmId === vm.id ? 'opacity-50' : ''} {dragOverVmId === vm.id ? 'border-t-2 border-pink-500' : ''}"
+                  draggable="true"
+                  ondragstart={(e) => {
+                    draggedVmId = vm.id;
+                    if (e.dataTransfer) {
+                      e.dataTransfer.effectAllowed = 'move';
+                      e.dataTransfer.setData('text/plain', vm.id.toString());
+                    }
+                  }}
+                  ondragover={(e) => {
+                    e.preventDefault();
+                    if (draggedVmId && draggedVmId !== vm.id) dragOverVmId = vm.id;
+                  }}
+                  ondragleave={() => dragOverVmId = null}
+                  ondrop={(e) => handleDrop(e, vm.id)}
+                  ondragend={() => { draggedVmId = null; dragOverVmId = null; }}
+                >
+                  <td class="px-4 py-3 font-medium text-[var(--color-text)] flex items-center gap-2">
+                    <GripVertical class="w-4 h-4 text-[var(--color-text3)] opacity-0 group-hover:opacity-100 cursor-grab" />
+                    {vm.name}
+                  </td>
                   <td class="px-4 py-3 text-xs">
                     <span class="bg-[var(--color-border)] border border-[var(--color-border2)] px-2 py-0.5 rounded text-[var(--color-text)]">
                       {vm.hypervisor_typ || '—'}
                     </span>
                   </td>
-                  <td class="px-4 py-3 flex items-center gap-2">
-                    <Server class="w-3.5 h-3.5 text-[var(--color-text3)]" />
-                    <span class="font-mono text-xs">{getHostName(vm.host_device_id)}</span>
+                  <td class="px-4 py-3">
+                    <div class="flex items-center gap-2">
+                      <Server class="w-3.5 h-3.5 text-[var(--color-text3)]" />
+                      <span class="font-mono text-xs">{getHostName(vm.host_device_id)}</span>
+                    </div>
                   </td>
                   <td class="px-4 py-3 text-[var(--color-text2)] max-w-[200px] truncate" title={vm.dienst || ''}>{vm.dienst || '—'}</td>
                   <td class="px-4 py-3 font-mono text-xs text-[var(--color-text2)]">{vm.ip_adresse || '—'}</td>

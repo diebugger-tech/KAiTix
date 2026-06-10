@@ -23,7 +23,7 @@
   let showPower = $state(true);
   let showCables = $state(true);
   let viewMode = $state<'rack' | 'netzplan' | 'stromlauf' | '3d'>('rack');
-  let showDeviceTypes = $state(new Set<string>(['server', 'switch', 'pdu', 'storage', 'firewall', 'kvm']));
+  let showDeviceTypes = $state(new Set<string>(['server', 'switch', 'pdu', 'storage', 'firewall', 'kvm', 'patchpanel']));
   let searchQuery = $state('');
 
   // Pan / zoom
@@ -205,17 +205,20 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
 
       const leftPdus  = sidePdus.slice(0, Math.ceil(sidePdus.length / 2));
       const rightPdus = sidePdus.slice(Math.ceil(sidePdus.length / 2));
-      const pduSlots  = Math.max(leftPdus.length, rightPdus.length, 1);
-      const pduSlotH  = Math.max(rackH / pduSlots, 20);
 
       leftPdus.forEach((dev, i) => {
-        const py = RACK_TOP + i * pduSlotH, ph = Math.max(pduSlotH - 3, 16);
-        nodeBoxes.set(dev.id, { x, y: py, w: PDU_SIDE_W, h: ph, cx: x + PDU_SIDE_W / 2, cy: py + ph / 2, node: dev, isSide: true });
+        const py = RACK_TOP;
+        const ph = rackH;
+        // Offset X slightly if multiple PDUs exist to make them clickable
+        const px = x + i * 4; 
+        nodeBoxes.set(dev.id, { x: px, y: py, w: PDU_SIDE_W, h: ph, cx: px + PDU_SIDE_W / 2, cy: py + ph / 2, node: dev, isSide: true });
       });
       const rightX = rackX + RACK_WIDTH + PDU_SIDE_GAP;
       rightPdus.forEach((dev, i) => {
-        const py = RACK_TOP + i * pduSlotH, ph = Math.max(pduSlotH - 3, 16);
-        nodeBoxes.set(dev.id, { x: rightX, y: py, w: PDU_SIDE_W, h: ph, cx: rightX + PDU_SIDE_W / 2, cy: py + ph / 2, node: dev, isSide: true });
+        const py = RACK_TOP;
+        const ph = rackH;
+        const px = rightX + i * 4;
+        nodeBoxes.set(dev.id, { x: px, y: py, w: PDU_SIDE_W, h: ph, cx: px + PDU_SIDE_W / 2, cy: py + ph / 2, node: dev, isSide: true });
       });
 
       let uy = RACK_TOP + rackH - floatingH + 8;
@@ -367,8 +370,8 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
   }
 
   // ── Filter helpers ───────────────────────────────────────────────────────────
-  const deviceTypes = ['server', 'switch', 'pdu', 'storage', 'firewall', 'kvm'];
-  const deviceTypeLabel: Record<string, string> = { server: 'Server', switch: 'Switch', pdu: 'PDU', storage: 'Storage', firewall: 'Firewall', kvm: 'KVM' };
+  const deviceTypes = ['server', 'switch', 'pdu', 'storage', 'firewall', 'kvm', 'patchpanel'];
+  const deviceTypeLabel: Record<string, string> = { server: 'Server', switch: 'Switch', pdu: 'PDU', storage: 'Storage', firewall: 'Firewall', kvm: 'KVM', patchpanel: 'Patchpanel' };
 
   function toggleDeviceType(typ: string) {
     const next = new Set(showDeviceTypes);
@@ -728,6 +731,8 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
             {selectedStandort}
             {selectedRackreihe}
             {selectedRack}
+            {showHeatmap}
+            {anomalyScores}
           />
         {:else if data && viewMode === 'rack'}
           {@const l = baseLayout}

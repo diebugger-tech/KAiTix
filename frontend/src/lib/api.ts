@@ -62,6 +62,8 @@ export interface Rack {
   breite_mm?: number;
   bemerkung?: string;
   max_watt?: number;
+  cooling_capacity_w?: number;
+  total_tdp_w?: number;
   usv_n1_redundant?: boolean;
   devices?: Device[];
   hersteller?: string;
@@ -682,6 +684,7 @@ export const api = {
   createVirtualMachine: (vm: Partial<VirtualMachine>): Promise<VirtualMachine> => request('virtual-machines/', { method: 'POST', body: JSON.stringify(vm) }),
   updateVirtualMachine: (id: number, vm: Partial<VirtualMachine>): Promise<VirtualMachine> => request(`virtual-machines/${id}`, { method: 'PUT', body: JSON.stringify(vm) }),
   deleteVirtualMachine: (id: number): Promise<null> => request(`virtual-machines/${id}`, { method: 'DELETE' }),
+  reorderVirtualMachines: (reorders: Array<{id: number, shutdown_priority: number}>): Promise<VirtualMachine[]> => request('virtual-machines/reorder', { method: 'PUT', body: JSON.stringify(reorders) }),
 
   // Runbooks
   getRunbooks: (): Promise<Runbook[]> => request('runbooks/'),

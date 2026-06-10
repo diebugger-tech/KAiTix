@@ -17,7 +17,9 @@
     showDeviceTypes = new Set<string>(),
     selectedStandort = '__ALL__',
     selectedRackreihe = '__ALL__',
-    selectedRack = '__ALL__'
+    selectedRack = '__ALL__',
+    showHeatmap = false,
+    anomalyScores = []
   } = $props();
 
   let containerEl: HTMLElement;
@@ -39,7 +41,7 @@
 
   // Stores for interactivity
   let deviceMeshes: THREE.Mesh[] = [];
-  let rackWireframes: { mesh: THREE.LineSegments, rack: any }[] = [];
+  let rackWireframes: { mesh: THREE.LineSegments, rack: any, aura: THREE.Mesh }[] = [];
   let rackLabels: { label: CSS2DObject, rackId: number }[] = [];
   let standortLabels: { label: CSS2DObject, standort: string }[] = [];
   let deviceBoxes = new Map<number, { x: number, y: number, z: number }>();
@@ -153,7 +155,15 @@
       const rackCz = zOffset + RACK_DEPTH / 2;
       wireframe.position.set(rackCx, rackCy, rackCz);
       scene.add(wireframe);
-      rackWireframes.push({ mesh: wireframe, rack });
+
+      // Heatmap Aura
+      const auraGeo = new THREE.BoxGeometry(RACK_WIDTH + 2, rackH + 2, RACK_DEPTH + 2);
+      const auraMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.0, side: THREE.DoubleSide, depthWrite: false });
+      const auraMesh = new THREE.Mesh(auraGeo, auraMat);
+      auraMesh.position.set(rackCx, rackCy, rackCz);
+      scene.add(auraMesh);
+
+      rackWireframes.push({ mesh: wireframe, rack, aura: auraMesh });
 
       // Rack Label
       const rDiv = document.createElement('div');
@@ -175,20 +185,19 @@
         let w = RACK_WIDTH - 1, d = RACK_DEPTH - 1;
 
         if (dev.u_hoehe === 0) {
-          // PDU - zero U
+          // PDU - zero U (full height of rack)
           w = PDU_W;
-          h = Math.max(rackH / 3, 10);
+          h = rackH;
           d = PDU_W;
-          // Alternate left and right back corners
+          cy = rackH / 2; // Center vertically
+          // Alternate left and right back corners, offset by depth if multiple
           if (pduLeftCount <= pduRightCount) {
             cx = xOffset + PDU_W / 2;
-            cz = zOffset + PDU_W / 2;
-            cy = pduLeftCount * h + h / 2;
+            cz = zOffset + PDU_W / 2 + pduLeftCount * (PDU_W + 1);
             pduLeftCount++;
           } else {
             cx = xOffset + RACK_WIDTH - PDU_W / 2;
-            cz = zOffset + PDU_W / 2;
-            cy = pduRightCount * h + h / 2;
+            cz = zOffset + PDU_W / 2 + pduRightCount * (PDU_W + 1);
             pduRightCount++;
           }
         } else if (dev.u_position) {
@@ -336,6 +345,21 @@
       
       const lbl = rackLabels.find(l => l.rackId === r.id);
       if (lbl) lbl.label.visible = visible;
+
+      // Heatmap
+      if (showHeatmap && visible) {
+        const scoreObj = anomalyScores.find(s => s.rack_id === r.id);
+        if (scoreObj) {
+          rw.aura.visible = true;
+          if (scoreObj.level === 'critical') { rw.aura.material.color.setHex(0xef4444); rw.aura.material.opacity = 0.3; }
+          else if (scoreObj.level === 'warning') { rw.aura.material.color.setHex(0xf59e0b); rw.aura.material.opacity = 0.2; }
+          else { rw.aura.material.color.setHex(0x10b981); rw.aura.material.opacity = 0.1; }
+        } else {
+          rw.aura.visible = false;
+        }
+      } else {
+        rw.aura.visible = false;
+      }
     }
 
     // 2. Hide/show meshes based on visibleRackIds, visibleNodeIds and showDeviceTypes

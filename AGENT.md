@@ -1,5 +1,5 @@
 # KAiTix — AGENT.md
-*Letztes Update: 2026-05-30*
+*Letztes Update: 2026-06-10*
 
 ## Projektübersicht
 
@@ -42,9 +42,19 @@ ServerFlow-Dateien dienen als Referenz für Domänenwissen (USV-Berechnung, Kent
 
 ---
 
-## Aktueller Stand (2026-05-30)
+## Aktueller Stand (2026-06-10)
 
 ### Zuletzt abgeschlossen (diese Session)
+
+**Phase 4 — UX & UI Refactoring (abgeschlossen):**
+- **Dark Mode Komplett-Redesign:** Ablösung des altbackenen Grau-Grün-Themes durch ein hochkontrastiges, modernes "Slate & Emerald" Farbschema in Svelte 5.
+  - Satter `slate-950` Basis-Hintergrund für starke Tiefe, `slate-900` für Cards.
+  - Gestochen scharfe Textfarben (`slate-50`, `slate-300`, `slate-400`) zur Behebung gravierender Lesbarkeitsprobleme bei kleinen Schriften (z.B. Auslastung, Standorte).
+  - Leuchtender `emerald-500` Akzentton für Ladebalken, Ränder und Buttons.
+- **Racks-Übersicht & Filter-Sync (RackFilterBar):**
+  - Redundante, linke Rack-Liste entfernt, um vollen Fokus auf das Grid und die Topbar-Suche zu legen.
+  - 2-Wege-Synchronisation (`$effect`) zwischen Dropdown-Filter und ausgewähltem Rack repariert (verhinderte "Empty Select" durch int/string mismatch).
+  - Sauberes Reset-Verhalten auf "Alle" implementiert.
 
 **Phase 3 — Daten-Härtung (Import & Export) abgeschlossen:**
 - **Runbook Laufzettel / Print Export:** Sauberes `@media print`-Layout ohne störende App-UI. `RunbookPrint`-Komponente mit Checklisten und dynamisch generierten Rack Elevations für Zielgeräte. Zero-U PDUs und Geräte sind berücksichtigt und visuell markiert.

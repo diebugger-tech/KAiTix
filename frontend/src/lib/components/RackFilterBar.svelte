@@ -160,14 +160,14 @@
     <div>
       <label class="block text-[9px] uppercase font-bold tracking-wider text-[var(--color-text3)] mb-1">Rack</label>
       <select
-        value={selectedRack}
+        value={selectedRack?.toString() || '__ALL__'}
         onchange={handleRackChange}
         disabled={filteredRacks.length === 0}
         class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] hover:border-[var(--color-border2)] rounded-lg px-2.5 py-1.5 text-xs text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75] disabled:opacity-50 transition"
       >
         <option value="__ALL__">Alle</option>
         {#each filteredRacks as rack}
-          <option value={rack.id}>{rack.name}</option>
+          <option value={rack.id?.toString()}>{rack.name}</option>
         {/each}
       </select>
     </div>
@@ -210,14 +210,14 @@
     <div class="flex items-center gap-2 border-l border-[var(--color-border)] pl-3">
       <span class="text-[10px] uppercase font-bold tracking-wider text-[var(--color-text3)] shrink-0">Rack</span>
       <select
-        value={selectedRack}
+        value={selectedRack?.toString() || '__ALL__'}
         onchange={handleRackChange}
         disabled={filteredRacks.length === 0}
         class="bg-[var(--color-bg3)] border border-[var(--color-border2)] hover:border-[var(--color-border2)] rounded-lg px-2.5 py-1 text-xs text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75] disabled:opacity-50 transition"
       >
         <option value="__ALL__">Alle</option>
         {#each filteredRacks as rack}
-          <option value={rack.id}>{rack.name}</option>
+          <option value={rack.id?.toString()}>{rack.name}</option>
         {/each}
       </select>
     </div>

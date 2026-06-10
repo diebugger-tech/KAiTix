@@ -5,7 +5,8 @@ export function nodeColor(typ: string) {
     pdu: '#78350f', 
     firewall: '#7f1d1d', 
     storage: '#4c1d95', 
-    kvm: '#1e3a5f' 
+    kvm: '#1e3a5f',
+    patchpanel: '#b45309'
   };
   return m[typ] ?? '#1e293b';
 }
@@ -17,7 +18,8 @@ export function nodeStroke(typ: string) {
     pdu: '#f59e0b', 
     firewall: '#ef4444', 
     storage: '#8b5cf6', 
-    kvm: '#38bdf8' 
+    kvm: '#38bdf8',
+    patchpanel: '#f59e0b'
   };
   return m[typ] ?? '#475569';
 }

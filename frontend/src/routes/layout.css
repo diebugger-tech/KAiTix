@@ -1,21 +1,25 @@
 @import "tailwindcss";
 
 :root {
-  /* Farben */
-  --color-bg:        #0D0F0E;
-  --color-bg2:       #131615;
-  --color-bg3:       #181C1A;
-  --color-border:    rgba(255,255,255,0.07);
-  --color-border2:   rgba(255,255,255,0.13);
-  --color-text:      #E8EDE9;
-  --color-text2:     #8A9A8D;
-  --color-text3:     #556059;
+  /* Basis-Farben (Slate/Neutral Dark Theme) */
+  --color-bg:        #020617; /* slate-950: Sehr dunkler, satter Hintergrund */
+  --color-bg2:       #0f172a; /* slate-900: Karten und Container */
+  --color-bg3:       #1e293b; /* slate-800: Inputs, Dropdowns, Hover-Elemente */
+  
+  /* Rahmen mit klarem Kontrast */
+  --color-border:    #1e293b; /* slate-800 */
+  --color-border2:   #334155; /* slate-700 */
+  
+  /* Kristallklarer Text für maximale Lesbarkeit */
+  --color-text:      #f8fafc; /* slate-50: Reines Weiß für Haupttexte */
+  --color-text2:     #cbd5e1; /* slate-300: Helles Grau für Sekundärtexte */
+  --color-text3:     #94a3b8; /* slate-400: Gedämpftes Grau für Tertiärtexte, aber absolut lesbar */
 
-  /* Teal Akzent */
-  --color-accent:        #1D9E75;
-  --color-accent-light:  #5DCAA5;
-  --color-accent-dim:    rgba(29,158,117,0.18);
-  --color-accent-border: rgba(29,158,117,0.4);
+  /* Frischer Smaragd-Grün Akzent (Emerald) */
+  --color-accent:        #10b981; /* emerald-500 */
+  --color-accent-light:  #34d399; /* emerald-400 */
+  --color-accent-dim:    rgba(16, 185, 129, 0.15);
+  --color-accent-border: rgba(16, 185, 129, 0.4);
 
   /* Typografie */
   --font-mono: 'IBM Plex Mono', monospace;
@@ -26,16 +30,17 @@
   --radius-lg: 16px;
 
   /* Dynamische UI Farben */
-  --color-header-bg:     rgba(13,15,14,0.85);
-  --color-hover:         rgba(255,255,255,0.04);
-  --color-row-hover:     rgba(255,255,255,0.03);
-  --color-btn-bg:        rgba(255,255,255,0.05);
-  --color-scrollbar:     rgba(29,158,117,0.3);
-  --color-scrollbar-hover: rgba(29,158,117,0.5);
+  --color-header-bg:     rgba(2, 6, 23, 0.85); /* slate-950 mit transparenz */
+  --color-hover:         rgba(255, 255, 255, 0.06);
+  --color-row-hover:     rgba(255, 255, 255, 0.04);
+  --color-btn-bg:        #1e293b; /* slate-800 */
+  --color-scrollbar:     rgba(16, 185, 129, 0.3);
+  --color-scrollbar-hover: rgba(16, 185, 129, 0.6);
+  
   /* Input Felder */
-  --color-input-bg:      #181C1A;
-  --color-input-border:  rgba(255,255,255,0.13);
-  --color-input-text:    #ffffff;
+  --color-input-bg:      #0f172a; /* slate-900 */
+  --color-input-border:  #334155; /* slate-700 */
+  --color-input-text:    #f8fafc;
 }
 
 :root.light {
