@@ -629,6 +629,41 @@ class AnomalyScorer:
 
             partial_scores.append(pdu_redundancy_score * _W_PDU_REDUNDANCY)
 
+            # ── 7. Logische Fehler (Doku-Inkonsistenzen) ──────────────────────
+            logical_errors_score = 0.0
+
+            # 7a - U-Positions-Konflikte (HE-Überlappung)
+            rack_u_slots: dict[int, list[Device]] = {}
+            for dev in devs:
+                if getattr(dev, "side", None) is not None:
+                    continue  # Zero-U Geräte ignorieren
+                u_pos = getattr(dev, "u_position", None)
+                u_h = getattr(dev, "u_hoehe", 1) or 1
+                if u_pos is not None and u_h > 0:
+                    for u in range(u_pos, u_pos + u_h):
+                        if u in rack_u_slots:
+                            for c_dev in rack_u_slots[u]:
+                                issues.append(
+                                    f"HE-Konflikt auf HE {u}: {dev.hostname} überlappt mit {c_dev.hostname}"
+                                )
+                                logical_errors_score = max(logical_errors_score, 0.5)
+                            rack_u_slots[u].append(dev)
+                        else:
+                            rack_u_slots[u] = [dev]
+
+            # 7b - Fehlende Phase bei Stromverbrauchern
+            for dev in devs:
+                tdp = _effective_watt(dev)
+                phase = getattr(dev, "phase", None)
+                strom_typ = getattr(dev, "strom_typ", None)
+                if tdp > 0 and phase is None and strom_typ != "3-phasig":
+                    issues.append(
+                        f"Logik-Fehler: {dev.hostname} hat {round(tdp, 1)}W Verbrauch, aber keine Phase (L1/L2/L3) dokumentiert"
+                    )
+                    logical_errors_score = max(logical_errors_score, 0.2)
+
+            partial_scores.append(logical_errors_score)
+
             total_score = round(sum(partial_scores), 3)
             total_score = max(0.0, min(1.0, total_score))
 
