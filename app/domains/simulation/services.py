@@ -395,6 +395,7 @@ class AnomalyScorer:
         devices: Sequence[Device],
         outlets: Sequence[PduOutlet],
         usv_rack_ids: set[int],
+        cables: Sequence = None,
     ) -> list[dict]:
         """
         Berechnet einen gewichteten Anomalie-Score für jedes Rack.
@@ -661,6 +662,28 @@ class AnomalyScorer:
                         f"Logik-Fehler: {dev.hostname} hat {round(tdp, 1)}W Verbrauch, aber keine Phase (L1/L2/L3) dokumentiert"
                     )
                     logical_errors_score = max(logical_errors_score, 0.2)
+
+            # 7c - Netzwerk-Port Doppelbelegung (Physischer Kabel-Konflikt)
+            if cables:
+                # Wir bauen einen Index: (device_id, port_name) -> list of cables
+                port_occupancy = {}
+                for c in cables:
+                    if getattr(c, "typ", "").startswith("Strom"):
+                        continue
+                    if c.von_device_id and c.von_port:
+                        port_occupancy.setdefault((c.von_device_id, c.von_port), []).append(c)
+                    if c.nach_device_id and c.nach_port:
+                        port_occupancy.setdefault((c.nach_device_id, c.nach_port), []).append(c)
+
+                for dev in devs:
+                    # Prüfe, ob einer der Ports dieses Geräts doppelt belegt ist
+                    for (d_id, p_name), mapped_cables in port_occupancy.items():
+                        if d_id == dev.id and len(mapped_cables) > 1:
+                            cable_nrs = [c.kabel_nr for c in mapped_cables if c.kabel_nr]
+                            issues.append(
+                                f"Port-Doppelbelegung: Am Gerät {dev.hostname} stecken {len(mapped_cables)} Kabel im selben Port '{p_name}' ({', '.join(cable_nrs)})"
+                            )
+                            logical_errors_score = max(logical_errors_score, 0.4)
 
             partial_scores.append(logical_errors_score)
 

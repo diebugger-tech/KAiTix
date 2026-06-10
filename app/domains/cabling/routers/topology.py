@@ -54,4 +54,5 @@ async def get_anomaly_scores(db: AsyncSession = Depends(get_db)):
         devices=raw.devices,
         outlets=raw.outlets,
         usv_rack_ids=usv_rack_ids,
+        cables=raw.cables,
     )
