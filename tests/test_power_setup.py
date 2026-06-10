@@ -116,13 +116,11 @@ async def test_rollback_bei_fehler_in_schritt_3(db, monkeypatch, seed_rack):
 
     # Nach Rollback: nichts persistiert
     units = await db.scalar(
-        select(func.count()).select_from(UsvUnit).where(
-            UsvUnit.bezeichnung == "Rollback-Test"
-        )
+        select(func.count())
+        .select_from(UsvUnit)
+        .where(UsvUnit.bezeichnung == "Rollback-Test")
     )
-    mods = await db.scalar(
-        select(func.count()).select_from(UsvModule)
-    )
+    mods = await db.scalar(select(func.count()).select_from(UsvModule))
     assert units == 0
     assert mods == 0
 

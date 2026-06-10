@@ -160,28 +160,31 @@ async def test_eplan_pdu_auto_config(client: AsyncClient, db: AsyncSession):
     assert response_commit.status_code == 201
 
     # 3. Verify target device A (PDU-A) properties
-    d_query = await db.execute(select(Device).where(Device.hostname == "KentixSmartPDU-40HE-16A-A-01"))
+    d_query = await db.execute(
+        select(Device).where(Device.hostname == "KentixSmartPDU-40HE-16A-A-01")
+    )
     pdu_a = d_query.scalar_one_or_none()
     assert pdu_a is not None
     assert pdu_a.typ == "pdu"
     assert pdu_a.u_hoehe == 0
     assert pdu_a.redundancy_path == "A"
     assert pdu_a.side == "left"
-    assert float(pdu_a.absicherung_a) == 16.0
+    assert float(pdu_a.absicherung_a) == 16.0  # type: ignore
     assert pdu_a.strom_typ == "3-phasig"
     assert pdu_a.anschluss_stecker == "CEE-16A-3P"
     assert pdu_a.min_rack_hoehe == 40
 
     # 4. Verify target device B (PDU-B) properties
-    d_query = await db.execute(select(Device).where(Device.hostname == "KentixSmartPDU-40HE-32A-B-01"))
+    d_query = await db.execute(
+        select(Device).where(Device.hostname == "KentixSmartPDU-40HE-32A-B-01")
+    )
     pdu_b = d_query.scalar_one_or_none()
     assert pdu_b is not None
     assert pdu_b.typ == "pdu"
     assert pdu_b.u_hoehe == 0
     assert pdu_b.redundancy_path == "B"
     assert pdu_b.side == "right"
-    assert float(pdu_b.absicherung_a) == 32.0
+    assert float(pdu_b.absicherung_a) == 32.0  # type: ignore
     assert pdu_b.strom_typ == "3-phasig"
     assert pdu_b.anschluss_stecker == "CEE-32A-3P"
     assert pdu_b.min_rack_hoehe == 40
-

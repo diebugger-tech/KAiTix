@@ -296,17 +296,29 @@ async def test_simulation_pdu_path_failure(client: AsyncClient, db: AsyncSession
     await db.flush()
 
     # Create Servers
-    srv_single = Device(hostname="srv-single", typ="server", rack_id=rack.id, psu_count=1)
+    srv_single = Device(
+        hostname="srv-single", typ="server", rack_id=rack.id, psu_count=1
+    )
     srv_dual = Device(hostname="srv-dual", typ="server", rack_id=rack.id, psu_count=2)
     db.add_all([srv_single, srv_dual])
     await db.flush()
 
     # Connect Servers to Outlets
     o_a.connected_device_id = srv_single.id
-    
+
     # Dual server connects to both
-    o_a_dual = PduOutlet(pdu_id=pdu_a.id, outlet_name="Outlet-A2", redundancy_path="A", connected_device_id=srv_dual.id)
-    o_b_dual = PduOutlet(pdu_id=pdu_b.id, outlet_name="Outlet-B2", redundancy_path="B", connected_device_id=srv_dual.id)
+    o_a_dual = PduOutlet(
+        pdu_id=pdu_a.id,
+        outlet_name="Outlet-A2",
+        redundancy_path="A",
+        connected_device_id=srv_dual.id,
+    )
+    o_b_dual = PduOutlet(
+        pdu_id=pdu_b.id,
+        outlet_name="Outlet-B2",
+        redundancy_path="B",
+        connected_device_id=srv_dual.id,
+    )
     db.add_all([o_a_dual, o_b_dual])
 
     await db.commit()
@@ -360,4 +372,3 @@ async def test_scorer_pdu_anomalies(db: AsyncSession):
     assert any("inkompatibel" in i for i in issues)
     # Check score contributes to total
     assert res[0]["score"] > 0.0
-

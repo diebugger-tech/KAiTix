@@ -9,8 +9,8 @@ from ._helpers import (
     _make_ods_mkrow,
     _to_csv,
 )
-from openpyxl import Workbook
-from openpyxl.styles import Border, Side
+from openpyxl import Workbook  # type: ignore
+from openpyxl.styles import Border, Side  # type: ignore
 
 _HEADER = [
     "Kabel-Nr",
@@ -89,8 +89,8 @@ def _cable_xlsx(data: dict) -> bytes:
 
 
 def _cable_ods(data: dict) -> bytes:
-    from odf.opendocument import OpenDocumentSpreadsheet
-    from odf.table import Table
+    from odf.opendocument import OpenDocumentSpreadsheet  # type: ignore
+    from odf.table import Table  # type: ignore
 
     doc = OpenDocumentSpreadsheet()
     mkrow = _make_ods_mkrow()

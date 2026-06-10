@@ -33,6 +33,7 @@ IMBALANCE_ZIEL_PCT = 10.0
 @dataclass(frozen=True)
 class DeviceLoad:
     """Last-Beitrag eines Geräts. Entkoppelt von der ORM-Device-Klasse."""
+
     tdp_watt: float
     phase: str | None = None
     einschaltstrom_faktor: float = DEFAULT_EINSCHALTSTROM_FAKTOR
@@ -41,6 +42,7 @@ class DeviceLoad:
 @dataclass(frozen=True)
 class ModuleSpec:
     """Ein aktives Leistungsmodul."""
+
     leistung_kw: float
 
 
@@ -52,14 +54,15 @@ class PowerMetricsResult:
     kaltstart_ok ist ein Simulations-Ergebnis ("reicht die N+1-Kapazität
     rechnerisch für den Kaltstart-Peak"), kein Freigabe-Stempel.
     """
+
     last_kw: float
     peak_kw: float
     installiert_kw: float
     groesstes_modul_kw: float
     n1_kw: float
     reserve_kw: float
-    kaltstart_reserve_kw: float          # n1_kw - peak_kw (kann negativ sein)
-    kaltstart_ok: bool                   # Simulation: peak_kw <= n1_kw
+    kaltstart_reserve_kw: float  # n1_kw - peak_kw (kann negativ sein)
+    kaltstart_ok: bool  # Simulation: peak_kw <= n1_kw
     phasen_last_kw: dict[str, float]
     phasen_imbalance_pct: float
     hinweise: list[str] = field(default_factory=list)
@@ -158,8 +161,8 @@ def calculate_power_metrics(
         max_abw = max(abs(w - ideal) for w in phasen.values())
         imbalance_pct = (max_abw / ideal) * 100.0
         if imbalance_pct > IMBALANCE_ZIEL_PCT:
-            max_phase = max(phasen, key=phasen.get)
-            min_phase = min(phasen, key=phasen.get)
+            max_phase = max(phasen, key=phasen.get)  # type: ignore
+            min_phase = min(phasen, key=phasen.get)  # type: ignore
             hinweise.append(
                 f"Phasen-Imbalance {imbalance_pct:.1f} % über Zielwert "
                 f"{IMBALANCE_ZIEL_PCT:.0f} % — Last von {max_phase} nach "

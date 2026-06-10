@@ -34,8 +34,12 @@ class UsvUnit(Base):
     max_kw: Mapped[float] = mapped_column(DECIMAL(6, 2), nullable=False)
     battery_strings: Mapped[int] = mapped_column(Integer, nullable=False, default=2)
     blocks_per_string: Mapped[int] = mapped_column(Integer, nullable=False, default=32)
-    block_voltage_v: Mapped[Decimal] = mapped_column(DECIMAL(5, 2), nullable=False, default=Decimal("12.00"))
-    block_capacity_ah: Mapped[Decimal] = mapped_column(DECIMAL(7, 2), nullable=False, default=Decimal("100.00"))
+    block_voltage_v: Mapped[Decimal] = mapped_column(
+        DECIMAL(5, 2), nullable=False, default=Decimal("12.00")
+    )
+    block_capacity_ah: Mapped[Decimal] = mapped_column(
+        DECIMAL(7, 2), nullable=False, default=Decimal("100.00")
+    )
     has_bypass_switch: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False
     )

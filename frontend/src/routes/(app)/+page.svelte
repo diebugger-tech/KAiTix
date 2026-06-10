@@ -18,6 +18,7 @@
   import RackFrontView from '$lib/components/RackFrontView.svelte';
   import { locationStore } from '$lib/locations.svelte';
   import { goto } from '$app/navigation';
+  import { calculateRackMetrics } from '$lib/utils/rackMetrics';
 
   let racks = $state<Rack[]>([]);
   let devices = $state<Device[]>([]);
@@ -66,6 +67,7 @@
   // Reactive Derived Values
   const totalRacks = $derived(racks.length);
   const totalDevices = $derived(devices.length);
+  const existingReihen = $derived([...new Set(racks.map(r => r.rackreihe).filter(r => Boolean(r) && r !== 'Alle'))].sort());
   const totalPowerWatt = $derived(devices.reduce((sum, d) => sum + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0));
   const totalCables = $derived(cables.length);
   const totalL1Kw = $derived(devices.filter(d => d.phase === 'L1').reduce((s, d) => s + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0) / 1000);
@@ -268,17 +270,7 @@
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {#each roomRacks as rack}
                   {@const rackDevices = devices.filter(d => d.rack_id === rack.id)}
-                  {@const occupiedU = rackDevices.reduce((sum, d) => sum + d.u_hoehe, 0)}
-                  {@const percent = Math.round((occupiedU / rack.hoehe_u) * 100)}
-                  {@const rackKw = rackDevices.reduce((s, d) => s + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0) / 1000}
-                  {@const rL1kw = rackDevices.filter(d => d.phase === 'L1').reduce((s, d) => s + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0) / 1000}
-                  {@const rL2kw = rackDevices.filter(d => d.phase === 'L2').reduce((s, d) => s + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0) / 1000}
-                  {@const rL3kw = rackDevices.filter(d => d.phase === 'L3').reduce((s, d) => s + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0) / 1000}
-                  {@const rPhTotal = rL1kw + rL2kw + rL3kw}
-                  {@const rPhIdeal = rPhTotal / 3}
-                  {@const rPhImb = rPhTotal > 0 ? (Math.max(Math.abs(rL1kw - rPhIdeal), Math.abs(rL2kw - rPhIdeal), Math.abs(rL3kw - rPhIdeal)) / rPhIdeal) * 100 : 0}
-                  {@const hasPhased = rackDevices.some(d => d.phase)}
-                  {@const rackPdus = rackDevices.filter(d => d.typ === 'pdu')}
+                  {@const { occupiedU, percent, totalKw: rackKw, L1kw: rL1kw, L2kw: rL2kw, L3kw: rL3kw, imbalancePct: rPhImb, hasPhasedDevices: hasPhased, pdus: rackPdus } = calculateRackMetrics(rack, devices)}
 
                   <!-- svelte-ignore a11y_click_events_have_key_events -->
                   <div class="block app-card border rounded-xl p-5 space-y-4 transition-colors cursor-pointer app-card-hover" role="button" tabindex="0" onclick={() => goto(`/racks?rack=${rack.id}`)}>
@@ -369,17 +361,7 @@
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {#each racksWithoutRoom as rack}
                   {@const rackDevices = devices.filter(d => d.rack_id === rack.id)}
-                  {@const occupiedU = rackDevices.reduce((sum, d) => sum + d.u_hoehe, 0)}
-                  {@const percent = Math.round((occupiedU / rack.hoehe_u) * 100)}
-                  {@const rackKw = rackDevices.reduce((s, d) => s + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0) / 1000}
-                  {@const rL1kw = rackDevices.filter(d => d.phase === 'L1').reduce((s, d) => s + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0) / 1000}
-                  {@const rL2kw = rackDevices.filter(d => d.phase === 'L2').reduce((s, d) => s + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0) / 1000}
-                  {@const rL3kw = rackDevices.filter(d => d.phase === 'L3').reduce((s, d) => s + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0) / 1000}
-                  {@const rPhTotal = rL1kw + rL2kw + rL3kw}
-                  {@const rPhIdeal = rPhTotal / 3}
-                  {@const rPhImb = rPhTotal > 0 ? (Math.max(Math.abs(rL1kw - rPhIdeal), Math.abs(rL2kw - rPhIdeal), Math.abs(rL3kw - rPhIdeal)) / rPhIdeal) * 100 : 0}
-                  {@const hasPhased = rackDevices.some(d => d.phase)}
-                  {@const rackPdus = rackDevices.filter(d => d.typ === 'pdu')}
+                  {@const { occupiedU, percent, totalKw: rackKw, L1kw: rL1kw, L2kw: rL2kw, L3kw: rL3kw, imbalancePct: rPhImb, hasPhasedDevices: hasPhased, pdus: rackPdus } = calculateRackMetrics(rack, devices)}
 
                   <a href="/racks?rack={rack.id}" class="block app-card border hover:border-amber-500/40 rounded-xl p-5 space-y-4 transition-colors">
                     <div class="flex items-start justify-between">
@@ -454,5 +436,6 @@
 <RackModal
   bind:show={showAddRack}
   onSave={handleAddRack}
+  existingReihen={existingReihen}
   hardwareTypes={hardwareTypes}
 />

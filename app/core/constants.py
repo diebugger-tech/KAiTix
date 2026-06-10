@@ -1,8 +1,8 @@
 from typing import Optional
 
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.units import mm
+from reportlab.lib import colors  # type: ignore
+from reportlab.lib.pagesizes import A4  # type: ignore
+from reportlab.lib.units import mm  # type: ignore
 
 
 C_SERVER = colors.HexColor("#185FA5")

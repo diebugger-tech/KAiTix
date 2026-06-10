@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from pydantic import BaseModel, Field
-from decimal import Decimal
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -15,7 +15,6 @@ from app.models import (
     UsvSimulationEvent,
 )
 from app.domains.power.models import (
-    DistributionPanel,
     UsvCalculation,
 )
 from app.domains.power.schemas import (
@@ -40,6 +39,7 @@ from app.domains.power.services.setup import setup_usv_system, UsvUnitExists
 
 router = APIRouter()
 
+
 @router.post(
     "/setup",
     response_model=UsvSystemSetupResponse,
@@ -60,11 +60,11 @@ async def usv_setup(
 
 
 class UsvSimulationRequest(BaseModel):
-    l1_kw: Decimal = Field(..., ge=0, description="Phase L1 load in kW")
-    l2_kw: Decimal = Field(..., ge=0, description="Phase L2 load in kW")
-    l3_kw: Decimal = Field(..., ge=0, description="Phase L3 load in kW")
-    module_capacity_kw: Decimal = Field(
-        Decimal("10.0"), gt=0, description="UPS module capacity in kW"
+    l1_kw: float = Field(..., ge=0, description="Phase L1 load in kW")
+    l2_kw: float = Field(..., ge=0, description="Phase L2 load in kW")
+    l3_kw: float = Field(..., ge=0, description="Phase L3 load in kW")
+    module_capacity_kw: float = Field(
+        float("10.0"), gt=0, description="UPS module capacity in kW"
     )
     installed_modules_count: int = Field(
         ..., ge=0, description="Number of installed modules"
@@ -73,16 +73,16 @@ class UsvSimulationRequest(BaseModel):
 
 class SimulateFaultRequest(BaseModel):
     fault_type: str
-    l1_kw: Decimal = Field(..., ge=0)
-    l2_kw: Decimal = Field(..., ge=0)
-    l3_kw: Decimal = Field(..., ge=0)
-    module_capacity_kw: Decimal = Field(Decimal("10.0"), gt=0)
+    l1_kw: float = Field(..., ge=0)
+    l2_kw: float = Field(..., ge=0)
+    l3_kw: float = Field(..., ge=0)
+    module_capacity_kw: float = Field(float("10.0"), gt=0)
     installed_modules_count: int = Field(..., ge=0)
     system_state: Optional[Dict[str, Any]] = None
-    battery_voltage: Decimal = Field(Decimal("48"), gt=0)
-    battery_capacity_ah: Decimal = Field(Decimal("100"), gt=0)
-    peukert_exponent: Decimal = Field(Decimal("1.2"), gt=0)
-    inverter_efficiency: Decimal = Field(Decimal("0.90"), gt=0, le=1)
+    battery_voltage: float = Field(float("48"), gt=0)
+    battery_capacity_ah: float = Field(float("100"), gt=0)
+    peukert_exponent: float = Field(float("1.2"), gt=0)
+    inverter_efficiency: float = Field(float("0.90"), gt=0, le=1)
 
 
 # === USV UNITS ===
@@ -210,13 +210,8 @@ async def get_power_audit(usv_unit_id: int, db: AsyncSession = Depends(get_db)):
     if not usv_unit:
         raise HTTPException(status_code=404, detail="USV unit not found")
 
-    panel_query = await db.execute(
-        select(DistributionPanel).where(DistributionPanel.usv_unit_id == usv_unit_id)
-    )
-    panel = panel_query.scalar_one_or_none()
-
     # 2. VDE Audit durchführen (on the fly) - OBSOLETE (NUR-DOKU)
-    audit_results = []
+    audit_results: list = []
 
     # 3. Berechnungen laden
     calc_query = await db.execute(
@@ -298,30 +293,30 @@ async def simulate_fault(
 
 
 class RuntimeCurveRequest(BaseModel):
-    l1_kw: Decimal = Field(..., ge=0)
-    l2_kw: Decimal = Field(..., ge=0)
-    l3_kw: Decimal = Field(..., ge=0)
-    module_capacity_kw: Decimal = Field(Decimal("10.0"), gt=0)
+    l1_kw: float = Field(..., ge=0)
+    l2_kw: float = Field(..., ge=0)
+    l3_kw: float = Field(..., ge=0)
+    module_capacity_kw: float = Field(float("10.0"), gt=0)
     installed_modules_count: int = Field(..., ge=0)
     battery_type: str = "vrla"
     series_blocks: int = Field(4, gt=0)
     parallel_strings: int = Field(1, gt=0)
-    block_voltage_v: Decimal = Field(Decimal("12"), gt=0)
-    block_capacity_ah: Decimal = Field(Decimal("100"), gt=0)
-    age_years: Decimal = Field(Decimal("0"), ge=0)
-    temperature_c: Decimal = Field(Decimal("20"), ge=-273.15)
-    inverter_efficiency: Decimal = Field(Decimal("0.90"), gt=0, le=1)
+    block_voltage_v: float = Field(float("12"), gt=0)
+    block_capacity_ah: float = Field(float("100"), gt=0)
+    age_years: float = Field(float("0"), ge=0)
+    temperature_c: float = Field(float("20"), ge=-273.15)
+    inverter_efficiency: float = Field(float("0.90"), gt=0, le=1)
 
 
 class DimensioningRequest(BaseModel):
-    load_kw: Decimal = Field(..., ge=0)
-    target_runtime_min: Decimal = Field(..., gt=0)
+    load_kw: float = Field(..., ge=0)
+    target_runtime_min: float = Field(..., gt=0)
     battery_type: str = "vrla"
-    block_voltage_v: Decimal = Field(Decimal("12"), gt=0)
-    block_capacity_ah: Decimal = Field(Decimal("100"), gt=0)
-    inverter_efficiency: Decimal = Field(Decimal("0.90"), gt=0, le=1)
-    system_voltage_v: Decimal = Field(Decimal("48"), gt=0)
-    safety_margin_pct: Decimal = Field(Decimal("0.15"), ge=0, le=1)
+    block_voltage_v: float = Field(float("12"), gt=0)
+    block_capacity_ah: float = Field(float("100"), gt=0)
+    inverter_efficiency: float = Field(float("0.90"), gt=0, le=1)
+    system_voltage_v: float = Field(float("48"), gt=0)
+    safety_margin_pct: float = Field(float("0.15"), ge=0, le=1)
 
 
 @router.post("/battery/runtime-curve")
@@ -392,11 +387,11 @@ class ShutdownSimulationRequest(BaseModel):
     battery_type: str = "vrla"
     series_blocks: int = Field(4, gt=0)
     parallel_strings: int = Field(1, gt=0)
-    block_voltage_v: Decimal = Field(Decimal("12"), gt=0)
-    block_capacity_ah: Decimal = Field(Decimal("100"), gt=0)
-    age_years: Decimal = Field(Decimal("0"), ge=0)
-    temperature_c: Decimal = Field(Decimal("20"), ge=-273.15)
-    inverter_efficiency: Decimal = Field(Decimal("0.90"), gt=0, le=1)
+    block_voltage_v: float = Field(float("12"), gt=0)
+    block_capacity_ah: float = Field(float("100"), gt=0)
+    age_years: float = Field(float("0"), ge=0)
+    temperature_c: float = Field(float("20"), ge=-273.15)
+    inverter_efficiency: float = Field(float("0.90"), gt=0, le=1)
 
 
 @router.post("/simulate-shutdown", response_model=ShutdownSimulationResponse)
@@ -463,4 +458,4 @@ async def get_phase_balancing(rack_id: int, db: AsyncSession = Depends(get_db)):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"No devices found in rack {rack_id}",
         )
-    return PhaseBalancer.calculate_balancing(devices)
+    return PhaseBalancer.calculate_balancing(devices)  # type: ignore

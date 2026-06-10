@@ -38,4 +38,4 @@ fetch("http://127.0.0.1:8003/api/v1/runbooks/")
 p.terminate()
 p.wait()
 print("--- UVICORN LOGS ---")
-print(p.stdout.read())
+print(p.stdout.read())  # type: ignore

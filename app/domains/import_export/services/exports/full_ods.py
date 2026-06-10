@@ -13,8 +13,8 @@ from ._helpers import (
 
 
 def _ods(data: dict) -> bytes:
-    from odf.opendocument import OpenDocumentSpreadsheet
-    from odf.table import Table
+    from odf.opendocument import OpenDocumentSpreadsheet  # type: ignore
+    from odf.table import Table  # type: ignore
 
     doc = OpenDocumentSpreadsheet()
     mkrow = _make_ods_mkrow()

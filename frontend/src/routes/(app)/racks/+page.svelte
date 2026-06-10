@@ -27,27 +27,47 @@
   let hasParsedDeviceParam = false;
 
   // Filtering and search state
-  let filterStandort = $state('Alle');
-  let filterReihe = $state('Alle');
+  let filterStandort = $state('__ALL__');
+  let filterReihe = $state('__ALL__');
   let searchRackName = $state('');
   let showManageLocations = $state(false);
-  let dropdownSelectedRackId = $state<string | number>('Alle');
+  let dropdownSelectedRackId = $state<string | number>('__ALL__');
 
   let filteredRacks = $derived(
     racks.filter(r => {
-      if (filterStandort && filterStandort !== 'Alle' && r.standort !== filterStandort) return false;
-      if (filterReihe && filterReihe !== 'Alle' && r.rackreihe !== filterReihe) return false;
+      if (filterStandort && filterStandort !== '__ALL__' && r.standort !== filterStandort) return false;
+      if (filterReihe && filterReihe !== '__ALL__') {
+        const parts = filterReihe.split(' || ');
+        if (parts.length === 2) {
+          if (r.standort !== parts[0] || r.rackreihe !== parts[1]) return false;
+        } else {
+          if (r.rackreihe !== filterReihe) return false;
+        }
+      }
       if (searchRackName && !r.name.toLowerCase().includes(searchRackName.toLowerCase())) return false;
       return true;
     }).sort((a, b) => a.name.localeCompare(b.name))
   );
 
+  let existingReihen = $derived([...new Set(racks.map(r => r.rackreihe).filter(r => Boolean(r) && r !== '__ALL__'))].sort());
+
   // Sync dropdown selected rack to main selectedRack object
   $effect(() => {
-    if (dropdownSelectedRackId !== 'Alle' && selectedRack?.id !== dropdownSelectedRackId) {
-      const found = racks.find(r => r.id == dropdownSelectedRackId);
+    if (dropdownSelectedRackId !== '__ALL__' && String(selectedRack?.id) !== String(dropdownSelectedRackId)) {
+      const found = racks.find(r => String(r.id) === String(dropdownSelectedRackId));
       if (found) {
         selectedRack = found;
+        selectedDevice = null;
+      }
+    }
+  });
+
+  // Deselect if active rack falls out of filter
+  $effect(() => {
+    if (selectedRack) {
+      const isStillInFilter = filteredRacks.some(r => String(r.id) === String(selectedRack!.id));
+      if (!isStillInFilter) {
+        selectedRack = null;
         selectedDevice = null;
       }
     }
@@ -56,12 +76,12 @@
   // Sync main selectedRack object back to dropdown selection
   $effect(() => {
     if (selectedRack) {
-      if (dropdownSelectedRackId !== selectedRack.id) {
+      if (String(dropdownSelectedRackId) !== String(selectedRack.id)) {
         dropdownSelectedRackId = selectedRack.id;
       }
     } else {
-      if (dropdownSelectedRackId !== 'Alle') {
-        dropdownSelectedRackId = 'Alle';
+      if (dropdownSelectedRackId !== '__ALL__') {
+        dropdownSelectedRackId = '__ALL__';
       }
     }
   });
@@ -205,6 +225,7 @@
         api.getUsvUnits().catch(() => [] as import('$lib/api').UsvUnit[]),
       ]);
       racks = rd; devices = dd; cables = cd; hardware = hd; usvUnits = ud;
+      locationStore.syncFromRacks(rd);
       if (!selectedRack && rd.length > 0) {
         const rackParam = page.url.searchParams.get('rack');
         const preselect = rackParam ? rd.find(r => r.id === Number(rackParam)) : null;
@@ -313,6 +334,10 @@
     if (!editingLocation) return;
     const old = editingLocation;
     const newName = editLocationName.trim();
+    if (newName.toLowerCase() === 'alle' || newName === '__ALL__') {
+      alert('"Alle" ist ein reservierter Begriff und kann nicht verwendet werden.');
+      return;
+    }
     locationStore.update(old, newName, editLocationType);
     if (newName !== old) await applyLocationRename(old, newName);
     editingLocation = null;
@@ -330,10 +355,70 @@
   async function addLocation() {
     const name = newLocationName.trim();
     if (!name) return;
+    if (name.toLowerCase() === 'alle' || name === '__ALL__') {
+      alert('"Alle" ist ein reservierter Begriff und kann nicht verwendet werden.');
+      return;
+    }
     locationStore.add(name, newLocationType);
     newLocationName = '';
     newLocationType = 'rechenzentrum';
     showAddLocation = false;
+  }
+
+  let newReiheNames = $state<Record<string, string>>({});
+  let editingReihe = $state<{ standort: string, old: string } | null>(null);
+  let editReiheName = $state('');
+
+  async function applyReiheRename(standort: string, oldReihe: string, newReihe: string) {
+    const trimmed = newReihe.trim();
+    if (!trimmed || trimmed === oldReihe) return;
+    if (trimmed.toLowerCase() === 'alle' || trimmed === '__ALL__') {
+      alert('"Alle" ist ein reservierter Begriff und kann nicht verwendet werden.');
+      return;
+    }
+    for (const r of racks) {
+      if (r.standort === standort && r.rackreihe === oldReihe) {
+        try { await api.updateRack(r.id, { ...r, rackreihe: trimmed }); }
+        catch (e) { console.error('Rackreihe update failed:', e); }
+      }
+    }
+    locationStore.renameReihe(standort, oldReihe, trimmed);
+    await loadAll();
+  }
+
+  function startEditReihe(standort: string, reihe: string) {
+    editingReihe = { standort, old: reihe };
+    editReiheName = reihe;
+  }
+
+  async function saveEditReihe() {
+    if (!editingReihe) return;
+    const { standort, old } = editingReihe;
+    const newName = editReiheName.trim();
+    if (newName && newName !== old) {
+      await applyReiheRename(standort, old, newName);
+    }
+    editingReihe = null;
+  }
+
+  function removeReihe(standort: string, reihe: string) {
+    const racksInReihe = racks.filter(r => r.standort === standort && r.rackreihe === reihe);
+    if (racksInReihe.length > 0) {
+      alert(`Kann nicht löschen: ${racksInReihe.length} Rack(s) dieser Reihe zugeordnet.`);
+      return;
+    }
+    locationStore.removeReihe(standort, reihe);
+  }
+
+  function doAddReihe(standort: string) {
+    const name = (newReiheNames[standort] || '').trim();
+    if (!name) return;
+    if (name.toLowerCase() === 'alle' || name === '__ALL__') {
+      alert('"Alle" ist ein reservierter Begriff und kann nicht verwendet werden.');
+      return;
+    }
+    locationStore.addReihe(standort, name);
+    newReiheNames[standort] = '';
   }
 
   onMount(() => {
@@ -1089,8 +1174,8 @@
               <Building class="w-3.5 h-3.5 text-[#5DCAA5] shrink-0" />
               <span>Filter</span>
             </div>
-            {#if (filterStandort && filterStandort !== 'Alle') || (filterReihe && filterReihe !== 'Alle') || searchRackName}
-              <button onclick={() => { filterStandort = 'Alle'; filterReihe = 'Alle'; dropdownSelectedRackId = 'Alle'; searchRackName = ''; }}
+            {#if (filterStandort && filterStandort !== '__ALL__') || (filterReihe && filterReihe !== '__ALL__') || searchRackName}
+              <button onclick={() => { filterStandort = '__ALL__'; filterReihe = '__ALL__'; dropdownSelectedRackId = '__ALL__'; searchRackName = ''; }}
                 class="text-[10px] text-red-400 hover:text-red-300 font-semibold transition">
                 Reset
               </button>
@@ -1103,6 +1188,7 @@
               bind:selectedStandort={filterStandort}
               bind:selectedRackreihe={filterReihe}
               bind:selectedRack={dropdownSelectedRackId}
+              bind:searchQuery={searchRackName}
               layout="vertical"
             />
 
@@ -1114,31 +1200,8 @@
           </div>
         </div>
 
-        <h3 class="text-xs font-bold text-[var(--color-text3)] uppercase tracking-wider px-1">Racks ({filteredRacks.length})</h3>
-        <div class="space-y-1.5 max-h-[calc(100vh-530px)] overflow-y-auto pr-1">
-          {#each filteredRacks as rack}
-            {@const active = selectedRack?.id === rack.id}
-            <button onclick={() => { selectedRack = rack; selectedDevice = null; }}
-              class="w-full text-left p-3 rounded-xl border transition {active ? 'bg-[#1D9E75]/10 border-[#1D9E75]/50' : 'bg-[var(--color-bg2)] border-[var(--color-border)] hover:border-[var(--color-border2)]'}">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-2 min-w-0">
-                  <Layers class="w-3.5 h-3.5 shrink-0 {active ? 'text-[#5DCAA5]' : 'text-[var(--color-text3)]'}" />
-                  <div class="min-w-0">
-                    <div class="font-bold text-xs truncate {active ? 'text-[var(--color-text)]' : 'text-[var(--color-text)]'}">{rack.name}</div>
-                    <div class="text-[10px] text-[var(--color-text3)] truncate">
-                      {rack.standort || '–'}
-                      {#if rack.rackreihe} <span class="opacity-50">·</span> {rack.rackreihe}{/if}
-                    </div>
-                  </div>
-                </div>
-                <ChevronRight class="w-3 h-3 text-[var(--color-text3)] shrink-0" />
-              </div>
-            </button>
-          {/each}
-        </div>
-
         <!-- Standorte verwalten -->
-        <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl p-3.5 space-y-2.5 mt-3">
+        <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl p-3.5 space-y-2.5">
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-2 text-[var(--color-text2)] font-bold text-[10px] uppercase tracking-wider">
               <Building class="w-3.5 h-3.5 text-[#5DCAA5] shrink-0" />
@@ -1206,9 +1269,60 @@
                     </button>
                   </div>
                 </div>
+                <!-- Rackreihen -->
+                <div class="pl-7 pr-2 pb-2 space-y-1">
+                  {#each loc.reihen || [] as reihe}
+                    {#if editingReihe?.standort === loc.name && editingReihe?.old === reihe}
+                      <div class="flex items-center gap-1 mt-1">
+                        <input type="text" bind:value={editReiheName} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded px-1.5 py-0.5 text-[10px] text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]">
+                        <button onclick={saveEditReihe} class="p-0.5 text-[#1D9E75] hover:text-[#0F6E56]"><Zap class="w-3 h-3" /></button>
+                        <button onclick={() => editingReihe = null} class="p-0.5 text-[var(--color-text3)] hover:text-[var(--color-text2)]"><Trash2 class="w-3 h-3" /></button>
+                      </div>
+                    {:else}
+                      <div class="flex items-center justify-between group/reihe text-[10px] text-[var(--color-text2)] px-1.5 py-0.5 rounded hover:bg-[var(--color-bg3)]">
+                        <span>{reihe}</span>
+                        <div class="flex gap-1 opacity-0 group-hover/reihe:opacity-100 transition">
+                          <button onclick={() => startEditReihe(loc.name, reihe)} class="text-[var(--color-text3)] hover:text-[#5DCAA5]"><Edit2 class="w-2.5 h-2.5" /></button>
+                          <button onclick={() => removeReihe(loc.name, reihe)} class="text-[var(--color-text3)] hover:text-red-400"><Trash2 class="w-2.5 h-2.5" /></button>
+                        </div>
+                      </div>
+                    {/if}
+                  {/each}
+                  <div class="flex items-center gap-1 mt-1.5 px-1.5">
+                    <input type="text" bind:value={newReiheNames[loc.name]} placeholder="Neue Rackreihe..." 
+                      onkeydown={(e) => { if (e.key === 'Enter') doAddReihe(loc.name); }}
+                      class="flex-1 bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded px-1.5 py-1 text-[10px] text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75] transition">
+                    <button onclick={() => doAddReihe(loc.name)} class="p-1 text-[#1D9E75] hover:text-[#0F6E56] bg-[#1D9E75]/10 hover:bg-[#1D9E75]/20 rounded transition" title="Reihe hinzufügen">
+                      <Plus class="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
               {/if}
             {/each}
           </div>
+        </div>
+
+        <h3 class="text-xs font-bold text-[var(--color-text3)] uppercase tracking-wider px-1 pt-2 border-t border-[var(--color-border)] mt-2">Racks ({filteredRacks.length})</h3>
+        <div class="space-y-1.5 max-h-[calc(100vh-530px)] overflow-y-auto pr-1">
+          {#each filteredRacks as rack}
+            {@const active = selectedRack?.id === rack.id}
+            <button onclick={() => { selectedRack = rack; selectedDevice = null; }}
+              class="w-full text-left p-3 rounded-xl border transition {active ? 'bg-[#1D9E75]/10 border-[#1D9E75]/50' : 'bg-[var(--color-bg2)] border-[var(--color-border)] hover:border-[var(--color-border2)]'}">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2 min-w-0">
+                  <Layers class="w-3.5 h-3.5 shrink-0 {active ? 'text-[#5DCAA5]' : 'text-[var(--color-text3)]'}" />
+                  <div class="min-w-0">
+                    <div class="font-bold text-xs truncate {active ? 'text-[var(--color-text)]' : 'text-[var(--color-text)]'}">{rack.name}</div>
+                    <div class="text-[10px] text-[var(--color-text3)] truncate">
+                      {rack.standort || '–'}
+                      {#if rack.rackreihe} <span class="opacity-50">·</span> {rack.rackreihe}{/if}
+                    </div>
+                  </div>
+                </div>
+                <ChevronRight class="w-3 h-3 text-[var(--color-text3)] shrink-0" />
+              </div>
+            </button>
+          {/each}
         </div>
 
 
@@ -1304,16 +1418,20 @@
             {/if}
 
             <!-- Rack Layout mit Seitlichen PDUs -->
-            <RackFrontView
-              rack={selectedRack}
-              {rackDevices}
-              {devices}
-              {hardware}
-              {selectedDevice}
-              onDeviceClick={(dev) => loadDeviceDetail(dev)}
-              onEmptyClick={(u) => openAddDevice(u)}
-              onEmptySideClick={(side) => { openAddDevice(null); devSide = side; }}
-            />
+            <div class="bg-[var(--color-bg3)]/30 border-[var(--color-border2)]">
+              <div class="max-w-2xl mx-auto py-8 px-4">
+                <RackFrontView
+                  rack={selectedRack}
+                  {rackDevices}
+                  {devices}
+                  {hardware}
+                  {selectedDevice}
+                  onDeviceClick={(dev) => loadDeviceDetail(dev)}
+                  onEmptyClick={(u) => openAddDevice(u)}
+                  onEmptySideClick={(side) => { openAddDevice(null); devSide = side; }}
+                />
+              </div>
+            </div>
           </div>
         {/if}
       </div>
@@ -1743,8 +1861,9 @@
 <RackModal
   bind:show={showAddRack}
   onSave={handleAddRack}
-  defaultStandort={filterStandort}
-  defaultRackreihe={filterReihe}
+  defaultStandort={filterStandort === '__ALL__' ? '' : filterStandort}
+  defaultRackreihe={filterReihe === '__ALL__' ? '' : filterReihe.split(' || ').pop()}
+  existingReihen={existingReihen}
   hardwareTypes={hardware.filter(h => h.kategorie === 'rack')}
 />
 
@@ -1753,6 +1872,7 @@
   onSave={handleEditRack}
   initialData={selectedRack}
   showRemark={true}
+  existingReihen={existingReihen}
   hardwareTypes={hardware.filter(h => h.kategorie === 'rack')}
 />
 

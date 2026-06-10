@@ -133,7 +133,9 @@ class Device(Base):
         DECIMAL(5, 1)
     )  # Absicherung je Stromkreis in A, z.B. 16.0 oder 32.0
     anschluss_stecker: Mapped[Optional[str]] = mapped_column(
-        Enum("CEE-16A-3P", "CEE-32A-3P", "CEE-63A-3P", "C14", "C20", "Schuko", "sonstige"),
+        Enum(
+            "CEE-16A-3P", "CEE-32A-3P", "CEE-63A-3P", "C14", "C20", "Schuko", "sonstige"
+        ),
         nullable=True,
     )  # z.B. "CEE-16A-3P" (Kentix SmartPDU 16A), "CEE-32A-3P"
     redundancy_path: Mapped[Optional[str]] = mapped_column(

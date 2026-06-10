@@ -15,9 +15,9 @@
     showCrossRack = false,
     showIntraRack = false,
     showDeviceTypes = new Set<string>(),
-    selectedStandort = 'Alle',
-    selectedRackreihe = 'Alle',
-    selectedRack = 'Alle'
+    selectedStandort = '__ALL__',
+    selectedRackreihe = '__ALL__',
+    selectedRack = '__ALL__'
   } = $props();
 
   let containerEl: HTMLElement;
@@ -327,9 +327,9 @@
     for (const rw of rackWireframes) {
       const r = rw.rack;
       let visible = true;
-      if (currentStandort !== 'Alle' && r.standort !== currentStandort) visible = false;
-      if (currentReihe !== 'Alle' && r.rackreihe !== currentReihe && `${r.standort} || ${r.rackreihe}` !== currentReihe) visible = false;
-      if (currentRack !== 'Alle' && String(r.id) !== String(currentRack)) visible = false;
+      if (currentStandort !== '__ALL__' && r.standort !== currentStandort) visible = false;
+      if (currentReihe !== '__ALL__' && r.rackreihe !== currentReihe && `${r.standort} || ${r.rackreihe}` !== currentReihe) visible = false;
+      if (currentRack !== '__ALL__' && String(r.id) !== String(currentRack)) visible = false;
       
       rw.mesh.visible = visible;
       if (visible) visibleRackIds.add(r.id);
@@ -348,7 +348,7 @@
 
     // 3. Hide/show Standort labels
     for (const sl of standortLabels) {
-      sl.label.visible = (currentStandort === 'Alle' || sl.standort === currentStandort);
+      sl.label.visible = (currentStandort === '__ALL__' || sl.standort === currentStandort);
     }
     
     // Optional center camera on filtered

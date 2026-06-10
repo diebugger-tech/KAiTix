@@ -17,11 +17,11 @@ Install: pip install reportlab
 from datetime import datetime
 from typing import Optional
 
-from reportlab.lib.pagesizes import A4
-from reportlab.lib import colors
-from reportlab.lib.units import mm
-from reportlab.pdfgen import canvas as rl_canvas
-from reportlab.platypus import (
+from reportlab.lib.pagesizes import A4  # type: ignore
+from reportlab.lib import colors  # type: ignore
+from reportlab.lib.units import mm  # type: ignore
+from reportlab.pdfgen import canvas as rl_canvas  # type: ignore
+from reportlab.platypus import (  # type: ignore
     SimpleDocTemplate,
     Paragraph,
     Spacer,
@@ -30,8 +30,8 @@ from reportlab.platypus import (
     PageBreak,
     Flowable,
 )
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle  # type: ignore
+from reportlab.lib.enums import TA_CENTER  # type: ignore
 
 from app.core.constants import (
     C_SERVER,
@@ -222,7 +222,7 @@ def _draw_rack_front(
         c.setFillColor(C_MUTED)
         hint = f"… {extra} weitere HE"
         if hidden_devs:
-            typen = {}
+            typen = {}  # type: ignore
             for d in hidden_devs:
                 t = typ_label(d.get("typ", "–"))
                 typen[t] = typen.get(t, 0) + 1

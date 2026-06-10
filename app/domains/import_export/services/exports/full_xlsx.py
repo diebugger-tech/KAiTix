@@ -1,8 +1,8 @@
 import io
 from datetime import datetime
 
-from openpyxl import Workbook
-from openpyxl.styles import Font, Border, Side
+from openpyxl import Workbook  # type: ignore
+from openpyxl.styles import Font, Border, Side  # type: ignore
 
 from ._helpers import (
     COL_XRACK,

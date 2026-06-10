@@ -176,10 +176,10 @@ async def create_pdu_outlet(
     db.add(db_outlet)
     await db.commit()
     await db.refresh(db_outlet)
-    
+
     # Pre-populate the relationship to avoid MissingGreenlet on Pydantic serialization
     db_outlet.pdu = pdu_obj
-    
+
     return db_outlet
 
 
@@ -193,9 +193,7 @@ async def update_pdu_outlet(
     result = await db.execute(
         select(PduOutletModel)
         .options(selectinload(PduOutletModel.pdu))
-        .where(
-            PduOutletModel.id == outlet_id, PduOutletModel.pdu_id == pdu_id
-        )
+        .where(PduOutletModel.id == outlet_id, PduOutletModel.pdu_id == pdu_id)
     )
     outlet = result.scalar_one_or_none()
     if not outlet:

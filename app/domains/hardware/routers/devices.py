@@ -15,7 +15,7 @@ from app.domains.hardware.schemas import (
     DeviceCreate,
     DeviceUpdate,
 )
-from app.domains.cabling.schemas import InterfaceBody
+from app.domains.cabling.schemas import InterfaceBody, Interface as InterfaceSchema
 from app.domains.network.services.ipam_service import validate_and_check_ip
 
 router = APIRouter()
@@ -45,12 +45,12 @@ async def _check_u_conflict(
         # Overlap: ranges [a, a+h) and [b, b+h) overlap when a < b+h AND b < a+h
         a, ah = u_position, u_hoehe
         b, bh = dev.u_position, dev.u_hoehe
-        if a < b + bh and b < a + ah:
+        if a < b + bh and b < a + ah:  # type: ignore
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=(
                     f"U-Positions-Konflikt: HE {a}–{a + ah - 1} überschneidet sich mit "
-                    f"'{dev.hostname}' (HE {b}–{b + bh - 1})"
+                    f"'{dev.hostname}' (HE {b}–{b + bh - 1})"  # type: ignore
                 ),
             )
 
@@ -278,6 +278,14 @@ async def delete_device(device_id: int, db: AsyncSession = Depends(get_db)):
     await db.delete(device)
     await db.commit()
     return None
+
+
+@router.get("/{device_id}/interfaces", response_model=List[InterfaceSchema])
+async def get_interfaces(device_id: int, db: AsyncSession = Depends(get_db)):
+    from app.models import Interface
+
+    result = await db.execute(select(Interface).where(Interface.device_id == device_id))
+    return list(result.scalars().all())
 
 
 @router.post("/{device_id}/interfaces", status_code=201)

@@ -89,9 +89,7 @@ async def test_rack_delete_cascade(db: AsyncSession):
     assert res.scalar_one_or_none() is None
 
     # Interface should be gone
-    res = await db.execute(
-        select(Interface).where(Interface.id == interface.id)
-    )
+    res = await db.execute(select(Interface).where(Interface.id == interface.id))
     assert res.scalar_one_or_none() is None
 
     # DevicePort should be gone

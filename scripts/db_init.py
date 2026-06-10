@@ -32,6 +32,7 @@ def _alembic_cfg() -> Config:
 async def _probe() -> tuple[bool, bool]:
     """(alembic_version vorhanden?, Kern-Schema vorhanden?)"""
     async with engine.connect() as conn:
+
         def _check(sync_conn):
             insp = inspect(sync_conn)
             return insp.has_table("alembic_version"), insp.has_table("racks")

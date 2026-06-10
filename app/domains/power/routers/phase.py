@@ -34,7 +34,7 @@ async def optimize_rack_phases(rack_id: int, db: AsyncSession = Depends(get_db))
             detail=f"No suitable devices found in rack {rack_id}",
         )
 
-    return optimize_phases(devices)
+    return optimize_phases(devices)  # type: ignore
 
 
 @router.post("/optimize/{rack_id}/apply")
@@ -70,7 +70,7 @@ async def apply_rack_phases(
 
     neue_imbalance_pct = 0.0
     if devices:
-        balance_result = PhaseBalancer.calculate_balancing(devices)
+        balance_result = PhaseBalancer.calculate_balancing(devices)  # type: ignore
         neue_imbalance_pct = balance_result.get(
             "initial_imbalance_pct", 0.0
         )  # initial is the current since we don't optimize here

@@ -12,7 +12,9 @@ class Cable(Base):
     __tablename__ = "cables"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    kabel_nr: Mapped[Optional[str]] = mapped_column(String(50), nullable=True, unique=True)
+    kabel_nr: Mapped[Optional[str]] = mapped_column(
+        String(50), nullable=True, unique=True
+    )
     typ: Mapped[str] = mapped_column(
         Enum(
             "Cat6",

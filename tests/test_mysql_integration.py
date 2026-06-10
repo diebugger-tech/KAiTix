@@ -24,7 +24,7 @@ from httpx import AsyncClient, ASGITransport
 
 from app.main import app
 from app.core.database import Base, get_db
-from testcontainers.mysql import MySqlContainer
+from testcontainers.mysql import MySqlContainer  # type: ignore
 
 pytestmark = pytest.mark.integration
 

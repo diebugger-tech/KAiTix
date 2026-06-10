@@ -120,10 +120,14 @@ class DeviceBase(BaseModel):
     bemerkung: Optional[str] = None
     strom_typ: Optional[str] = None
     spannung_v: Optional[int] = Field(None, ge=0)
-    absicherung_a: Optional[Decimal] = Field(None, ge=0)  # Absicherung in A (z.B. 16.0 für CEE-16A)
+    absicherung_a: Optional[Decimal] = Field(
+        None, ge=0
+    )  # Absicherung in A (z.B. 16.0 für CEE-16A)
     anschluss_stecker: Optional[str] = None  # z.B. "CEE-16A-3P", "CEE-32A-3P"
     redundancy_path: Optional[str] = None  # "A" oder "B"
-    min_rack_hoehe: Optional[int] = None  # PDU-Filter: nur in Racks mit >= dieser HE-Anzahl
+    min_rack_hoehe: Optional[int] = (
+        None  # PDU-Filter: nur in Racks mit >= dieser HE-Anzahl
+    )
 
 
 class DeviceCreate(DeviceBase):

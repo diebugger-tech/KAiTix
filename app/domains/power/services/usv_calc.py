@@ -1,4 +1,3 @@
-from decimal import Decimal
 import math
 from typing import Dict, Any, List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,7 +12,7 @@ from app.models import (
 class UsvCalculator:
     @staticmethod
     def calculate_n1_required_modules(
-        l1_kw: Decimal, l2_kw: Decimal, l3_kw: Decimal, module_capacity_kw: Decimal
+        l1_kw: float, l2_kw: float, l3_kw: float, module_capacity_kw: float
     ) -> int:
         """
         Calculates the number of modules required to achieve N+1 redundancy.
@@ -29,7 +28,7 @@ class UsvCalculator:
         # Calculate modules needed for total power
         modules_total = p_total / module_capacity_kw
         # Calculate modules needed for worst-case phase balance
-        modules_phase = (Decimal("3") * p_max_phase) / module_capacity_kw
+        modules_phase = (float("3") * p_max_phase) / module_capacity_kw
 
         max_needed = max(modules_total, modules_phase)
 
@@ -64,9 +63,9 @@ class UsvCalculator:
 
         # Find the largest module capacity to subtract for N-1
         largest_module_kw = max(
-            (m.leistung_kw for m in active_modules), default=Decimal("0")
+            (m.leistung_kw for m in active_modules), default=float("0")
         )
-        n1_kw = max(Decimal("0"), installed_kw - largest_module_kw)
+        n1_kw = max(float("0"), installed_kw - largest_module_kw)
 
         # Find all devices in the same rack as the UPS
         rack_id = usv_unit.rack_id
@@ -76,13 +75,13 @@ class UsvCalculator:
         devices = device_result.scalars().all()
 
         # Initialize phase power aggregators (in kW)
-        l1_load = Decimal("0")
-        l2_load = Decimal("0")
-        l3_load = Decimal("0")
+        l1_load = float("0")
+        l2_load = float("0")
+        l3_load = float("0")
 
-        l1_peak = Decimal("0")
-        l2_peak = Decimal("0")
-        l3_peak = Decimal("0")
+        l1_peak = float("0")
+        l2_peak = float("0")
+        l3_peak = float("0")
 
         device_details = []
 
@@ -92,20 +91,20 @@ class UsvCalculator:
                 if device.psu_nennwatt is not None:
                     last_pct = device.last_pct if device.last_pct is not None else 60.0
                     effective_watt = (
-                        Decimal(str(device.psu_nennwatt))
-                        * Decimal(str(last_pct))
-                        / Decimal("100.0")
+                        float(str(device.psu_nennwatt))
+                        * float(str(last_pct))
+                        / float("100.0")
                     )
                 elif device.tdp_watt is not None:
-                    effective_watt = Decimal(str(device.tdp_watt))
+                    effective_watt = float(str(device.tdp_watt))
                 else:
-                    effective_watt = Decimal(str(device.anschlussleistung_watt or 0))
+                    effective_watt = float(str(device.anschlussleistung_watt or 0))
 
                 if not effective_watt:
                     continue
 
-                kw_load = effective_watt / Decimal("1000")
-                peak_factor = device.einschaltstrom_faktor or Decimal("2.5")
+                kw_load = effective_watt / float("1000")
+                peak_factor = device.einschaltstrom_faktor or float("2.5")
                 kw_peak = kw_load * peak_factor
 
                 phase = device.phase or "L1"  # Default fallback
@@ -138,14 +137,12 @@ class UsvCalculator:
         # Each individual phase load must be <= (N-1 capacity / 3)
         # Note: Peak load is used for Cold Start (Kaltstart) safety check
         # Quick Win 3: USVs can typically handle 150% overload for short durations
-        installed_peak_cap = installed_kw * Decimal("1.5")
+        installed_peak_cap = installed_kw * float("1.5")
         phase_peak_cap = (
-            installed_peak_cap / Decimal("3")
-            if installed_peak_cap > 0
-            else Decimal("0")
+            installed_peak_cap / float("3") if installed_peak_cap > 0 else float("0")
         )
 
-        phase_capacity_n1 = n1_kw / Decimal("3") if n1_kw > 0 else Decimal("0")
+        phase_capacity_n1 = n1_kw / float("3") if n1_kw > 0 else float("0")
 
         max_active_phase_load = max(l1_load, l2_load, l3_load)
         max_active_phase_peak = max(l1_peak, l2_peak, l3_peak)
@@ -162,7 +159,7 @@ class UsvCalculator:
 
         # Recommended module size is usually the size of modules currently used or default 10kW
         rec_module_capacity = (
-            largest_module_kw if largest_module_kw > 0 else Decimal("10")
+            largest_module_kw if largest_module_kw > 0 else float("10")
         )
         recommended_modules = cls.calculate_n1_required_modules(
             l1_load, l2_load, l3_load, rec_module_capacity
@@ -193,18 +190,18 @@ class UsvCalculator:
     @classmethod
     def simulate_sandbox_usv(
         cls,
-        l1_kw: Decimal,
-        l2_kw: Decimal,
-        l3_kw: Decimal,
-        module_capacity_kw: Decimal,
+        l1_kw: float,
+        l2_kw: float,
+        l3_kw: float,
+        module_capacity_kw: float,
         installed_modules_count: int,
     ) -> Dict[str, Any]:
         """
         Simulates UPS status based on manual phase load inputs (sandbox).
         """
-        installed_kw = Decimal(str(installed_modules_count)) * module_capacity_kw
-        n1_kw = max(Decimal("0"), installed_kw - module_capacity_kw)
-        phase_capacity_n1 = n1_kw / Decimal("3") if n1_kw > 0 else Decimal("0")
+        installed_kw = float(str(installed_modules_count)) * module_capacity_kw
+        n1_kw = max(float("0"), installed_kw - module_capacity_kw)
+        phase_capacity_n1 = n1_kw / float("3") if n1_kw > 0 else float("0")
 
         total_load_kw = l1_kw + l2_kw + l3_kw
         max_phase_load = max(l1_kw, l2_kw, l3_kw)
@@ -245,23 +242,23 @@ class FaultSimulationEngine:
 
     @staticmethod
     def calculate_battery_runtime_peukert(
-        total_load_kw: Decimal,
-        battery_voltage: Decimal = Decimal("48"),
-        battery_capacity_ah: Decimal = Decimal("100"),
-        peukert_exponent: Decimal = Decimal("1.2"),
-        inverter_efficiency: Decimal = Decimal("0.90"),
-    ) -> Decimal:
+        total_load_kw: float,
+        battery_voltage: float = float("48"),
+        battery_capacity_ah: float = float("100"),
+        peukert_exponent: float = float("1.2"),
+        inverter_efficiency: float = float("0.90"),
+    ) -> float:
         """
         Peukert's law: t = C_nom * (I_nom / I)^(k-1) / I  [hours].
 
         Returns runtime in minutes.
         """
         if total_load_kw <= 0:
-            return Decimal("9999")
+            return float("9999")
 
-        rated_disposal_hours = Decimal("10")
+        rated_disposal_hours = float("10")
         i_rated = battery_capacity_ah / rated_disposal_hours
-        i_load = (total_load_kw * Decimal("1000")) / (
+        i_load = (total_load_kw * float("1000")) / (
             battery_voltage * inverter_efficiency
         )
 
@@ -272,32 +269,32 @@ class FaultSimulationEngine:
                 / (float(i_load) ** float(peukert_exponent))
             )
         except (ZeroDivisionError, OverflowError):
-            return Decimal("0")
+            return float("0")
 
-        return Decimal(str(round(t_hours * 60.0, 1)))
+        return float(str(round(t_hours * 60.0, 1)))
 
     # --- Build baseline state ---
 
     @classmethod
     def _build_base_state(
         cls,
-        l1_kw: Decimal,
-        l2_kw: Decimal,
-        l3_kw: Decimal,
-        module_capacity_kw: Decimal,
+        l1_kw: float,
+        l2_kw: float,
+        l3_kw: float,
+        module_capacity_kw: float,
         installed_modules_count: int,
-        battery_voltage: Decimal,
-        battery_capacity_ah: Decimal,
-        peukert_exponent: Decimal,
-        inverter_efficiency: Decimal,
+        battery_voltage: float,
+        battery_capacity_ah: float,
+        peukert_exponent: float,
+        inverter_efficiency: float,
     ) -> Dict[str, Any]:
-        installed_kw = Decimal(str(installed_modules_count)) * module_capacity_kw
+        installed_kw = float(str(installed_modules_count)) * module_capacity_kw
         n1_kw = (
-            max(Decimal("0"), installed_kw - module_capacity_kw)
+            max(float("0"), installed_kw - module_capacity_kw)
             if installed_modules_count >= 2
-            else Decimal("0")
+            else float("0")
         )
-        phase_capacity_n1 = n1_kw / Decimal("3") if n1_kw > 0 else Decimal("0")
+        phase_capacity_n1 = n1_kw / float("3") if n1_kw > 0 else float("0")
 
         total_load = l1_kw + l2_kw + l3_kw
         max_phase = max(l1_kw, l2_kw, l3_kw)
@@ -323,7 +320,7 @@ class FaultSimulationEngine:
         return {
             "status": status,
             "grid_online": True,
-            "battery_soc_pct": Decimal("100"),
+            "battery_soc_pct": float("100"),
             "battery_runtime_min": battery_runtime,
             "loads": {
                 "l1": float(l1_kw),
@@ -352,13 +349,13 @@ class FaultSimulationEngine:
     def _apply_grid_failure(
         cls,
         state: Dict[str, Any],
-        l1: Decimal,
-        l2: Decimal,
-        l3: Decimal,
-        bv: Decimal,
-        bah: Decimal,
-        pk: Decimal,
-        ie: Decimal,
+        l1: float,
+        l2: float,
+        l3: float,
+        bv: float,
+        bah: float,
+        pk: float,
+        ie: float,
     ) -> tuple[Dict[str, Any], Dict[str, Any]]:
         s = dict(state)
         s["grid_online"] = False
@@ -398,17 +395,17 @@ class FaultSimulationEngine:
     def _apply_battery_defect(
         cls,
         state: Dict[str, Any],
-        bv: Decimal,
-        bah: Decimal,
-        pk: Decimal,
-        ie: Decimal,
+        bv: float,
+        bah: float,
+        pk: float,
+        ie: float,
     ) -> tuple[Dict[str, Any], Dict[str, Any]]:
         s = dict(state)
-        effective_ah = Decimal(str(s["battery_capacity_ah"])) * Decimal("0.5")
+        effective_ah = float(str(s["battery_capacity_ah"])) * float("0.5")
         s["battery_capacity_ah"] = float(effective_ah)
-        s["battery_soc_pct"] = Decimal("50")
+        s["battery_soc_pct"] = float("50")
 
-        total = Decimal(str(s["total_load_kw"]))
+        total = float(str(s["total_load_kw"]))
         runtime = cls.calculate_battery_runtime_peukert(total, bv, effective_ah, pk, ie)
         s["battery_runtime_min"] = float(runtime)
 
@@ -433,10 +430,10 @@ class FaultSimulationEngine:
     def _apply_module_failure(
         cls,
         state: Dict[str, Any],
-        l1: Decimal,
-        l2: Decimal,
-        l3: Decimal,
-        module_capacity_kw: Decimal,
+        l1: float,
+        l2: float,
+        l3: float,
+        module_capacity_kw: float,
     ) -> tuple[Dict[str, Any], Dict[str, Any]]:
         s = dict(state)
         failed = s["failed_modules_count"] + 1
@@ -450,13 +447,13 @@ class FaultSimulationEngine:
             }
             return s, event
 
-        installed_kw = Decimal(str(remaining)) * module_capacity_kw
+        installed_kw = float(str(remaining)) * module_capacity_kw
         n1_kw = (
-            max(Decimal("0"), installed_kw - module_capacity_kw)
+            max(float("0"), installed_kw - module_capacity_kw)
             if remaining >= 2
-            else Decimal("0")
+            else float("0")
         )
-        phase_cap = n1_kw / Decimal("3") if n1_kw > 0 else Decimal("0")
+        phase_cap = n1_kw / float("3") if n1_kw > 0 else float("0")
 
         total = l1 + l2 + l3
         max_ph = max(l1, l2, l3)
@@ -500,16 +497,16 @@ class FaultSimulationEngine:
     def simulate_fault(
         cls,
         fault_type: str,
-        l1_kw: Decimal,
-        l2_kw: Decimal,
-        l3_kw: Decimal,
-        module_capacity_kw: Decimal,
+        l1_kw: float,
+        l2_kw: float,
+        l3_kw: float,
+        module_capacity_kw: float,
         installed_modules_count: int,
         system_state: Optional[Dict[str, Any]] = None,
-        battery_voltage: Decimal = Decimal("48"),
-        battery_capacity_ah: Decimal = Decimal("100"),
-        peukert_exponent: Decimal = Decimal("1.2"),
-        inverter_efficiency: Decimal = Decimal("0.90"),
+        battery_voltage: float = float("48"),
+        battery_capacity_ah: float = float("100"),
+        peukert_exponent: float = float("1.2"),
+        inverter_efficiency: float = float("0.90"),
     ) -> Dict[str, Any]:
         """
         Apply a fault to the current system state (or build baseline for 'reset').
@@ -589,34 +586,34 @@ class FaultSimulationEngine:
 BATTERY_TYPE_PROFILES: Dict[str, Dict[str, Any]] = {
     "lead_acid": {
         "name": "Blei-Säure",
-        "peukert_k": Decimal("1.20"),
+        "peukert_k": float("1.20"),
         "lifespan_years": 5,
-        "temp_coeff_per_10c": Decimal("-0.020"),
-        "aging_base": Decimal("0.80"),
+        "temp_coeff_per_10c": float("-0.020"),
+        "aging_base": float("0.80"),
         "aging_divisor": 5,
     },
     "vrla": {
         "name": "VRLA",
-        "peukert_k": Decimal("1.15"),
+        "peukert_k": float("1.15"),
         "lifespan_years": 8,
-        "temp_coeff_per_10c": Decimal("-0.015"),
-        "aging_base": Decimal("0.85"),
+        "temp_coeff_per_10c": float("-0.015"),
+        "aging_base": float("0.85"),
         "aging_divisor": 5,
     },
     "li_ion": {
         "name": "Li-Ion",
-        "peukert_k": Decimal("1.05"),
+        "peukert_k": float("1.05"),
         "lifespan_years": 15,
-        "temp_coeff_per_10c": Decimal("-0.005"),
-        "aging_base": Decimal("0.95"),
+        "temp_coeff_per_10c": float("-0.005"),
+        "aging_base": float("0.95"),
         "aging_divisor": 10,
     },
     "nicd": {
         "name": "NiCd",
-        "peukert_k": Decimal("1.10"),
+        "peukert_k": float("1.10"),
         "lifespan_years": 20,
-        "temp_coeff_per_10c": Decimal("-0.010"),
-        "aging_base": Decimal("0.88"),
+        "temp_coeff_per_10c": float("-0.010"),
+        "aging_base": float("0.88"),
         "aging_divisor": 5,
     },
 }
@@ -634,30 +631,30 @@ class BatteryCabinetEngine:
         battery_type: str,
         series_blocks: int,
         parallel_strings: int,
-        block_voltage_v: Decimal = Decimal("12"),
-        block_capacity_ah: Decimal = Decimal("100"),
-        age_years: Decimal = Decimal("0"),
-        temperature_c: Decimal = Decimal("20"),
+        block_voltage_v: float = float("12"),
+        block_capacity_ah: float = float("100"),
+        age_years: float = float("0"),
+        temperature_c: float = float("20"),
     ) -> Dict[str, Any]:
         profile = BatteryCabinetEngine.get_profile(battery_type)
 
-        total_voltage = Decimal(str(series_blocks)) * block_voltage_v
-        nominal_capacity_ah = Decimal(str(parallel_strings)) * block_capacity_ah
-        nominal_energy_kwh = total_voltage * nominal_capacity_ah / Decimal("1000")
+        total_voltage = float(str(series_blocks)) * block_voltage_v
+        nominal_capacity_ah = float(str(parallel_strings)) * block_capacity_ah
+        nominal_energy_kwh = total_voltage * nominal_capacity_ah / float("1000")
 
         # Temperature factor: 1.0 at 20°C, linear change
-        if temperature_c < Decimal("20"):
+        if temperature_c < float("20"):
             # <20°C -> Capacity loss ca. 1% pro °C unter 20°C
-            temp_delta = Decimal("20") - temperature_c
-            temp_factor = Decimal("1") - (temp_delta * Decimal("0.01"))
-            temp_factor = max(Decimal("0.5"), temp_factor)
+            temp_delta = float("20") - temperature_c
+            temp_factor = float("1") - (temp_delta * float("0.01"))
+            temp_factor = max(float("0.5"), temp_factor)
             aging_temp_multiplier = 1.0
         else:
             # >= 20°C -> No capacity loss, but accelerated aging
-            temp_factor = Decimal("1")
-            if temperature_c > Decimal("25"):
+            temp_factor = float("1")
+            if temperature_c > float("25"):
                 # Halbierung der Lebensdauer alle 10°C über 25°C
-                excess_temp = float(temperature_c - Decimal("25"))
+                excess_temp = float(temperature_c - float("25"))
                 aging_temp_multiplier = 2.0 ** (excess_temp / 10.0)
             else:
                 aging_temp_multiplier = 1.0
@@ -665,10 +662,10 @@ class BatteryCabinetEngine:
         # Aging factor: capacity_degradation = aging_base ^ (age / divisor)
         effective_age = float(age_years) * aging_temp_multiplier
         aging_exp = effective_age / profile["aging_divisor"]
-        aging_factor = Decimal(str(round(float(profile["aging_base"]) ** aging_exp, 4)))
+        aging_factor = float(str(round(float(profile["aging_base"]) ** aging_exp, 4)))
 
         effective_capacity_ah = nominal_capacity_ah * aging_factor * temp_factor
-        effective_energy_kwh = total_voltage * effective_capacity_ah / Decimal("1000")
+        effective_energy_kwh = total_voltage * effective_capacity_ah / float("1000")
 
         return {
             "battery_type": battery_type,
@@ -678,8 +675,8 @@ class BatteryCabinetEngine:
             "nominal_energy_kwh": float(round(nominal_energy_kwh, 2)),
             "effective_capacity_ah": float(round(effective_capacity_ah, 1)),
             "effective_energy_kwh": float(round(effective_energy_kwh, 2)),
-            "aging_factor_pct": float(round(aging_factor * Decimal("100"), 1)),
-            "temperature_factor_pct": float(round(temp_factor * Decimal("100"), 1)),
+            "aging_factor_pct": float(round(aging_factor * float("100"), 1)),
+            "temperature_factor_pct": float(round(temp_factor * float("100"), 1)),
             "peukert_k": float(profile["peukert_k"]),
             "lifespan_years": profile["lifespan_years"],
             "series_blocks": series_blocks,
@@ -691,19 +688,19 @@ class BatteryCabinetEngine:
 
     @staticmethod
     def calculate_runtime_curve(
-        l1_kw: Decimal,
-        l2_kw: Decimal,
-        l3_kw: Decimal,
-        module_capacity_kw: Decimal,
+        l1_kw: float,
+        l2_kw: float,
+        l3_kw: float,
+        module_capacity_kw: float,
         installed_modules_count: int,
         battery_type: str,
         series_blocks: int,
         parallel_strings: int,
-        block_voltage_v: Decimal = Decimal("12"),
-        block_capacity_ah: Decimal = Decimal("100"),
-        age_years: Decimal = Decimal("0"),
-        temperature_c: Decimal = Decimal("20"),
-        inverter_efficiency: Decimal = Decimal("0.90"),
+        block_voltage_v: float = float("12"),
+        block_capacity_ah: float = float("100"),
+        age_years: float = float("0"),
+        temperature_c: float = float("20"),
+        inverter_efficiency: float = float("0.90"),
     ) -> Dict[str, Any]:
         battery_info = BatteryCabinetEngine.calculate_effective_capacity(
             battery_type,
@@ -717,12 +714,12 @@ class BatteryCabinetEngine:
         profile = BatteryCabinetEngine.get_profile(battery_type)
         peukert_k = profile["peukert_k"]
 
-        installed_kw = Decimal(str(installed_modules_count)) * module_capacity_kw
+        installed_kw = float(str(installed_modules_count)) * module_capacity_kw
         total_load = float(l1_kw + l2_kw + l3_kw)
         runtime_at_current = FaultSimulationEngine.calculate_battery_runtime_peukert(
-            Decimal(str(total_load)),
-            Decimal(str(battery_info["total_voltage_v"])),
-            Decimal(str(battery_info["effective_capacity_ah"])),
+            float(str(total_load)),
+            float(str(battery_info["total_voltage_v"])),
+            float(str(battery_info["effective_capacity_ah"])),
             peukert_k,
             inverter_efficiency,
         )
@@ -735,9 +732,9 @@ class BatteryCabinetEngine:
             pct = i / step_count
             load_point = max(float(installed_kw) * 0.02, max_load * pct)
             runtime = FaultSimulationEngine.calculate_battery_runtime_peukert(
-                Decimal(str(round(load_point, 2))),
-                Decimal(str(battery_info["total_voltage_v"])),
-                Decimal(str(battery_info["effective_capacity_ah"])),
+                float(str(round(load_point, 2))),
+                float(str(battery_info["total_voltage_v"])),
+                float(str(battery_info["effective_capacity_ah"])),
                 peukert_k,
                 inverter_efficiency,
             )
@@ -773,15 +770,17 @@ class BatteryCabinetEngine:
                 age_years,
                 temperature_c,
             )
-            runtime_strangausfall = FaultSimulationEngine.calculate_battery_runtime_peukert(
-                Decimal(str(total_load)),
-                Decimal(str(redundant_battery_info["total_voltage_v"])),
-                Decimal(str(redundant_battery_info["effective_capacity_ah"])),
-                peukert_k,
-                inverter_efficiency,
+            runtime_strangausfall = (
+                FaultSimulationEngine.calculate_battery_runtime_peukert(
+                    float(str(total_load)),
+                    float(str(redundant_battery_info["total_voltage_v"])),
+                    float(str(redundant_battery_info["effective_capacity_ah"])),
+                    peukert_k,
+                    inverter_efficiency,
+                )
             )
         else:
-            runtime_strangausfall = Decimal("0")
+            runtime_strangausfall = float("0")
 
         return {
             "curve": curve_points,
@@ -796,14 +795,14 @@ class BatteryCabinetEngine:
 
     @staticmethod
     def calculate_dimensioning(
-        load_kw: Decimal,
-        target_runtime_min: Decimal,
+        load_kw: float,
+        target_runtime_min: float,
         battery_type: str,
-        block_voltage_v: Decimal = Decimal("12"),
-        block_capacity_ah: Decimal = Decimal("100"),
-        inverter_efficiency: Decimal = Decimal("0.90"),
-        system_voltage_v: Decimal = Decimal("48"),
-        safety_margin_pct: Decimal = Decimal("0.15"),
+        block_voltage_v: float = float("12"),
+        block_capacity_ah: float = float("100"),
+        inverter_efficiency: float = float("0.90"),
+        system_voltage_v: float = float("48"),
+        safety_margin_pct: float = float("0.15"),
     ) -> Dict[str, Any]:
         profile = BatteryCabinetEngine.get_profile(battery_type)
         peukert_k = profile["peukert_k"]
@@ -811,19 +810,19 @@ class BatteryCabinetEngine:
         if load_kw <= 0 or target_runtime_min <= 0:
             return {"error": "Last und Laufzeit muessen > 0 sein"}
 
-        load_with_margin = load_kw * (Decimal("1") + safety_margin_pct)
-        target_hours = target_runtime_min / Decimal("60")
+        load_with_margin = load_kw * (float("1") + safety_margin_pct)
+        target_hours = target_runtime_min / float("60")
 
         # Invert Peukert: C = I^k * t / (I_n)^(k-1)
-        i_load = (load_with_margin * Decimal("1000")) / (
+        i_load = (load_with_margin * float("1000")) / (
             system_voltage_v * inverter_efficiency
         )
-        i_rated = Decimal("0")  # placeholder; we solve iteratively
+        i_rated = float("0")  # placeholder; we solve iteratively
 
         # Iterative approach: guess capacity, calculate runtime, adjust
-        cap_guess = load_with_margin * target_hours * Decimal("1000") / system_voltage_v
+        cap_guess = load_with_margin * target_hours * float("1000") / system_voltage_v
         for _ in range(50):
-            i_rated = cap_guess / Decimal("10")
+            i_rated = cap_guess / float("10")
             try:
                 t_h = (
                     float(cap_guess)
@@ -833,13 +832,13 @@ class BatteryCabinetEngine:
             except (ZeroDivisionError, OverflowError):
                 break
             if t_h <= 0:
-                cap_guess *= Decimal("1.1")
+                cap_guess *= float("1.1")
                 continue
             if abs(t_h - float(target_hours)) < 0.001:
                 break
-            cap_guess = cap_guess * Decimal(str(float(target_hours) / t_h))
+            cap_guess = cap_guess * float(str(float(target_hours) / t_h))
 
-        required_ah = max(Decimal("1"), cap_guess)
+        required_ah = max(float("1"), cap_guess)
         series_blocks = int(float(system_voltage_v / block_voltage_v))
         if series_blocks < 1:
             series_blocks = 1
@@ -847,7 +846,7 @@ class BatteryCabinetEngine:
             1, int(math.ceil(float(required_ah / block_capacity_ah)))
         )
         total_blocks = series_blocks * parallel_strings
-        actual_capacity_ah = Decimal(str(parallel_strings)) * block_capacity_ah
+        actual_capacity_ah = float(str(parallel_strings)) * block_capacity_ah
 
         # Verify with actual config
         v_actual = FaultSimulationEngine.calculate_battery_runtime_peukert(
@@ -871,7 +870,7 @@ class BatteryCabinetEngine:
             "target_runtime_min": float(target_runtime_min),
             "load_kw": float(load_kw),
             "load_with_margin_kw": float(round(load_with_margin, 2)),
-            "safety_margin_pct": float(safety_margin_pct * Decimal("100")),
+            "safety_margin_pct": float(safety_margin_pct * float("100")),
             "battery_type": battery_type,
             "battery_type_name": profile["name"],
         }
@@ -888,11 +887,11 @@ class ShutdownSimulationEngine:
         battery_type: str,
         series_blocks: int,
         parallel_strings: int,
-        block_voltage_v: Decimal,
-        block_capacity_ah: Decimal,
-        age_years: Decimal,
-        temperature_c: Decimal,
-        inverter_efficiency: Decimal,
+        block_voltage_v: float,
+        block_capacity_ah: float,
+        age_years: float,
+        temperature_c: float,
+        inverter_efficiency: float,
         devices: List[Dict[str, Any]],
     ) -> Dict[str, Any]:
         # Calculate initial capacity
@@ -906,13 +905,13 @@ class ShutdownSimulationEngine:
             temperature_c=temperature_c,
         )
 
-        effective_ah = Decimal(str(battery_info["effective_capacity_ah"]))
-        total_voltage_v = Decimal(str(battery_info["total_voltage_v"]))
+        effective_ah = float(str(battery_info["effective_capacity_ah"]))
+        total_voltage_v = float(str(battery_info["total_voltage_v"]))
         profile = BatteryCabinetEngine.get_profile(battery_type)
         peukert_k = profile["peukert_k"]
 
         # Rated discharge parameters
-        rated_hours = Decimal("10.0")
+        rated_hours = float("10.0")
         i_rated = effective_ah / rated_hours
 
         # Setup simulation state
@@ -951,9 +950,9 @@ class ShutdownSimulationEngine:
                         device_statuses[dev["id"]]["shutdown_at_seconds"] = delay
 
             active_load_watt = sum(
-                Decimal(str(d.get("tdp_watt") or 0)) for d in active_devices
+                float(str(d.get("tdp_watt") or 0)) for d in active_devices
             )
-            active_load_kw = active_load_watt / Decimal("1000")
+            active_load_kw = active_load_watt / float("1000")
 
             battery_empty = c_remaining <= 1
             if battery_empty:
@@ -964,7 +963,7 @@ class ShutdownSimulationEngine:
 
             all_shut_down = len(active_devices) == 0 and t > 0
 
-            runtime_capacity = max(Decimal("0.001"), c_remaining)
+            runtime_capacity = max(float("0.001"), c_remaining)
             remaining_runtime_min = (
                 FaultSimulationEngine.calculate_battery_runtime_peukert(
                     total_load_kw=active_load_kw,
@@ -976,14 +975,14 @@ class ShutdownSimulationEngine:
             )
 
             soc_pct = (
-                (c_remaining / effective_ah) * Decimal("100")
+                (c_remaining / effective_ah) * float("100")
                 if effective_ah > 0
-                else Decimal("0")
+                else float("0")
             )
             timeline.append(
                 {
                     "time_seconds": t,
-                    "soc_pct": float(round(max(Decimal("0"), soc_pct), 2)),
+                    "soc_pct": float(round(max(float("0"), soc_pct), 2)),
                     "load_kw": float(round(active_load_kw, 3)),
                     "remaining_runtime_min": float(remaining_runtime_min),
                     "active_device_ids": [d["id"] for d in active_devices],
@@ -994,17 +993,15 @@ class ShutdownSimulationEngine:
                 break
 
             if active_load_kw > 0:
-                i_load = (active_load_kw * Decimal("1000")) / (
+                i_load = (active_load_kw * float("1000")) / (
                     total_voltage_v * inverter_efficiency
                 )
                 try:
-                    i_peukert = i_load * (i_load / i_rated) ** (
-                        peukert_k - Decimal("1")
-                    )
-                    ah_consumed = i_peukert * Decimal(str(step_seconds / 3600.0))
+                    i_peukert = i_load * (i_load / i_rated) ** (peukert_k - float("1"))
+                    ah_consumed = i_peukert * float(str(step_seconds / 3600.0))
                     c_remaining -= ah_consumed
                 except Exception:
-                    c_remaining = Decimal("0")
+                    c_remaining = float("0")
             else:
                 pass
 
@@ -1109,7 +1106,7 @@ class PhaseBalancer:
                 from_p = phases[best_device_id]
                 phases[best_device_id] = best_to_phase
                 loads[from_p] -= device_watts[best_device_id]
-                loads[best_to_phase] += device_watts[best_device_id]
+                loads[best_to_phase] += device_watts[best_device_id]  # type: ignore
                 recommendations.append(
                     {
                         "device_id": best_device_id,

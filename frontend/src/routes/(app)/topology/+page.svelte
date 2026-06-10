@@ -157,11 +157,16 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
 
     // Sort by standort for geographic grouping
     let sortedRacks = [...data.racks].sort((a, b) => (a.standort ?? '').localeCompare(b.standort ?? ''));
-    if (selectedStandort && selectedStandort !== 'Alle') {
+    if (selectedStandort && selectedStandort !== '__ALL__') {
       sortedRacks = sortedRacks.filter(r => r.standort === selectedStandort);
     }
-    if (selectedRackreihe && selectedRackreihe !== 'Alle') {
-      sortedRacks = sortedRacks.filter(r => r.rackreihe === selectedRackreihe);
+    if (selectedRackreihe && selectedRackreihe !== '__ALL__') {
+      const parts = selectedRackreihe.split(' || ');
+      if (parts.length === 2) {
+        sortedRacks = sortedRacks.filter(r => r.standort === parts[0] && r.rackreihe === parts[1]);
+      } else {
+        sortedRacks = sortedRacks.filter(r => r.rackreihe === selectedRackreihe);
+      }
     }
 
     let x = 20;
@@ -383,9 +388,9 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
     }
   }
 
-  let selectedStandort = $state('Alle');
-  let selectedRackreihe = $state('Alle');
-  let selectedRack = $state<string | number | null>('Alle');
+  let selectedStandort = $state('__ALL__');
+  let selectedRackreihe = $state('__ALL__');
+  let selectedRack = $state<string | number | null>('__ALL__');
   let netzplanCableFilter = $state(new Set([
     'cat', 'lwl', 'sfp', 'dac', 'breakout', 'sonstige-netz',
     'strom-l1', 'strom-l2', 'strom-l3', 'strom-other'
@@ -466,14 +471,14 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
   const visibleNodeIds = $derived.by(() => {
     if (!data) return new Set<number>();
     let ids = new Set(data.nodes.filter(n => showDeviceTypes.has(n.typ)).map(n => n.id));
-    if (selectedStandort && selectedStandort !== 'Alle') {
+    if (selectedStandort && selectedStandort !== '__ALL__') {
       const rIds = new Set(data.racks.filter(r => r.standort === selectedStandort).map(r => r.id));
       ids = new Set([...ids].filter(id => {
         const n = data!.nodes.find(node => node.id === id);
         return n && (rIds.has(n.rack_id!) || !n.rack_id);
       }));
     }
-    if (selectedRack && selectedRack !== 'Alle') {
+    if (selectedRack && selectedRack !== '__ALL__') {
       const rIds = new Set(data.nodes.filter(n => String(n.rack_id) === String(selectedRack)).map(n => n.id));
       ids = new Set([...ids].filter(id => rIds.has(id)));
     }
@@ -513,19 +518,24 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
 
   const filteredNetzplanData = $derived.by(() => {
     let items = netzplanData;
-    if (selectedStandort && selectedStandort !== 'Alle') {
+    if (selectedStandort && selectedStandort !== '__ALL__') {
       items = items.filter(item => {
         const rack = data?.racks.find(r => r.id === item.node.rack_id);
         return rack?.standort === selectedStandort;
       });
     }
-    if (selectedRackreihe && selectedRackreihe !== 'Alle') {
+    if (selectedRackreihe && selectedRackreihe !== '__ALL__') {
       items = items.filter(item => {
         const rack = data?.racks.find(r => r.id === item.node.rack_id);
-        return rack?.rackreihe === selectedRackreihe;
+        const parts = selectedRackreihe.split(' || ');
+        if (parts.length === 2) {
+          return rack?.standort === parts[0] && rack?.rackreihe === parts[1];
+        } else {
+          return rack?.rackreihe === selectedRackreihe;
+        }
       });
     }
-    if (selectedRack && selectedRack !== 'Alle') {
+    if (selectedRack && selectedRack !== '__ALL__') {
       items = items.filter(item => String(item.node.rack_id) === String(selectedRack));
     }
     return items
@@ -1043,7 +1053,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
             {@const rack = data.racks.find(r => r.id === item.node.rack_id)}
             {@const prevItem = filteredNetzplanData[idx - 1]}
             {@const prevRack = prevItem ? data.racks.find(r => r.id === prevItem.node.rack_id) : null}
-            {@const standortChanged = selectedStandort === 'Alle' && rack?.standort !== prevRack?.standort}
+            {@const standortChanged = selectedStandort === '__ALL__' && rack?.standort !== prevRack?.standort}
 
             {#if standortChanged && rack?.standort}
               {@const locTyp = locationStore.getTyp(rack.standort)}

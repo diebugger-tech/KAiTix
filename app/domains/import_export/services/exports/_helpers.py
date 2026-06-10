@@ -78,8 +78,8 @@ def _to_csv(header, rows):
 
 
 def _make_xlsx_helpers(brd):
-    from openpyxl.styles import Font, PatternFill, Alignment
-    from openpyxl.utils import get_column_letter
+    from openpyxl.styles import Font, PatternFill, Alignment  # type: ignore
+    from openpyxl.utils import get_column_letter  # type: ignore
 
     def hf():
         return Font(bold=True, color="FFFFFF", name="Arial", size=10)
@@ -122,8 +122,8 @@ def _make_xlsx_helpers(brd):
 
 
 def _make_ods_mkrow():
-    from odf.table import TableRow, TableCell
-    from odf.text import P
+    from odf.table import TableRow, TableCell  # type: ignore
+    from odf.text import P  # type: ignore
 
     def mkrow(values):
         tr = TableRow()

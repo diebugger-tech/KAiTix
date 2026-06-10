@@ -364,7 +364,7 @@ class CablingService:
         result = await self.db.execute(
             select(CableModel).options(selectinload(CableModel.cable_strands))
         )
-        return result.scalars().all()
+        return result.scalars().all()  # type: ignore
 
     async def create_cable(self, cable_in: CableCreate) -> CableModel:
         if not cable_in.kabel_nr:

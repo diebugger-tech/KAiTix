@@ -2,7 +2,7 @@ import json
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, Form, status
 from pydantic import BaseModel
-from decimal import Decimal
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.core.database import get_db
@@ -192,7 +192,7 @@ async def commit_eplan(
         s_port = None
         if s_dev and conn.source_port:
             s_port_name_lower = conn.source_port.lower()
-            s_ports_list = device_ports_cache[s_dev_key]
+            s_ports_list = device_ports_cache[s_dev_key]  # type: ignore
             s_port = next(
                 (p for p in s_ports_list if p.port_name.lower() == s_port_name_lower),
                 None,
@@ -220,7 +220,7 @@ async def commit_eplan(
         t_port = None
         if t_dev and conn.target_port:
             t_port_name_lower = conn.target_port.lower()
-            t_ports_list = device_ports_cache[t_dev_key]
+            t_ports_list = device_ports_cache[t_dev_key]  # type: ignore
             t_port = next(
                 (p for p in t_ports_list if p.port_name.lower() == t_port_name_lower),
                 None,
@@ -252,7 +252,7 @@ async def commit_eplan(
             cable = c_result.scalar_one_or_none()
 
             length_val = (
-                Decimal(str(conn.length)) if conn.length is not None else Decimal("0.0")
+                float(str(conn.length)) if conn.length is not None else float("0.0")
             )
 
             # Map input cable type to valid database enum option
@@ -346,9 +346,13 @@ async def commit_eplan(
                     red_path = "A"
                 elif conn.cable_number and "-PDU-B-" in conn.cable_number.upper():
                     red_path = "B"
-                elif "-A-" in t_dev.hostname.upper() or t_dev.hostname.upper().endswith("-A"):
+                elif "-A-" in t_dev.hostname.upper() or t_dev.hostname.upper().endswith(
+                    "-A"
+                ):
                     red_path = "A"
-                elif "-B-" in t_dev.hostname.upper() or t_dev.hostname.upper().endswith("-B"):
+                elif "-B-" in t_dev.hostname.upper() or t_dev.hostname.upper().endswith(
+                    "-B"
+                ):
                     red_path = "B"
 
                 if red_path:
@@ -358,32 +362,32 @@ async def commit_eplan(
 
                 # Parse and set power values based on cable type
                 if "cee-16a" in db_typ.lower():
-                    t_dev.absicherung_a = Decimal("16.0")
+                    t_dev.absicherung_a = float("16.0")
                     t_dev.strom_typ = "3-phasig"
                     t_dev.anschluss_stecker = "CEE-16A-3P"
                     t_dev.spannung_v = 400
                 elif "cee-32a" in db_typ.lower():
-                    t_dev.absicherung_a = Decimal("32.0")
+                    t_dev.absicherung_a = float("32.0")
                     t_dev.strom_typ = "3-phasig"
                     t_dev.anschluss_stecker = "CEE-32A-3P"
                     t_dev.spannung_v = 400
                 elif "cee-63a" in db_typ.lower():
-                    t_dev.absicherung_a = Decimal("63.0")
+                    t_dev.absicherung_a = float("63.0")
                     t_dev.strom_typ = "3-phasig"
                     t_dev.anschluss_stecker = "CEE-63A-3P"
                     t_dev.spannung_v = 400
                 elif "c13" in db_typ.lower():
-                    t_dev.absicherung_a = Decimal("10.0")
+                    t_dev.absicherung_a = float("10.0")
                     t_dev.strom_typ = "1-phasig"
                     t_dev.anschluss_stecker = "C14"
                     t_dev.spannung_v = 230
                 elif "c19" in db_typ.lower():
-                    t_dev.absicherung_a = Decimal("16.0")
+                    t_dev.absicherung_a = float("16.0")
                     t_dev.strom_typ = "1-phasig"
                     t_dev.anschluss_stecker = "C20"
                     t_dev.spannung_v = 230
                 elif "schuko" in db_typ.lower():
-                    t_dev.absicherung_a = Decimal("16.0")
+                    t_dev.absicherung_a = float("16.0")
                     t_dev.strom_typ = "1-phasig"
                     t_dev.anschluss_stecker = "Schuko"
                     t_dev.spannung_v = 230

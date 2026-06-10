@@ -1,5 +1,4 @@
 import pytest
-from decimal import Decimal
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.domains.power.services.usv_calc import UsvCalculator
@@ -16,7 +15,7 @@ async def test_n1_required_modules():
     # Example 1: 0 load should require 1 module (N+1 where N=0)
     assert (
         UsvCalculator.calculate_n1_required_modules(
-            Decimal("0"), Decimal("0"), Decimal("0"), Decimal("10")
+            float("0"), float("0"), float("0"), float("10")
         )
         == 1
     )
@@ -27,7 +26,7 @@ async def test_n1_required_modules():
     # N = 3, so N+1 = 4.
     assert (
         UsvCalculator.calculate_n1_required_modules(
-            Decimal("10"), Decimal("10"), Decimal("10"), Decimal("10")
+            float("10"), float("10"), float("10"), float("10")
         )
         == 4
     )
@@ -40,7 +39,7 @@ async def test_n1_required_modules():
     # N+1 = 4 modules.
     assert (
         UsvCalculator.calculate_n1_required_modules(
-            Decimal("10"), Decimal("0"), Decimal("0"), Decimal("10")
+            float("10"), float("0"), float("0"), float("10")
         )
         == 4
     )
@@ -79,19 +78,19 @@ async def test_get_usv_status_endpoint(client: AsyncClient, db: AsyncSession):
     db.add(rack)
     await db.flush()
 
-    usv = UsvUnit(bezeichnung="UPS Core 1", rack_id=rack.id, max_kw=Decimal("50"))
+    usv = UsvUnit(bezeichnung="UPS Core 1", rack_id=rack.id, max_kw=float("50"))
     db.add(usv)
     await db.flush()
 
     # Add active modules
     m1 = UsvModule(
-        usv_unit_id=usv.id, slot=1, leistung_kw=Decimal("10"), status="aktiv"
+        usv_unit_id=usv.id, slot=1, leistung_kw=float("10"), status="aktiv"
     )
     m2 = UsvModule(
-        usv_unit_id=usv.id, slot=2, leistung_kw=Decimal("10"), status="aktiv"
+        usv_unit_id=usv.id, slot=2, leistung_kw=float("10"), status="aktiv"
     )
     m3 = UsvModule(
-        usv_unit_id=usv.id, slot=3, leistung_kw=Decimal("10"), status="aktiv"
+        usv_unit_id=usv.id, slot=3, leistung_kw=float("10"), status="aktiv"
     )
     db.add_all([m1, m2, m3])
 
@@ -101,8 +100,8 @@ async def test_get_usv_status_endpoint(client: AsyncClient, db: AsyncSession):
         typ="server",
         rack_id=rack.id,
         phase="L1",
-        tdp_watt=Decimal("1500"),  # 1.5 kW
-        einschaltstrom_faktor=Decimal("2.0"),
+        tdp_watt=float("1500"),  # 1.5 kW
+        einschaltstrom_faktor=float("2.0"),
     )
     db.add(device)
     await db.commit()
@@ -134,30 +133,30 @@ async def test_simulate_shutdown_success(client: AsyncClient, db: AsyncSession):
             typ="server",
             rack_id=rack.id,
             phase="L1",
-            tdp_watt=Decimal("500"),
+            tdp_watt=float("500"),
             shutdown_delay_seconds=30,
             shutdown_priority=3,
-            einschaltstrom_faktor=Decimal("2.0"),
+            einschaltstrom_faktor=float("2.0"),
         ),
         Device(
             hostname="app-01",
             typ="server",
             rack_id=rack.id,
             phase="L2",
-            tdp_watt=Decimal("300"),
+            tdp_watt=float("300"),
             shutdown_delay_seconds=20,
             shutdown_priority=2,
-            einschaltstrom_faktor=Decimal("2.0"),
+            einschaltstrom_faktor=float("2.0"),
         ),
         Device(
             hostname="web-01",
             typ="server",
             rack_id=rack.id,
             phase="L3",
-            tdp_watt=Decimal("200"),
+            tdp_watt=float("200"),
             shutdown_delay_seconds=10,
             shutdown_priority=1,
-            einschaltstrom_faktor=Decimal("2.0"),
+            einschaltstrom_faktor=float("2.0"),
         ),
     ]
     db.add_all(devices)
@@ -208,10 +207,10 @@ async def test_simulate_shutdown_crash_detection(client: AsyncClient, db: AsyncS
         typ="server",
         rack_id=rack.id,
         phase="L1",
-        tdp_watt=Decimal("5000"),
+        tdp_watt=float("5000"),
         shutdown_delay_seconds=300,
         shutdown_priority=1,
-        einschaltstrom_faktor=Decimal("2.0"),
+        einschaltstrom_faktor=float("2.0"),
     )
     db.add(device)
     await db.commit()
@@ -253,20 +252,20 @@ async def test_simulate_shutdown_peukert_discharge(
             typ="server",
             rack_id=rack.id,
             phase="L1",
-            tdp_watt=Decimal("2000"),
+            tdp_watt=float("2000"),
             shutdown_delay_seconds=10,
             shutdown_priority=1,
-            einschaltstrom_faktor=Decimal("2.0"),
+            einschaltstrom_faktor=float("2.0"),
         ),
         Device(
             hostname="late-off",
             typ="server",
             rack_id=rack.id,
             phase="L2",
-            tdp_watt=Decimal("1000"),
+            tdp_watt=float("1000"),
             shutdown_delay_seconds=120,
             shutdown_priority=2,
-            einschaltstrom_faktor=Decimal("2.0"),
+            einschaltstrom_faktor=float("2.0"),
         ),
     ]
     db.add_all(devices)

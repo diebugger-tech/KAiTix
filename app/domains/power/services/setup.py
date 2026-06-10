@@ -29,9 +29,7 @@ class UsvUnitExists(Exception):
     def __init__(self, bezeichnung: str, rack_id: int):
         self.bezeichnung = bezeichnung
         self.rack_id = rack_id
-        super().__init__(
-            f"USV '{bezeichnung}' in Rack {rack_id} existiert bereits."
-        )
+        super().__init__(f"USV '{bezeichnung}' in Rack {rack_id} existiert bereits.")
 
 
 async def setup_usv_system(
@@ -141,9 +139,11 @@ async def setup_usv_system(
         )
         device_loads = [
             DeviceLoad(
-                tdp_watt=float(d.tdp_watt),
+                tdp_watt=float(d.tdp_watt),  # type: ignore
                 phase=d.phase,
-                einschaltstrom_faktor=float(d.einschaltstrom_faktor or 2.5) if hasattr(d, 'einschaltstrom_faktor') else 2.5,
+                einschaltstrom_faktor=float(d.einschaltstrom_faktor or 2.5)
+                if hasattr(d, "einschaltstrom_faktor")
+                else 2.5,
             )
             for d in dev_rows
         ]
