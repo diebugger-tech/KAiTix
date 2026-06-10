@@ -242,8 +242,10 @@
         const rackParam = page.url.searchParams.get('rack');
         const preselect = rackParam ? rd.find(r => r.id === Number(rackParam)) : null;
         selectedRack = preselect ?? rd[0];
+        if (selectedRack) dropdownSelectedRackId = selectedRack.id;
       } else if (selectedRack) {
         selectedRack = rd.find(r => r.id === selectedRack!.id) ?? rd[0] ?? null;
+        if (selectedRack) dropdownSelectedRackId = selectedRack.id;
       }
       if (!hasParsedDeviceParam) {
         hasParsedDeviceParam = true;

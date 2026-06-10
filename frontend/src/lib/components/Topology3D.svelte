@@ -42,11 +42,12 @@
   // Stores for interactivity
   let deviceMeshes: THREE.Mesh[] = [];
   let rackWireframes: { mesh: THREE.LineSegments, rack: any, aura: THREE.Mesh }[] = [];
+  let cableMeshes: { mesh: THREE.Mesh, edge: any }[] = [];
   let rackLabels: { label: CSS2DObject, rackId: number }[] = [];
   let standortLabels: { label: CSS2DObject, standort: string }[] = [];
-  let deviceBoxes = new Map<number, { x: number, y: number, z: number }>();
-  const raycaster = new THREE.Raycaster();
-  const mouse = new THREE.Vector2();
+  let deviceBoxes = new Map<number, { x: number, y: number, z: number, w: number }>();
+  let raycaster = new THREE.Raycaster();
+  let mouse = new THREE.Vector2();
 
   function initScene() {
     scene = new THREE.Scene();
@@ -87,6 +88,7 @@
     // Event listeners
     window.addEventListener('resize', onWindowResize);
     renderer.domElement.addEventListener('pointerdown', onPointerDown);
+    renderer.domElement.addEventListener('pointermove', onPointerMove);
 
     animate();
     sceneReady = true;
@@ -223,7 +225,7 @@
         scene.add(devMesh);
         deviceMeshes.push(devMesh);
 
-        deviceBoxes.set(dev.id, { x: cx, y: cy, z: cz });
+        deviceBoxes.set(dev.id, { x: cx, y: cy, z: cz, w });
       }
 
       xOffset += RACK_WIDTH + RACK_GAP;
@@ -232,11 +234,9 @@
     }
 
     // Edges (Cables)
-    if (showCables || showPower) {
-      const lineMat = new THREE.LineBasicMaterial({ vertexColors: true, opacity: 0.6, transparent: true });
-      const points: THREE.Vector3[] = [];
-      const colors: number[] = [];
+    const portUsage = new Map<number, number>();
 
+    if (showCables || showPower) {
       for (const edge of data.edges) {
         const isPower = (edge as any).edge_type === 'power';
         if (!showPower && isPower) continue;
@@ -248,33 +248,47 @@
         const b = deviceBoxes.get(edge.nach_device_id);
         if (!a || !b) continue;
 
-        // Quadratic bezier curve point
-        const p0 = new THREE.Vector3(a.x, a.y, a.z);
-        const p2 = new THREE.Vector3(b.x, b.y, b.z);
+        // Port Spreading: Offset cable positions along the width of the device
+        const usageA = portUsage.get(edge.von_device_id) || 0;
+        const usageB = portUsage.get(edge.nach_device_id) || 0;
+        portUsage.set(edge.von_device_id, usageA + 1);
+        portUsage.set(edge.nach_device_id, usageB + 1);
+
+        // Distribute from front-left to front-right
+        const dxA = (a.w * 0.8) * ((usageA % 10) / 9) - (a.w * 0.4);
+        const dxB = (b.w * 0.8) * ((usageB % 10) / 9) - (b.w * 0.4);
+
+        // Z offset: attach to front of device
+        const dz = RACK_DEPTH / 2;
+
+        const p0 = new THREE.Vector3(a.x + dxA, a.y, a.z + dz);
+        const p2 = new THREE.Vector3(b.x + dxB, b.y, b.z + dz);
         
-        // Control point: higher up, slightly forward
-        const midX = (a.x + b.x) / 2;
-        const midY = Math.max(a.y, b.y) + (edge.cross_rack ? 20 : 5);
-        const midZ = (a.z + b.z) / 2 + (edge.cross_rack ? 10 : 2);
+        // Control point: Gravity droop (lower Y) and further forward (higher Z)
+        const midX = (p0.x + p2.x) / 2;
+        const droop = edge.cross_rack ? 30 : 5;
+        const midY = Math.min(p0.y, p2.y) - droop - (Math.abs(p0.x - p2.x) * 0.1);
+        const midZ = Math.max(p0.z, p2.z) + (edge.cross_rack ? 15 : 5);
         const p1 = new THREE.Vector3(midX, midY, midZ);
 
         const curve = new THREE.QuadraticBezierCurve3(p0, p1, p2);
-        const curvePts = curve.getPoints(20);
+        
+        // Tube Geometry for thick cables
+        const radius = isPower ? 0.6 : 0.3;
+        const tubeGeo = new THREE.TubeGeometry(curve, 16, radius, 6, false);
         
         const colHex = baseEdgeColor(edge.typ, (edge as any).phase, isPower);
-        const col = new THREE.Color(colHex);
+        const tubeMat = new THREE.MeshStandardMaterial({ 
+          color: colHex, 
+          roughness: 0.5, 
+          metalness: 0.2,
+          transparent: true,
+          opacity: 1.0
+        });
 
-        for (let i = 0; i < curvePts.length - 1; i++) {
-          points.push(curvePts[i], curvePts[i+1]);
-          colors.push(col.r, col.g, col.b, col.r, col.g, col.b);
-        }
-      }
-
-      if (points.length > 0) {
-        const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
-        lineGeo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-        const lines = new THREE.LineSegments(lineGeo, lineMat);
-        scene.add(lines);
+        const tubeMesh = new THREE.Mesh(tubeGeo, tubeMat);
+        scene.add(tubeMesh);
+        cableMeshes.push({ mesh: tubeMesh, edge });
       }
     }
 
@@ -284,6 +298,24 @@
     controls.update();
   }
 
+  function onPointerMove(event: PointerEvent) {
+    if (!renderer) return;
+    const rect = renderer.domElement.getBoundingClientRect();
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(deviceMeshes);
+    if (intersects.length > 0) {
+      const node = intersects[0].object.userData.node;
+      hoveredNodeId = node.id;
+      renderer.domElement.style.cursor = 'pointer';
+    } else {
+      hoveredNodeId = null;
+      renderer.domElement.style.cursor = 'default';
+    }
+  }
+
   function onPointerDown(event: PointerEvent) {
     if (!renderer) return;
     const rect = renderer.domElement.getBoundingClientRect();
@@ -291,10 +323,11 @@
     mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
     raycaster.setFromCamera(mouse, camera);
-    // Intersection against device meshes only (Catch #5)
+    // Intersection against device meshes only
     const intersects = raycaster.intersectObjects(deviceMeshes);
     if (intersects.length > 0) {
-      selectedNode = intersects[0].object.userData.node;
+      const node = intersects[0].object.userData.node;
+      selectedNode = selectedNode?.id === node.id ? null : node;
     } else {
       selectedNode = null;
     }
@@ -368,9 +401,50 @@
       const inVisibleRack = node.rack_id ? visibleRackIds.has(node.rack_id) : true;
       const isVisible = inVisibleRack && visibleNodeIds.has(node.id) && showDeviceTypes.has(node.typ);
       mesh.visible = isVisible;
+      
+      // Focus highlight
+      if (mesh.material instanceof THREE.MeshStandardMaterial) {
+        if (selectedNode?.id || hoveredNodeId) {
+          const isFocused = node.id === selectedNode?.id || node.id === hoveredNodeId;
+          mesh.material.emissive.setHex(isFocused ? 0x333333 : 0x000000);
+          mesh.material.opacity = isFocused ? 1.0 : 0.3;
+          mesh.material.transparent = true;
+        } else {
+          mesh.material.emissive.setHex(0x000000);
+          mesh.material.opacity = 1.0;
+          mesh.material.transparent = false;
+        }
+      }
     }
 
-    // 3. Hide/show Standort labels
+    // 3. Highlight Cables (Hover / Selected focus mode)
+    const activeFocusId = hoveredNodeId || selectedNode?.id;
+    for (const cm of cableMeshes) {
+      const isVisibleEdge = visibleNodeIds.has(cm.edge.von_device_id) && visibleNodeIds.has(cm.edge.nach_device_id);
+      
+      if (!isVisibleEdge) {
+        cm.mesh.visible = false;
+        continue;
+      }
+
+      cm.mesh.visible = true;
+
+      if (activeFocusId) {
+        const isConnected = cm.edge.von_device_id === activeFocusId || cm.edge.nach_device_id === activeFocusId;
+        if (isConnected) {
+          cm.mesh.material.opacity = 1.0;
+          cm.mesh.material.emissive.copy(cm.mesh.material.color).multiplyScalar(0.5); // Glow effect
+        } else {
+          cm.mesh.material.opacity = 0.05;
+          cm.mesh.material.emissive.setHex(0x000000);
+        }
+      } else {
+        cm.mesh.material.opacity = 0.8;
+        cm.mesh.material.emissive.setHex(0x000000);
+      }
+    }
+
+    // 4. Hide/show Standort labels
     for (const sl of standortLabels) {
       sl.label.visible = (currentStandort === '__ALL__' || sl.standort === currentStandort);
     }
@@ -403,6 +477,7 @@
     if (renderer) {
       renderer.dispose();
       renderer.domElement.removeEventListener('pointerdown', onPointerDown);
+      renderer.domElement.removeEventListener('pointermove', onPointerMove);
     }
     window.removeEventListener('resize', onWindowResize);
     
