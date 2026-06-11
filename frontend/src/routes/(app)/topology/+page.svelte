@@ -18,6 +18,72 @@
 
   let hoveredEdge = $state<string | null>(null);
   let selectedNode = $state<Node | null>(null);
+
+  let editForm = $state<{ hostname: string; ip_adresse: string; hersteller: string; modell: string }>({ hostname: '', ip_adresse: '', hersteller: '', modell: '' });
+  let isSaving = $state(false);
+
+  let panelWidth = $state(384);
+  let isResizing = $state(false);
+  let startX = 0;
+  let startWidth = 0;
+
+  function startResize(e: MouseEvent) {
+    isResizing = true;
+    startX = e.clientX;
+    startWidth = panelWidth;
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', stopResize);
+    e.preventDefault();
+  }
+
+  function handleMouseMove(e: MouseEvent) {
+    if (!isResizing) return;
+    const dx = startX - e.clientX;
+    let newWidth = startWidth + dx;
+    if (newWidth < 280) newWidth = 280;
+    if (newWidth > 800) newWidth = 800;
+    panelWidth = newWidth;
+  }
+
+  function stopResize() {
+    isResizing = false;
+    window.removeEventListener('mousemove', handleMouseMove);
+    window.removeEventListener('mouseup', stopResize);
+  }
+
+  $effect(() => {
+    if (selectedNode) {
+      editForm.hostname = selectedNode.hostname;
+      editForm.ip_adresse = selectedNode.ip_adresse || '';
+      editForm.hersteller = selectedNode.hersteller || '';
+      editForm.modell = selectedNode.modell || '';
+    }
+  });
+
+  async function saveNode() {
+    if (!selectedNode || !data) return;
+    isSaving = true;
+    try {
+      const payload = {
+        hostname: editForm.hostname.trim(),
+        ip_adresse: editForm.ip_adresse.trim() || undefined,
+        hersteller: editForm.hersteller.trim() || undefined,
+        modell: editForm.modell.trim() || undefined,
+      };
+      const updated = await api.updateDevice(selectedNode.id, payload);
+      
+      const idx = data.nodes.findIndex(n => n.id === updated.id);
+      if (idx !== -1) {
+        data.nodes[idx] = { ...data.nodes[idx], ...updated };
+        data.nodes = [...data.nodes];
+      }
+      selectedNode = { ...selectedNode, ...updated };
+    } catch (e: any) {
+      alert('Speichern fehlgeschlagen: ' + e.message);
+    } finally {
+      isSaving = false;
+    }
+  }
   let showCrossRack = $state(true);
   let showIntraRack = $state(true);
   let showPower = $state(true);
@@ -358,8 +424,20 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
       topology3dRef.resetCamera();
     }
   }
-  function zoomIn()  { const f = 0.8;  viewBox = { x: viewBox.x + viewBox.w*(1-f)/2, y: viewBox.y + viewBox.h*(1-f)/2, w: viewBox.w*f, h: viewBox.h*f }; }
-  function zoomOut() { const f = 1.25; viewBox = { x: viewBox.x + viewBox.w*(1-f)/2, y: viewBox.y + viewBox.h*(1-f)/2, w: viewBox.w*f, h: viewBox.h*f }; }
+  function zoomIn() {
+    if (viewMode === 'rack') {
+      const f = 0.8; viewBox = { x: viewBox.x + viewBox.w*(1-f)/2, y: viewBox.y + viewBox.h*(1-f)/2, w: viewBox.w*f, h: viewBox.h*f };
+    } else if (viewMode === '3d' && topology3dRef) {
+      topology3dRef.zoomIn();
+    }
+  }
+  function zoomOut() {
+    if (viewMode === 'rack') {
+      const f = 1.25; viewBox = { x: viewBox.x + viewBox.w*(1-f)/2, y: viewBox.y + viewBox.h*(1-f)/2, w: viewBox.w*f, h: viewBox.h*f };
+    } else if (viewMode === '3d' && topology3dRef) {
+      topology3dRef.zoomOut();
+    }
+  }
 
   const nodeEdges = $derived.by(() => {
     if (!data || !selectedNode) return [];
@@ -643,6 +721,10 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
             <FileText size={13} /> Drucken / PDF
           </button>
         {:else}
+          <div class="flex items-center bg-[var(--color-border)] border border-[var(--color-border2)] rounded-lg overflow-hidden">
+            <button onclick={zoomOut} class="px-2 py-1 hover:bg-[var(--color-border2)] text-[var(--color-text)] transition border-r border-[var(--color-border2)]" title="Herauszoomen">-</button>
+            <button onclick={zoomIn} class="px-2 py-1 hover:bg-[var(--color-border2)] text-[var(--color-text)] transition" title="Hineinzoomen">+</button>
+          </div>
           <button onclick={downloadTopologyPdf} disabled={pdfLoading}
             class="px-3 py-1 bg-[var(--color-border)] hover:bg-[var(--color-border2)] border border-[var(--color-border2)] rounded-lg text-xs text-[var(--color-text)] transition disabled:opacity-40 flex items-center gap-1.5">
             <FileText size={13} />{pdfLoading ? '…' : 'PDF'}
@@ -919,89 +1001,123 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
         {/if}
       </div>
 
+      <!-- Resize Handle -->
+      <!-- svelte-ignore a11y_no_static_element_interactions -->
+      <div
+        class="w-1.5 cursor-col-resize bg-transparent hover:bg-[var(--color-border)] active:bg-blue-500/50 transition-colors z-10 shrink-0"
+        onmousedown={startResize}
+      ></div>
+
       <!-- Detail Panel -->
-      <div class="w-72 shrink-0 flex flex-col gap-3 h-full">
+      <div class="shrink-0 flex flex-col gap-4 h-full" style="width: {panelWidth}px">
         {#if !selectedNode}
-        <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl p-4">
-          <p class="text-[10px] uppercase font-bold tracking-wider text-[var(--color-text3)] mb-3">Legende</p>
-          <div class="grid grid-cols-2 gap-1.5 text-[10px]">
+        <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl p-5">
+          <p class="text-xs uppercase font-bold tracking-wider text-[var(--color-text3)] mb-3">Legende</p>
+          <div class="grid grid-cols-2 gap-2 text-xs">
             {#each deviceTypes as dt}
-              <div class="flex items-center gap-1.5">
-                <div class="w-2.5 h-2.5 rounded-sm shrink-0" style="background:{nodeStroke(dt)};opacity:.7"></div>
+              <div class="flex items-center gap-2">
+                <div class="w-3 h-3 rounded-sm shrink-0" style="background:{nodeStroke(dt)};opacity:.7"></div>
                 <span class="text-[var(--color-text2)]">{deviceTypeLabel[dt]}</span>
               </div>
             {/each}
           </div>
-          <div class="border-t border-[var(--color-border)] mt-2.5 pt-2.5 space-y-1.5">
+          <div class="border-t border-[var(--color-border)] mt-3 pt-3 space-y-2">
             {#each [['#3b82f6','Kupfer (Cat)'],['#d946ef','LWL / Glasfaser'],['#06b6d4','SFP+'],['#6b7280','DAC'],['#ef4444','Strom'],['#f97316','Strom L1'],['#84cc16','Strom L2'],['#a855f7','Strom L3']] as [col, label]}
               <div class="flex items-center gap-2">
-                <svg width="20" height="8"><line x1="0" y1="4" x2="20" y2="4" stroke={col} stroke-width="1.5"/></svg>
-                <span class="text-[10px] text-[var(--color-text3)]">{label}</span>
+                <svg width="24" height="8"><line x1="0" y1="4" x2="24" y2="4" stroke={col} stroke-width="2"/></svg>
+                <span class="text-xs text-[var(--color-text3)]">{label}</span>
               </div>
             {/each}
             <div class="flex items-center gap-2">
-              <svg width="20" height="8"><line x1="0" y1="4" x2="20" y2="4" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5 2"/></svg>
-              <span class="text-[10px] text-[var(--color-text3)]">Rack-übergreifend</span>
+              <svg width="24" height="8"><line x1="0" y1="4" x2="24" y2="4" stroke="#94a3b8" stroke-width="2" stroke-dasharray="5 2"/></svg>
+              <span class="text-xs text-[var(--color-text3)]">Rack-übergreifend</span>
             </div>
             <div class="flex items-center gap-2">
-              <svg width="20" height="8"><line x1="0" y1="4" x2="20" y2="4" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3 3"/></svg>
-              <span class="text-[10px] text-[var(--color-text3)]">PDU-Strom</span>
+              <svg width="24" height="8"><line x1="0" y1="4" x2="24" y2="4" stroke="#ef4444" stroke-width="2" stroke-dasharray="3 3"/></svg>
+              <span class="text-xs text-[var(--color-text3)]">PDU-Strom</span>
             </div>
           </div>
-          <div class="border-t border-[var(--color-border)] mt-2.5 pt-2 flex items-center gap-2">
-            <div class="flex gap-0.5">
-              <div class="w-2 h-3 rounded-sm bg-emerald-500 opacity-70"></div>
-              <div class="w-2 h-3 rounded-sm bg-amber-500 opacity-70"></div>
-              <div class="w-2 h-3 rounded-sm bg-red-500 opacity-70"></div>
+          <div class="border-t border-[var(--color-border)] mt-3 pt-3 flex items-center gap-2">
+            <div class="flex gap-1">
+              <div class="w-2.5 h-4 rounded-sm bg-emerald-500 opacity-70"></div>
+              <div class="w-2.5 h-4 rounded-sm bg-amber-500 opacity-70"></div>
+              <div class="w-2.5 h-4 rounded-sm bg-red-500 opacity-70"></div>
             </div>
-            <span class="text-[10px] text-[var(--color-text3)]">Rack-Auslastung (HE)</span>
+            <span class="text-xs text-[var(--color-text3)]">Rack-Auslastung (HE)</span>
           </div>
           {#if showHeatmap}
-            <div class="border-t border-[var(--color-border)] mt-2.5 pt-2">
-              <p class="text-[9px] uppercase font-bold tracking-wider text-[var(--color-text2)] mb-1.5">Anomalie-Heatmap</p>
-              <div class="space-y-1 text-[10px] text-[var(--color-text2)]">
-                <div class="flex items-center gap-1.5">
-                  <div class="w-3 h-3 rounded bg-red-500/20 border border-red-500 shrink-0"></div>
+            <div class="border-t border-[var(--color-border)] mt-3 pt-3">
+              <p class="text-[10px] uppercase font-bold tracking-wider text-[var(--color-text2)] mb-2">Anomalie-Heatmap</p>
+              <div class="space-y-1.5 text-xs text-[var(--color-text2)]">
+                <div class="flex items-center gap-2">
+                  <div class="w-3.5 h-3.5 rounded bg-red-500/20 border border-red-500 shrink-0"></div>
                   <span>Kritisch (Score &ge; 60%)</span>
                 </div>
-                <div class="flex items-center gap-1.5">
-                  <div class="w-3 h-3 rounded bg-amber-500/20 border border-amber-500 shrink-0"></div>
+                <div class="flex items-center gap-2">
+                  <div class="w-3.5 h-3.5 rounded bg-amber-500/20 border border-amber-500 shrink-0"></div>
                   <span>Warnung (Score 30-59%)</span>
                 </div>
-                <div class="flex items-center gap-1.5">
-                  <div class="w-3 h-3 rounded bg-emerald-500/10 border border-emerald-500 shrink-0"></div>
+                <div class="flex items-center gap-2">
+                  <div class="w-3.5 h-3.5 rounded bg-emerald-500/10 border border-emerald-500 shrink-0"></div>
                   <span>Normal (Score &lt; 30%)</span>
                 </div>
               </div>
             </div>
           {/if}
-          <p class="text-[9px] text-[var(--color-text3)] mt-2">PDUs seitlich · Drag: verschieben · Scroll: Zoom</p>
+          <p class="text-[10px] text-[var(--color-text3)] mt-3">PDUs seitlich · Drag: verschieben · Scroll: Zoom</p>
         </div>
-          <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl p-4 text-center flex-1 flex items-center justify-center">
-            <p class="text-xs text-[var(--color-text3)]">Gerät anklicken für Details</p>
+          <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl p-5 text-center flex-1 flex items-center justify-center">
+            <p class="text-sm text-[var(--color-text3)]">Gerät anklicken für Details</p>
           </div>
 
         {:else}
-          <div class="bg-[var(--color-bg2)] border border-violet-800/40 rounded-xl p-4 flex-1 overflow-y-auto">
-            <div class="flex items-start justify-between mb-3">
+          <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] shadow-sm rounded-xl p-5 flex-1 overflow-y-auto">
+            <div class="flex items-start justify-between mb-5 border-b border-[var(--color-border)] pb-3">
               <div>
-                <p class="text-xs font-bold text-[var(--color-text)] font-mono">{selectedNode.hostname}</p>
-                <p class="text-[10px] text-[var(--color-text3)] mt-0.5">{selectedNode.typ} · {selectedNode.rack_name ?? 'kein Rack'}</p>
+                <p class="text-base font-bold text-[var(--color-text)]">Gerät bearbeiten</p>
+                <p class="text-xs text-[var(--color-text3)] mt-1">{selectedNode.typ} · {selectedNode.rack_name ?? 'kein Rack'}</p>
               </div>
-              <button onclick={() => selectedNode = null} class="text-[var(--color-text3)] hover:text-[var(--color-text2)] text-xs">✕</button>
+              <button onclick={() => selectedNode = null} class="text-[var(--color-text2)] hover:text-[var(--color-text)] transition-colors p-1 hover:bg-[var(--color-border)] rounded">✕</button>
             </div>
-            {#if selectedNode.hersteller || selectedNode.modell}
-              <p class="text-xs text-[var(--color-text2)] mb-1">{[selectedNode.hersteller, selectedNode.modell].filter(Boolean).join(' / ')}</p>
-            {/if}
-            {#if selectedNode.ip_adresse}
-              <p class="text-xs font-mono text-blue-400 mb-2">{selectedNode.ip_adresse}</p>
-            {/if}
+
+            <div class="space-y-4 mb-5">
+              <div>
+                <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Hostname</label>
+                <input type="text" bind:value={editForm.hostname} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:border-[#1D9E75] outline-none transition" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">IP-Adresse</label>
+                <input type="text" bind:value={editForm.ip_adresse} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm font-mono text-blue-400 focus:border-[#1D9E75] outline-none transition" placeholder="z.B. 192.168.1.10" />
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Hersteller</label>
+                  <input type="text" bind:value={editForm.hersteller} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:border-[#1D9E75] outline-none transition" />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Modell</label>
+                  <input type="text" bind:value={editForm.modell} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:border-[#1D9E75] outline-none transition" />
+                </div>
+              </div>
+            </div>
+
+            <div class="flex gap-3 mb-6">
+              <button onclick={() => selectedNode = null} class="px-4 py-2 rounded-lg text-sm font-medium text-[var(--color-text2)] hover:text-[var(--color-text)] hover:bg-[var(--color-border)] transition">Abbrechen</button>
+              <button onclick={saveNode} disabled={isSaving} class="flex-1 bg-[#1D9E75] hover:bg-[#15805e] text-white rounded-lg py-2 text-sm font-bold transition disabled:opacity-50">
+                {isSaving ? 'Wird gespeichert...' : 'Speichern'}
+              </button>
+            </div>
+
             {#if selectedNode.u_position}
-              <p class="text-[10px] text-[var(--color-text3)] mb-3">HE {selectedNode.u_position} · {selectedNode.u_hoehe}U</p>
+              <div class="bg-[var(--color-bg3)] p-3 rounded-lg border border-[var(--color-border2)] mb-5">
+                <p class="text-xs font-semibold text-[var(--color-text2)] mb-1">Rack-Position <span class="text-[10px] font-normal text-[var(--color-text3)]">(Read-Only)</span></p>
+                <p class="text-sm text-[var(--color-text)] font-mono">HE {selectedNode.u_position} <span class="text-[var(--color-text3)] mx-1">|</span> {selectedNode.u_hoehe}U</p>
+              </div>
             {/if}
+
             {#if nodeEdges.length > 0}
-              <p class="text-[10px] uppercase font-bold tracking-wider text-[var(--color-text3)] mb-2">Verbindungen ({nodeEdges.length})</p>
-              <div class="space-y-1.5">
+              <p class="text-xs font-semibold text-[var(--color-text2)] mb-2">Verbindungen ({nodeEdges.length})</p>
+              <div class="space-y-2">
                 {#each nodeEdges as edge}
                   {@const otherId = connectedNodeId(edge)}
                   {@const other = data?.nodes.find(n => n.id === otherId)}

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import * as THREE from 'three';
-  import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+  import { MapControls } from 'three/examples/jsm/controls/MapControls.js';
   import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
   import { nodeColor, nodeStroke, baseEdgeColor } from '$lib/topologyColors';
   import { appState } from '$lib/state.svelte';
@@ -27,7 +27,7 @@
   let labelRenderer: CSS2DRenderer;
   let scene: THREE.Scene;
   let camera: THREE.PerspectiveCamera;
-  let controls: OrbitControls;
+  let controls: MapControls;
   let sceneReady = $state(false);
   let animationFrameId: number;
 
@@ -80,7 +80,7 @@
     containerEl.appendChild(labelRenderer.domElement);
 
     // Controls (Catch #4)
-    controls = new OrbitControls(camera, renderer.domElement);
+    controls = new MapControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
 
@@ -353,6 +353,26 @@
     if (camera && controls) {
       // Re-target to center. We can estimate center.
       controls.reset();
+    }
+  }
+
+  export function zoomIn() {
+    if (camera && controls) {
+      const target = controls.target;
+      const position = camera.position;
+      const dir = new THREE.Vector3().subVectors(target, position);
+      camera.position.add(dir.multiplyScalar(0.2));
+      controls.update();
+    }
+  }
+
+  export function zoomOut() {
+    if (camera && controls) {
+      const target = controls.target;
+      const position = camera.position;
+      const dir = new THREE.Vector3().subVectors(position, target);
+      camera.position.add(dir.multiplyScalar(0.25));
+      controls.update();
     }
   }
 
