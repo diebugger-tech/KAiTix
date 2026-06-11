@@ -338,6 +338,7 @@
       </div>
       <div class="flex-1 overflow-y-auto p-2 space-y-2">
         {#each devices as dev}
+          {@const hostVms = vms.filter(v => v.host_device_id === dev.id)}
           <div 
             class="p-3 rounded-lg border transition-colors {dragOverHostId === dev.id ? 'border-pink-500 bg-pink-500/10' : 'border-[var(--color-border2)] bg-[var(--color-bg3)]'}"
             ondragover={(e) => { e.preventDefault(); if(draggedVmId) dragOverHostId = dev.id; }}
@@ -347,7 +348,6 @@
             <div class="font-medium text-sm flex items-center justify-between text-[var(--color-text)]">
               <span class="truncate pr-2" title={dev.hostname}>{dev.hostname}</span>
             </div>
-            {@const hostVms = vms.filter(v => v.host_device_id === dev.id)}
             <div class="mt-2 flex flex-col gap-1">
               <span class="text-[10px] text-[var(--color-text2)] font-semibold">{hostVms.length} VMs</span>
               {#if hostVms.length > 0}
