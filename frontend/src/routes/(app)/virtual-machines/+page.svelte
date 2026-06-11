@@ -40,6 +40,58 @@
     }
   }
 
+  let dragOverHostId = $state<number | null>(null);
+
+  async function handleHostDrop(e: DragEvent, targetHostId: number) {
+    e.preventDefault();
+    if (!draggedVmId) {
+      dragOverHostId = null;
+      return;
+    }
+    
+    const vm = vms.find(v => v.id === draggedVmId);
+    if (vm && vm.host_device_id !== targetHostId) {
+      try {
+        const updated = { ...vm, host_device_id: targetHostId };
+        await api.updateVirtualMachine(vm.id, updated);
+        vms = await api.getVirtualMachines();
+      } catch (err: any) {
+        alert("Fehler beim Zuweisen des Hosts: " + err.message);
+      }
+    }
+    
+    draggedVmId = null;
+    dragOverHostId = null;
+  }
+
+  let dragOverDependencyVmId = $state<number | null>(null);
+
+  async function handleDependencyDrop(e: DragEvent, targetVmId: number) {
+    e.preventDefault();
+    if (!draggedVmId || draggedVmId === targetVmId) {
+      dragOverDependencyVmId = null;
+      return;
+    }
+    
+    const vm = vms.find(v => v.id === draggedVmId);
+    if (vm && vm.depends_on_vm_id !== targetVmId) {
+      try {
+        const updated = { ...vm, depends_on_vm_id: targetVmId };
+        await api.updateVirtualMachine(vm.id, updated);
+        vms = await api.getVirtualMachines();
+      } catch (err: any) {
+        if (err.message?.includes('Zirkuläre Abhängigkeit')) {
+          alert("Fehler: " + err.message);
+        } else {
+          alert("Fehler beim Setzen der Abhängigkeit: " + err.message);
+        }
+      }
+    }
+    
+    draggedVmId = null;
+    dragOverDependencyVmId = null;
+  }
+
   async function handleDrop(e: DragEvent, targetVmId: number) {
     e.preventDefault();
     if (!draggedVmId || draggedVmId === targetVmId) {
@@ -277,7 +329,41 @@
     </button>
   </div>
 
-  <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl flex-1 overflow-hidden flex flex-col shadow-2xl">
+  <div class="flex gap-4 flex-1 min-h-0">
+    <!-- Hosts Sidebar -->
+    <div class="w-64 bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl flex flex-col overflow-hidden shrink-0 shadow-lg hidden md:flex">
+      <div class="p-3 border-b border-[var(--color-border)] bg-[var(--color-bg3)] font-semibold text-sm text-[var(--color-text)] flex items-center gap-2 shrink-0">
+        <Server class="w-4 h-4 text-[var(--color-text3)]"/>
+        Physische Hosts
+      </div>
+      <div class="flex-1 overflow-y-auto p-2 space-y-2">
+        {#each devices as dev}
+          <div 
+            class="p-3 rounded-lg border transition-colors {dragOverHostId === dev.id ? 'border-pink-500 bg-pink-500/10' : 'border-[var(--color-border2)] bg-[var(--color-bg3)]'}"
+            ondragover={(e) => { e.preventDefault(); if(draggedVmId) dragOverHostId = dev.id; }}
+            ondragleave={() => dragOverHostId = null}
+            ondrop={(e) => handleHostDrop(e, dev.id)}
+          >
+            <div class="font-medium text-sm flex items-center justify-between text-[var(--color-text)]">
+              <span class="truncate pr-2" title={dev.hostname}>{dev.hostname}</span>
+            </div>
+            {@const hostVms = vms.filter(v => v.host_device_id === dev.id)}
+            <div class="mt-2 flex flex-col gap-1">
+              <span class="text-[10px] text-[var(--color-text2)] font-semibold">{hostVms.length} VMs</span>
+              {#if hostVms.length > 0}
+                <div class="flex flex-wrap gap-1">
+                  {#each hostVms as hv}
+                    <span class="px-1.5 py-0.5 bg-[var(--color-border)] text-[var(--color-text2)] rounded text-[9px] truncate max-w-[80px]" title={hv.name}>{hv.name}</span>
+                  {/each}
+                </div>
+              {/if}
+            </div>
+          </div>
+        {/each}
+      </div>
+    </div>
+
+    <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl flex-1 overflow-hidden flex flex-col shadow-xl min-w-0">
     <!-- Tabs Header -->
     <div class="flex border-b border-[var(--color-border)] bg-[var(--color-bg3)] px-4 py-2 justify-between items-center shrink-0 select-none">
       <div class="flex space-x-2">
@@ -447,14 +533,29 @@
                 {@const isUnrelated = hoveredVmId !== null && !isHovered && !isParent && !isChild}
                 
                 <div
-                  class="absolute flex flex-col justify-between p-3 rounded-lg border text-left cursor-pointer transition-all duration-200 select-none bg-[var(--color-bg2)] group shadow-md"
+                  class="absolute flex flex-col justify-between p-3 rounded-lg border text-left cursor-pointer transition-all duration-200 select-none bg-[var(--color-bg2)] group shadow-md {dragOverDependencyVmId === vm.id ? 'ring-2 ring-pink-500 bg-pink-500/10' : ''}"
                   style="width: 220px; height: 75px; left: {coord.x - 110}px; top: {coord.y - 37}px;
                          border-color: {isHovered ? '#3b82f6' : isParent ? '#10b981' : isChild ? '#ec4899' : '#1f2937'};
                          box-shadow: {isHovered ? '0 0 10px rgba(59, 130, 246, 0.4)' : isParent ? '0 0 10px rgba(16, 185, 129, 0.4)' : isChild ? '0 0 10px rgba(236, 72, 153, 0.4)' : 'none'};
-                         opacity: {isUnrelated ? 0.35 : 1};"
+                         opacity: {isUnrelated ? 0.35 : draggedVmId === vm.id ? 0.5 : 1};"
                   onmouseenter={() => hoveredVmId = vm.id}
                   onmouseleave={() => hoveredVmId = null}
                   onclick={() => openEdit(vm)}
+                  draggable="true"
+                  ondragstart={(e) => {
+                    draggedVmId = vm.id;
+                    if (e.dataTransfer) {
+                      e.dataTransfer.effectAllowed = 'link';
+                      e.dataTransfer.setData('text/plain', vm.id.toString());
+                    }
+                  }}
+                  ondragover={(e) => {
+                    e.preventDefault();
+                    if (draggedVmId && draggedVmId !== vm.id) dragOverDependencyVmId = vm.id;
+                  }}
+                  ondragleave={() => dragOverDependencyVmId = null}
+                  ondrop={(e) => handleDependencyDrop(e, vm.id)}
+                  ondragend={() => { draggedVmId = null; dragOverDependencyVmId = null; }}
                 >
                   <div class="flex items-start justify-between gap-1.5 min-w-0">
                     <div class="flex items-center gap-1.5 min-w-0">
@@ -508,6 +609,7 @@
         {/if}
       </div>
     {/if}
+  </div>
   </div>
 </div>
 
