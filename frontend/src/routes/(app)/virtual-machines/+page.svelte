@@ -169,6 +169,15 @@
   }
 
   async function save() {
+    if (!currentVm.name?.trim()) {
+      alert("Bitte einen Namen für die VM eingeben.");
+      return;
+    }
+    if (!currentVm.host_device_id || currentVm.host_device_id === "null") {
+      alert("Bitte einen physischen Host-Server auswählen.");
+      return;
+    }
+
     try {
       if (editMode && currentVm.id) {
         await api.updateVirtualMachine(currentVm.id, currentVm);
@@ -706,8 +715,7 @@
     <button onclick={() => panelOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium text-[var(--color-text2)] hover:text-[var(--color-text)] hover:bg-[var(--color-border)] transition">Abbrechen</button>
     <button 
       onclick={save}
-      disabled={!currentVm.name || !currentVm.host_device_id}
-      class="px-4 py-2 bg-pink-600 hover:bg-pink-500 disabled:opacity-50 disabled:cursor-not-allowed text-[var(--color-text)] rounded-lg text-sm font-semibold transition flex items-center gap-2"
+      class="px-4 py-2 bg-pink-600 hover:bg-pink-500 text-[var(--color-text)] rounded-lg text-sm font-semibold transition flex items-center gap-2"
     >
       <CheckCircle2 class="w-4 h-4" />
       Speichern
