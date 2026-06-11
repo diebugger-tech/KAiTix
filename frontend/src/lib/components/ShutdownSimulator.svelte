@@ -249,7 +249,7 @@
     {#if showConfig}
       <div class="mt-4 pt-4 border-t border-[var(--color-border2)]/50 grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div>
-          <label class="block text-xs text-[var(--color-text3)] mb-1">Batterietyp</label>
+          <div class="block text-xs text-[var(--color-text3)] mb-1">Batterietyp</div>
           <select bind:value={batType} class="w-full bg-[var(--color-bg2)] border border-[var(--color-border2)] rounded px-2 py-1.5 text-xs text-[var(--color-text)]">
             {#each batteryTypeOptions as opt}
               <option value={opt.value}>{opt.label}</option>
@@ -257,21 +257,21 @@
           </select>
         </div>
         <div>
-          <label class="block text-xs text-[var(--color-text3)] mb-1">Seriell × Parallel</label>
+          <div class="block text-xs text-[var(--color-text3)] mb-1">Seriell × Parallel</div>
           <div class="flex space-x-1">
             <input type="number" bind:value={batSeries} min="1" class="w-1/2 bg-[var(--color-bg2)] border border-[var(--color-border2)] rounded px-2 py-1.5 text-xs text-[var(--color-text)]" />
             <input type="number" bind:value={batParallel} min="1" class="w-1/2 bg-[var(--color-bg2)] border border-[var(--color-border2)] rounded px-2 py-1.5 text-xs text-[var(--color-text)]" />
           </div>
         </div>
         <div>
-          <label class="block text-xs text-[var(--color-text3)] mb-1">Block V / Ah</label>
+          <div class="block text-xs text-[var(--color-text3)] mb-1">Block V / Ah</div>
           <div class="flex space-x-1">
             <input type="number" bind:value={batBlockV} min="1" class="w-1/2 bg-[var(--color-bg2)] border border-[var(--color-border2)] rounded px-2 py-1.5 text-xs text-[var(--color-text)]" />
             <input type="number" bind:value={batBlockAh} min="1" class="w-1/2 bg-[var(--color-bg2)] border border-[var(--color-border2)] rounded px-2 py-1.5 text-xs text-[var(--color-text)]" />
           </div>
         </div>
         <div>
-          <label class="block text-xs text-[var(--color-text3)] mb-1">Alter / Temp</label>
+          <div class="block text-xs text-[var(--color-text3)] mb-1">Alter / Temp</div>
           <div class="flex space-x-1">
             <input type="number" bind:value={batAge} min="0" step="0.5" class="w-1/2 bg-[var(--color-bg2)] border border-[var(--color-border2)] rounded px-2 py-1.5 text-xs text-[var(--color-text)]" />
             <input type="number" bind:value={batTemp} min="-20" class="w-1/2 bg-[var(--color-bg2)] border border-[var(--color-border2)] rounded px-2 py-1.5 text-xs text-[var(--color-text)]" />

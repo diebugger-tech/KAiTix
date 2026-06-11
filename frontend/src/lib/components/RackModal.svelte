@@ -141,7 +141,7 @@
     </div>
     <form onsubmit={handleSubmit} class="space-y-4">
       <div>
-        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Rack-Modell (Vorlage)</label>
+        <div class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Rack-Modell (Vorlage)</div>
         <select bind:value={selectedRackHWId}
           class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]">
           <option value={null}>Manuelle Eingabe</option>
@@ -151,12 +151,12 @@
         </select>
       </div>
       <div>
-        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Bezeichnung *</label>
+        <div class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Bezeichnung *</div>
         <input type="text" bind:value={name} required placeholder={namePlaceholder}
           class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]" />
       </div>
       <div>
-        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Standort *</label>
+        <div class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Standort *</div>
         <select bind:value={standort} required
           class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]">
           <option value="" disabled selected>Standort wählen...</option>
@@ -174,7 +174,7 @@
         {/if}
       </div>
       <div>
-        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Rackreihe</label>
+        <div class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Rackreihe</div>
         <div class="flex gap-1.5">
           <select bind:value={rackreihe}
             class="flex-1 bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]">
@@ -200,7 +200,7 @@
       </div>
       
       <div>
-        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Max. Kühlleistung (Watt)</label>
+        <div class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Max. Kühlleistung (Watt)</div>
         <input type="number" bind:value={cooling_capacity_w} min="0" placeholder="z.B. 10000"
           class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]" />
         <p class="text-[10px] text-[var(--color-text3)] mt-1">Gibt die maximale Abwärme (TDP) an, die dieses Rack abführen kann.</p>
@@ -208,16 +208,16 @@
 
       {#if selectedRackHWId !== null}
       <div>
-        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Höheneinheiten</label>
+        <div class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Höheneinheiten</div>
         <div class="w-full bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-lg px-4 py-2 text-sm text-[var(--color-text3)]">{hoehe_u} HE</div>
       </div>
       <div>
-        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Breite (mm)</label>
+        <div class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Breite (mm)</div>
         <div class="w-full bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-lg px-4 py-2 text-sm text-[var(--color-text3)]">{breite_mm} mm</div>
       </div>
       {:else}
       <div>
-        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Höheneinheiten</label>
+        <div class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Höheneinheiten</div>
         <select bind:value={hoehe_u}
           class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]">
           {#each rackHeights as h}
@@ -226,7 +226,7 @@
         </select>
       </div>
       <div>
-        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Breite (mm)</label>
+        <div class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Breite (mm)</div>
         <select bind:value={breite_mm}
           class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]">
           <option value={600}>600 mm (Standard)</option>
@@ -235,7 +235,7 @@
       </div>
       {/if}
       <div>
-        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Bemerkung</label>
+        <div class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Bemerkung</div>
         <textarea bind:value={bemerkung} rows="2"
           class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75] resize-none"></textarea>
       </div>

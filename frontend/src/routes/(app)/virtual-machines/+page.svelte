@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { api, type VirtualMachine, type Device } from '$lib/api';
   import { Monitor, Plus, Server, CheckCircle2, AlertCircle, ArrowUp, ArrowDown, GripVertical } from '@lucide/svelte';
+  import VmForm from '$lib/components/VmForm.svelte';
 
   let vms = $state<VirtualMachine[]>([]);
   let devices = $state<Device[]>([]);
@@ -203,7 +204,7 @@
       alert("Bitte einen Namen für die VM eingeben.");
       return;
     }
-    if (!currentVm.host_device_id || currentVm.host_device_id === "null") {
+    if (!currentVm.host_device_id) {
       alert("Bitte einen physischen Host-Server auswählen.");
       return;
     }
@@ -685,78 +686,7 @@
   </div>
   
   <div class="p-6 overflow-y-auto flex-1 space-y-5">
-    <div class="grid grid-cols-1 gap-4">
-      <div>
-        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Name <span class="text-red-400">*</span></label>
-        <input type="text" bind:value={currentVm.name} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-pink-500" />
-      </div>
-      <div>
-        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Hypervisor-Typ</label>
-        <select bind:value={currentVm.hypervisor_typ} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-pink-500">
-          <option value="vmware">VMware ESXi</option>
-          <option value="hyper-v">Microsoft Hyper-V</option>
-          <option value="kvm">KVM (Linux)</option>
-          <option value="xcpng">XCP-ng</option>
-          <option value="sonstige">Sonstige</option>
-        </select>
-      </div>
-    </div>
-
-    <div>
-      <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Läuft auf (Host-System) <span class="text-red-400">*</span></label>
-      <select bind:value={currentVm.host_device_id} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-pink-500">
-        <option value={null}>-- Physischen Server wählen --</option>
-        {#each devices as dev}
-          <option value={dev.id}>{dev.hostname} ({dev.typ})</option>
-        {/each}
-      </select>
-    </div>
-
-    <div class="grid grid-cols-1 gap-4">
-      <div>
-        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Betriebssystem</label>
-        <input type="text" bind:value={currentVm.betriebssystem} placeholder="z.B. Ubuntu 24.04" class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-pink-500" />
-      </div>
-      <div>
-        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">IP-Adresse</label>
-        <input type="text" bind:value={currentVm.ip_adresse} placeholder="192.168.x.x" class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] font-mono focus:outline-none focus:border-pink-500" />
-      </div>
-      <div>
-        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">IPv6-Adresse</label>
-        <input type="text" bind:value={currentVm.ipv6_adresse} placeholder="2001:db8::x" class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] font-mono focus:outline-none focus:border-pink-500" />
-      </div>
-    </div>
-
-    <div>
-      <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Dienst / Anwendung</label>
-      <input type="text" bind:value={currentVm.dienst} placeholder="z.B. Primary Database Server" class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-pink-500" />
-    </div>
-
-    <div class="grid grid-cols-1 gap-4">
-      <div>
-        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Abhängig von (VM)</label>
-        <select bind:value={currentVm.depends_on_vm_id} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-pink-500">
-          <option value={null}>-- Keine Abhängigkeit --</option>
-          {#each vms.filter(v => v.id !== currentVm.id) as v}
-            <option value={v.id}>{v.name}</option>
-          {/each}
-        </select>
-      </div>
-      <div>
-        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Shutdown-Prio</label>
-        <input type="number" bind:value={currentVm.shutdown_priority} min="1" max="99" class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-pink-500" />
-      </div>
-    </div>
-
-    <div>
-      <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Verantwortlicher (Team/Person)</label>
-      <input type="text" bind:value={currentVm.responsible} placeholder="z.B. Andreas / DBA Team" class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-pink-500" />
-    </div>
-
-    <div>
-      <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Bemerkung</label>
-      <textarea bind:value={currentVm.bemerkung} rows="3" class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-pink-500 resize-none"></textarea>
-    </div>
+    <VmForm bind:vm={currentVm} {devices} {vms} />
   </div>
 
   <div class="p-4 border-t border-[var(--color-border)] bg-[var(--color-bg3)] flex justify-end gap-3 shrink-0">

@@ -71,4 +71,4 @@ watchfiles==1.2.0
 websockets==16.0
 
 # MySQL-Integrationstests (optional, siehe tests/test_mysql_integration.py)
-testcontainers[mysql]>=4.0.0
+testcontainers[mysql]==4.0.0

@@ -4,8 +4,10 @@
   import { api, type Rack, type Device, type HardwareType, type Cable, type DevicePort, type PduOutlet } from '$lib/api';
   import { Server, Layers, Plus, HardDrive, Zap, LogOut, Check, X, ShieldAlert, Cpu, Network, Edit2, Trash2, ShieldCheck, ChevronRight, Activity, ZapOff, Play, Clock, Building, MapPin, Wifi, Box, ChevronDown, FileText, Cable as CableIcon, Thermometer, AlertTriangle } from '@lucide/svelte';
   import RackModal from '$lib/components/RackModal.svelte';
+  import DeviceForm from '$lib/components/DeviceForm.svelte';
   import RackFilterBar from '$lib/components/RackFilterBar.svelte';
   import RackFrontView from '$lib/components/RackFrontView.svelte';
+  import { validateDevicePosition } from '$lib/validation';
   import { locationStore, type LocationType } from '$lib/locations.svelte';
   import { calculateRackMetrics } from '$lib/utils/rackMetrics';
 
@@ -50,7 +52,7 @@
     }).sort((a, b) => a.name.localeCompare(b.name))
   );
 
-  let existingReihen = $derived([...new Set(racks.map(r => r.rackreihe).filter(r => Boolean(r) && r !== '__ALL__'))].sort());
+  let existingReihen = $derived(([...new Set(racks.map(r => r.rackreihe).filter(r => Boolean(r) && r !== '__ALL__'))] as string[]).sort());
 
   // Sync dropdown -> selectedRack
   $effect(() => {
@@ -143,6 +145,7 @@
   let devPhase        = $state<'L1'|'L2'|'L3'>('L1');
   let devSide         = $state<'left'|'right'>('left');
   let devIp           = $state('');
+  let devIpv6         = $state('');
   let devHersteller   = $state('');
   let devModell       = $state('');
   let devSeriennummer  = $state('');
@@ -158,23 +161,7 @@
 
   // Gerät bearbeiten modal
   let showEditDevice = $state(false);
-  let editHostname   = $state('');
-  let editIp         = $state('');
-  let editIpv6       = $state('');
-  let editPhase      = $state<'L1'|'L2'|'L3'>('L1');
-  let editAnschluss  = $state<number|null>(0);
-  let editHersteller = $state('');
-  let editModell     = $state('');
-  let editSeriennummer  = $state('');
-  let editInventarnummer = $state('');
-  let editBemerkung  = $state('');
-  let editUPos       = $state<number|null>(1);
-  let editUHoehe     = $state<number|null>(1);
-  let editSide       = $state<'left'|'right'>('left');
-  let editShutdownDelay = $state<number|null>(0);
-  let editShutdownPriority = $state<number|null>(2);
-  let editShutdownMethod = $state<string>('ACPI_Graceful');
-  let editDependencies = $state<any[]>([]);
+  let tempEditDevice = $state<Partial<Device> & { dependencies?: any[] }>({});
 
   // Kabel anlegen modal
   let showAddCable  = $state(false);
@@ -494,6 +481,14 @@
   async function submitAddDevice(e: SubmitEvent) {
     e.preventDefault();
     if (!selectedRack || !devHostname.trim()) return;
+    
+    const uPos = devUHoehe === 0 || targetSlot === null ? undefined : Number(targetSlot);
+    const err = validateDevicePosition(uPos, Number(devUHoehe), selectedRack.hoehe_u);
+    if (err && Number(devUHoehe) !== 0) {
+      alert(err);
+      return;
+    }
+
     try {
       const newDev = await api.createDevice({
         hostname: devHostname.trim(),
@@ -507,7 +502,7 @@
         psu_nennwatt: devPsuNennwatt ?? undefined,
         anschlussleistung_watt: devAnschlussleistung || undefined,
         ip_adresse: devIp || undefined,
-        ipv6_adresse: editIpv6 || undefined,
+        ipv6_adresse: devIpv6 || undefined,
         hersteller: devHersteller || undefined,
         modell: devModell || undefined,
         seriennummer: devSeriennummer || undefined,
@@ -539,40 +534,28 @@
   // ── Gerät bearbeiten ──────────────────────────────────────────────
   function openEditDevice() {
     if (!selectedDevice) return;
-    editHostname     = selectedDevice.hostname;
-    editIp           = selectedDevice.ip_adresse || '';
-    editIpv6         = selectedDevice.ipv6_adresse || '';
-    editPhase        = (selectedDevice.phase as 'L1'|'L2'|'L3') || 'L1';
-    editAnschluss    = Number(selectedDevice.anschlussleistung_watt ?? selectedDevice.tdp_watt ?? 0);
-    editHersteller   = selectedDevice.hersteller || '';
-    editModell       = selectedDevice.modell || '';
-    editSeriennummer   = selectedDevice.seriennummer || '';
-    editInventarnummer = selectedDevice.inventarnummer || '';
-    editBemerkung      = selectedDevice.bemerkung || '';
-    editUPos         = selectedDevice.u_position ?? (selectedDevice.u_hoehe === 0 ? null : 1);
-    editUHoehe       = selectedDevice.u_hoehe ?? 1;
-    editSide         = (selectedDevice.side as 'left'|'right') ?? 'left';
+    tempEditDevice = { ...selectedDevice };
+    tempEditDevice.dependencies = selectedDevice.dependencies ? [...selectedDevice.dependencies] : [];
     showEditDevice   = true;
   }
 
   async function submitEditDevice(e: SubmitEvent) {
     e.preventDefault();
-    if (!selectedDevice) return;
+    if (!selectedDevice || !selectedRack) return;
+
+    const err = validateDevicePosition(tempEditDevice.u_position, tempEditDevice.u_hoehe ?? 0, selectedRack.hoehe_u);
+    if (err && tempEditDevice.u_hoehe !== 0) {
+      alert(err);
+      return;
+    }
+
     try {
-      const updated = await api.updateDevice(selectedDevice.id, {
-        hostname:               editHostname.trim(),
-        ip_adresse:             editIp || undefined,
-        ipv6_adresse:           editIpv6 || undefined,
-        anschlussleistung_watt: editAnschluss || undefined,
-        hersteller:             editHersteller || undefined,
-        modell:                 editModell || undefined,
-        seriennummer:           editSeriennummer || undefined,
-        inventarnummer:         editInventarnummer || undefined,
-        bemerkung:              editBemerkung || undefined,
-        u_position:             editUHoehe === 0 || editUPos === null ? undefined : Number(editUPos),
-        u_hoehe:                Number(editUHoehe),
-        side:                   editUHoehe === 0 ? editSide : undefined,
-      });
+      const payload: Partial<Device> = {
+        ...tempEditDevice,
+        u_position: tempEditDevice.u_hoehe === 0 ? undefined : tempEditDevice.u_position,
+        side: tempEditDevice.u_hoehe === 0 ? tempEditDevice.side : undefined,
+      };
+      const updated = await api.updateDevice(selectedDevice.id, payload);
       showEditDevice = false;
       await loadAll();
       await loadDeviceDetail(updated);
@@ -1081,7 +1064,7 @@
     ];
   });
 
-  const cableTypes = $derived([...new Set(cables.map(c => c.typ))].sort());
+  const cableTypes = $derived(([...new Set(cables.map(c => c.typ))] as string[]).sort());
 
   const PINNED_CABLE_TYPES = ['Strom-C13-Lock', 'Strom-C19-Lock'];
   const legendCableTypes = $derived(
@@ -2051,11 +2034,11 @@
         {/if}
 
         <div>
-      <div>
-        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">IPv6-Adresse</label>
-        <input type="text" bind:value={editIpv6} placeholder="2001:db8::1"
-          class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] font-mono focus:outline-none focus:border-[#1D9E75]" />
-      </div>
+          <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">IPv6-Adresse</label>
+          <input type="text" bind:value={devIpv6} placeholder="2001:db8::1"
+            class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] font-mono focus:outline-none focus:border-[#1D9E75]" />
+        </div>
+        <div>
           <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">IP-Adresse</label>
           <input type="text" bind:value={devIp} placeholder="192.168.1.10"
             class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]" />
@@ -2341,133 +2324,8 @@
       <button onclick={() => showEditDevice=false}><X class="w-5 h-5 text-[var(--color-text3)]" /></button>
     </div>
     <form onsubmit={submitEditDevice} class="p-6 space-y-4">
-      <div>
-        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Hostname *</label>
-        <input type="text" bind:value={editHostname} required
-          class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]" />
-      </div>
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">U-Position</label>
-          <input type="number" bind:value={editUPos} min="1" max={selectedRack?.hoehe_u ?? 42}
-            disabled={editUHoehe === 0}
-            class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75] disabled:opacity-50" />
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Höhe (HE)</label>
-          <input type="number" bind:value={editUHoehe} min="0"
-            oninput={() => { if (editUHoehe === 0) editUPos = null; }}
-            class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]" />
-        </div>
-      </div>
-      {#if editUHoehe === 0}
-      <div>
-        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Seite</label>
-        <div class="grid grid-cols-2 gap-2">
-          <button type="button" onclick={() => editSide = 'left'}
-            class="px-3 py-2 rounded-lg text-sm transition border {editSide === 'left' ? 'bg-[#1D9E75]/20 border-[#1D9E75]/40 text-[var(--color-text)]' : 'text-[var(--color-text2)] hover:bg-[var(--color-border2)] border-[var(--color-border2)]'}">
-            Links (0UL)
-          </button>
-          <button type="button" onclick={() => editSide = 'right'}
-            class="px-3 py-2 rounded-lg text-sm transition border {editSide === 'right' ? 'bg-[#1D9E75]/20 border-[#1D9E75]/40 text-[var(--color-text)]' : 'text-[var(--color-text2)] hover:bg-[var(--color-border2)] border-[var(--color-border2)]'}">
-            Rechts (0UR)
-          </button>
-        </div>
-      </div>
-      {/if}
-      {#if selectedDevice.typ !== 'pdu'}
-      <div class="mb-4">
-        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Anschlussleistung (W)</label>
-        <input type="number" bind:value={editAnschluss} min="0"
-          class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]" />
-      </div>
-      {/if}
-      <div>
-      <div>
-        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">IPv6-Adresse</label>
-        <input type="text" bind:value={editIpv6} placeholder="2001:db8::1"
-          class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] font-mono focus:outline-none focus:border-[#1D9E75]" />
-      </div>
-        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">IP-Adresse</label>
-        <input type="text" bind:value={editIp} placeholder="192.168.1.10"
-          class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]" />
-      </div>
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Hersteller</label>
-          <input type="text" bind:value={editHersteller}
-            class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]" />
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Modell</label>
-          <input type="text" bind:value={editModell}
-            class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]" />
-        </div>
-      </div>
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Seriennummer</label>
-          <input type="text" bind:value={editSeriennummer}
-            class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]" />
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Inventarnummer</label>
-          <input type="text" bind:value={editInventarnummer}
-            class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]" />
-        </div>
-      </div>
-      <div>
-        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Bemerkung</label>
-        <textarea bind:value={editBemerkung} rows="2"
-          class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75] resize-none"></textarea>
-      </div>
-
-      <div class="border-t border-[var(--color-border)] pt-4 mt-2">
-        <h4 class="text-sm font-bold text-[var(--color-text)] mb-3">Ausfall- & Boot-Verhalten</h4>
-        <div class="grid grid-cols-3 gap-4 mb-4">
-          <div>
-            <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Priorität (1=Höchste)</label>
-            <input type="number" bind:value={editShutdownPriority} min="1" max="4"
-              class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]" />
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Delay (Sekunden)</label>
-            <input type="number" bind:value={editShutdownDelay} min="0"
-              class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]" />
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Methode</label>
-            <select bind:value={editShutdownMethod}
-              class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]">
-              <option value="ACPI_Graceful">ACPI Graceful</option>
-              <option value="SSH_Script">SSH Script</option>
-              <option value="Hard_Power_Cut">Hard Power Cut</option>
-            </select>
-          </div>
-        </div>
-
-        <h4 class="text-sm font-bold text-[var(--color-text)] mb-2">Abhängigkeiten (DAG)</h4>
-        <p class="text-[10px] text-[var(--color-text3)] mb-2">Wenn die ausgewählten Geräte ausfallen, fällt dieses Gerät ebenfalls aus. Nutze 'HA-Cluster' für redundante Systeme (Gerät überlebt, solange mind. eines im Cluster online ist).</p>
-        
-        {#each editDependencies as dep, i}
-          <div class="flex items-center space-x-2 mb-2 bg-[var(--color-bg2)] p-2 rounded border border-[var(--color-border)]">
-            <select bind:value={dep.depends_on_device_id} class="flex-1 bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded px-2 py-1 text-xs text-[var(--color-text)]">
-              {#each devices.filter(d => d.id !== selectedDevice!.id) as d}
-                <option value={d.id}>{d.hostname} ({d.typ})</option>
-              {/each}
-            </select>
-            <select bind:value={dep.dependency_type} class="w-24 bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded px-2 py-1 text-xs text-[var(--color-text)]">
-              <option value="power">Power</option>
-              <option value="network">Network</option>
-            </select>
-            <input type="text" bind:value={dep.dependency_group} placeholder="HA-Cluster (opt)" class="w-28 bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded px-2 py-1 text-xs text-[var(--color-text)]" />
-            <button type="button" onclick={() => editDependencies = editDependencies.filter((_, idx) => idx !== i)} class="p-1 text-red-500/50 hover:text-red-400"><X class="w-3 h-3"/></button>
-          </div>
-        {/each}
-        <button type="button" onclick={() => editDependencies = [...editDependencies, {depends_on_device_id: devices.find(d=>d.id!==selectedDevice!.id)?.id, dependency_type: 'power', dependency_group: ''}]}
-          class="text-xs text-blue-400 hover:text-[#86EFCB] mt-1 flex items-center gap-1">+ Abhängigkeit hinzufügen</button>
-      </div>
-      <div class="flex justify-end space-x-3 pt-2">
+      <DeviceForm bind:device={tempEditDevice} {devices} rackHoeheU={selectedRack?.hoehe_u ?? 42} />
+      <div class="flex justify-end space-x-3 pt-4 border-t border-[var(--color-border)]">
         <button type="button" onclick={() => showEditDevice=false}
           class="px-4 py-2 text-sm text-[var(--color-text2)] hover:bg-[var(--color-border)] rounded-lg transition">Abbrechen</button>
         <button type="submit"

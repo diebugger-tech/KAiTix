@@ -23,7 +23,8 @@
     Monitor,
     BookOpen,
     Sun,
-    Moon
+    Moon,
+    Info
   } from '@lucide/svelte';
   import { goto } from '$app/navigation';
 
@@ -111,6 +112,12 @@
       title: 'Tools',
       links: [
         { href: '/import', icon: FileUp, label: 'Import' }
+      ]
+    },
+    {
+      title: 'Referenz',
+      links: [
+        { href: '/referenz/ipv6', icon: Info, label: 'IPv6 Schema', matchPrefix: true }
       ]
     }
   ];

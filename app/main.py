@@ -35,10 +35,31 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
     )
 
 
-@app.get("/")
-def root():
-    return {
-        "message": f"Welcome to the {settings.PROJECT_NAME} API",
-        "docs_url": "/docs",
-        "status": "healthy",
-    }
+import os
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+@app.exception_handler(StarletteHTTPException)
+async def custom_http_exception_handler(request: Request, exc: StarletteHTTPException):
+    # Only fallback to SPA for 404s that are not API calls
+    if exc.status_code == 404 and not request.url.path.startswith("/api/"):
+        index_path = "frontend/build/index.html"
+        if os.path.exists(index_path):
+            return FileResponse(index_path)
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+    )
+
+# Mount the static files from the SvelteKit build output
+if os.path.exists("frontend/build"):
+    app.mount("/", StaticFiles(directory="frontend/build", html=True), name="frontend")
+else:
+    @app.get("/")
+    def root():
+        return {
+            "message": f"Welcome to the {settings.PROJECT_NAME} API (Frontend not built)",
+            "docs_url": "/docs",
+            "status": "healthy",
+        }

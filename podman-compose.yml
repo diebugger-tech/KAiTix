@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  db:
+    image: docker.io/library/mysql:8.0
+    container_name: kaitix-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: kaitix
+      MYSQL_USER: kaitix
+      MYSQL_PASSWORD: kaitixpassword
+    volumes:
+      - kaitix_db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Containerfile
+    container_name: kaitix-backend
+    ports:
+      - "8003:8003"
+    environment:
+      - DATABASE_URL=mysql+aiomysql://kaitix:kaitixpassword@db:3306/kaitix
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  kaitix_db_data:
