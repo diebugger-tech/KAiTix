@@ -7,7 +7,7 @@
   let devices = $state<Device[]>([]);
   let loading = $state(true);
   
-  let showModal = $state(false);
+  let panelOpen = $state(false);
   let editMode = $state(false);
   let currentVm = $state<Partial<VirtualMachine>>({ shutdown_priority: 5 });
   let activeTab = $state<'table' | 'graph'>('table');
@@ -107,13 +107,13 @@
   function openCreate() {
     editMode = false;
     currentVm = { shutdown_priority: 5, hypervisor_typ: 'vmware' };
-    showModal = true;
+    panelOpen = true;
   }
 
   function openEdit(vm: VirtualMachine) {
     editMode = true;
     currentVm = { ...vm };
-    showModal = true;
+    panelOpen = true;
   }
 
   async function save() {
@@ -123,7 +123,7 @@
       } else {
         await api.createVirtualMachine(currentVm);
       }
-      showModal = false;
+      panelOpen = false;
       vms = await api.getVirtualMachines();
     } catch (e: any) {
       if (e.message?.includes('Zirkuläre Abhängigkeit')) {
@@ -511,98 +511,105 @@
   </div>
 </div>
 
-{#if showModal}
-<div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-  <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-    <div class="p-4 border-b border-[var(--color-border)] flex items-center justify-between">
-      <h3 class="text-lg font-bold text-[var(--color-text)]">{editMode ? 'VM bearbeiten' : 'Neue VM anlegen'}</h3>
-      <button onclick={() => showModal = false} class="text-[var(--color-text2)] hover:text-[var(--color-text)]">✕</button>
-    </div>
-    
-    <div class="p-6 overflow-y-auto space-y-4">
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Name <span class="text-red-400">*</span></label>
-          <input type="text" bind:value={currentVm.name} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-pink-500" />
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Hypervisor-Typ</label>
-          <select bind:value={currentVm.hypervisor_typ} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-pink-500">
-            <option value="vmware">VMware ESXi</option>
-            <option value="hyper-v">Microsoft Hyper-V</option>
-            <option value="kvm">KVM (Linux)</option>
-            <option value="xcpng">XCP-ng</option>
-            <option value="sonstige">Sonstige</option>
-          </select>
-        </div>
-      </div>
+{#if panelOpen}
+<!-- Backdrop overlay -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity" onclick={() => panelOpen = false}></div>
 
+<!-- Slide Panel -->
+<div class="fixed inset-y-0 right-0 w-full max-w-md bg-[var(--color-bg2)] border-l border-[var(--color-border)] shadow-2xl z-50 flex flex-col transform transition-transform duration-300 translate-x-0">
+  <div class="p-4 border-b border-[var(--color-border)] flex items-center justify-between shrink-0 bg-[var(--color-bg3)]">
+    <h3 class="text-lg font-bold text-[var(--color-text)] flex items-center gap-2">
+      <Monitor class="w-5 h-5 text-pink-400" />
+      {editMode ? 'VM bearbeiten' : 'Neue VM anlegen'}
+    </h3>
+    <button onclick={() => panelOpen = false} class="text-[var(--color-text2)] hover:text-[var(--color-text)] transition-colors p-1 hover:bg-[var(--color-border)] rounded">
+      ✕
+    </button>
+  </div>
+  
+  <div class="p-6 overflow-y-auto flex-1 space-y-5">
+    <div class="grid grid-cols-1 gap-4">
       <div>
-        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Läuft auf (Host-System) <span class="text-red-400">*</span></label>
-        <select bind:value={currentVm.host_device_id} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-pink-500">
-          <option value={null}>-- Physischen Server wählen --</option>
-          {#each devices as dev}
-            <option value={dev.id}>{dev.hostname} ({dev.typ})</option>
+        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Name <span class="text-red-400">*</span></label>
+        <input type="text" bind:value={currentVm.name} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-pink-500" />
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Hypervisor-Typ</label>
+        <select bind:value={currentVm.hypervisor_typ} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-pink-500">
+          <option value="vmware">VMware ESXi</option>
+          <option value="hyper-v">Microsoft Hyper-V</option>
+          <option value="kvm">KVM (Linux)</option>
+          <option value="xcpng">XCP-ng</option>
+          <option value="sonstige">Sonstige</option>
+        </select>
+      </div>
+    </div>
+
+    <div>
+      <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Läuft auf (Host-System) <span class="text-red-400">*</span></label>
+      <select bind:value={currentVm.host_device_id} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-pink-500">
+        <option value={null}>-- Physischen Server wählen --</option>
+        {#each devices as dev}
+          <option value={dev.id}>{dev.hostname} ({dev.typ})</option>
+        {/each}
+      </select>
+    </div>
+
+    <div class="grid grid-cols-1 gap-4">
+      <div>
+        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Betriebssystem</label>
+        <input type="text" bind:value={currentVm.betriebssystem} placeholder="z.B. Ubuntu 24.04" class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-pink-500" />
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">IP-Adresse</label>
+        <input type="text" bind:value={currentVm.ip_adresse} placeholder="192.168.x.x" class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] font-mono focus:outline-none focus:border-pink-500" />
+      </div>
+    </div>
+
+    <div>
+      <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Dienst / Anwendung</label>
+      <input type="text" bind:value={currentVm.dienst} placeholder="z.B. Primary Database Server" class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-pink-500" />
+    </div>
+
+    <div class="grid grid-cols-1 gap-4">
+      <div>
+        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Abhängig von (VM)</label>
+        <select bind:value={currentVm.depends_on_vm_id} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-pink-500">
+          <option value={null}>-- Keine Abhängigkeit --</option>
+          {#each vms.filter(v => v.id !== currentVm.id) as v}
+            <option value={v.id}>{v.name}</option>
           {/each}
         </select>
       </div>
-
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Betriebssystem</label>
-          <input type="text" bind:value={currentVm.betriebssystem} placeholder="z.B. Ubuntu 24.04" class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-pink-500" />
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">IP-Adresse</label>
-          <input type="text" bind:value={currentVm.ip_adresse} placeholder="192.168.x.x" class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] font-mono focus:outline-none focus:border-pink-500" />
-        </div>
-      </div>
-
       <div>
-        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Dienst / Anwendung</label>
-        <input type="text" bind:value={currentVm.dienst} placeholder="z.B. Primary Database Server" class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-pink-500" />
-      </div>
-
-      <div class="grid grid-cols-3 gap-4">
-        <div class="col-span-2">
-          <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Abhängig von (VM)</label>
-          <select bind:value={currentVm.depends_on_vm_id} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-pink-500">
-            <option value={null}>-- Keine Abhängigkeit --</option>
-            {#each vms.filter(v => v.id !== currentVm.id) as v}
-              <option value={v.id}>{v.name}</option>
-            {/each}
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Shutdown-Prio</label>
-          <input type="number" bind:value={currentVm.shutdown_priority} min="1" max="99" class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-pink-500" />
-        </div>
-      </div>
-
-      <div class="grid grid-cols-2 gap-4">
-        <div class="col-span-2">
-          <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Verantwortlicher (Team/Person)</label>
-          <input type="text" bind:value={currentVm.responsible} placeholder="z.B. Andreas / DBA Team" class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-pink-500" />
-        </div>
-      </div>
-
-      <div>
-        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Bemerkung</label>
-        <textarea bind:value={currentVm.bemerkung} rows="2" class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-pink-500 resize-none"></textarea>
+        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Shutdown-Prio</label>
+        <input type="number" bind:value={currentVm.shutdown_priority} min="1" max="99" class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-pink-500" />
       </div>
     </div>
 
-    <div class="p-4 border-t border-[var(--color-border)] bg-[var(--color-bg2)] flex justify-end gap-3 shrink-0">
-      <button onclick={() => showModal = false} class="px-4 py-2 rounded-lg text-sm font-medium text-[var(--color-text2)] hover:text-[var(--color-text)] hover:bg-[var(--color-border)] transition">Abbrechen</button>
-      <button 
-        onclick={save}
-        disabled={!currentVm.name || !currentVm.host_device_id}
-        class="px-4 py-2 bg-pink-600 hover:bg-pink-500 disabled:opacity-50 disabled:cursor-not-allowed text-[var(--color-text)] rounded-lg text-sm font-semibold transition flex items-center gap-2"
-      >
-        <CheckCircle2 class="w-4 h-4" />
-        Speichern
-      </button>
+    <div>
+      <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Verantwortlicher (Team/Person)</label>
+      <input type="text" bind:value={currentVm.responsible} placeholder="z.B. Andreas / DBA Team" class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-pink-500" />
     </div>
+
+    <div>
+      <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Bemerkung</label>
+      <textarea bind:value={currentVm.bemerkung} rows="3" class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-pink-500 resize-none"></textarea>
+    </div>
+  </div>
+
+  <div class="p-4 border-t border-[var(--color-border)] bg-[var(--color-bg3)] flex justify-end gap-3 shrink-0">
+    <button onclick={() => panelOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium text-[var(--color-text2)] hover:text-[var(--color-text)] hover:bg-[var(--color-border)] transition">Abbrechen</button>
+    <button 
+      onclick={save}
+      disabled={!currentVm.name || !currentVm.host_device_id}
+      class="px-4 py-2 bg-pink-600 hover:bg-pink-500 disabled:opacity-50 disabled:cursor-not-allowed text-[var(--color-text)] rounded-lg text-sm font-semibold transition flex items-center gap-2"
+    >
+      <CheckCircle2 class="w-4 h-4" />
+      Speichern
+    </button>
   </div>
 </div>
 {/if}
