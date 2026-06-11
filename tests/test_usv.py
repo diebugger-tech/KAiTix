@@ -83,15 +83,9 @@ async def test_get_usv_status_endpoint(client: AsyncClient, db: AsyncSession):
     await db.flush()
 
     # Add active modules
-    m1 = UsvModule(
-        usv_unit_id=usv.id, slot=1, leistung_kw=float("10"), status="aktiv"
-    )
-    m2 = UsvModule(
-        usv_unit_id=usv.id, slot=2, leistung_kw=float("10"), status="aktiv"
-    )
-    m3 = UsvModule(
-        usv_unit_id=usv.id, slot=3, leistung_kw=float("10"), status="aktiv"
-    )
+    m1 = UsvModule(usv_unit_id=usv.id, slot=1, leistung_kw=float("10"), status="aktiv")
+    m2 = UsvModule(usv_unit_id=usv.id, slot=2, leistung_kw=float("10"), status="aktiv")
+    m3 = UsvModule(usv_unit_id=usv.id, slot=3, leistung_kw=float("10"), status="aktiv")
     db.add_all([m1, m2, m3])
 
     # Add device on this rack

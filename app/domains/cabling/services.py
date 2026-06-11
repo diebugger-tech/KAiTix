@@ -519,6 +519,7 @@ class CablingService:
                 or_(
                     DeviceModel.hostname.ilike(term),
                     DeviceModel.ip_adresse.ilike(term),
+                    DeviceModel.ipv6_adresse.ilike(term),
                     DeviceModel.seriennummer.ilike(term),
                     DeviceModel.inventarnummer.ilike(term),
                     DeviceModel.hersteller.ilike(term),
@@ -559,6 +560,7 @@ class CablingService:
                     "typ": d.typ,
                     "rack_id": d.rack_id,
                     "ip_adresse": d.ip_adresse,
+                    "ipv6_adresse": d.ipv6_adresse,
                     "hersteller": d.hersteller,
                     "modell": d.modell,
                 }

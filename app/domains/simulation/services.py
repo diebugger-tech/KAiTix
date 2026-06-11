@@ -671,15 +671,21 @@ class AnomalyScorer:
                     if getattr(c, "typ", "").startswith("Strom"):
                         continue
                     if c.von_device_id and c.von_port:
-                        port_occupancy.setdefault((c.von_device_id, c.von_port), []).append(c)
+                        port_occupancy.setdefault(
+                            (c.von_device_id, c.von_port), []
+                        ).append(c)
                     if c.nach_device_id and c.nach_port:
-                        port_occupancy.setdefault((c.nach_device_id, c.nach_port), []).append(c)
+                        port_occupancy.setdefault(
+                            (c.nach_device_id, c.nach_port), []
+                        ).append(c)
 
                 for dev in devs:
                     # Prüfe, ob einer der Ports dieses Geräts doppelt belegt ist
                     for (d_id, p_name), mapped_cables in port_occupancy.items():
                         if d_id == dev.id and len(mapped_cables) > 1:
-                            cable_nrs = [c.kabel_nr for c in mapped_cables if c.kabel_nr]
+                            cable_nrs = [
+                                c.kabel_nr for c in mapped_cables if c.kabel_nr
+                            ]
                             issues.append(
                                 f"Port-Doppelbelegung: Am Gerät {dev.hostname} stecken {len(mapped_cables)} Kabel im selben Port '{p_name}' ({', '.join(cable_nrs)})"
                             )

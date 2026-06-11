@@ -16,7 +16,10 @@ from app.domains.hardware.schemas import (
     DeviceUpdate,
 )
 from app.domains.cabling.schemas import InterfaceBody, Interface as InterfaceSchema
-from app.domains.network.services.ipam_service import validate_and_check_ip
+from app.domains.network.services.ipam_service import (
+    validate_and_check_ip,
+    validate_and_check_ipv6,
+)
 
 router = APIRouter()
 
@@ -160,6 +163,8 @@ async def create_device(device_in: DeviceCreate, db: AsyncSession = Depends(get_
     # IP Validation
     if data.get("ip_adresse"):
         data["ip_adresse"] = await validate_and_check_ip(db, data["ip_adresse"])
+    if data.get("ipv6_adresse"):
+        data["ipv6_adresse"] = await validate_and_check_ipv6(db, data["ipv6_adresse"])
 
     db_device = DeviceModel(**data)
     db.add(db_device)
@@ -230,6 +235,10 @@ async def update_device(
     if device.ip_adresse:
         device.ip_adresse = await validate_and_check_ip(
             db, device.ip_adresse, exclude_device_id=device.id
+        )
+    if device.ipv6_adresse:
+        device.ipv6_adresse = await validate_and_check_ipv6(
+            db, device.ipv6_adresse, exclude_device_id=device.id
         )
 
     # Conflict check with merged state

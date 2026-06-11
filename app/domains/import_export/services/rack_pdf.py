@@ -273,12 +273,21 @@ def _device_table(data: dict, rack: dict) -> Optional[Table]:
         uhe = max(d.get("u_hoehe", 1), 1)
         u_str = f"U{u0}" if uhe == 1 else f"U{u0}–{u0 + uhe - 1}"
         power = d.get("anschlussleistung_watt") or d.get("tdp_watt") or 0
+        ipv4 = d.get("ip_adresse", "–") or "–"
+        ipv6 = d.get("ipv6_adresse", "–") or "–"
+        if ipv4 != "–" and ipv6 != "–":
+            ip_val = f"{ipv4}\n{ipv6}"
+        elif ipv6 != "–":
+            ip_val = ipv6
+        else:
+            ip_val = ipv4
+
         rows.append(
             [
                 u_str,
                 d.get("hostname", "–"),
                 d.get("typ", "–"),
-                d.get("ip_adresse", "–") or "–",
+                ip_val,
                 d.get("phase", "–") or "–",
                 f"{int(power)} W",
             ]

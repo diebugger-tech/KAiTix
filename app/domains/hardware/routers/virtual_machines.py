@@ -10,31 +10,40 @@ from app.domains.hardware.schemas import (
     VirtualMachineUpdate,
     VirtualMachineReorder,
 )
-from app.domains.network.services.ipam_service import validate_and_check_ip
+from app.domains.network.services.ipam_service import (
+    validate_and_check_ip,
+    validate_and_check_ipv6,
+)
 
 router = APIRouter()
 
 
-async def check_circular_dependency(db: AsyncSession, vm_id: int, depends_on_vm_id: int | None):
+async def check_circular_dependency(
+    db: AsyncSession, vm_id: int, depends_on_vm_id: int | None
+):
     if not depends_on_vm_id:
         return
     if vm_id == depends_on_vm_id:
         raise HTTPException(
-            status_code=400, detail="Zirkuläre Abhängigkeit erkannt: VM kann nicht von sich selbst abhängen."
+            status_code=400,
+            detail="Zirkuläre Abhängigkeit erkannt: VM kann nicht von sich selbst abhängen.",
         )
 
-    result = await db.execute(select(VirtualMachineModel.id, VirtualMachineModel.depends_on_vm_id))
+    result = await db.execute(
+        select(VirtualMachineModel.id, VirtualMachineModel.depends_on_vm_id)
+    )
     vms = result.all()
     dep_map = {row.id: row.depends_on_vm_id for row in vms}
-    
+
     dep_map[vm_id] = depends_on_vm_id
     current_dep = depends_on_vm_id
     visited = set()
-    
+
     while current_dep:
         if current_dep == vm_id:
             raise HTTPException(
-                status_code=400, detail="Zirkuläre Abhängigkeit erkannt: Diese Zuweisung führt zu einer Endlosschleife."
+                status_code=400,
+                detail="Zirkuläre Abhängigkeit erkannt: Diese Zuweisung führt zu einer Endlosschleife.",
             )
         if current_dep in visited:
             break
@@ -59,6 +68,8 @@ async def create_virtual_machine(
     # IP Validation
     if db_vm.ip_adresse:
         db_vm.ip_adresse = await validate_and_check_ip(db, db_vm.ip_adresse)
+    if db_vm.ipv6_adresse:
+        db_vm.ipv6_adresse = await validate_and_check_ipv6(db, db_vm.ipv6_adresse)
 
     # Note: For creation, vm_id doesn't exist yet, but we can assign a dummy id like -1 to check cycle
     await check_circular_dependency(db, -1, db_vm.depends_on_vm_id)
@@ -103,6 +114,10 @@ async def update_virtual_machine(
         vm.ip_adresse = await validate_and_check_ip(
             db, vm.ip_adresse, exclude_vm_id=vm.id
         )
+    if vm.ipv6_adresse:
+        vm.ipv6_adresse = await validate_and_check_ipv6(
+            db, vm.ipv6_adresse, exclude_vm_id=vm.id
+        )
 
     await check_circular_dependency(db, vm.id, vm.depends_on_vm_id)
 
@@ -118,16 +133,16 @@ async def reorder_virtual_machines(
     vm_ids = [r.id for r in reorders]
     if not vm_ids:
         return []
-        
+
     result = await db.execute(
         select(VirtualMachineModel).where(VirtualMachineModel.id.in_(vm_ids))
     )
     vms = {vm.id: vm for vm in result.scalars().all()}
-    
+
     for r in reorders:
         if r.id in vms:
             vms[r.id].shutdown_priority = r.shutdown_priority
-            
+
     await db.commit()
     return list(vms.values())
 

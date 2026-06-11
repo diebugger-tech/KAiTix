@@ -114,7 +114,7 @@
       phaseDisplay = 'Nicht verbunden';
     }
 
-    return `${dev.hostname}\nIP: ${dev.ip_adresse || '–'}\nPhase/PDU: ${phaseDisplay}\nLeistung: ${power > 0 ? power + ' W' : '–'}\nBemerkung: ${dev.bemerkung || '–'}`;
+    return `${dev.hostname}\nIP: ${dev.ip_adresse || '–'}\nIPv6: ${dev.ipv6_adresse || '–'}\nPhase/PDU: ${phaseDisplay}\nLeistung: ${power > 0 ? power + ' W' : '–'}\nBemerkung: ${dev.bemerkung || '–'}`;
   });
 
   function handleDeviceClick(dev: Device, e: MouseEvent) {

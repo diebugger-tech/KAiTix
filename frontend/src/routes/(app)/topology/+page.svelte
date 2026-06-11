@@ -466,6 +466,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
     return new Set(data.nodes
       .filter(n => n.hostname.toLowerCase().includes(q) ||
                    (n.ip_adresse ?? '').includes(q) ||
+                   (n.ipv6_adresse ?? '').includes(q) ||
                    (n.modell ?? '').toLowerCase().includes(q) ||
                    (n.hersteller ?? '').toLowerCase().includes(q))
       .map(n => n.id));
@@ -994,7 +995,10 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
               <p class="text-xs text-[var(--color-text2)] mb-1">{[selectedNode.hersteller, selectedNode.modell].filter(Boolean).join(' / ')}</p>
             {/if}
             {#if selectedNode.ip_adresse}
-              <p class="text-xs font-mono text-blue-400 mb-2">{selectedNode.ip_adresse}</p>
+              <p class="text-xs font-mono text-blue-400 mb-1">{selectedNode.ip_adresse}</p>
+            {/if}
+            {#if selectedNode.ipv6_adresse}
+              <p class="text-[10px] font-mono text-blue-300 mb-2">{selectedNode.ipv6_adresse}</p>
             {/if}
             {#if selectedNode.u_position}
               <p class="text-[10px] text-[var(--color-text3)] mb-3">HE {selectedNode.u_position} · {selectedNode.u_hoehe}U</p>
@@ -1088,6 +1092,7 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
                   {#if rack}<span class="text-[10px] text-[var(--color-text3)] bg-[var(--color-border2)] px-1.5 py-0.5 rounded">{rack.name}{rack.standort ? ' · '+rack.standort : ''}</span>{/if}
                   {#if item.node.u_position}<span class="text-[10px] text-[var(--color-text3)] bg-[var(--color-border2)] px-1.5 py-0.5 rounded">HE {item.node.u_position}</span>{/if}
                   {#if item.node.ip_adresse}<span class="text-[10px] font-mono text-blue-400">{item.node.ip_adresse}</span>{/if}
+                  {#if item.node.ipv6_adresse}<span class="text-[9px] font-mono text-blue-300">{item.node.ipv6_adresse}</span>{/if}
                 </div>
               </div>
               <div class="divide-y divide-[var(--color-border)]/40">

@@ -47,7 +47,9 @@ class Rack(Base):
     def total_tdp_w(self) -> float:
         if not self.devices:
             return 0.0
-        return sum(float(dev.tdp_watt) for dev in self.devices if dev.tdp_watt is not None)
+        return sum(
+            float(dev.tdp_watt) for dev in self.devices if dev.tdp_watt is not None
+        )
 
 
 class DeviceDependency(Base):
@@ -95,8 +97,12 @@ class Device(Base):
     )
     hostname: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
     # NUR-DOKU: Keine Auflösung, kein Ping, kein Scan. Reine Dokumentation.
-    ip_adresse: Mapped[Optional[str]] = mapped_column(String(45))  # IPv4 (Konvention); IPv6 in ipv6_adresse
-    ipv6_adresse: Mapped[Optional[str]] = mapped_column(String(45))  # bewusste v1-Vereinfachung = eine Adresse je Gerät/VM; Mehrfachadressen je Interface (Link-Local/ULA/GUA) sind als spätere Kindtabelle möglich, hier absichtlich nicht umgesetzt.
+    ip_adresse: Mapped[Optional[str]] = mapped_column(
+        String(45)
+    )  # IPv4 (Konvention); IPv6 in ipv6_adresse
+    ipv6_adresse: Mapped[Optional[str]] = mapped_column(
+        String(45)
+    )  # bewusste v1-Vereinfachung = eine Adresse je Gerät/VM; Mehrfachadressen je Interface (Link-Local/ULA/GUA) sind als spätere Kindtabelle möglich, hier absichtlich nicht umgesetzt.
     hersteller: Mapped[Optional[str]] = mapped_column(String(100))
     modell: Mapped[Optional[str]] = mapped_column(String(100))
     seriennummer: Mapped[Optional[str]] = mapped_column(String(100))
@@ -265,8 +271,12 @@ class VirtualMachine(Base):
     betriebssystem: Mapped[Optional[str]] = mapped_column(String(100))
     dienst: Mapped[Optional[str]] = mapped_column(String(255))
     # NUR-DOKU: Keine Auflösung, kein Ping, kein Scan. Reine Dokumentation.
-    ip_adresse: Mapped[Optional[str]] = mapped_column(String(45))  # IPv4 (Konvention); IPv6 in ipv6_adresse
-    ipv6_adresse: Mapped[Optional[str]] = mapped_column(String(45))  # bewusste v1-Vereinfachung = eine Adresse je Gerät/VM; Mehrfachadressen je Interface (Link-Local/ULA/GUA) sind als spätere Kindtabelle möglich, hier absichtlich nicht umgesetzt.
+    ip_adresse: Mapped[Optional[str]] = mapped_column(
+        String(45)
+    )  # IPv4 (Konvention); IPv6 in ipv6_adresse
+    ipv6_adresse: Mapped[Optional[str]] = mapped_column(
+        String(45)
+    )  # bewusste v1-Vereinfachung = eine Adresse je Gerät/VM; Mehrfachadressen je Interface (Link-Local/ULA/GUA) sind als spätere Kindtabelle möglich, hier absichtlich nicht umgesetzt.
     depends_on_vm_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("virtual_machines.id", ondelete="SET NULL")
     )

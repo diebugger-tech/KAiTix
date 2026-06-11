@@ -18,7 +18,7 @@ export interface Device {
   id: number;
   hostname: string;
   typ: 'server' | 'switch' | 'pdu' | 'storage' | 'firewall' | 'kentix_raconode' | 'kentix_doormaster' | 'kentix_multisensor' | 'usv' | 'patchpanel' | 'sonstige';
-  ip_adresse?: string;
+  ip_adresse?: string; ipv6_adresse?: string;
   hersteller?: string;
   modell?: string;
   seriennummer?: string;
@@ -377,7 +377,7 @@ export interface VirtualMachine {
   vm_id_extern?: string | null;
   betriebssystem?: string | null;
   dienst?: string | null;
-  ip_adresse?: string | null;
+  ip_adresse?: string | null; ipv6_adresse?: string | null;
   depends_on_vm_id?: number | null;
   shutdown_priority?: number | null;
   responsible?: string | null;
@@ -612,7 +612,7 @@ export const api = {
     nodes: Array<{
       id: number; hostname: string; typ: string; rack_id: number | null;
       rack_name: string | null; u_position: number | null; u_hoehe: number;
-      hersteller: string | null; modell: string | null; ip_adresse: string | null;
+      hersteller: string | null; modell: string | null; ip_adresse: string | null; ipv6_adresse: string | null;
     }>;
     edges: Array<{
       id: string; kabel_nr: string; typ: string; laenge_m: number | null; farbe: string | null;
@@ -659,7 +659,7 @@ export const api = {
 
   // Search
   search: (q: string): Promise<{
-    devices: Array<{ id: number; hostname: string; typ: string; rack_id: number | null; ip_adresse: string | null; hersteller: string | null; modell: string | null }>;
+    devices: Array<{ id: number; hostname: string; typ: string; rack_id: number | null; ip_adresse: string | null; ipv6_adresse: string | null; hersteller: string | null; modell: string | null }>;
     cables: Array<{ id: number; kabel_nr: string; typ: string; farbe: string | null; von_port: string | null; nach_port: string | null }>;
     racks: Array<{ id: number; name: string; standort: string }>;
   }> => request(`search?q=${encodeURIComponent(q)}`),

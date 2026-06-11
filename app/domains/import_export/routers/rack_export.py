@@ -92,6 +92,7 @@ async def _build_pdf_data(db: AsyncSession, rack_id: int | None = None) -> dict:
                 "hostname": d.hostname,
                 "typ": d.typ,
                 "ip_adresse": d.ip_adresse,
+                "ipv6_adresse": d.ipv6_adresse,
                 "rack_id": d.rack_id,
                 "u_position": d.u_position,
                 "u_hoehe": d.u_hoehe,

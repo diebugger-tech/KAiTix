@@ -160,6 +160,7 @@
   let showEditDevice = $state(false);
   let editHostname   = $state('');
   let editIp         = $state('');
+  let editIpv6       = $state('');
   let editPhase      = $state<'L1'|'L2'|'L3'>('L1');
   let editAnschluss  = $state<number|null>(0);
   let editHersteller = $state('');
@@ -506,6 +507,7 @@
         psu_nennwatt: devPsuNennwatt ?? undefined,
         anschlussleistung_watt: devAnschlussleistung || undefined,
         ip_adresse: devIp || undefined,
+        ipv6_adresse: editIpv6 || undefined,
         hersteller: devHersteller || undefined,
         modell: devModell || undefined,
         seriennummer: devSeriennummer || undefined,
@@ -539,6 +541,7 @@
     if (!selectedDevice) return;
     editHostname     = selectedDevice.hostname;
     editIp           = selectedDevice.ip_adresse || '';
+    editIpv6         = selectedDevice.ipv6_adresse || '';
     editPhase        = (selectedDevice.phase as 'L1'|'L2'|'L3') || 'L1';
     editAnschluss    = Number(selectedDevice.anschlussleistung_watt ?? selectedDevice.tdp_watt ?? 0);
     editHersteller   = selectedDevice.hersteller || '';
@@ -559,6 +562,7 @@
       const updated = await api.updateDevice(selectedDevice.id, {
         hostname:               editHostname.trim(),
         ip_adresse:             editIp || undefined,
+        ipv6_adresse:           editIpv6 || undefined,
         anschlussleistung_watt: editAnschluss || undefined,
         hersteller:             editHersteller || undefined,
         modell:                 editModell || undefined,
@@ -942,7 +946,7 @@
       phaseDisplay = 'Nicht verbunden';
     }
 
-    return `${dev.hostname}\nIP: ${dev.ip_adresse || '–'}\nPhase/PDU: ${phaseDisplay}\nLeistung: ${power > 0 ? power + ' W' : '–'}\nBemerkung: ${dev.bemerkung || '–'}`;
+    return `${dev.hostname}\nIP: ${dev.ip_adresse || '–'}\nIPv6: ${dev.ipv6_adresse || '–'}\nPhase/PDU: ${phaseDisplay}\nLeistung: ${power > 0 ? power + ' W' : '–'}\nBemerkung: ${dev.bemerkung || '–'}`;
   });
 
   const phaseCapacityWatts = $derived((ph: 'L1' | 'L2' | 'L3') => {
@@ -2047,6 +2051,11 @@
         {/if}
 
         <div>
+      <div>
+        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">IPv6-Adresse</label>
+        <input type="text" bind:value={editIpv6} placeholder="2001:db8::1"
+          class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] font-mono focus:outline-none focus:border-[#1D9E75]" />
+      </div>
           <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">IP-Adresse</label>
           <input type="text" bind:value={devIp} placeholder="192.168.1.10"
             class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]" />
@@ -2374,6 +2383,11 @@
       </div>
       {/if}
       <div>
+      <div>
+        <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">IPv6-Adresse</label>
+        <input type="text" bind:value={editIpv6} placeholder="2001:db8::1"
+          class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] font-mono focus:outline-none focus:border-[#1D9E75]" />
+      </div>
         <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">IP-Adresse</label>
         <input type="text" bind:value={editIp} placeholder="192.168.1.10"
           class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]" />

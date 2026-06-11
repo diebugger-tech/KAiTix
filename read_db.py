@@ -1,6 +1,6 @@
 import sqlite3
 
-db_path = 'backend/kaitix.db'
+db_path = "backend/kaitix.db"
 try:
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()

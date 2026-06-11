@@ -221,7 +221,6 @@ class VirtualMachineReorder(BaseModel):
     shutdown_priority: int
 
 
-
 class VirtualMachine(VirtualMachineBase):
     id: int
     model_config = ConfigDict(from_attributes=True)
