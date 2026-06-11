@@ -920,7 +920,8 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
       </div>
 
       <!-- Detail Panel -->
-      <div class="w-72 shrink-0 flex flex-col gap-3">
+      <div class="w-72 shrink-0 flex flex-col gap-3 h-full">
+        {#if !selectedNode}
         <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl p-4">
           <p class="text-[10px] uppercase font-bold tracking-wider text-[var(--color-text3)] mb-3">Legende</p>
           <div class="grid grid-cols-2 gap-1.5 text-[10px]">
@@ -976,8 +977,11 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
           {/if}
           <p class="text-[9px] text-[var(--color-text3)] mt-2">PDUs seitlich · Drag: verschieben · Scroll: Zoom</p>
         </div>
+          <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl p-4 text-center flex-1 flex items-center justify-center">
+            <p class="text-xs text-[var(--color-text3)]">Gerät anklicken für Details</p>
+          </div>
 
-        {#if selectedNode}
+        {:else}
           <div class="bg-[var(--color-bg2)] border border-violet-800/40 rounded-xl p-4 flex-1 overflow-y-auto">
             <div class="flex items-start justify-between mb-3">
               <div>
@@ -1027,15 +1031,12 @@ ${rows.map(r => `<tr class="${r.isPower ? 'power' : ''}"><td>${r.device}</td><td
               <p class="text-xs text-[var(--color-text3)] italic">Keine Verbindungen</p>
             {/if}
             {#if selectedNode.rack_id}
-              <button onclick={() => goto(`/racks?rack=${selectedNode!.rack_id}`)}
-                class="mt-3 w-full px-3 py-2 bg-[#1D9E75]/20 hover:bg-[#1D9E75]/30 text-blue-400 border border-blue-600/30 rounded-lg text-xs font-medium transition">
-                Im Rack ansehen ↗
+              <button onclick={() => goto(`/racks?rack=${selectedNode!.rack_id}&device=${selectedNode!.id}`)}
+                class="mt-3 w-full px-3 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-600/30 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2">
+                <Building class="w-4 h-4 shrink-0" />
+                <span>Im Rack ansehen & bearbeiten</span>
               </button>
             {/if}
-          </div>
-        {:else}
-          <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl p-4 text-center flex-1 flex items-center justify-center">
-            <p class="text-xs text-[var(--color-text3)]">Gerät anklicken für Details</p>
           </div>
         {/if}
       </div>
