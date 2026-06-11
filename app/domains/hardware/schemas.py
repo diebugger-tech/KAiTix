@@ -102,6 +102,7 @@ class DeviceBase(BaseModel):
     typ: str
     hostname: str
     ip_adresse: Optional[str] = None
+    ipv6_adresse: Optional[str] = None
     hersteller: Optional[str] = None
     modell: Optional[str] = None
     seriennummer: Optional[str] = None
@@ -141,6 +142,7 @@ class DeviceUpdate(BaseModel):
     typ: Optional[str] = None
     hostname: Optional[str] = None
     ip_adresse: Optional[str] = None
+    ipv6_adresse: Optional[str] = None
     hersteller: Optional[str] = None
     modell: Optional[str] = None
     seriennummer: Optional[str] = None
@@ -188,6 +190,7 @@ class VirtualMachineBase(BaseModel):
     betriebssystem: Optional[str] = None
     dienst: Optional[str] = None
     ip_adresse: Optional[str] = None
+    ipv6_adresse: Optional[str] = None
     depends_on_vm_id: Optional[int] = None
     shutdown_priority: Optional[int] = Field(5, ge=1)
     responsible: Optional[str] = None
@@ -206,6 +209,7 @@ class VirtualMachineUpdate(BaseModel):
     betriebssystem: Optional[str] = None
     dienst: Optional[str] = None
     ip_adresse: Optional[str] = None
+    ipv6_adresse: Optional[str] = None
     depends_on_vm_id: Optional[int] = None
     shutdown_priority: Optional[int] = Field(None, ge=1)
     responsible: Optional[str] = None
