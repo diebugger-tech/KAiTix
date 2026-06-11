@@ -48,6 +48,7 @@
   let deviceBoxes = new Map<number, { x: number, y: number, z: number, w: number }>();
   let raycaster = new THREE.Raycaster();
   let mouse = new THREE.Vector2();
+  let hoveredNodeId = $state<number | null>(null);
 
   function initScene() {
     scene = new THREE.Scene();
