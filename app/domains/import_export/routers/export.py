@@ -75,6 +75,7 @@ async def _load_data(db: AsyncSession) -> dict:
             "typ": d.typ,
             "hostname": d.hostname,
             "ip": d.ip_adresse or "–",
+            "ipv6": d.ipv6_adresse or "–",
             "rack_id": d.rack_id,
             "u_pos": d.u_position or 0,
             "u_h": d.u_hoehe or 1,

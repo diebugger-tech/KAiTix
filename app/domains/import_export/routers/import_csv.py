@@ -9,6 +9,7 @@ from sqlalchemy import select
 
 from app.core.database import get_db
 from app.models import Rack, Device, Cable
+from app.core.network_utils import normalize_ipv6
 
 router = APIRouter()
 
@@ -111,6 +112,7 @@ async def preview_devices(file: UploadFile, db: AsyncSession = Depends(get_db)):
                 "seriennummer": raw.get("seriennummer") or None,
                 "inventarnummer": raw.get("inventarnummer") or None,
                 "ip_adresse": raw.get("ip_adresse") or None,
+                "ipv6_adresse": raw.get("ipv6_adresse") or None,
                 "bemerkung": raw.get("bemerkung") or None,
                 "status": status,
                 "errors": errors,
@@ -141,6 +143,7 @@ class DeviceImportRow(BaseModel):
     seriennummer: Optional[str] = None
     inventarnummer: Optional[str] = None
     ip_adresse: Optional[str] = None
+    ipv6_adresse: Optional[str] = None
     bemerkung: Optional[str] = None
 
 
@@ -163,6 +166,8 @@ async def commit_devices(
     conflict_csv = []
     conflict_rack = []
     seen_in_payload = set()
+    existing_ipv6_map = {normalize_ipv6(d.ipv6_adresse): d.hostname.lower() for d in devs_res.scalars().all() if d.ipv6_adresse and normalize_ipv6(d.ipv6_adresse)}
+    seen_ipv6_in_payload = {}
 
     # Build initial rack allocations
     updating_hostnames = (
@@ -182,6 +187,18 @@ async def commit_devices(
     for row_data in payload.rows:
         row_num = row_data.row or "?"
         name = row_data.hostname.lower()
+        
+        ipv6_norm = normalize_ipv6(row_data.ipv6_adresse) if row_data.ipv6_adresse else None
+        
+        if ipv6_norm:
+            # Check for duplicates across all processing (update or create)
+            if ipv6_norm in existing_ipv6_map and existing_ipv6_map[ipv6_norm] != name:
+                conflict_db.append(f"Zeile {row_num}: IPv6 '{row_data.ipv6_adresse}' wird bereits von '{existing_ipv6_map[ipv6_norm]}' verwendet")
+                continue
+            if ipv6_norm in seen_ipv6_in_payload and seen_ipv6_in_payload[ipv6_norm] != name:
+                conflict_csv.append(f"Zeile {row_num}: IPv6 '{row_data.ipv6_adresse}' mehrfach in Datei")
+                continue
+            seen_ipv6_in_payload[ipv6_norm] = name
 
         final_rack_id = row_data.rack_id
         final_u_pos = row_data.u_position
@@ -216,6 +233,8 @@ async def commit_devices(
                 existing.inventarnummer = row_data.inventarnummer
             if row_data.ip_adresse is not None:
                 existing.ip_adresse = row_data.ip_adresse
+            if row_data.ipv6_adresse is not None:
+                existing.ipv6_adresse = row_data.ipv6_adresse
             if row_data.bemerkung is not None:
                 existing.bemerkung = row_data.bemerkung
             updated += 1
@@ -245,6 +264,7 @@ async def commit_devices(
                 seriennummer=row_data.seriennummer,
                 inventarnummer=row_data.inventarnummer,
                 ip_adresse=row_data.ip_adresse,
+                ipv6_adresse=row_data.ipv6_adresse,
                 bemerkung=row_data.bemerkung,
             )
             db.add(dev)
