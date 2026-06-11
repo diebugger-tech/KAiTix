@@ -13,6 +13,36 @@
   let activeTab = $state<'table' | 'graph'>('table');
   let hoveredVmId = $state<number | null>(null);
 
+  let panelWidth = $state(448);
+  let isResizing = $state(false);
+  let startX = 0;
+  let startWidth = 0;
+
+  function startResize(e: MouseEvent) {
+    isResizing = true;
+    startX = e.clientX;
+    startWidth = panelWidth;
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', stopResize);
+    e.preventDefault();
+  }
+
+  function handleMouseMove(e: MouseEvent) {
+    if (!isResizing) return;
+    const dx = startX - e.clientX;
+    let newWidth = startWidth + dx;
+    if (newWidth < 320) newWidth = 320;
+    const maxW = window.innerWidth ? window.innerWidth * 0.9 : 1200;
+    if (newWidth > maxW) newWidth = maxW;
+    panelWidth = newWidth;
+  }
+
+  function stopResize() {
+    isResizing = false;
+    window.removeEventListener('mousemove', handleMouseMove);
+    window.removeEventListener('mouseup', stopResize);
+  }
+
   let sortColumn = $state<'name' | 'hypervisor_typ' | 'host' | 'dienst' | 'ip_adresse' | 'priority' | 'responsible'>('priority');
   let sortDirection = $state<'asc' | 'desc'>('asc');
 
@@ -637,7 +667,13 @@
 <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity" onclick={() => panelOpen = false}></div>
 
 <!-- Slide Panel -->
-<div class="fixed inset-y-0 right-0 w-full max-w-md bg-[var(--color-bg2)] border-l border-[var(--color-border)] shadow-2xl z-50 flex flex-col transform transition-transform duration-300 translate-x-0">
+<div class="fixed inset-y-0 right-0 bg-[var(--color-bg2)] border-l border-[var(--color-border)] shadow-2xl z-50 flex flex-col transform transition-transform duration-300 translate-x-0" style="width: {panelWidth}px; max-width: 100vw;">
+  <!-- Resize Handle -->
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div
+    class="absolute left-0 top-0 bottom-0 w-2 -ml-1 cursor-col-resize bg-transparent hover:bg-[var(--color-border)] active:bg-pink-500/50 transition-colors z-50"
+    onmousedown={startResize}
+  ></div>
   <div class="p-4 border-b border-[var(--color-border)] flex items-center justify-between shrink-0 bg-[var(--color-bg3)]">
     <h3 class="text-lg font-bold text-[var(--color-text)] flex items-center gap-2">
       <Monitor class="w-5 h-5 text-pink-400" />
