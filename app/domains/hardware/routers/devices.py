@@ -120,11 +120,11 @@ async def _check_side_conflict(
 
 
 def get_device_options():
-    # interfaces table does not exist yet (pending Phase-1 migration)
     return [
         selectinload(DeviceModel.pdu_outlets),
         selectinload(DeviceModel.connected_pdu_outlets),
         selectinload(DeviceModel.dependencies),
+        selectinload(DeviceModel.depended_by),
     ]
 
 

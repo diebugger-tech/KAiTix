@@ -170,14 +170,14 @@ class Device(Base):
         back_populates="device",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        lazy="selectin",
+        lazy="raise",
     )
     depended_by: Mapped[List["DeviceDependency"]] = relationship(
         foreign_keys="[DeviceDependency.depends_on_device_id]",
         back_populates="depends_on_device",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        lazy="selectin",
+        lazy="raise",
     )
 
     interfaces: Mapped[List["Interface"]] = relationship(

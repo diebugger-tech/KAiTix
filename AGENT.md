@@ -46,6 +46,15 @@ ServerFlow-Dateien dienen als Referenz für Domänenwissen (USV-Berechnung, Kent
 
 ### Zuletzt abgeschlossen (diese Session)
 
+**Phase 5 — Performance & Backend Härtung (abgeschlossen):**
+- **N+1 / Kaltstart Latenz Fix (BUG-01):**
+  - Massive Latenz (bis zu 40s) beim ersten Laden des Dashboards behoben.
+  - Ursache: Kaskadierende `lazy="selectin"` Queries für `Device.dependencies` und `Device.depended_by` entfernt (jetzt `lazy="raise"`).
+  - Explicit `selectinload` in `get_device_options` Router eingebaut.
+  - `lifespan` Context-Manager in FastAPI integriert, um den MySQL-Connection-Pool beim Start aufzuwärmen (`SELECT 1`).
+- **Testdaten & IPv6:**
+  - `seed_testdata.py` erweitert: IPv6-Adressen für Compute-Server eingefügt und DB erfolgreich geseeded, um Showcase-Vollständigkeit (inkl. Referenz IPv6-Daten) herzustellen.
+
 **Phase 4 — UX & UI Refactoring (abgeschlossen):**
 - **Dark Mode Komplett-Redesign:** Ablösung des altbackenen Grau-Grün-Themes durch ein hochkontrastiges, modernes "Slate & Emerald" Farbschema in Svelte 5.
   - Satter `slate-950` Basis-Hintergrund für starke Tiefe, `slate-900` für Cards.

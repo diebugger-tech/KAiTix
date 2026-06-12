@@ -459,6 +459,8 @@ async def main(if_empty: bool = False):
                 u_hoehe=2,
                 tdp_watt=850,
                 phase=phase,
+                ip_adresse=f"10.0.1.{100+i}",
+                ipv6_adresse=f"2001:db8:1::{100+i}",
             )
             servers_app.append(srv)
         db.add_all(servers_app)
