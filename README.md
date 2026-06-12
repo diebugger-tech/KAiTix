@@ -82,6 +82,11 @@ KAiTix ist ein hochspezialisiertes Planungs-, Simulations- und Dokumentationswer
 ### 9. UX & Interface Design
 * **Slate & Emerald Dark Theme:** KAiTix nutzt eine hochkontrastige, augenschonende "Slate & Emerald" Farbpalette, die speziell auf die Anforderungen in dunklen RZ-Umgebungen und auf maximale Lesbarkeit bei dichten Datentabellen und Metriken ausgelegt ist.
 * **Effiziente Filter:** Schnelle 2-Wege-Synchronisation von Standort-, Reihen- und Rack-Filtern zum sofortigen Wechseln zwischen Rechenzentren.
+* **Virtuelle Maschinen & Topology UI:** Umfassend überarbeitete Sidebar-Ansichten und Suchfunktionen für schnelle Navigation.
+
+### 10. Referenz & Lernbereich
+* **IPv6 Referenz:** Integriertes Cheat-Sheet für das IPv6-Design (VLAN-Mapping, ULAs, IID-Berechnung), direkt abrufbar aus der Navigation.
+
 
 ---
 
