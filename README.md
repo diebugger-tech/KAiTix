@@ -154,6 +154,7 @@ cp .env.example .env
 ```bash
 podman compose up --build
 ```
+> KAiTix nutzt ab sofort eine **robuste Single-Image-Architektur** (Multi-Stage Static Build). Backend (FastAPI) und Frontend (SvelteKit) laufen im selben Container und werden gemeinsam über uvicorn (Port 8003 intern) ausgeliefert. Das reduziert Overhead und verhindert Sync-Probleme zwischen mehreren Containern.
 
 Danach ist die Anwendung im Browser erreichbar unter: **http://localhost:8080**
 

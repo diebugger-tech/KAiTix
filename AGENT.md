@@ -198,9 +198,17 @@ make install   # einmalig
 make dev-all   # Backend + Frontend starten
 ```
 
+### Podman / Docker (Single-Image Architektur)
+Die Anwendung wurde vollständig auf einen **Multi-Stage Static Build** umgestellt, bei dem FastAPI als einziger Server (`uvicorn`) sowohl die Backend-API (auf `/api/v1`) als auch das gebaute SvelteKit-Frontend (auf `/`) über Port 8003 ausliefert. Es gibt keinen separaten Node-Server oder nginx mehr.
+Die `compose.yml` mappt Host-Port `8080` auf Container-Port `8003`.
+```bash
+podman compose -f compose.yml up --build -d
+```
+
 ### Tests
 ```bash
 pytest                    # alle Tests
+
 pytest -x                 # stop on first failure
 ruff check app/           # Linting
 ```

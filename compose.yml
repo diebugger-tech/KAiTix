@@ -36,7 +36,7 @@ services:
       dockerfile: Containerfile
     restart: unless-stopped
     ports:
-      - "8080:80"
+      - "8080:8003"
     environment:
       # Host ist im Compose-Netz IMMER der Service 'db'. Bewusst NICHT aus
       # ${DATABASE_URL} abgeleitet, damit eine herumliegende Dev-.env
@@ -50,11 +50,11 @@ services:
         condition: service_healthy
     # 1. Schema bootstrappen / Migrationen anwenden (robust auf leerer DB)
     # 2. Demo-Daten laden, falls aktiviert UND die DB noch leer ist (--if-empty)
-    # 3. App (Backend + Frontend + nginx) starten
+    # 3. App (Backend + Frontend) starten
     command: >
       sh -c "PYTHONPATH=. /app/.venv/bin/python scripts/db_init.py &&
              if [ \"$$SEED_DEMO_DATA\" = \"true\" ]; then PYTHONPATH=. /app/.venv/bin/python scripts/seed_testdata.py --if-empty; fi &&
-             /app/start.sh"
+             /app/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8003"
     networks:
       - kaitix
     # Auto-Rebuild beim Entwickeln:  podman compose -f compose.yml watch

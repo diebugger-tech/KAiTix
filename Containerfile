@@ -54,6 +54,7 @@ RUN pip install --upgrade pip \
 
 # Code kopieren
 COPY app/ /app/app/
+COPY scripts/ /app/scripts/
 COPY alembic.ini /app/
 # (Die Alembic-Migrations-Ordner müssen auch mit!)
 COPY alembic/ /app/alembic/
