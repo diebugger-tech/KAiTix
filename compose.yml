@@ -32,21 +32,7 @@ services:
              /app/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8003"
     networks:
       - kaitix
-    # Auto-Rebuild beim Entwickeln:  podman compose -f compose.yml watch
-    # Das All-in-One-Image hat keinen Live-Mount, daher wird bei Quelländerungen
-    # das Image neu gebaut und der Container neugestartet (action: rebuild).
-    develop:
-      watch:
-        - action: rebuild
-          path: ./app
-        - action: rebuild
-          path: ./frontend/src
-        - action: rebuild
-          path: ./scripts
-        - action: rebuild
-          path: ./requirements.txt
-        - action: rebuild
-          path: ./frontend/package.json
+
 
   # Seed-Service: Einmalig Demo-Daten laden
   # Aufruf: podman compose -f compose.yml run --rm seed
