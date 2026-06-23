@@ -20,6 +20,10 @@ def _runbook_options():
         .selectinload(PduOutlet.pdu),
         selectinload(RunbookModel.layers)
         .selectinload(RunbookLayerModel.devices)
+        .selectinload(RunbookDeviceModel.device)
+        .selectinload(Device.dependencies),
+        selectinload(RunbookModel.layers)
+        .selectinload(RunbookLayerModel.devices)
         .selectinload(RunbookDeviceModel.vm),
     ]
 
