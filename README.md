@@ -53,6 +53,7 @@ KAiTix ist ein hochspezialisiertes Planungs-, Simulations- und Dokumentationswer
 * **Drag & Drop Planer:** Shutdown- und Startup-Sequenzen komfortabel via Weboberfläche in Layer einteilen.
 * **Interaktives Protokoll:** Schritt-für-Schritt-Ausführung mit namentlichem Audit-Trail (Wer hat wann welchen Schritt abgehakt/zurückgenommen).
 * **Startup auto-generiert:** Automatische Umkehrung eines Shutdown-Runbooks auf Knopfdruck.
+* **Print-Laufzettel:** Für den RZ-Einsatz optimierte Druckansicht (PDF/Print) mit visuellen Rack Elevations und Checklisten.
 
 ### 4. USV-Simulation & Phasenlast-Berechnung
 * **N+1 Dimensionierung:** Berechnung der minimalen Anzahl an USV- und Batteriemodulen, die für eine Autonomiezeit bei Phasenungleichgewicht (L1/L2/L3) erforderlich sind.

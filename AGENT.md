@@ -1,5 +1,5 @@
 # KAiTix — AGENT.md
-*Letztes Update: 2026-06-10*
+*Letztes Update: 2026-06-23*
 
 ## Projektübersicht
 
@@ -51,6 +51,7 @@ ServerFlow-Dateien dienen als Referenz für Domänenwissen (USV-Berechnung, Kent
   - Massive Latenz (bis zu 40s) beim ersten Laden des Dashboards behoben.
   - Ursache: Kaskadierende `lazy="selectin"` Queries für `Device.dependencies` und `Device.depended_by` entfernt (jetzt `lazy="raise"`).
   - Explicit `selectinload` in `get_device_options` Router eingebaut.
+  - **Regression Fix:** `ResponseValidationError` bei `/api/v1/runbooks/` behoben durch explizites `.selectinload(Device.dependencies)` in `_runbook_options`.
   - `lifespan` Context-Manager in FastAPI integriert, um den MySQL-Connection-Pool beim Start aufzuwärmen (`SELECT 1`).
 - **Testdaten & IPv6:**
   - `seed_testdata.py` erweitert: IPv6-Adressen für Compute-Server eingefügt und DB erfolgreich geseeded, um Showcase-Vollständigkeit (inkl. Referenz IPv6-Daten) herzustellen.
