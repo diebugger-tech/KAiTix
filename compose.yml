@@ -9,27 +9,6 @@
 # =============================================================================
 
 services:
-  db:
-    image: docker.io/library/mysql:8
-    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-kaitix}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-kaitix}
-      MYSQL_USER: ${MYSQL_USER:-kaitix}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-kaitix}
-    volumes:
-      - db_data:/var/lib/mysql
-    healthcheck:
-      # -h 127.0.0.1 erzwingt TCP (der Unix-Socket liegt in mysql:8.4 unter
-      # /var/lib/mysql/, nicht /var/run/mysqld/ — 'localhost' würde fehlschlagen).
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-kaitix}"]
-      interval: 5s
-      timeout: 5s
-      retries: 20
-      start_period: 40s
-    networks:
-      - kaitix
-
   app:
     build:
       context: .
@@ -38,16 +17,12 @@ services:
     ports:
       - "8080:8003"
     environment:
-      # Host ist im Compose-Netz IMMER der Service 'db'. Bewusst NICHT aus
-      # ${DATABASE_URL} abgeleitet, damit eine herumliegende Dev-.env
-      # (z. B. @127.0.0.1 für lokale Entwicklung) den Container nicht kaputtmacht.
-      DATABASE_URL: mysql+aiomysql://${MYSQL_USER:-kaitix}:${MYSQL_PASSWORD:-kaitix}@db:3306/${MYSQL_DATABASE:-kaitix}
+      DATABASE_URL: sqlite+aiosqlite:///data/kaitix.db
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:8080}
       # Demo-Daten beim allerersten Start automatisch laden (nur wenn DB leer).
       SEED_DEMO_DATA: ${SEED_DEMO_DATA:-true}
-    depends_on:
-      db:
-        condition: service_healthy
+    volumes:
+      - ./data:/app/data
     # 1. Schema bootstrappen / Migrationen anwenden (robust auf leerer DB)
     # 2. Demo-Daten laden, falls aktiviert UND die DB noch leer ist (--if-empty)
     # 3. App (Backend + Frontend) starten
@@ -80,10 +55,9 @@ services:
       context: .
       dockerfile: Containerfile
     environment:
-      DATABASE_URL: mysql+aiomysql://${MYSQL_USER:-kaitix}:${MYSQL_PASSWORD:-kaitix}@db:3306/${MYSQL_DATABASE:-kaitix}
-    depends_on:
-      db:
-        condition: service_healthy
+      DATABASE_URL: sqlite+aiosqlite:///data/kaitix.db
+    volumes:
+      - ./data:/app/data
     command: >
       sh -c "PYTHONPATH=. /app/.venv/bin/python scripts/db_init.py && PYTHONPATH=. /app/.venv/bin/python scripts/seed_testdata.py"
     profiles:
@@ -91,8 +65,7 @@ services:
     networks:
       - kaitix
 
-volumes:
-  db_data:
+
 
 networks:
   kaitix:

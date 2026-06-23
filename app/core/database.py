@@ -1,12 +1,19 @@
 from collections.abc import AsyncGenerator
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import declarative_base
+from sqlalchemy import event
 from app.core.config import settings
 
 engine = create_async_engine(
     settings.DATABASE_URL,
     echo=False,
 )
+
+@event.listens_for(engine.sync_engine, "connect")
+def _fk_on(dbapi_conn, _):
+    cur = dbapi_conn.cursor()
+    cur.execute("PRAGMA foreign_keys=ON")
+    cur.close()
 
 # Async session maker
 AsyncSessionLocal = async_sessionmaker(

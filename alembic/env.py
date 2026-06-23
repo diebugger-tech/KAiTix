@@ -32,6 +32,8 @@ def get_db_url():
     url = settings.DATABASE_URL
     if url.startswith("mysql+aiomysql://"):
         url = url.replace("mysql+aiomysql://", "mysql+pymysql://")
+    elif url.startswith("sqlite+aiosqlite:///"):
+        url = url.replace("sqlite+aiosqlite:///", "sqlite:///")
     return url
 
 
@@ -53,6 +55,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        render_as_batch=True,
     )
 
     with context.begin_transaction():
@@ -72,7 +75,11 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
+        context.configure(
+            connection=connection, 
+            target_metadata=target_metadata,
+            render_as_batch=True,
+        )
 
         with context.begin_transaction():
             context.run_migrations()

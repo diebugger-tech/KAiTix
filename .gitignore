@@ -73,6 +73,10 @@ Cargo.lock
 *.db
 *.sqlite
 *.sqlite3
+kaitix.db
+data/
+*.db-wal
+*.db-shm
 mysql_data/
 postgres_data/
 
