@@ -1462,9 +1462,9 @@
       {#if selectedDevice}
         {@const c = typColor(selectedDevice.typ)}
         <!-- Overlay -->
-        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 flex justify-center items-start pt-10 pb-10 overflow-y-auto" onclick={closeModal} role="dialog" tabindex="-1">
+        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 flex justify-center items-start pt-10 pb-10 overflow-y-auto" onmousedown={(e) => { if (e.target === e.currentTarget) closeModal(); }} role="dialog" tabindex="-1">
           <!-- Modal Container -->
-          <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl w-full max-w-4xl shadow-2xl relative flex flex-col min-h-[50vh] max-h-full" onclick={(e) => e.stopPropagation()} role="document" tabindex="0">
+          <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl w-auto min-w-[900px] max-w-[95vw] resize overflow-auto shadow-2xl relative flex flex-col min-h-[50vh] max-h-full" onclick={(e) => e.stopPropagation()} role="document" tabindex="0">
             
             <!-- Modal Header -->
             <div class="px-5 py-4 border-b border-[var(--color-border)] shrink-0" style="border-top-left-radius: 0.75rem; border-top-right-radius: 0.75rem; border-left: 3px solid {c.border}">
@@ -1590,10 +1590,10 @@
                         <span class="shrink-0 w-7 font-bold text-center {outlet.phase==='L1'?'text-blue-400':outlet.phase==='L2'?'text-cyan-400':'text-orange-400'}">
                           {outlet.phase ?? '–'}
                         </span>
-                        <span class="font-mono text-[var(--color-text)] w-16 truncate shrink-0">{outlet.outlet_name}</span>
-                        <span class="text-[10px] text-[var(--color-text3)] w-8 shrink-0">{outlet.steckdosentyp ?? '–'}</span>
+                        <span class="font-mono text-[var(--color-text)] w-24 shrink-0">{outlet.outlet_name}</span>
+                        <span class="text-xs text-[var(--color-text3)] w-8 shrink-0">{outlet.steckdosentyp ?? '–'}</span>
                         <select
-                          class="flex-1 min-w-0 bg-[var(--color-border)] border border-[var(--color-border2)] rounded px-2 py-1 text-[10px] text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]"
+                          class="flex-1 min-w-0 bg-[var(--color-border)] border border-[var(--color-border2)] rounded px-2 py-1.5 text-xs text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]"
                           value={outlet.connected_device_id ?? ''}
                           onchange={(e) => {
                             const v = (e.target as HTMLSelectElement).value;
@@ -1640,7 +1640,7 @@
                   <div class="overflow-x-auto rounded-lg border border-[var(--color-border)]">
                     <table class="w-full text-xs">
                       <thead class="bg-[var(--color-bg3)]">
-                        <tr class="border-b border-[var(--color-border)] text-[var(--color-text3)] uppercase text-[9px] font-mono tracking-wider">
+                        <tr class="border-b border-[var(--color-border)] text-[var(--color-text3)] uppercase text-xs font-mono tracking-wider">
                           <th class="px-2.5 py-1.5 text-left">Port</th>
                           <th class="px-2.5 py-1.5 text-left">Typ</th>
                           <th class="px-2.5 py-1.5 text-left">Kabel-Nr</th>
@@ -1656,7 +1656,7 @@
                           <tr class="border-b border-[var(--color-border)]/40 last:border-0 transition
                             {cable ? 'hover:bg-emerald-900/10' : 'hover:bg-[var(--color-border2)]'}">
                             <td class="px-2.5 py-1.5 font-mono font-bold {cable ? 'text-[var(--color-text)]' : 'text-[var(--color-text3)]'}">{p.name}</td>
-                            <td class="px-2.5 py-1.5 text-[var(--color-text3)] text-[10px]">{p.typ}</td>
+                            <td class="px-2.5 py-1.5 text-[var(--color-text3)] text-xs">{p.typ}</td>
                             <td class="px-2.5 py-1.5 font-mono {cable ? 'text-[var(--color-text)]' : 'text-[var(--color-text2)]'}">{cable?.kabel_nr ?? '—'}</td>
                             <td class="px-2.5 py-1.5">
                               {#if end && end.otherDev}
@@ -1670,10 +1670,10 @@
                                 }}
                                   class="font-medium transition {end.crossRack ? 'text-orange-400 hover:text-orange-300' : 'text-emerald-400 hover:text-emerald-300'}">
                                   {end.otherDev.hostname}
-                                  {#if end.crossRack}<span class="text-[9px] ml-1 text-orange-500/70">★{end.otherRack?.name}</span>{/if}
+                                  {#if end.crossRack}<span class="text-xs ml-1 text-orange-500/70">★{end.otherRack?.name}</span>{/if}
                                 </button>
                               {:else}
-                                <span class="text-[var(--color-text2)] italic text-[10px]">frei</span>
+                                <span class="text-[var(--color-text2)] italic text-xs">frei</span>
                               {/if}
                             </td>
                             <td class="px-2.5 py-1.5 font-mono {end ? 'text-[var(--color-text2)]' : 'text-[var(--color-text2)]'}">{end?.otherPort ?? '—'}</td>
@@ -1712,10 +1712,10 @@
                       <div class="flex items-center space-x-3 min-w-0">
                         <div class="shrink-0">
                           <div class="font-mono font-bold text-[var(--color-text)]">{iface.port_name}</div>
-                          <div class="text-[10px] text-[var(--color-text3)]">{iface.typ}</div>
+                          <div class="text-xs text-[var(--color-text3)]">{iface.typ}</div>
                         </div>
                         {#if end}
-                          <div class="flex items-center space-x-1.5 min-w-0 text-[10px]">
+                          <div class="flex items-center space-x-1.5 min-w-0 text-xs">
                             <span class="text-[var(--color-text3)]">──[{cable?.typ} {cable?.laenge_m}m]──►</span>
                             <span class="font-medium {end.crossRack ? 'text-orange-400' : 'text-emerald-400'} truncate">
                               {end.otherDev?.hostname ?? '?'}/{end.otherPort}
@@ -1723,7 +1723,7 @@
                             </span>
                           </div>
                         {:else}
-                          <span class="text-[var(--color-text3)] text-[10px]">frei</span>
+                          <span class="text-[var(--color-text3)] text-xs">frei</span>
                         {/if}
                       </div>
                       {#if !cable}
@@ -1755,10 +1755,10 @@
                       <div class="flex items-center space-x-3 min-w-0">
                         <div class="shrink-0">
                           <div class="font-mono font-bold text-[var(--color-text)]">{port.port_name}</div>
-                          <div class="text-[10px] text-[var(--color-text3)]">{port.typ}</div>
+                          <div class="text-xs text-[var(--color-text3)]">{port.typ}</div>
                         </div>
                         {#if end}
-                          <div class="flex items-center space-x-1.5 min-w-0 text-[10px]">
+                          <div class="flex items-center space-x-1.5 min-w-0 text-xs">
                             <span class="text-[var(--color-text3)]">──[{cable?.typ} {cable?.laenge_m}m]──►</span>
                             <span class="font-medium {end.crossRack ? 'text-orange-400' : 'text-emerald-400'} truncate">
                               {end.otherDev?.hostname ?? '?'}/{end.otherPort}
@@ -1766,7 +1766,7 @@
                             </span>
                           </div>
                         {:else}
-                          <span class="text-[var(--color-text3)] text-[10px]">frei</span>
+                          <span class="text-[var(--color-text3)] text-xs">frei</span>
                         {/if}
                       </div>
                       {#if !cable}
@@ -1802,22 +1802,22 @@
                 !devicePorts.some(p => p.port_name === c.von_port || p.port_name === c.nach_port)
               ).length > 0}
                 <div>
-                  <div class="text-[10px] text-[var(--color-text3)] mb-1.5 uppercase font-mono">Weitere Kabel</div>
+                  <div class="text-xs text-[var(--color-text3)] mb-1.5 uppercase font-mono">Weitere Kabel</div>
                   {#each cables.filter(c =>
                     (c.von_device_id === selectedDevice!.id || c.nach_device_id === selectedDevice!.id) &&
                     !(selectedDevice!.server_interfaces ?? []).some(i => i.port_name === c.von_port || i.port_name === c.nach_port) &&
                     !devicePorts.some(p => p.port_name === c.von_port || p.port_name === c.nach_port)
                   ) as cable}
                     {@const end = otherEnd(cable, selectedDevice!.id)}
-                    <div class="bg-[var(--color-bg3)] border border-[var(--color-border)]/50 rounded p-2 text-[10px] flex justify-between items-center mb-1">
-                      <div class="flex items-center space-x-2 min-w-0">
+                    <div class="bg-[var(--color-bg3)] border border-[var(--color-border)]/50 rounded p-2 text-xs flex justify-between items-center mb-1">
+                      <div class="flex items-center space-x-2 min-w-0 flex-1">
                         <span class="font-mono text-[var(--color-text2)] shrink-0">{cable.kabel_nr} · {cable.typ} · {cable.laenge_m}m</span>
-                        <span class="{end.crossRack?'text-orange-400':'text-emerald-400'} truncate max-w-[120px]">
+                        <span class="{end.crossRack?'text-orange-400':'text-emerald-400'} flex-1 min-w-0 truncate">
                           → {end.otherDev?.hostname ?? '?'}/{end.otherPort}
                           {#if end.crossRack}(★{end.otherRack?.name}){/if}
                         </span>
                       </div>
-                      <div class="flex items-center space-x-1.5 shrink-0">
+                      <div class="flex items-center space-x-1.5 shrink-0 ml-2">
                         <button onclick={() => openEditCable(cable)}
                           class="p-1 text-[var(--color-text2)] hover:text-[#5DCAA5] transition" title="Kabel bearbeiten">
                           <Edit2 class="w-2.5 h-2.5" />

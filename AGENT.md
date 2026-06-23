@@ -119,6 +119,7 @@ Das Ziel für den kommenden Schritt ist es, die USV-Prüfung und Dimensionierung
 
 ### 🟢 Backlog / Optional (Neue Ideen)
 
+- Datenbank-Migration auf SQLite: Umstellung von MySQL 8 auf SQLite (via aiosqlite). Vereinfacht das Podman-Deployment massiv (ein Container weniger), macht die App extrem portabel ("Download & Run") und passt perfekt zum Single-User-Konzept.
 - 3D-Orbit-Legende (Packet-Tracer-artig): erklärt 3D-spezifische Elemente (Rackreihen=Tiefe, Standorte=getrennte Blöcke, PDUs=seitliche Zero-U-Bars, Kabelfarben).
 - Blast-Radius-Hover: Hover auf PDU/Switch hebt angeschlossene Geräte hervor, Rest dimmt (Ausfallsimulation visuell).
 - Kabel-Tracing in der Rack-Frontansicht (SVG-Linien Gerät->Switch).
