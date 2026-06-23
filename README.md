@@ -7,7 +7,7 @@
 [![Node: 20+](https://img.shields.io/badge/Node-20+-brightgreen.svg)](https://nodejs.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.136%2B-009688.svg)](https://fastapi.tiangolo.com/)
 [![Svelte 5](https://img.shields.io/badge/Svelte-5.0-ff3e00.svg)](https://svelte.dev/)
-[![MySQL 8](https://img.shields.io/badge/MySQL-8.0-blue.svg)](https://www.mysql.com/)
+[![SQLite](https://img.shields.io/badge/SQLite-3-blue.svg)](https://sqlite.org/)
 
 KAiTix ist ein hochspezialisiertes Planungs-, Simulations- und Dokumentationswerkzeug für MSP-Techniker und IT-Teams. Es dient als Single Source of Truth für die visuelle Darstellung von Racks, PDU-Steckdosenbelegungen, Kabelverbindungen und USV-Dimensionierungen sowie für die Simulation von Ausfallszenarien (Blast Radius).
 
@@ -107,9 +107,9 @@ KAiTix folgt einem bewusst einfachen und fokussierten Design. Diese Prinzipien s
 
 ## Tech Stack
 
-* **Backend:** FastAPI, SQLAlchemy 2.0 (Async), Alembic, MySQL 8 (aiomysql)
+* **Backend:** FastAPI, SQLAlchemy 2.0 (Async), Alembic, SQLite (aiosqlite)
 * **Frontend:** Svelte 5, Vite, Vanilla JS (kein TypeScript), CSS, Three.js (für 3D-Visualisierung)
-* **Deployment:** Docker, Docker Compose, Nginx
+* **Deployment:** Podman/Docker (Single-Image Architektur)
 
 ---
 
@@ -117,12 +117,12 @@ KAiTix folgt einem bewusst einfachen und fokussierten Design. Diese Prinzipien s
 
 ### VARIANTE A — Container (Empfohlen)
 
-Mit Podman/Docker müssen Sie **weder Python noch Node noch MySQL lokal installieren**.
+Mit Podman/Docker müssen Sie **weder Python noch Node noch SQLite lokal installieren**.
 Alle Abhängigkeiten werden automatisch im Container installiert:
 
 * Das **`Containerfile`** installiert Python 3, Node 22, nginx und baut Backend + Frontend.
-* **`compose.yml`** zieht das MySQL-8-Image, baut das App-Image, wendet die Migrationen an
-  und lädt beim allerersten Start automatisch Demo-Daten (nur in eine leere DB).
+* **`compose.yml`** baut das kompakte Single-Image für Backend, Frontend und SQLite.
+* Beim allerersten Start werden automatisch Demo-Daten geladen (nur in eine leere DB).
 
 #### Einzige Voraussetzung
 
@@ -188,7 +188,6 @@ Falls Sie die Anwendung direkt auf Ihrem System installieren und ausführen möc
 #### Voraussetzungen
 * **Python 3.11+**
 * **Node 20+**
-* **MySQL 8+** (lokal installiert und konfiguriert)
 
 #### Installationsschritte
 
@@ -196,7 +195,7 @@ Falls Sie die Anwendung direkt auf Ihrem System installieren und ausführen möc
    ```bash
    cp .env.example .env
    ```
-   *Wichtig:* Passen Sie `DATABASE_URL` in der `.env`-Datei an Ihre lokale MySQL-Datenbankverbindung an (z. B. `DATABASE_URL=mysql+aiomysql://user:password@localhost:3306/kaitix`).
+   *Wichtig:* Die SQLite-Datenbank wird standardmäßig automatisch in `./data/kaitix.db` angelegt (`DATABASE_URL=sqlite+aiosqlite:///data/kaitix.db`).
 
 2. **Python-Abhängigkeiten installieren**
 

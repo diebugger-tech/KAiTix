@@ -10,7 +10,7 @@ PDUs und Kentix-Geräte werden dokumentiert (welche Steckdose/welches Gerät), n
 Runbooks sind Techniker-Checklisten, keine Automation-Trigger.
 
 **Ursprung:** ServerFlow (Python CLI, sync SQLAlchemy, PyMySQL) war der Vorgänger.
-KAiTix ist die Neuentwicklung (FastAPI, async, Svelte5, Alembic, MySQL8).
+KAiTix ist die Neuentwicklung (FastAPI, async, Svelte5, Alembic, SQLite).
 ServerFlow-Dateien dienen als Referenz für Domänenwissen (USV-Berechnung, Kentix-Integration).
 
 ---
@@ -19,9 +19,9 @@ ServerFlow-Dateien dienen als Referenz für Domänenwissen (USV-Berechnung, Kent
 
 | Komponente | Technologie |
 |---|---|
-| Backend | FastAPI, async SQLAlchemy + aiomysql, Alembic |
+| Backend | FastAPI, async SQLAlchemy + aiosqlite, Alembic |
 | Frontend | Svelte 5 (keine SSR-Props-Spread: `...props` verboten) |
-| Datenbank | MySQL 8 (einzige unterstützte DB) |
+| Datenbank | SQLite (aiosqlite) |
 | Containerisierung | Podman (bevorzugt), Docker (dokumentiert als Alternative) |
 | CLI-Agent | Claude Code (Implementierung) |
 | Planung/Review | Claude.ai Web-Chat (diese Konversation) |
@@ -52,7 +52,7 @@ ServerFlow-Dateien dienen als Referenz für Domänenwissen (USV-Berechnung, Kent
   - Ursache: Kaskadierende `lazy="selectin"` Queries für `Device.dependencies` und `Device.depended_by` entfernt (jetzt `lazy="raise"`).
   - Explicit `selectinload` in `get_device_options` Router eingebaut.
   - **Regression Fix:** `ResponseValidationError` bei `/api/v1/runbooks/` behoben durch explizites `.selectinload(Device.dependencies)` in `_runbook_options`.
-  - `lifespan` Context-Manager in FastAPI integriert, um den MySQL-Connection-Pool beim Start aufzuwärmen (`SELECT 1`).
+  - `lifespan` Context-Manager in FastAPI integriert, um den SQLite-Connection-Pool beim Start aufzuwärmen (`SELECT 1`).
 - **Testdaten & IPv6:**
   - `seed_testdata.py` erweitert: IPv6-Adressen für Compute-Server eingefügt und DB erfolgreich geseeded, um Showcase-Vollständigkeit (inkl. Referenz IPv6-Daten) herzustellen.
 
@@ -120,7 +120,6 @@ Das Ziel für den kommenden Schritt ist es, die USV-Prüfung und Dimensionierung
 
 ### 🟢 Backlog / Optional (Neue Ideen)
 
-- Datenbank-Migration auf SQLite: Umstellung von MySQL 8 auf SQLite (via aiosqlite). Vereinfacht das Podman-Deployment massiv (ein Container weniger), macht die App extrem portabel ("Download & Run") und passt perfekt zum Single-User-Konzept.
 - 3D-Orbit-Legende (Packet-Tracer-artig): erklärt 3D-spezifische Elemente (Rackreihen=Tiefe, Standorte=getrennte Blöcke, PDUs=seitliche Zero-U-Bars, Kabelfarben).
 - Blast-Radius-Hover: Hover auf PDU/Switch hebt angeschlossene Geräte hervor, Rest dimmt (Ausfallsimulation visuell).
 - Kabel-Tracing in der Rack-Frontansicht (SVG-Linien Gerät->Switch).
