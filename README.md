@@ -130,7 +130,7 @@ Auf einem frischen System wird **nur die Container-Engine** benötigt — sie is
 was sich nicht selbst installieren kann. Einmalig unter Ubuntu / Debian:
 
 ```bash
-sudo apt install -y podman docker-compose
+sudo apt update && sudo apt install -y podman podman-compose
 ```
 *(Alternativ Docker Desktop. Podman wird empfohlen: rootless, kein privilegierter Daemon.)*
 
