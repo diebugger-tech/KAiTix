@@ -229,13 +229,34 @@ Falls Sie die Anwendung direkt auf Ihrem System installieren und ausführen möc
    ```
    *(Das Svelte5-Frontend läuft standardmäßig unter http://localhost:5175)*
 
-6. **Backend starten (in einem separaten Terminal)**
+6. **Backend starten (in einem separaten Terminal, im Hauptverzeichnis)**
    ```bash
-   # Zurück im Hauptverzeichnis
    source .venv/bin/activate
-   uvicorn app.main:app --reload
+   uvicorn app.main:app --reload --port 8003
    ```
-   *(Das FastAPI-Backend läuft standardmäßig unter http://localhost:8003)*
+   *(Das FastAPI-Backend läuft unter http://localhost:8003, API-Doku unter http://localhost:8003/docs. Ohne `--port 8003` startet uvicorn auf 8000 — dann findet das Frontend die API nicht.)*
+
+7. **Im Browser öffnen:** **http://localhost:5175**
+
+   Die Oberfläche läuft über Vite (Port 5175), das alle `/api`-Aufrufe an das Backend auf Port 8003 weiterleitet.
+
+> [!IMPORTANT]
+> uvicorn meldet beim Start `Uvicorn running on http://0.0.0.0:8003`. `0.0.0.0` ist nur die Bind-Adresse
+> („lausche auf allen Netzwerkschnittstellen") und **keine** Adresse für den Browser. Immer `localhost`
+> (oder die IP des Rechners im LAN) verwenden.
+
+#### Schnellstart mit make
+
+Sind `.venv` und `frontend/node_modules` einmal eingerichtet (Schritte 1–5), reichen danach:
+
+| Befehl | Wirkung |
+|---|---|
+| `make dev-all` | Backend + Frontend parallel starten |
+| `make status` | Prüfen, was auf 8003/5175 läuft |
+| `make stop` | Backend + Frontend beenden (auch wenn das Terminal schon zu ist) |
+| `make restart-all` | Stoppen, aufräumen, neu starten |
+
+Danach im Browser: **http://localhost:5175**
 
 ---
 
@@ -257,13 +278,25 @@ PYTHONPATH=. python3 scripts/seed_testdata.py
 | `make dev` | Backend starten (Port 8003) |
 | `make dev-frontend` | Frontend starten (Port 5175) |
 | `make dev-all` | Backend + Frontend parallel starten |
+| `make stop` | Backend + Frontend beenden |
+| `make stop-backend` | Nur Backend beenden |
+| `make stop-frontend` | Nur Frontend beenden |
+| `make restart-all` | Stoppen, aufräumen, `dev-all` neu starten |
+| `make status` | Service-Status (Ports, venv, nix-shell) anzeigen |
 | `make install` | Python-Abhängigkeiten installieren (in nix-shell) |
+| `make update` | `main` pullen, dann `install` + `migrate-apply` |
 | `make test` | `pytest` ausführen |
 | `make lint` | Code mit `ruff` und `mypy` prüfen |
 | `make format` | Code mit `ruff` formatieren |
 | `make migrate-create message="..."` | Neue Alembic-Datenbankmigration erstellen |
 | `make migrate-apply` | Alembic-Migrationen auf Datenbank anwenden |
-| `make clean` | Temporäre Dateien (Cache, Backups) entfernen |
+| `make db-shell` | Datenbank-Shell öffnen |
+| `make clean` | Temporäre Dateien (Caches, `__pycache__`, Backups) entfernen |
+| `make clean-bak` | Nur `*.bak`-Dateien entfernen |
+| `make check-branch` | Prüfen, ob auf einem erlaubten Branch gearbeitet wird |
+| `make -n <target>` | Dry-Run: zeigt die Befehle eines Targets, ohne sie auszuführen |
+
+**Browser-URLs (lokale Entwicklung):** UI http://localhost:5175 · API-Doku http://localhost:8003/docs
 
 ---
 
