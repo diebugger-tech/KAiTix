@@ -17,6 +17,22 @@ KAiTix ist ein hochspezialisiertes Planungs-, Simulations- und Dokumentationswer
 
 ---
 
+## Schnellstart
+
+```bash
+git clone https://github.com/diebugger-tech/KAiTix.git
+cd KAiTix
+cp .env.example .env
+podman compose up --build
+```
+
+Danach im Browser öffnen: **http://localhost:8080**
+
+> [!IMPORTANT]
+> Die App ist ausschließlich über **`http://localhost:8080`** erreichbar — nicht über `0.0.0.0`, `:8003`, `:3000` oder `:5175`. Das sind Bind-Adressen bzw. interne Ports (Container) oder der Dev-Server der manuellen Installation. Mehr dazu in der [Installationsanleitung](#installationsanleitung).
+
+---
+
 ## Screenshots
 
 ![Landingpage](docs/screenshots/Landingpage.png)
@@ -115,6 +131,13 @@ KAiTix folgt einem bewusst einfachen und fokussierten Design. Diese Prinzipien s
 
 ## Installationsanleitung
 
+**Welche Adresse öffne ich im Browser?**
+
+| Variante | Browser-URL |
+|---|---|
+| A — Container (empfohlen) | **http://localhost:8080** |
+| B — Manuelle Installation | http://localhost:5175 (API-Doku: http://localhost:8003/docs) |
+
 ### VARIANTE A — Container (Empfohlen)
 
 Mit Podman/Docker müssen Sie **weder Python noch Node noch SQLite lokal installieren**.
@@ -164,6 +187,9 @@ Danach ist die Anwendung im Browser erreichbar unter: **http://localhost:8080**
 > internen Ports `:3000` (Frontend) oder `:8003` (Backend) — das sind containerinterne
 > Adressen, die der Browser nicht erreicht (`ERR_CONNECTION_REFUSED`). Alles läuft
 > gebündelt über Port **8080**.
+
+Zugriff von einem anderen Rechner im LAN: `http://<IP-des-Servers>:8080` — dafür die Adresse
+vorher in der `.env` bei `ALLOWED_ORIGINS` eintragen (z. B. `http://192.168.1.100:8080`).
 
 > [!NOTE]
 > Beim **ersten** Start werden automatisch Demo-Daten geladen (Racks, Geräte, VMs,
