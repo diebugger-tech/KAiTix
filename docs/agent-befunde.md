@@ -23,3 +23,6 @@
 ## 2026-11-17 · Umbau B3 · Claude Fable 5.2
 - Die Kabelliste kennt keinen Direktlink auf ein einzelnes Kabel (die Auswahl ist nur Seitenzustand); die Erfassung kann zum Ändern oder Löschen deshalb nur auf /cables verweisen — frontend/src/routes/(app)/cables/+page.svelte:24 — Aufgefallen beim Bau der Kabel-Enden je Gerät in der Erfassungsansicht.
 - request() schreibt jede fehlgeschlagene Antwort als console.error, auch erwartbare fachliche 409 wie die Doppelbelegung eines Ports — frontend/src/lib/api.ts:532 — Im Browser-Test der Erfassung in der Konsole gesehen.
+
+## 2026-11-17 · Umbau B4 · Claude Fable 5.2
+- Das Frontend hat keinen Testlauf: in den Skripten stehen nur dev, build, preview und check, kein Test-Skript — frontend/package.json:6-13 — Aufgefallen, weil die Abläufe der Umbau-Oberfläche (Erfassung, Sammelbuchung, Korrigieren) nur mit einem Browser-Skript außerhalb des Repos geprüft werden konnten.

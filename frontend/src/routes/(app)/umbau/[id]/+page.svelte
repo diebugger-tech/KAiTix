@@ -3,7 +3,9 @@
   import { page } from '$app/state';
   import { umbauApi, STATUS_LABEL, zeit, type UmbauDetail, type UmbauStatus } from '$lib/umbauApi';
   import ErfassungAnsicht from '$lib/components/umbau/ErfassungAnsicht.svelte';
-  import { ArrowLeft, Construction, X } from '@lucide/svelte';
+  import EndenAnsicht from '$lib/components/umbau/EndenAnsicht.svelte';
+  import Ereignisprotokoll from '$lib/components/umbau/Ereignisprotokoll.svelte';
+  import { ArrowLeft, ArrowRight, Construction, X } from '@lucide/svelte';
 
   const umbauId = Number(page.params.id ?? '0');
 
@@ -26,6 +28,35 @@
 
   const PHASEN: UmbauStatus[] = ['erfassung', 'rueckbau', 'umbau', 'wiederaufbau', 'abgeschlossen'];
   const phasenIndex = $derived(umbau ? PHASEN.indexOf(umbau.status) : -1);
+
+  // Phasenwechsel: Ziele und Sperrgründe kommen aus der API (naechste_status).
+  // Der Wechsel Erfassung → Rückbau ist das Einfrieren und steht in der Erfassungsansicht.
+  const WECHSEL_LABEL: Partial<Record<UmbauStatus, string>> = {
+    umbau: 'Rückbau abschließen, Umbau beginnen',
+    wiederaufbau: 'Wiederaufbau beginnen',
+    abgeschlossen: 'Umbau abschließen'
+  };
+  const weiter = $derived(
+    umbau?.naechste_status.find(z => z.ziel !== 'verworfen' && z.ziel !== 'rueckbau') ?? null
+  );
+  const verwerfbar = $derived(umbau?.naechste_status.some(z => z.ziel === 'verworfen') ?? false);
+  let wechselLaeuft = $state(false);
+
+  async function wechsle(ziel: UmbauStatus) {
+    if (!umbau) return;
+    if (ziel === 'verworfen' && !confirm(`Umbau „${umbau.name}" verwerfen? Das lässt sich nicht rückgängig machen.`)) return;
+    if (ziel === 'abgeschlossen' && !confirm('Umbau abschließen? Danach sind keine Buchungen mehr möglich.')) return;
+    wechselLaeuft = true;
+    errorMsg = '';
+    try {
+      umbau = await umbauApi.status(umbau.id, ziel);
+    } catch (err) {
+      errorMsg = err instanceof Error ? err.message : 'Statuswechsel fehlgeschlagen.';
+      await load();
+    } finally {
+      wechselLaeuft = false;
+    }
+  }
 </script>
 
 <svelte:head>
@@ -58,6 +89,37 @@
         {/if}
       </div>
     </div>
+    {#if umbau && (weiter || verwerfbar)}
+      <!-- Phasenwechsel: gesperrt mit Grund aus der API -->
+      <div class="flex flex-col items-end gap-1.5 max-w-full">
+        <div class="flex flex-wrap items-center justify-end gap-2">
+          {#if verwerfbar}
+            <button
+              type="button"
+              onclick={() => wechsle('verworfen')}
+              disabled={wechselLaeuft}
+              class="px-3 min-h-11 rounded-lg text-sm text-red-400 border border-red-500/40 hover:bg-red-500/10 transition disabled:opacity-50"
+            >
+              Verwerfen
+            </button>
+          {/if}
+          {#if weiter}
+            <button
+              type="button"
+              onclick={() => wechsle(weiter.ziel)}
+              disabled={!!weiter.sperrgrund || wechselLaeuft}
+              class="flex items-center gap-2 px-4 min-h-11 rounded-lg text-sm font-semibold bg-[#1D9E75] hover:bg-[#0F6E56] text-white transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {WECHSEL_LABEL[weiter.ziel] ?? STATUS_LABEL[weiter.ziel]}
+              <ArrowRight class="w-4 h-4" />
+            </button>
+          {/if}
+        </div>
+        {#if weiter?.sperrgrund}
+          <p class="text-xs text-amber-400 text-right max-w-md whitespace-pre-line" role="status">{weiter.sperrgrund}</p>
+        {/if}
+      </div>
+    {/if}
   </div>
 
   {#if umbau}
@@ -97,9 +159,8 @@
     {#if umbau.status === 'erfassung'}
       <ErfassungAnsicht {umbau} onchange={load} />
     {:else}
-      <p class="text-sm text-[var(--color-text2)]">
-        Der Soll-Stand ist eingefroren: {umbau.fortschritt.enden_gesamt} Enden.
-      </p>
+      <EndenAnsicht {umbau} onchange={load} />
     {/if}
+    <Ereignisprotokoll {umbau} />
   {/if}
 </div>

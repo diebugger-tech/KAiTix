@@ -24,6 +24,7 @@
     title = 'Auswahl',
     actionLabel = 'Auswahl übernehmen',
     einheit = 'Enden',
+    einheitEinzahl = 'Ende',
     busy = false,
     getId,
     getName,
@@ -49,6 +50,8 @@
     actionLabel?: string;
     /** Wie die Einträge heißen, z. B. "Enden". */
     einheit?: string;
+    /** Einzahl dazu, z. B. "Ende" („1 Ende gewählt“). */
+    einheitEinzahl?: string;
     /** Aktion läuft gerade, Knopf gesperrt. */
     busy?: boolean;
     getId: (c: T) => number;
@@ -219,7 +222,8 @@
   }
 
   const gefahr = $derived(confirmVariant === 'danger');
-  const zeileGross = $derived(`${selectedIds.size} ${einheit} gewählt`);
+  const mitEinheit = (anzahl: number) => `${anzahl} ${anzahl === 1 ? einheitEinzahl : einheit}`;
+  const zeileGross = $derived(`${mitEinheit(selectedIds.size)} gewählt`);
   const zeileKlein = $derived([`von ${cables.length}`, confirmNote].filter(Boolean).join(' · '));
   const gruppenText = (gewaehlt: number, anzahl: number, note: string | null, nichtBereit: number) =>
     [`${gewaehlt} von ${anzahl} gewählt`, note, nichtBereit > 0 ? `${nichtBereit} nicht bereit` : null]
@@ -414,7 +418,7 @@
   {/if}
 
   <FensterFuss
-    hauptLabel="{actionLabel} · {bestaetigbar.length} {einheit}"
+    hauptLabel="{actionLabel} · {mitEinheit(bestaetigbar.length)}"
     onhaupt={() => onconfirm([...bestaetigbar])}
     onabbrechen={oncancel}
     gesperrt={!!sperre}
