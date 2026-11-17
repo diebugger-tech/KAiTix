@@ -1,11 +1,38 @@
 from app.core.database import Base
 from datetime import date, datetime
-from sqlalchemy import ForeignKey, Integer, String, DECIMAL, Enum, Date, DateTime
+from sqlalchemy import (
+    Boolean,
+    ForeignKey,
+    Integer,
+    String,
+    DECIMAL,
+    Enum,
+    Date,
+    DateTime,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.domains.hardware.models import Device
+
+
+class Kabeltyp(Base):
+    __tablename__ = "kabeltypen"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
+    kategorie: Mapped[str] = mapped_column(
+        Enum("kupfer", "lwl", "dac", "aoc", "breakout", "strom", "sonstige"),
+        nullable=False,
+    )
+    stecker_a: Mapped[str] = mapped_column(String(50), nullable=False)
+    stecker_b: Mapped[str] = mapped_column(String(50), nullable=False)
+    enden_a: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    enden_b: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    standard_farbe: Mapped[Optional[str]] = mapped_column(String(30))
+    alt_typ: Mapped[str] = mapped_column(String(50), nullable=False, default="sonstige")
+    aktiv: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
 
 class Cable(Base):
@@ -33,6 +60,9 @@ class Cable(Base):
             "sonstige",
         ),
         nullable=False,
+    )
+    kabeltyp_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("kabeltypen.id", ondelete="RESTRICT"), nullable=True
     )
     laenge_m: Mapped[float] = mapped_column(DECIMAL(6, 2), nullable=False)
     farbe: Mapped[Optional[str]] = mapped_column(String(30))

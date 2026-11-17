@@ -1,5 +1,5 @@
 from app.domains.hardware.models import Rack, Device, PduOutlet
-from app.domains.cabling.models import Cable, CableStrand, Interface
+from app.domains.cabling.models import Cable, CableStrand, Interface, Kabeltyp
 from app.domains.power.models import UsvUnit, UsvModule, UsvSimulationEvent
 from app.domains.hardware.models import VirtualMachine
 from app.domains.runbooks.models import (
@@ -19,6 +19,7 @@ __all__ = [
     "Device",
     "PduOutlet",
     "Cable",
+    "Kabeltyp",
     "CableStrand",
     "Interface",
     "DevicePort",
