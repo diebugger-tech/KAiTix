@@ -4,6 +4,8 @@
   import { api, type Rack, type Device, type HardwareType, type Cable, type DevicePort, type PduOutlet, type Kabeltyp } from '$lib/api';
   import { Server, Layers, Plus, HardDrive, Zap, LogOut, Check, X, ShieldAlert, Cpu, Network, Edit2, Trash2, ShieldCheck, ChevronRight, Activity, ZapOff, Play, Clock, Building, MapPin, Wifi, Box, ChevronDown, FileText, Cable as CableIcon, Thermometer, AlertTriangle } from '@lucide/svelte';
   import RackModal from '$lib/components/RackModal.svelte';
+  import BreakoutEnden from '$lib/components/BreakoutEnden.svelte';
+  import { bEndenFuerTyp, straengeAusEnden, type BEnde } from '$lib/kabel';
   import DeviceForm from '$lib/components/DeviceForm.svelte';
   import RackFilterBar from '$lib/components/RackFilterBar.svelte';
   import RackFrontView from '$lib/components/RackFrontView.svelte';
@@ -171,6 +173,8 @@
   let cableNachDevId = $state<number|null>(null);
   let cableNachPort  = $state('');
   let cableKabeltypId = $state<number|null>(null);
+  // B-Enden, wenn der gewählte Kabeltyp ein Breakout ist (enden_b > 1)
+  let cableBEnden    = $state<BEnde[]>([]);
   // Folgt aus dem gewählten Kabeltyp (alt_typ) und steuert die Zielgeräte-Filter.
   let cableTyp       = $state('Cat6A');
   let cableLaenge    = $state<number|null>(1.0);
@@ -182,6 +186,7 @@
   let editCableId     = $state<number | null>(null);
   let editCableNr     = $state('');
   let editCableKabeltypId = $state<number | null>(null);
+  let editCableBEnden = $state<BEnde[]>([]);
   // Folgt aus dem gewählten Kabeltyp (alt_typ) und steuert die Zielgeräte-Filter.
   let editCableTyp    = $state('Cat6A');
   let editCableLaenge = $state<number|null>(1.0);
@@ -580,19 +585,32 @@
     return options;
   });
 
+  // Anzahl B-Enden des gewählten Kabeltyps (Breakout: > 1)
+  const cableEndenB = $derived(kabeltypen.find(k => k.id === cableKabeltypId)?.enden_b ?? 1);
+  // Ein deaktivierter Typ steht nicht mehr in kabeltypen, dann gilt die Angabe am Kabel.
+  const editCableEndenB = $derived.by(() => {
+    const kt = kabeltypen.find(k => k.id === editCableKabeltypId);
+    if (kt) return kt.enden_b;
+    const current = cables.find(c => c.id === editCableId)?.kabeltyp;
+    return current && current.id === editCableKabeltypId ? current.enden_b : 1;
+  });
+
   function onCableKabeltypChange() {
     const kt = kabeltypen.find(k => k.id === cableKabeltypId);
     if (!kt) return;
     cableTyp = kt.alt_typ;
     if (kt.standard_farbe) cableFarbe = kt.standard_farbe;
     cableNachDevId = null; cableNachPort = '';
+    cableBEnden = bEndenFuerTyp(kt.enden_b, null, cableBEnden);
   }
 
   function onEditCableKabeltypChange() {
     const kt = kabeltypen.find(k => k.id === editCableKabeltypId);
+    const orig = cables.find(c => c.id === editCableId);
+    // Schon ausgefüllte Zeilen behalten; sonst die Stränge des Kabels übernehmen
+    editCableBEnden = bEndenFuerTyp(editCableEndenB, editCableBEnden.length ? null : orig, editCableBEnden);
     if (!kt) {
       // Zurück auf den deaktivierten Typ des Kabels: dessen bisherigen typ wiederherstellen
-      const orig = cables.find(c => c.id === editCableId);
       if (orig && orig.kabeltyp_id === editCableKabeltypId) editCableTyp = orig.typ;
       return;
     }
@@ -610,18 +628,23 @@
     cableTyp = standardTyp?.alt_typ ?? 'Cat6A';
     if (standardTyp?.standard_farbe) cableFarbe = standardTyp.standard_farbe;
     cableNachDevId = null; cableNachPort = '';
+    cableBEnden = bEndenFuerTyp(standardTyp?.enden_b ?? 1);
     showAddCable = true;
   }
 
   async function submitAddCable(e: SubmitEvent) {
     e.preventDefault();
-    if (!cableFromDevice || !cableNachDevId) return;
+    // Breakout: die B-Enden stehen an den Strängen, das Ziel am Kabel bleibt leer
+    const breakout = cableEndenB > 1;
+    if (!cableFromDevice || (!breakout && !cableNachDevId)) return;
     if (cableKabeltypId === null) { alert('Bitte einen Kabeltyp wählen.'); return; }
     try {
       await api.createCable({
         kabeltyp_id: cableKabeltypId, laenge_m: cableLaenge ?? 1, farbe: cableFarbe || undefined,
         von_device_id: cableFromDevice.id, von_port: cableVonPort || undefined,
-        nach_device_id: cableNachDevId, nach_port: cableNachPort || undefined,
+        nach_device_id: breakout ? undefined : cableNachDevId ?? undefined,
+        nach_port: breakout ? undefined : cableNachPort || undefined,
+        ...(breakout ? { straenge: straengeAusEnden(cableBEnden) } : {}),
       });
       showAddCable = false; await loadAll();
       if (selectedDevice) await loadDeviceDetail(selectedDevice);
@@ -637,6 +660,7 @@
     editCableTyp = cable.typ;
     editCableLaenge = Number(cable.laenge_m);
     editCableFarbe = cable.farbe || '';
+    editCableBEnden = bEndenFuerTyp(cable.kabeltyp?.enden_b ?? 1, cable);
     
     if (cable.von_device_id === selectedDevice.id) {
       editCableFromDevice = selectedDevice;
@@ -654,7 +678,9 @@
 
   async function submitEditCable(e: SubmitEvent) {
     e.preventDefault();
-    if (!editCableId || !editCableFromDevice || !editCableNachDevId) return;
+    // Breakout: die B-Enden stehen an den Strängen, das Ziel am Kabel bleibt leer
+    const breakout = editCableEndenB > 1;
+    if (!editCableId || !editCableFromDevice || (!breakout && !editCableNachDevId)) return;
     try {
       const orig = cables.find(c => c.id === editCableId);
       if (!orig) return;
@@ -664,11 +690,14 @@
       let nach_id = orig.nach_device_id;
       let nach_p = orig.nach_port;
 
-      if (orig.von_device_id === selectedDevice!.id) {
-        nach_id = editCableNachDevId;
+      if (breakout) {
+        nach_id = undefined;
+        nach_p = undefined;
+      } else if (orig.von_device_id === selectedDevice!.id) {
+        nach_id = editCableNachDevId ?? undefined;
         nach_p = editCableNachPort || undefined;
       } else {
-        von_id = editCableNachDevId;
+        von_id = editCableNachDevId ?? undefined;
         von_p = editCableNachPort || undefined;
       }
 
@@ -681,6 +710,7 @@
         von_port: von_p || undefined,
         nach_device_id: nach_id,
         nach_port: nach_p || undefined,
+        ...(breakout ? { straenge: straengeAusEnden(editCableBEnden) } : {}),
       });
       showEditCable = false;
       await loadAll();
@@ -2158,6 +2188,9 @@
         </div>
       </div>
 
+      {#if cableEndenB > 1}
+        <BreakoutEnden bind:enden={cableBEnden} devices={devices.filter(d => d.id !== cableFromDevice?.id)} idPrefix="rack-add-b-ende" />
+      {:else}
       <div>
         <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Ziel-Gerät *</label>
         <select bind:value={cableNachDevId} required
@@ -2185,6 +2218,7 @@
           {#each targetDevPorts() as p}<option value={p} />{/each}
         </datalist>
       </div>
+      {/if}
 
       <div class="grid grid-cols-2 gap-4">
         <div>
@@ -2243,6 +2277,9 @@
         </div>
       </div>
 
+      {#if editCableEndenB > 1}
+        <BreakoutEnden bind:enden={editCableBEnden} devices={devices.filter(d => d.id !== editCableFromDevice?.id)} idPrefix="rack-edit-b-ende" />
+      {:else}
       <div>
         <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Ziel-Gerät *</label>
         <select bind:value={editCableNachDevId} required
@@ -2270,6 +2307,7 @@
           {#each editTargetDevPorts() as p}<option value={p} />{/each}
         </datalist>
       </div>
+      {/if}
 
       <div class="grid grid-cols-2 gap-4">
         <div>

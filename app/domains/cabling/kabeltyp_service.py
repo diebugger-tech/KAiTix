@@ -9,6 +9,9 @@ from app.domains.cabling.models import Kabeltyp as KabeltypModel
 from app.domains.cabling.schemas import KabeltypCreate, KabeltypUpdate
 
 
+GESPERRT_BEI_VERWENDUNG = ("alt_typ", "enden_a", "enden_b")
+
+
 class KabeltypService:
     """Pflege des Kabeltyp-Katalogs."""
 
@@ -53,15 +56,21 @@ class KabeltypService:
         if neuer_name is not None and neuer_name != kabeltyp.name:
             await self._pruefe_name_frei(neuer_name)
 
-        neuer_alt_typ = update_data.get("alt_typ")
-        if neuer_alt_typ is not None and neuer_alt_typ != kabeltyp.alt_typ:
+        # alt_typ steht als typ an jedem Kabel, enden_a/enden_b bestimmen die Stränge.
+        # Solange Kabel den Typ verwenden, würden diese Änderungen sie inkonsistent machen.
+        gesperrt = [
+            feld
+            for feld in GESPERRT_BEI_VERWENDUNG
+            if feld in update_data and update_data[feld] != getattr(kabeltyp, feld)
+        ]
+        if gesperrt:
             anzahl = await self._anzahl_kabel(kabeltyp.id)
             if anzahl:
                 raise HTTPException(
                     status_code=409,
                     detail=(
-                        f"alt_typ von Kabeltyp '{kabeltyp.name}' kann nicht geändert "
-                        f"werden: {anzahl} Kabel verwenden ihn"
+                        f"{', '.join(gesperrt)} von Kabeltyp '{kabeltyp.name}' kann "
+                        f"nicht geändert werden: {anzahl} Kabel verwenden ihn"
                     ),
                 )
 

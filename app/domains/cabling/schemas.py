@@ -78,6 +78,8 @@ class CableStrandBase(BaseModel):
     farbe: Optional[str] = None
     von_port_id: Optional[int] = None
     nach_port_id: Optional[int] = None
+    nach_device_id: Optional[int] = None
+    nach_port: Optional[str] = None
     bemerkung: Optional[str] = None
 
 
@@ -96,6 +98,22 @@ class CableStrandUpdate(BaseModel):
 class CableStrand(CableStrandBase):
     id: int
     model_config = ConfigDict(from_attributes=True)
+
+
+class StrangEingabe(BaseModel):
+    """Ein B-Ende eines Breakout-Kabels im Schreibweg (CableCreate/CableUpdate)."""
+
+    strand_number: int = Field(..., ge=1)
+    nach_device_id: Optional[int] = None
+    nach_port: Optional[str] = Field(None, max_length=50)
+    farbe: Optional[str] = Field(None, max_length=30)
+
+    @field_validator("nach_port", "farbe")
+    @classmethod
+    def _leer_ist_none(cls, wert: Optional[str]) -> Optional[str]:
+        if wert is None:
+            return None
+        return wert.strip() or None
 
 
 # === CABLE SCHEMAS ===
@@ -117,6 +135,8 @@ class CableCreate(CableBase):
     kabel_nr: Optional[str] = None
     # Neue Clients schicken kabeltyp_id, alte nur typ. Eines von beiden ist Pflicht.
     typ: Optional[str] = None
+    # B-Enden eines Breakout-Kabels (Kabeltyp mit enden_b > 1), sonst leer.
+    straenge: Optional[List[StrangEingabe]] = None
 
     @model_validator(mode="after")
     def _typ_oder_kabeltyp(self) -> "CableCreate":
@@ -129,6 +149,8 @@ class CableUpdate(BaseModel):
     kabel_nr: Optional[str] = None
     typ: Optional[str] = None
     kabeltyp_id: Optional[int] = None
+    # Nicht gesendet = Stränge bleiben; gesendet = vollständige neue Strangliste.
+    straenge: Optional[List[StrangEingabe]] = None
     laenge_m: Optional[Decimal] = Field(None, ge=0)
     farbe: Optional[str] = None
     von_device_id: Optional[int] = None

@@ -90,7 +90,10 @@ class Cable(Base):
     )
     interfaces: Mapped[List["Interface"]] = relationship(back_populates="cable")
     cable_strands: Mapped[List["CableStrand"]] = relationship(
-        back_populates="cable", cascade="all, delete-orphan", passive_deletes=True
+        back_populates="cable",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        order_by="CableStrand.strand_number",
     )
 
 
@@ -109,12 +112,23 @@ class CableStrand(Base):
     nach_port_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("interfaces.id", ondelete="SET NULL")
     )
+    # B-Ende eines Breakout-Strangs: Gerät + Port als Text (Port-Wahrheit wie am Kabel).
+    nach_device_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("devices.id", ondelete="SET NULL")
+    )
+    nach_port: Mapped[Optional[str]] = mapped_column(String(50))
     bemerkung: Mapped[Optional[str]] = mapped_column(String(255))
 
     # Relationships
     cable: Mapped["Cable"] = relationship(back_populates="cable_strands")
-    von_port: Mapped[Optional["Interface"]] = relationship(foreign_keys=[von_port_id])
-    nach_port: Mapped[Optional["Interface"]] = relationship(foreign_keys=[nach_port_id])
+    # Interface-Beziehungen zu von_port_id/nach_port_id (ungenutzt). Sie hießen bisher
+    # von_port/nach_port; der Name nach_port gehört jetzt der Textspalte.
+    von_interface: Mapped[Optional["Interface"]] = relationship(
+        foreign_keys=[von_port_id]
+    )
+    nach_interface: Mapped[Optional["Interface"]] = relationship(
+        foreign_keys=[nach_port_id]
+    )
 
 
 class Interface(Base):

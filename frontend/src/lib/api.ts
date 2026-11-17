@@ -104,12 +104,31 @@ export interface KabeltypKurz {
   enden_b: number;
 }
 
+/** Strang eines Breakout-Kabels: ein B-Ende mit Gerät und Port. */
+export interface CableStrand {
+  id: number;
+  cable_id: number;
+  strand_number: number;
+  farbe?: string | null;
+  nach_device_id?: number | null;
+  nach_port?: string | null;
+}
+
+/** B-Ende im Schreibweg (POST/PUT /cables, Feld straenge). */
+export interface StrangEingabe {
+  strand_number: number;
+  nach_device_id: number | null;
+  nach_port: string | null;
+  farbe?: string | null;
+}
+
 export interface Cable {
   id: number;
   kabel_nr: string;
   typ: string;
   kabeltyp_id?: number | null;
   kabeltyp?: KabeltypKurz | null;
+  cable_strands?: CableStrand[];
   laenge_m: number;
   farbe?: string;
   von_device_id?: number;
@@ -122,6 +141,9 @@ export interface Cable {
   von_device?: { hostname: string };
   nach_device?: { hostname: string };
 }
+
+/** Kabel im Schreibweg: bei Kabeltypen mit enden_b > 1 kommen die B-Enden als straenge mit. */
+export type CableWrite = Partial<Cable> & { straenge?: StrangEingabe[] };
 
 export interface DeviceDependency {
   device_id: number;
@@ -537,8 +559,8 @@ export const api = {
   // Cables
   getCables: (): Promise<Cable[]> => request('cables/'),
   getCable: (id: number): Promise<Cable> => request(`cables/${id}`),
-  createCable: (cable: Partial<Cable>): Promise<Cable> => request('cables/', { method: 'POST', body: JSON.stringify(cable) }),
-  updateCable: (id: number, cable: Partial<Cable>): Promise<Cable> => request(`cables/${id}`, { method: 'PUT', body: JSON.stringify(cable) }),
+  createCable: (cable: CableWrite): Promise<Cable> => request('cables/', { method: 'POST', body: JSON.stringify(cable) }),
+  updateCable: (id: number, cable: CableWrite): Promise<Cable> => request(`cables/${id}`, { method: 'PUT', body: JSON.stringify(cable) }),
   deleteCable: (id: number): Promise<null> => request(`cables/${id}`, { method: 'DELETE' }),
 
   // Kabeltyp-Katalog

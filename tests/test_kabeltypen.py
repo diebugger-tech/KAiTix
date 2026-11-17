@@ -49,6 +49,10 @@ async def _post_cable(client: AsyncClient, **felder):
     return await client.post("/api/v1/cables/", json=payload)
 
 
+# Ein Breakout-Kabel braucht seit A3 genau enden_b Stränge; die Enden dürfen leer sein.
+LEERE_STRAENGE = [{"strand_number": nummer} for nummer in range(1, 5)]
+
+
 # === Kabel-Schreibweg mit Katalog ============================================
 async def test_kabel_mit_kabeltyp_id_setzt_typ_und_standardfarbe(
     client: AsyncClient, db: AsyncSession
@@ -83,7 +87,9 @@ async def test_breakout_typ_schreibt_alt_typ_sonstige(
 ):
     breakout = await _seed_breakout(db)
 
-    response = await _post_cable(client, kabeltyp_id=breakout.id)
+    response = await _post_cable(
+        client, kabeltyp_id=breakout.id, straenge=LEERE_STRAENGE
+    )
 
     assert response.status_code == 201, response.text
     cable = response.json()
@@ -147,7 +153,8 @@ async def test_update_mit_kabeltyp_id_zieht_typ_nach(
     created = (await _post_cable(client, kabeltyp_id=cat.id)).json()
 
     response = await client.put(
-        f"/api/v1/cables/{created['id']}", json={"kabeltyp_id": breakout.id}
+        f"/api/v1/cables/{created['id']}",
+        json={"kabeltyp_id": breakout.id, "straenge": LEERE_STRAENGE},
     )
 
     assert response.status_code == 200, response.text
@@ -190,7 +197,9 @@ async def test_update_mit_unveraendertem_typ_behaelt_breakout_typ(
 ):
     await _seed_typ(db, "sonstige", kategorie="sonstige")
     breakout = await _seed_breakout(db)
-    created = (await _post_cable(client, kabeltyp_id=breakout.id)).json()
+    created = (
+        await _post_cable(client, kabeltyp_id=breakout.id, straenge=LEERE_STRAENGE)
+    ).json()
 
     # Alter Client schickt das ganze Kabel inklusive unverändertem typ zurück.
     response = await client.put(
