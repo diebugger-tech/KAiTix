@@ -10,6 +10,13 @@ from app.domains.runbooks.models import (
     RunbookExecutionStep,
 )
 from app.domains.network.models import Vlan, Subnet
+from app.domains.umbau.models import (
+    Umbau,
+    UmbauRack,
+    UmbauGeraetepruefung,
+    UmbauEnde,
+    UmbauEreignis,
+)
 
 # Legacy aliases for unified Interface model
 DevicePort = Interface
@@ -34,4 +41,9 @@ __all__ = [
     "RunbookExecutionStep",
     "Vlan",
     "Subnet",
+    "Umbau",
+    "UmbauRack",
+    "UmbauGeraetepruefung",
+    "UmbauEnde",
+    "UmbauEreignis",
 ]
