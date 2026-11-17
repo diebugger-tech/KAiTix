@@ -10,6 +10,7 @@ from fastapi import HTTPException
 
 from app.models import (
     Cable as CableModel,
+    Kabeltyp as KabeltypModel,
     Device as DeviceModel,
     Rack as RackModel,
     PduOutlet as PduOutletModel,
@@ -361,11 +362,38 @@ class CablingService:
         }
 
     # Cables operations
-    async def list_cables(self) -> List[CableModel]:
-        result = await self.db.execute(
-            select(CableModel).options(selectinload(CableModel.cable_strands))
+    @staticmethod
+    def _cable_query():
+        """Kabel samt allem, was das Response-Schema liest (Stränge, Kabeltyp)."""
+        return select(CableModel).options(
+            selectinload(CableModel.cable_strands),
+            selectinload(CableModel.kabeltyp),
         )
+
+    async def _load_cable(self, cable_id: int) -> CableModel:
+        result = await self.db.execute(
+            self._cable_query().where(CableModel.id == cable_id)
+        )
+        return result.scalar_one()
+
+    async def list_cables(self) -> List[CableModel]:
+        result = await self.db.execute(self._cable_query())
         return result.scalars().all()  # type: ignore
+
+    async def _kabeltyp_oder_422(self, kabeltyp_id: int) -> KabeltypModel:
+        kabeltyp = await self.db.get(KabeltypModel, kabeltyp_id)
+        if kabeltyp is None:
+            raise HTTPException(
+                status_code=422, detail=f"Kabeltyp {kabeltyp_id} existiert nicht"
+            )
+        return kabeltyp
+
+    async def _kabeltyp_id_fuer_typ(self, typ: str) -> int | None:
+        """Alte Clients schicken nur typ: Katalogzeile mit gleichem Namen suchen."""
+        result = await self.db.execute(
+            select(KabeltypModel.id).where(KabeltypModel.name == typ)
+        )
+        return result.scalar_one_or_none()
 
     async def _next_kabel_nr(self) -> str:
         result = await self.db.execute(
@@ -423,6 +451,13 @@ class CablingService:
         if not cable_in.kabel_nr:
             cable_in.kabel_nr = await self._next_kabel_nr()
         data = cable_in.model_dump()
+        if data["kabeltyp_id"] is not None:
+            kabeltyp = await self._kabeltyp_oder_422(data["kabeltyp_id"])
+            data["typ"] = kabeltyp.alt_typ
+            if not data["farbe"]:
+                data["farbe"] = kabeltyp.standard_farbe
+        else:
+            data["kabeltyp_id"] = await self._kabeltyp_id_fuer_typ(data["typ"])
         await self._check_port_conflicts(
             data["typ"],
             [
@@ -433,20 +468,11 @@ class CablingService:
         db_cable = CableModel(**data)
         self.db.add(db_cable)
         await self.db.commit()
-
-        # Reload with strands
-        result = await self.db.execute(
-            select(CableModel)
-            .where(CableModel.id == db_cable.id)
-            .options(selectinload(CableModel.cable_strands))
-        )
-        return result.scalar_one()
+        return await self._load_cable(db_cable.id)
 
     async def get_cable(self, cable_id: int) -> CableModel:
         result = await self.db.execute(
-            select(CableModel)
-            .where(CableModel.id == cable_id)
-            .options(selectinload(CableModel.cable_strands))
+            self._cable_query().where(CableModel.id == cable_id)
         )
         cable = result.scalar_one_or_none()
         if not cable:
@@ -464,6 +490,7 @@ class CablingService:
             raise HTTPException(status_code=404, detail="Cable not found")
 
         update_data = cable_in.model_dump(exclude_unset=True)
+        await self._resolve_typ_on_update(cable, update_data)
         connection_fields = (
             "von_device_id",
             "von_port",
@@ -495,13 +522,34 @@ class CablingService:
         cable.geaendert_am = datetime.now(timezone.utc)
 
         await self.db.commit()
-        # Reload with strands
-        result = await self.db.execute(
-            select(CableModel)
-            .where(CableModel.id == cable.id)
-            .options(selectinload(CableModel.cable_strands))
-        )
-        return result.scalar_one()
+        return await self._load_cable(cable.id)
+
+    async def _resolve_typ_on_update(
+        self, cable: CableModel, update_data: Dict[str, Any]
+    ) -> None:
+        """Hält typ und kabeltyp_id beim Ändern zusammen (ändert update_data).
+
+        - kabeltyp_id gesendet: typ folgt aus alt_typ, leere Farbe aus standard_farbe.
+        - nur typ gesendet: kabeltyp_id folgt über den Namen, aber nur wenn sich typ
+          wirklich ändert oder noch kein Kabeltyp gesetzt ist. Sonst würde ein alter
+          Client, der das ganze Kabel zurückschickt, z. B. einen Breakout-Typ
+          (alt_typ "sonstige") auf die Katalogzeile "sonstige" umbiegen.
+        """
+        if update_data.get("kabeltyp_id") is not None:
+            kabeltyp = await self._kabeltyp_oder_422(update_data["kabeltyp_id"])
+            update_data["typ"] = kabeltyp.alt_typ
+            if not update_data.get("farbe", cable.farbe):
+                update_data["farbe"] = kabeltyp.standard_farbe
+            return
+
+        # Explizites null löst die Zuordnung nicht: wie "nicht gesendet" behandeln.
+        update_data.pop("kabeltyp_id", None)
+        neuer_typ = update_data.get("typ")
+        if neuer_typ is None:
+            update_data.pop("typ", None)
+            return
+        if neuer_typ != cable.typ or cable.kabeltyp_id is None:
+            update_data["kabeltyp_id"] = await self._kabeltyp_id_fuer_typ(neuer_typ)
 
     async def delete_cable(self, cable_id: int) -> None:
         result = await self.db.execute(

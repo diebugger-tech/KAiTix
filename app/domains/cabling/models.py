@@ -81,6 +81,7 @@ class Cable(Base):
     geaendert_am: Mapped[Optional[datetime]] = mapped_column(DateTime)
 
     # Relationships
+    kabeltyp: Mapped[Optional["Kabeltyp"]] = relationship()
     von_device: Mapped[Optional["Device"]] = relationship(
         foreign_keys=[von_device_id], back_populates="cables_from"
     )

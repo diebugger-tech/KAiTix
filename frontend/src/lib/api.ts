@@ -79,10 +79,37 @@ export interface RackAnomalyScore {
   issues: string[];
 }
 
+export const KABELTYP_KATEGORIEN = ['kupfer', 'lwl', 'dac', 'aoc', 'breakout', 'strom', 'sonstige'] as const;
+export type KabeltypKategorie = (typeof KABELTYP_KATEGORIEN)[number];
+
+export interface Kabeltyp {
+  id: number;
+  name: string;
+  kategorie: KabeltypKategorie;
+  stecker_a: string;
+  stecker_b: string;
+  enden_a: number;
+  enden_b: number;
+  standard_farbe?: string | null;
+  alt_typ: string;
+  aktiv: boolean;
+}
+
+/** Auszug des Kabeltyps, den die API an jedem Kabel mitliefert. */
+export interface KabeltypKurz {
+  id: number;
+  name: string;
+  kategorie: KabeltypKategorie;
+  enden_a: number;
+  enden_b: number;
+}
+
 export interface Cable {
   id: number;
   kabel_nr: string;
   typ: string;
+  kabeltyp_id?: number | null;
+  kabeltyp?: KabeltypKurz | null;
   laenge_m: number;
   farbe?: string;
   von_device_id?: number;
@@ -513,6 +540,15 @@ export const api = {
   createCable: (cable: Partial<Cable>): Promise<Cable> => request('cables/', { method: 'POST', body: JSON.stringify(cable) }),
   updateCable: (id: number, cable: Partial<Cable>): Promise<Cable> => request(`cables/${id}`, { method: 'PUT', body: JSON.stringify(cable) }),
   deleteCable: (id: number): Promise<null> => request(`cables/${id}`, { method: 'DELETE' }),
+
+  // Kabeltyp-Katalog
+  getKabeltypen: (aktiv?: boolean): Promise<Kabeltyp[]> =>
+    request(aktiv === undefined ? 'kabeltypen/' : `kabeltypen/?aktiv=${aktiv}`),
+  createKabeltyp: (kabeltyp: Omit<Kabeltyp, 'id'>): Promise<Kabeltyp> =>
+    request('kabeltypen/', { method: 'POST', body: JSON.stringify(kabeltyp) }),
+  updateKabeltyp: (id: number, kabeltyp: Partial<Omit<Kabeltyp, 'id'>>): Promise<Kabeltyp> =>
+    request(`kabeltypen/${id}`, { method: 'PUT', body: JSON.stringify(kabeltyp) }),
+  deleteKabeltyp: (id: number): Promise<null> => request(`kabeltypen/${id}`, { method: 'DELETE' }),
   suggestCableColor: (typ: string): Promise<{ typ: string; suggested_color: string; note: string }> => request(`cables/suggest-color?typ=${encodeURIComponent(typ)}`),
   getColorRules: (): Promise<{ version: string; last_updated: string; rules: Array<{ id: string; typ: string; standard_farbe: string; kategorie: string; verwendungszweck: string; standard: string; hex: string }> }> => request('cables/color-rules'),
   updateColorRules: (rules: any[]): Promise<any> => request('cables/color-rules', { method: 'PUT', body: JSON.stringify({ rules }) }),

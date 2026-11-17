@@ -8,6 +8,7 @@
     Zap,
     FileUp,
     Cable,
+    Tags,
     User,
     Activity,
     Server,
@@ -73,6 +74,7 @@
     if (route === '/topology') return 'Topologie';
     if (route === '/eplan') return 'E-Plan';
     if (route === '/cables') return 'Kabelliste & Export';
+    if (route === '/kabeltypen') return 'Kabeltypen';
     if (route === '/hardware') return 'Hardware-Katalog';
     if (route === '/virtual-machines') return 'Virtuelle Maschinen';
     if (route.startsWith('/runbook-orchestrator')) return 'Runbook Orchestrator';
@@ -86,6 +88,7 @@
         { href: '/racks', icon: Layers, label: 'Racks' },
         { href: '/hardware', icon: Cpu, label: 'Hardware' },
         { href: '/cables', icon: Cable, label: 'Kabelliste' },
+        { href: '/kabeltypen', icon: Tags, label: 'Kabeltypen' },
         { href: '/topology', icon: Network, label: 'Topologie' }
       ]
     },

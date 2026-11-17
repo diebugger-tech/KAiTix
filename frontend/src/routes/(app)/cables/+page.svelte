@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { api, type Cable, type Device } from '$lib/api';
+  import { api, type Cable, type Device, type Kabeltyp } from '$lib/api';
   import {
     Cable as CableIcon,
     Plus,
@@ -21,6 +21,8 @@
 
   let cables = $state<Cable[]>([]);
   let devices = $state<Device[]>([]);
+  // Aktive Kabeltypen aus dem Katalog (GET /kabeltypen?aktiv=true)
+  let kabeltypen = $state<Kabeltyp[]>([]);
   let selectedCable = $state<Cable | null>(null);
   let loading = $state(true);
   let errorMsg = $state('');
@@ -68,7 +70,7 @@
 
   // Form fields
   let kabel_nr = $state('');
-  let typ = $state('Cat6A');
+  let kabeltyp_id = $state<number | null>(null);
   let laenge_m = $state(1.0);
   let farbe = $state('');
   let von_device_id = $state<number | null>(null);
@@ -154,13 +156,15 @@
     loading = true;
     errorMsg = '';
     try {
-      const [cablesData, devicesData, rulesData] = await Promise.all([
+      const [cablesData, devicesData, rulesData, kabeltypenData] = await Promise.all([
         api.getCables(),
         api.getDevices(),
-        api.getColorRules().catch(() => ({ rules: [] }))
+        api.getColorRules().catch(() => ({ rules: [] })),
+        api.getKabeltypen(true)
       ]);
       cables = cablesData;
       devices = devicesData;
+      kabeltypen = kabeltypenData;
       colorRules = rulesData.rules || [];
 
       if (cablesData.length > 0 && !selectedCable) {
@@ -178,22 +182,33 @@
 
   onMount(loadData);
 
-  async function suggestColorForTyp(newTyp: string) {
-    try {
-      const res = await api.suggestCableColor(newTyp);
-      if (res.suggested_color) {
-        farbe = res.suggested_color;
-      }
-    } catch {
-      // ignore
+  // Auswahl im Formular: aktive Typen. Trägt das bearbeitete Kabel einen
+  // deaktivierten Typ, bleibt dieser zusätzlich wählbar, damit er nicht verloren geht.
+  const formKabeltypen = $derived.by(() => {
+    const options = kabeltypen.map(k => ({ id: k.id, label: k.name }));
+    const current = showEditCable ? selectedCable?.kabeltyp : null;
+    if (current && !options.some(o => o.id === current.id)) {
+      options.push({ id: current.id, label: `${current.name} (deaktiviert)` });
     }
+    return options;
+  });
+
+  function defaultKabeltypId(): number | null {
+    return (kabeltypen.find(k => k.name === 'Cat6A') ?? kabeltypen[0])?.id ?? null;
+  }
+
+  // Farbe aus der Standardfarbe des gewählten Kabeltyps vorbelegen
+  function applyStandardFarbe() {
+    const standard = kabeltypen.find(k => k.id === kabeltyp_id)?.standard_farbe;
+    if (standard) farbe = standard;
   }
 
   function resetForm() {
     kabel_nr = '';
-    typ = 'Cat6A';
+    kabeltyp_id = defaultKabeltypId();
     laenge_m = 1.0;
     farbe = '';
+    applyStandardFarbe();
     von_device_id = null;
     von_port = '';
     nach_device_id = null;
@@ -204,7 +219,7 @@
   function openEditModal() {
     if (!selectedCable) return;
     kabel_nr = selectedCable.kabel_nr;
-    typ = selectedCable.typ;
+    kabeltyp_id = selectedCable.kabeltyp_id ?? null;
     laenge_m = selectedCable.laenge_m;
     farbe = selectedCable.farbe || '';
     von_device_id = selectedCable.von_device_id || null;
@@ -218,10 +233,14 @@
   async function handleAddCable(e: SubmitEvent) {
     e.preventDefault();
     if (!kabel_nr.trim()) return;
+    if (kabeltyp_id === null) {
+      alert('Bitte einen Kabeltyp wählen.');
+      return;
+    }
     try {
       await api.createCable({
         kabel_nr: kabel_nr.trim(),
-        typ,
+        kabeltyp_id: kabeltyp_id ?? undefined,
         laenge_m,
         farbe: farbe || undefined,
         von_device_id: von_device_id || undefined,
@@ -244,7 +263,7 @@
     try {
       await api.updateCable(selectedCable.id, {
         kabel_nr: kabel_nr.trim(),
-        typ,
+        kabeltyp_id: kabeltyp_id ?? undefined,
         laenge_m,
         farbe: farbe || undefined,
         von_device_id: von_device_id || undefined,
@@ -565,8 +584,9 @@
       <div class="grid grid-cols-3 gap-4">
         <div>
           <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Typ *</label>
-          <select bind:value={typ} onchange={() => suggestColorForTyp(typ)} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]">
-            {#each cableTypes as t}<option value={t}>{t}</option>{/each}
+          <select bind:value={kabeltyp_id} onchange={applyStandardFarbe} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]">
+            <option value={null} disabled>— Typ wählen —</option>
+            {#each formKabeltypen as k (k.id)}<option value={k.id}>{k.label}</option>{/each}
           </select>
         </div>
         <div>
@@ -579,6 +599,7 @@
           <select bind:value={farbe} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]">
             <option value="">—</option>
             {#each farben as f}<option value={f}>{f}</option>{/each}
+            {#if farbe && !farben.includes(farbe)}<option value={farbe}>{farbe}</option>{/if}
           </select>
         </div>
       </div>
@@ -641,8 +662,9 @@
       <div class="grid grid-cols-3 gap-4">
         <div>
           <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Typ *</label>
-          <select bind:value={typ} onchange={() => suggestColorForTyp(typ)} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]">
-            {#each cableTypes as t}<option value={t}>{t}</option>{/each}
+          <select bind:value={kabeltyp_id} onchange={applyStandardFarbe} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]">
+            <option value={null} disabled>— Typ wählen —</option>
+            {#each formKabeltypen as k (k.id)}<option value={k.id}>{k.label}</option>{/each}
           </select>
         </div>
         <div>
@@ -655,6 +677,7 @@
           <select bind:value={farbe} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]">
             <option value="">—</option>
             {#each farben as f}<option value={f}>{f}</option>{/each}
+            {#if farbe && !farben.includes(farbe)}<option value={farbe}>{farbe}</option>{/if}
           </select>
         </div>
       </div>

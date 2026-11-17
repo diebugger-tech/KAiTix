@@ -1,2 +1,9 @@
 ## 2026-11-17 · Umbau A0 Review · Kimi
 - CSV- und EPLAN-Import schreiben Kabel an CablingService vorbei, ohne Belegungsprüfung — app/domains/import_export/routers/import_csv.py:443-478, app/domains/import_export/routers/import_eplan.py:307-331 — Beim Review der zentralen Belegungsprüfung in Phase A0 aufgefallen.
+
+## 2026-11-17 · Umbau A2 · Claude Fable 5.2
+- CSV- und EPLAN-Import legen Kabel ohne kabeltyp_id an; importierte Kabel haben dadurch keinen Katalogtyp — app/domains/import_export/routers/import_csv.py:469-471, app/domains/import_export/routers/import_eplan.py:308 — Aufgefallen, weil der CablingService die Zuordnung typ → kabeltyp_id jetzt setzt und beide Importe ihn umgehen.
+- "Strom-C13-Lock" und "Strom-C19-Lock" stehen in festen Frontend-Listen, sind aber weder im Enum cables.typ noch im Katalog; über die Formulare sind sie seit der Katalog-Auswahl nicht mehr wählbar — frontend/src/routes/(app)/cables/+page.svelte:62,82,95, frontend/src/routes/(app)/racks/+page.svelte:1113,1128 — Beim Ersetzen der festen Formularlisten durch GET /kabeltypen aufgefallen.
+- Weitere feste Typlisten bleiben neben dem Katalog bestehen: Filter, Kategorien und Badges der Kabelliste sowie der Zielgeräte-Filter im Rack-Formular, der auf typ-Strings prüft — frontend/src/routes/(app)/cables/+page.svelte:58,82,86, frontend/src/routes/(app)/racks/+page.svelte:1063-1066,1091-1094 — Neue Katalogtypen (z. B. Breakouts mit alt_typ "sonstige") laufen dort in den Standardzweig.
+- request() setzt bei jeder fehlgeschlagenen Antwort den Backend-Status auf offline, auch bei fachlichen 409/422 — frontend/src/lib/api.ts:507-510 — Aufgefallen, weil die neuen 409-Antworten (Kabeltyp verwendet, Name vergeben) diesen Weg nehmen.
+- request() übernimmt parsed.detail ungeprüft als Fehlermeldung; bei Pydantic-Validierungsfehlern ist detail eine Liste und ergibt "[object Object]" — frontend/src/lib/api.ts:497 — Beim Prüfen der 422-Anzeige für die Kabeltyp-Pflegeseite aufgefallen.
