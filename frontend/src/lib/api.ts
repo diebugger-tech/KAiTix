@@ -488,7 +488,8 @@ export interface RunbookExecutionStep {
   note?: string | null;
 }
 
-async function request(path: string, options: RequestInit = {}) {
+// Exportiert für weitere API-Module (z. B. $lib/umbauApi), damit Header und Fehlerbehandlung gleich bleiben.
+export async function request(path: string, options: RequestInit = {}) {
   // Vite proxy routes /api to http://localhost:8003
   const url = path.startsWith('/') ? path : `/api/v1/${path}`;
   

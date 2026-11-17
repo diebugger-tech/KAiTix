@@ -23,6 +23,7 @@
     Search,
     Monitor,
     BookOpen,
+    Construction,
     Sun,
     Moon,
     Info
@@ -78,6 +79,7 @@
     if (route === '/hardware') return 'Hardware-Katalog';
     if (route === '/virtual-machines') return 'Virtuelle Maschinen';
     if (route.startsWith('/runbook-orchestrator')) return 'Runbook Orchestrator';
+    if (route.startsWith('/umbau')) return 'Serverraum-Umbau';
     return 'KAiTix';
   });
 
@@ -108,7 +110,8 @@
     {
       title: 'Betrieb',
       links: [
-        { href: '/runbook-orchestrator', icon: BookOpen, label: 'Runbook Orchestrator', matchPrefix: true }
+        { href: '/runbook-orchestrator', icon: BookOpen, label: 'Runbook Orchestrator', matchPrefix: true },
+        { href: '/umbau', icon: Construction, label: 'Umbau', matchPrefix: true }
       ]
     },
     {

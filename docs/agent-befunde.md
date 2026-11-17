@@ -19,3 +19,7 @@
 - Die Test-Session hängt an einer äußeren Transaktion; ein rollback() im Service rollt dort die gesamte Testvorbereitung zurück — tests/conftest.py:36-42 — Aufgefallen beim rowcount-0-Pfad, der deshalb ohne rollback auskommt; die vorhandene SAWarning "transaction already deassociated" in den Import- und Power-Tests stammt aus demselben Verhalten.
 - Kabel, die der CSV- oder EPLAN-Import ohne kabeltyp_id anlegt, sperren im Umbau das Einfrieren mit "Kabeltyp fehlt" — app/domains/import_export/routers/import_csv.py:469-471, app/domains/import_export/routers/import_eplan.py:308 — Folge des A2-Befunds, beim Bau der Einfrier-Sperre sichtbar geworden.
 - Die Abdeckung lässt sich in der vorhandenen venv nicht messen: pytest-cov ist nicht installiert, `pytest --cov` bricht mit "unrecognized arguments" ab — requirements.txt — Aufgefallen beim Prüfen, ob die Tests den rowcount-0-Zweig wirklich ausführen (ersatzweise mit dem Standardmodul trace geprüft).
+
+## 2026-11-17 · Umbau B3 · Claude Fable 5.2
+- Die Kabelliste kennt keinen Direktlink auf ein einzelnes Kabel (die Auswahl ist nur Seitenzustand); die Erfassung kann zum Ändern oder Löschen deshalb nur auf /cables verweisen — frontend/src/routes/(app)/cables/+page.svelte:24 — Aufgefallen beim Bau der Kabel-Enden je Gerät in der Erfassungsansicht.
+- request() schreibt jede fehlgeschlagene Antwort als console.error, auch erwartbare fachliche 409 wie die Doppelbelegung eines Ports — frontend/src/lib/api.ts:532 — Im Browser-Test der Erfassung in der Konsole gesehen.
