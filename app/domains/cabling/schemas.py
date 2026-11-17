@@ -38,7 +38,9 @@ class CableBase(BaseModel):
     laenge_m: Decimal = Field(..., ge=0)
     farbe: Optional[str] = None
     von_device_id: Optional[int] = None
+    von_port: Optional[str] = Field(None, max_length=50)
     nach_device_id: Optional[int] = None
+    nach_port: Optional[str] = Field(None, max_length=50)
     verlegt_am: Optional[date] = None
     verlegt_von: Optional[str] = None
     bemerkung: Optional[str] = None
@@ -54,7 +56,9 @@ class CableUpdate(BaseModel):
     laenge_m: Optional[Decimal] = Field(None, ge=0)
     farbe: Optional[str] = None
     von_device_id: Optional[int] = None
+    von_port: Optional[str] = Field(None, max_length=50)
     nach_device_id: Optional[int] = None
+    nach_port: Optional[str] = Field(None, max_length=50)
     verlegt_am: Optional[date] = None
     verlegt_von: Optional[str] = None
     bemerkung: Optional[str] = None

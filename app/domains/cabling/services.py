@@ -1,9 +1,10 @@
 import json
 import os
+import re
 from datetime import datetime, timezone
 from typing import List, Dict, Any, Sequence
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, or_
+from sqlalchemy import select, or_
 from sqlalchemy.orm import selectinload
 from fastapi import HTTPException
 
@@ -366,14 +367,69 @@ class CablingService:
         )
         return result.scalars().all()  # type: ignore
 
+    async def _next_kabel_nr(self) -> str:
+        result = await self.db.execute(
+            select(CableModel.kabel_nr).where(CableModel.kabel_nr.is_not(None))
+        )
+        highest = 0
+        for kabel_nr in result.scalars():
+            match = re.fullmatch(r"KAB-(\d+)", kabel_nr)
+            if match:
+                highest = max(highest, int(match.group(1)))
+        return f"KAB-{highest + 1:04d}"
+
+    async def _check_port_conflicts(
+        self,
+        typ: str,
+        endpoints: Sequence[tuple[int | None, str | None]],
+        exclude_cable_id: int | None = None,
+    ) -> None:
+        if typ.startswith("Strom"):
+            return
+        candidates = {
+            (device_id, port) for device_id, port in endpoints if device_id and port
+        }
+        if not candidates:
+            return
+
+        query = select(CableModel).order_by(CableModel.id)
+        if exclude_cable_id is not None:
+            query = query.where(CableModel.id != exclude_cable_id)
+        result = await self.db.execute(query)
+        for cable in result.scalars():
+            if cable.typ.startswith("Strom"):
+                continue
+            occupied = {
+                (cable.von_device_id, cable.von_port),
+                (cable.nach_device_id, cable.nach_port),
+            }
+            conflicts = candidates & occupied
+            if conflicts:
+                device_id, port = sorted(conflicts)[0]
+                device_result = await self.db.execute(
+                    select(DeviceModel.hostname).where(DeviceModel.id == device_id)
+                )
+                device_name = device_result.scalar_one_or_none() or f"#{device_id}"
+                kabel_nr = cable.kabel_nr or f"#{cable.id}"
+                raise HTTPException(
+                    status_code=409,
+                    detail=(
+                        f"Port '{port}' an Gerät '{device_name}' ist bereits durch "
+                        f"Kabel '{kabel_nr}' belegt"
+                    ),
+                )
+
     async def create_cable(self, cable_in: CableCreate) -> CableModel:
         if not cable_in.kabel_nr:
-            count_result = await self.db.execute(
-                select(func.count()).select_from(CableModel)
-            )
-            count = count_result.scalar() or 0
-            cable_in.kabel_nr = f"KAB-{count + 1:04d}"
+            cable_in.kabel_nr = await self._next_kabel_nr()
         data = cable_in.model_dump()
+        await self._check_port_conflicts(
+            data["typ"],
+            [
+                (data["von_device_id"], data["von_port"]),
+                (data["nach_device_id"], data["nach_port"]),
+            ],
+        )
         db_cable = CableModel(**data)
         self.db.add(db_cable)
         await self.db.commit()
@@ -408,6 +464,31 @@ class CablingService:
             raise HTTPException(status_code=404, detail="Cable not found")
 
         update_data = cable_in.model_dump(exclude_unset=True)
+        connection_fields = (
+            "von_device_id",
+            "von_port",
+            "nach_device_id",
+            "nach_port",
+            "typ",
+        )
+        if any(
+            field in update_data and update_data[field] != getattr(cable, field)
+            for field in connection_fields
+        ):
+            await self._check_port_conflicts(
+                update_data.get("typ", cable.typ),
+                [
+                    (
+                        update_data.get("von_device_id", cable.von_device_id),
+                        update_data.get("von_port", cable.von_port),
+                    ),
+                    (
+                        update_data.get("nach_device_id", cable.nach_device_id),
+                        update_data.get("nach_port", cable.nach_port),
+                    ),
+                ],
+                exclude_cable_id=cable.id,
+            )
         for field, value in update_data.items():
             setattr(cable, field, value)
         cable.geaendert_von = username
