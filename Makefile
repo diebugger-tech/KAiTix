@@ -2,8 +2,8 @@
 # KAiTix — Development Makefile
 # =============================================================================
 
-BACKEND_PORT  := 8003
-FRONTEND_PORT := 5175
+BACKEND_PORT  ?= 8003
+FRONTEND_PORT ?= 5175
 
 # Verzeichnisse, die find bei clean/clean-bak überspringt.
 # Hinweis: -prune nicht mit -delete kombinieren (-delete impliziert -depth und hebelt -prune aus).
@@ -75,7 +75,7 @@ dev:
 dev-frontend:
 	@echo ">>> Starte Frontend (Port $(FRONTEND_PORT))..."
 	@echo ">>> Im Browser: http://localhost:$(FRONTEND_PORT)"
-	cd frontend && npm run dev
+	cd frontend && KAITIX_FRONTEND_PORT=$(FRONTEND_PORT) KAITIX_BACKEND_PORT=$(BACKEND_PORT) npm run dev
 
 dev-all:
 	@if [ ! -d ".venv" ]; then echo "FEHLER: .venv fehlt. nix-shell starten und 'make install' ausführen."; exit 1; fi
@@ -84,7 +84,7 @@ dev-all:
 	@echo ">>> API-Doku:       http://localhost:$(BACKEND_PORT)/docs"
 	@trap 'kill %1 %2 2>/dev/null; exit' INT TERM; \
 	. .venv/bin/activate && uvicorn app.main:app --reload --host 0.0.0.0 --port $(BACKEND_PORT) & \
-	cd frontend && npm run dev & \
+	cd frontend && KAITIX_FRONTEND_PORT=$(FRONTEND_PORT) KAITIX_BACKEND_PORT=$(BACKEND_PORT) npm run dev & \
 	wait
 
 stop: stop-backend stop-frontend
