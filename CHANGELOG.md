@@ -5,6 +5,14 @@ Alle wesentlichen Änderungen am Projekt werden in dieser Datei dokumentiert.
 ## [Unreleased]
 
 ### Hinzugefügt
+- **Serverraum-Umbau** (`/umbau`): Kabel je Gerät erfassen, Soll-Stand einfrieren, jedes
+  Stecker-Ende abklemmen und nach dem Umbau am Soll-Port wieder anklemmen; Abweichung nur mit
+  Grund, Protokoll je Buchung. Beschreibung in `docs/umbau.md`. Migration `a6f7bab2f1b2`.
+- **Kabeltyp-Katalog** (`/kabeltypen`): Kabeltypen mit Kategorie, Steckern und Enden je Seite;
+  Kabel verweisen über `kabeltyp_id` darauf. Migration `52e1b97080a3`.
+- **Breakout-Kabel:** Jeder Strang hat eigenes Ziel-Gerät und eigenen Port. Migration `27f768e65156`.
+- **Ports überschreibbar:** `make dev-all BACKEND_PORT=… FRONTEND_PORT=…` für eine zweite Instanz.
+- README: Abschnitt „Update einer bestehenden Installation".
 - Runbook Orchestrator: PDF Print-Laufzettel mit Rack Elevations und Zero-U Highlighting
 - CSV Import: Aggregierte Fehlerdarstellung (Zusammenfassung fehlerhafter Zeilen)
 - **Container-Setup (3-Befehl-Onboarding):** `podman/docker compose up --build` bringt das
@@ -22,6 +30,7 @@ Alle wesentlichen Änderungen am Projekt werden in dieser Datei dokumentiert.
   kann den Container nicht mehr brechen); Healthcheck via `127.0.0.1`/`-uroot`; `service_healthy`-Gate.
 
 ### Behoben
+- Kabel: Ports im Schreibweg, Belegungsprüfung und Kabelnummern-Generator.
 - Frontend-Build brach ab: `{@const}` in `(app)/+layout.svelte` war kein direktes Kind des `{#each}`.
 
 ### Entfernt

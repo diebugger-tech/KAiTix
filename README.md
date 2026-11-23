@@ -104,6 +104,12 @@ Danach im Browser öffnen: **http://localhost:8080**
 ### 10. Referenz & Lernbereich
 * **IPv6 Referenz:** Integriertes Cheat-Sheet für das IPv6-Design (VLAN-Mapping, ULAs, IID-Berechnung), direkt abrufbar aus der Navigation.
 
+### 11. Serverraum-Umbau & Kabeltyp-Katalog
+* **Kabeltyp-Katalog:** Kabeltypen mit Kategorie und Anzahl Enden je Seite, z. B. Breakout QSFP+ → 4× SFP+. Pflege unter *Infrastruktur → Kabeltypen*.
+* **Breakout-Kabel:** Jeder Strang eines Breakouts hat sein eigenes Ziel-Gerät und seinen eigenen Port.
+* **Umbau begleiten:** Unter *Betrieb → Umbau* Racks wählen, Kabel je Gerät erfassen, Soll-Stand einfrieren, jedes Stecker-Ende abklemmen und nach dem Umbau am Soll-Port wieder anklemmen. Ein anderer Port geht nur mit Grund. Jede Buchung steht mit Name und Zeit im Protokoll.
+* **Details:** Ablauf, Regeln und Grenzen in [docs/umbau.md](docs/umbau.md).
+
 
 ---
 
@@ -286,6 +292,70 @@ Danach im Browser: **http://localhost:5175**
 
 ---
 
+## Update einer bestehenden Installation
+
+Die Datenbank `data/kaitix.db` liegt **nicht** im Repository. Jeder Rechner hat seine eigene
+Datenbank und braucht nach einem Update die neuen Migrationen.
+
+> [!WARNING]
+> Vor jedem Update die Datenbank sichern. Migrationen ändern das Schema; zurück geht es nur
+> über die Sicherung.
+
+### Update — Variante A (Container)
+
+Jeden Befehl einzeln einfügen:
+
+```bash
+cd KAiTix
+```
+```bash
+cp data/kaitix.db data/kaitix.db.bak
+```
+```bash
+git pull
+```
+```bash
+podman compose up --build
+```
+
+Die Migrationen laufen beim Containerstart automatisch (`scripts/db_init.py` führt
+`alembic upgrade head` aus). Bestehende Daten bleiben erhalten.
+
+### Update — Variante B (manuell)
+
+```bash
+cd KAiTix
+cp data/kaitix.db data/kaitix.db.bak
+git pull
+source .venv/bin/activate
+pip install -r requirements.txt
+alembic upgrade head
+cd frontend && npm install && cd ..
+make restart-all
+```
+
+Ohne `alembic upgrade head` fehlen neue Tabellen und Spalten; betroffene Seiten melden dann
+einen Serverfehler (500).
+
+Kurzform für `main` in der nix-shell mit aktivem venv: `make update` (wechselt auf `main`,
+pullt, installiert und migriert). Danach `make restart-all`.
+
+### Einen Feature-Branch vor dem Merge testen
+
+```bash
+cp data/kaitix.db data/kaitix.db.bak
+git fetch origin
+git switch <branch>
+```
+
+Danach dieselben Schritte wie oben ab `pip install` (bzw. `podman compose up --build`).
+
+Zurück auf `main`: erst `git switch main`, dann die Sicherung zurückkopieren
+(`cp data/kaitix.db.bak data/kaitix.db`). Die Datenbank kennt sonst Migrationen, die es auf
+`main` noch nicht gibt, und `alembic upgrade head` bricht ab.
+
+---
+
 ## Demo-Daten laden (Seeding)
 
 Um KAiTix mit Beispieldaten zu testen (2 Racks, 8 Geräte, 6 VMs, 2 Runbooks), führen Sie folgendes Skript aus:
@@ -323,6 +393,14 @@ PYTHONPATH=. python3 scripts/seed_testdata.py
 | `make -n <target>` | Dry-Run: zeigt die Befehle eines Targets, ohne sie auszuführen |
 
 **Browser-URLs (lokale Entwicklung):** UI http://localhost:5175 · API-Doku http://localhost:8003/docs
+
+**Andere Ports**, z. B. für eine zweite Instanz aus einem Git-Worktree parallel zur ersten:
+
+```bash
+make dev-all BACKEND_PORT=8013 FRONTEND_PORT=5185
+```
+
+Vite leitet `/api` dann automatisch an das Backend auf `BACKEND_PORT` weiter.
 
 ---
 

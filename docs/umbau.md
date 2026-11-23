@@ -37,6 +37,24 @@ unter „Infrastruktur → Kabeltypen“ (`/kabeltypen`).
 - **Stromkabel** (Kategorie `strom`) gehören nicht zum Umbau.
 - **Patchpanels** sind normale Geräte: Server → Panel und Panel → Switch sind zwei Kabel.
 
+## Einspielen
+
+Der Umbau bringt drei Migrationen mit, in dieser Reihenfolge:
+
+| Revision | Inhalt |
+|---|---|
+| `52e1b97080a3` | Tabelle `kabeltypen` mit 17 Katalogzeilen, `cables.kabeltyp_id` |
+| `27f768e65156` | `cable_strands.nach_device_id` und `nach_port` (B-Enden der Breakouts) |
+| `a6f7bab2f1b2` | Tabellen des Umbaus |
+
+Container: Die Migrationen laufen beim Start automatisch. Manuelle Installation: Datenbank
+sichern, dann `alembic upgrade head`. Die Schritte stehen in der README unter
+„Update einer bestehenden Installation".
+
+Vorhandene Kabel bekommen den Katalogtyp, dessen Name gleich ihrem bisherigen `typ` ist.
+Kabel ohne passenden Katalogeintrag bleiben ohne Kabeltyp. Sie lassen sich weiter
+bearbeiten, sperren aber das Einfrieren eines Umbaus, bis der Typ gesetzt ist.
+
 ## Tabellen des Umbaus
 
 Modelle in `app/domains/umbau/models.py`, Migration `a6f7bab2f1b2`.
