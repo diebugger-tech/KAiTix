@@ -10,6 +10,10 @@ from sqlalchemy import select
 from app.core.database import get_db
 from app.models import Rack, Device, Cable
 from app.core.network_utils import normalize_ipv6
+from app.domains.cabling.kabeltyp_service import (
+    kabeltyp_id_nach_typ,
+    kabeltyp_ids_nach_name,
+)
 
 router = APIRouter()
 
@@ -434,15 +438,23 @@ async def commit_cables(
     conflict_db = []
     conflict_csv = []
     seen_in_payload = set()
+    kabeltyp_ids = await kabeltyp_ids_nach_name(db)
 
     for row_data in payload.rows:
         row_num = row_data.row or "?"
         kabel_nr = row_data.kabel_nr
         name = kabel_nr.lower() if kabel_nr else None
+        typ = row_data.typ if row_data.typ in VALID_CABLE_TYPES else "Cat6"
 
         if payload.update_mode and name and name in existing_map:
             existing = existing_map[name]
-            existing.typ = row_data.typ if row_data.typ in VALID_CABLE_TYPES else "Cat6"
+            existing.kabeltyp_id = kabeltyp_id_nach_typ(
+                typ,
+                kabeltyp_ids,
+                alter_typ=existing.typ,
+                alte_kabeltyp_id=existing.kabeltyp_id,
+            )
+            existing.typ = typ
             existing.laenge_m = float(row_data.laenge_m)
             existing.farbe = row_data.farbe
             existing.bemerkung = row_data.bemerkung
@@ -468,7 +480,8 @@ async def commit_cables(
 
         cable = Cable(
             kabel_nr=row_data.kabel_nr,
-            typ=row_data.typ if row_data.typ in VALID_CABLE_TYPES else "Cat6",
+            typ=typ,
+            kabeltyp_id=kabeltyp_id_nach_typ(typ, kabeltyp_ids),
             laenge_m=Decimal(str(row_data.laenge_m)),
             farbe=row_data.farbe,
             bemerkung=row_data.bemerkung,

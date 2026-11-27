@@ -170,9 +170,12 @@ gefahrlos.
   Exporte kennen die Strang-Enden nicht.
 - **Kein Abgleich mit Interfaces.** Port-Vorschläge kommen aus den Interfaces, belegt
   wird aber allein über die Port-Texte am Kabel.
-- **Importierte Kabel haben keinen Kabeltyp.** CSV- und EPLAN-Import legen Kabel ohne
-  `kabeltyp_id` an. Solche Kabel sperren das Einfrieren, bis der Typ in der Kabelliste
-  gesetzt ist.
+- **Importe kennen nur die Standardtypen.** CSV- und EPLAN-Import ordnen den Kabeltyp
+  über den Namen zu (Katalogzeile mit dem Namen des `typ`, Regel in
+  `kabeltyp_service.kabeltyp_id_nach_typ`). Breakouts und eigene Katalogtypen lassen sich
+  nicht importieren; ohne passende Katalogzeile bleibt das Kabel ohne Kabeltyp und sperrt
+  das Einfrieren, bis der Typ in der Kabelliste gesetzt ist. Beim erneuten Import bleibt
+  ein gesetzter Kabeltyp, solange sich `typ` nicht ändert.
 - **Bestätigung gilt für alle Geräte der gewählten Racks**, auch für solche ohne
   Datenkabel.
 

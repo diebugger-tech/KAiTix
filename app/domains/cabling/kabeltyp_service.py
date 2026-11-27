@@ -1,4 +1,4 @@
-from typing import Sequence
+from typing import Mapping, Sequence
 
 from fastapi import HTTPException
 from sqlalchemy import func, select
@@ -10,6 +10,30 @@ from app.domains.cabling.schemas import KabeltypCreate, KabeltypUpdate
 
 
 GESPERRT_BEI_VERWENDUNG = ("alt_typ", "enden_a", "enden_b")
+
+
+async def kabeltyp_ids_nach_name(db: AsyncSession) -> dict[str, int]:
+    """Katalog als Name → id, für Schreibwege ohne Katalogauswahl (CSV, EPLAN)."""
+    result = await db.execute(select(KabeltypModel.name, KabeltypModel.id))
+    return {name: kabeltyp_id for name, kabeltyp_id in result.all()}
+
+
+def kabeltyp_id_nach_typ(
+    neuer_typ: str,
+    ids_nach_name: Mapping[str, int],
+    *,
+    alter_typ: str | None = None,
+    alte_kabeltyp_id: int | None = None,
+) -> int | None:
+    """Kabeltyp zu einem typ-String, gleiche Regel wie CablingService beim Ändern.
+
+    Ein gesetzter Kabeltyp bleibt, solange sich typ nicht ändert. Sonst würde ein
+    Breakout (alt_typ "sonstige") beim erneuten Import auf die Katalogzeile
+    "sonstige" umgebogen. Ohne passende Katalogzeile bleibt das Kabel ohne Typ.
+    """
+    if alte_kabeltyp_id is not None and neuer_typ == alter_typ:
+        return alte_kabeltyp_id
+    return ids_nach_name.get(neuer_typ)
 
 
 class KabeltypService:
