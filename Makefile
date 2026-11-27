@@ -169,10 +169,13 @@ lint:
 	@echo ">>> Typ-Check mit mypy..."
 	mypy .
 
+# alembic/versions bleibt unangetastet: generierte Migrationen sind immutable.
+RUFF_FORMAT_EXCLUDE := --config 'extend-exclude = ["alembic/versions"]'
+
 format:
-	@echo ">>> Formatiere Code mit ruff..."
-	ruff check --fix .
-	ruff format .
+	@echo ">>> Formatiere Code mit ruff (ohne alembic/versions)..."
+	ruff check --fix $(RUFF_FORMAT_EXCLUDE) .
+	ruff format $(RUFF_FORMAT_EXCLUDE) .
 
 # === DATABASE ================================================================
 migrate-create:
