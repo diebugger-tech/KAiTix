@@ -5,7 +5,8 @@
   import ErfassungAnsicht from '$lib/components/umbau/ErfassungAnsicht.svelte';
   import EndenAnsicht from '$lib/components/umbau/EndenAnsicht.svelte';
   import Ereignisprotokoll from '$lib/components/umbau/Ereignisprotokoll.svelte';
-  import { ArrowLeft, ArrowRight, Construction, X } from '@lucide/svelte';
+  import UmbauDruck from '$lib/components/umbau/UmbauDruck.svelte';
+  import { ArrowLeft, ArrowRight, Construction, Printer, X } from '@lucide/svelte';
 
   const umbauId = Number(page.params.id ?? '0');
 
@@ -63,7 +64,7 @@
   <title>KAiTix - Umbau{umbau ? ` · ${umbau.name}` : ''}</title>
 </svelte:head>
 
-<div class="space-y-6">
+<div class="space-y-6 screen-only">
   <div class="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--color-border)] pb-4">
     <div class="flex items-start gap-3 min-w-0">
       <a
@@ -89,10 +90,21 @@
         {/if}
       </div>
     </div>
-    {#if umbau && (weiter || verwerfbar)}
+    {#if umbau && (weiter || verwerfbar || umbau.enden.length > 0)}
       <!-- Phasenwechsel: gesperrt mit Grund aus der API -->
       <div class="flex flex-col items-end gap-1.5 max-w-full">
         <div class="flex flex-wrap items-center justify-end gap-2">
+          {#if umbau.enden.length > 0}
+            <!-- Druckliste: Enden nach Rack/Gerät mit Abhakfeldern, Stand jetzt -->
+            <button
+              type="button"
+              onclick={() => window.print()}
+              class="flex items-center gap-2 px-3 min-h-11 rounded-lg text-sm text-[var(--color-text)] border border-[var(--color-border2)] hover:bg-[var(--color-border)] transition"
+            >
+              <Printer class="w-4 h-4" />
+              Druckliste
+            </button>
+          {/if}
           {#if verwerfbar}
             <button
               type="button"
@@ -164,3 +176,9 @@
     <Ereignisprotokoll {umbau} />
   {/if}
 </div>
+
+{#if umbau && umbau.enden.length > 0}
+  <div class="print-only">
+    <UmbauDruck {umbau} />
+  </div>
+{/if}

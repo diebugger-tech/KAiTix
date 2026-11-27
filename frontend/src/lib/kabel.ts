@@ -67,7 +67,8 @@ export function endenAmGeraet(cables: Cable[], deviceId: number): KabelEnde[] {
     const b: Gegenstelle[] = straenge.length
       ? straenge.map(s => ({ device_id: s.nach_device_id ?? null, port: s.nach_port ?? null }))
       : [{ device_id: cable.nach_device_id ?? null, port: cable.nach_port ?? null }];
-    const offen = !cable.kabeltyp || fehlt(a) || b.some(fehlt);
+    // Wie regeln.unvollstaendig im Backend: Nummer, Kabeltyp und alle Enden.
+    const offen = !cable.kabel_nr?.trim() || !cable.kabeltyp || fehlt(a) || b.some(fehlt);
     if (a.device_id === deviceId) {
       enden.push({ cable, schluessel: `${cable.id}-A`, eigenerPort: a.port, gegenstellen: b, unvollstaendig: offen });
     }

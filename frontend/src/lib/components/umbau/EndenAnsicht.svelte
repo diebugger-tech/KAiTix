@@ -10,7 +10,8 @@
   import { umbauApi, ENDE_STATUS_LABEL, zeit, type UmbauDetail, type UmbauEnde } from '$lib/umbauApi';
   import CableSelectGrid from './CableSelectGrid.svelte';
   import AndererPort from './AndererPort.svelte';
-  import { ChevronDown, ChevronRight, ListChecks, Undo2, Unplug, Plug, TriangleAlert } from '@lucide/svelte';
+  import KabelNachtragen from './KabelNachtragen.svelte';
+  import { ChevronDown, ChevronRight, ListChecks, Undo2, Unplug, Plug, TriangleAlert, Plus, Trash2 } from '@lucide/svelte';
 
   let {
     umbau,
@@ -36,6 +37,30 @@
   let sammel = $state<'buchen' | 'korrigieren' | null>(null);
   let sammelBusy = $state(false);
   let andererPort = $state<UmbauEnde | null>(null);
+  let nachtragOffen = $state(false);
+
+  /** Nachträge, die sich noch entfernen lassen: im Rückbau, alle Enden gesteckt. */
+  const entfernbar = $derived.by(() => {
+    const status = new Map<number, boolean>();
+    for (const e of umbau.enden) {
+      if (e.nachtrag_nr == null) continue;
+      status.set(e.nachtrag_nr, (status.get(e.nachtrag_nr) ?? true) && e.status === 'gesteckt');
+    }
+    return new Set([...status].filter(([, alleGesteckt]) => rueckbau && alleGesteckt).map(([nr]) => nr));
+  });
+
+  async function nachtragEntfernen(e: UmbauEnde) {
+    if (e.nachtrag_nr == null) return;
+    if (!confirm(`Nachgetragenes Kabel ${e.kabel_nr ?? ''} mit allen Enden entfernen?`)) return;
+    await einzeln(e, () => umbauApi.nachtragEntfernen(umbau.id, e.nachtrag_nr as number));
+  }
+
+  /** Position und Länge aus der Soll-Kopie, soweit vorhanden. */
+  function ortUndLaenge(e: UmbauEnde): string {
+    return [e.soll_position, e.laenge_m != null ? `${e.laenge_m.toLocaleString('de-DE')} m` : null]
+      .filter(Boolean)
+      .join(' · ');
+  }
 
   // --- Was ist in dieser Phase erledigt, offen, zurücknehmbar? -----------------
   function erledigt(e: UmbauEnde): boolean {
@@ -170,6 +195,16 @@
     </div>
     {#if buchbar}
       <div class="flex flex-wrap items-center gap-2">
+        {#if rueckbau}
+          <button
+            type="button"
+            onclick={() => (nachtragOffen = true)}
+            class="flex items-center gap-2 px-4 min-h-11 rounded-lg text-sm font-semibold border border-[var(--color-border2)] text-[var(--color-text)] hover:bg-[var(--color-border)] transition"
+          >
+            <Plus class="w-4 h-4" />
+            Kabel nachtragen
+          </button>
+        {/if}
         <button
           type="button"
           onclick={() => (sammel = 'buchen')}
@@ -236,10 +271,19 @@
                     <div class="flex flex-wrap items-center gap-2">
                       <span class="font-mono text-base font-bold text-[var(--color-text)]">{e.soll_device_name}:{e.soll_port}</span>
                       <span class="text-[11px] font-semibold px-2 py-0.5 rounded border {statusFarbe[e.status]}">{ENDE_STATUS_LABEL[e.status]}</span>
+                      {#if e.nachtrag_nr != null}
+                        <span
+                          class="text-[11px] font-semibold px-2 py-0.5 rounded border border-orange-500/40 bg-orange-500/10 text-orange-400"
+                          title="Im Rückbau nachgetragen, steht nicht in der Kabelliste"
+                        >
+                          nachgetragen
+                        </span>
+                      {/if}
                     </div>
                     <div class="mt-0.5 text-xs text-[var(--color-text2)]">
                       <span class="font-mono">{e.kabel_nr ?? '—'}</span> · {e.kabeltyp_name}{e.farbe ? ` · ${e.farbe}` : ''}
                       · Gegenseite <span class="font-mono">{e.gegenseite.join(', ') || '—'}</span>
+                      {#if ortUndLaenge(e)}<span class="text-[var(--color-text3)]"> · {ortUndLaenge(e)}</span>{/if}
                     </div>
                     {#if e.status === 'angeklemmt_abweichend'}
                       <div class="mt-0.5 text-xs text-fuchsia-400">
@@ -253,14 +297,28 @@
                     {/if}
                   </div>
                   {#if !e.sperrgrund && rueckbau && e.status === 'gesteckt'}
-                    <button
-                      type="button"
-                      onclick={() => abklemmen(e)}
-                      disabled={laeuft === e.id}
-                      class="flex items-center gap-2 px-4 min-h-11 rounded-lg text-sm font-semibold bg-[#1D9E75] hover:bg-[#0F6E56] text-white transition disabled:opacity-50"
-                    >
-                      <Unplug class="w-4 h-4" /> Abklemmen
-                    </button>
+                    <div class="flex flex-wrap items-center gap-2">
+                      {#if e.seite === 'A' && e.nachtrag_nr != null && entfernbar.has(e.nachtrag_nr)}
+                        <button
+                          type="button"
+                          onclick={() => nachtragEntfernen(e)}
+                          disabled={laeuft === e.id}
+                          aria-label="Nachtrag {e.kabel_nr ?? ''} entfernen"
+                          title="Nachtrag entfernen (z. B. bei Tippfehler)"
+                          class="min-w-11 min-h-11 flex items-center justify-center rounded-lg border border-red-500/40 text-red-400 hover:bg-red-500/10 transition disabled:opacity-50"
+                        >
+                          <Trash2 class="w-4 h-4" />
+                        </button>
+                      {/if}
+                      <button
+                        type="button"
+                        onclick={() => abklemmen(e)}
+                        disabled={laeuft === e.id}
+                        class="flex items-center gap-2 px-4 min-h-11 rounded-lg text-sm font-semibold bg-[#1D9E75] hover:bg-[#0F6E56] text-white transition disabled:opacity-50"
+                      >
+                        <Unplug class="w-4 h-4" /> Abklemmen
+                      </button>
+                    </div>
                   {:else if !e.sperrgrund && wiederaufbau && e.status === 'abgeklemmt'}
                     <div class="flex flex-wrap items-center gap-2">
                       <button
@@ -329,6 +387,17 @@
       {/if}
     </div>
   </div>
+{/if}
+
+{#if nachtragOffen}
+  <KabelNachtragen
+    {devices}
+    onconfirm={async (eingabe) => {
+      await umbauApi.nachtragen(umbau.id, eingabe);
+      await onchange();
+    }}
+    onclose={() => (nachtragOffen = false)}
+  />
 {/if}
 
 {#if andererPort}

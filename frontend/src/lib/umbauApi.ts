@@ -54,14 +54,19 @@ export interface UmbauEnde {
   strand_number?: number | null;
   seite: 'A' | 'B';
   ende_nr: number;
+  /** Gesetzt bei einem im Rückbau nachgetragenen Kabel (nicht in der Kabelliste). */
+  nachtrag_nr?: number | null;
   soll_device_id?: number | null;
   soll_device_name: string;
   soll_rack_name?: string | null;
+  /** Einbauort des Geräts beim Einfrieren, z. B. "HE 12–13". */
+  soll_position?: string | null;
   soll_port: string;
   kabel_nr?: string | null;
   kabeltyp_name: string;
   kategorie: string;
   farbe?: string | null;
+  laenge_m?: number | null;
   status: EndeStatus;
   abgeklemmt_am?: string | null;
   abgeklemmt_von?: string | null;
@@ -132,6 +137,28 @@ export interface AnklemmenEingabe {
   grund?: string | null;
 }
 
+export interface EndpunktEingabe {
+  device_id: number;
+  port: string;
+}
+
+/** Ein im Rückbau gefundenes Kabel, das nicht in der Kabelliste steht. */
+export interface NachtragEingabe {
+  kabeltyp_id: number;
+  /** Leer: der Umbau vergibt „NT-<nr>“. */
+  kabel_nr?: string | null;
+  farbe?: string | null;
+  laenge_m?: number | null;
+  bemerkung?: string | null;
+  a: EndpunktEingabe;
+  b: EndpunktEingabe[];
+}
+
+/** Ports gelten als gleich ohne Rand-Leerzeichen und Groß-/Kleinschreibung (wie im Backend). */
+export function portGleich(a?: string | null, b?: string | null): boolean {
+  return (a ?? '').trim().toLocaleLowerCase('de') === (b ?? '').trim().toLocaleLowerCase('de');
+}
+
 export const STATUS_LABEL: Record<UmbauStatus, string> = {
   erfassung: 'Erfassung',
   rueckbau: 'Rückbau',
@@ -168,5 +195,9 @@ export const umbauApi = {
   abklemmen: (umbauId: number, endeId: number, abgeklemmt: boolean): Promise<UmbauEnde> =>
     request(`umbau/${umbauId}/enden/${endeId}/abklemmen?abgeklemmt=${abgeklemmt}`, { method: 'PUT' }),
   anklemmen: (umbauId: number, endeId: number, eingabe: AnklemmenEingabe): Promise<UmbauEnde> =>
-    request(`umbau/${umbauId}/enden/${endeId}/anklemmen`, { method: 'PUT', body: JSON.stringify(eingabe) })
+    request(`umbau/${umbauId}/enden/${endeId}/anklemmen`, { method: 'PUT', body: JSON.stringify(eingabe) }),
+  nachtragen: (umbauId: number, eingabe: NachtragEingabe): Promise<UmbauDetail> =>
+    request(`umbau/${umbauId}/nachtraege`, { method: 'POST', body: JSON.stringify(eingabe) }),
+  nachtragEntfernen: (umbauId: number, nachtragNr: number): Promise<UmbauDetail> =>
+    request(`umbau/${umbauId}/nachtraege/${nachtragNr}`, { method: 'DELETE' })
 };

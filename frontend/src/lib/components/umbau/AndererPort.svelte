@@ -5,7 +5,7 @@
 <script lang="ts">
   import { untrack } from 'svelte';
   import type { Device } from '$lib/api';
-  import type { UmbauEnde } from '$lib/umbauApi';
+  import { portGleich, type UmbauEnde } from '$lib/umbauApi';
   import FensterKopf from './FensterKopf.svelte';
   import FensterFuss from './FensterFuss.svelte';
 
@@ -29,8 +29,9 @@
   let busy = $state(false);
   let fehler = $state('');
 
+  // Gleiche Regel wie das Backend: Groß-/Kleinschreibung zählt nicht als Abweichung.
   const gleichWieSoll = $derived(
-    istDeviceId === (ende.soll_device_id ?? null) && istPort.trim() === ende.soll_port
+    istDeviceId === (ende.soll_device_id ?? null) && portGleich(istPort, ende.soll_port)
   );
   const sperre = $derived(
     !istPort.trim()
