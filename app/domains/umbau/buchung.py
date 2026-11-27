@@ -6,10 +6,10 @@ Status. Trifft es keine Zeile, war jemand schneller: neu lesen, dann entweder
 Das Ereignis entsteht nur bei rowcount 1, in derselben Transaktion.
 """
 
-from typing import Any
+from typing import Any, cast
 
 from fastapi import HTTPException
-from sqlalchemy import select, update
+from sqlalchemy import CursorResult, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domains.hardware.models import Device
@@ -157,7 +157,7 @@ class EndenBuchung:
             .values(status=ziel, **werte)
             .execution_options(synchronize_session=False)
         )
-        if result.rowcount != 1:
+        if cast(CursorResult[Any], result).rowcount != 1:
             # Jemand war schneller: neu lesen und entscheiden. Kein Ereignis.
             await self.db.refresh(ende)
             if regeln.ziel_schon_erreicht(aktion, ende.status):

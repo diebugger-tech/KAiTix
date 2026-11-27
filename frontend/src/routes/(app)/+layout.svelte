@@ -83,7 +83,8 @@
     return 'KAiTix';
   });
 
-  const navGroups = [
+  type NavLink = { href: string; icon: typeof Info; label: string; matchPrefix?: boolean };
+  const navGroups: { title: string; links: NavLink[] }[] = [
     {
       title: 'Infrastruktur',
       links: [

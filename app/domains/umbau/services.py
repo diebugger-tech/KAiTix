@@ -7,10 +7,10 @@ auf seinen eigenen Tabellen.
 
 from collections import Counter
 from dataclasses import dataclass
-from typing import Any, Sequence
+from typing import Any, Sequence, cast
 
 from fastapi import HTTPException
-from sqlalchemy import func, select, update
+from sqlalchemy import CursorResult, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -437,7 +437,7 @@ class UmbauService:
             )
             .execution_options(synchronize_session=False)
         )
-        if result.rowcount != 1:
+        if cast(CursorResult[Any], result).rowcount != 1:
             return await self._nach_verlorenem_wechsel(umbau, regeln.RUECKBAU)
 
         # Soll-Stand als Textkopie festhalten: je physischem Ende eine Zeile.
@@ -507,7 +507,7 @@ class UmbauService:
             .values(**werte)
             .execution_options(synchronize_session=False)
         )
-        if result.rowcount != 1:
+        if cast(CursorResult[Any], result).rowcount != 1:
             return await self._nach_verlorenem_wechsel(umbau, ziel)
 
         self.db.add(
