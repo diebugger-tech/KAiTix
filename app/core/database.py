@@ -9,11 +9,13 @@ engine = create_async_engine(
     echo=False,
 )
 
+
 @event.listens_for(engine.sync_engine, "connect")
 def _fk_on(dbapi_conn, _):
     cur = dbapi_conn.cursor()
     cur.execute("PRAGMA foreign_keys=ON")
     cur.close()
+
 
 # Async session maker
 AsyncSessionLocal = async_sessionmaker(
