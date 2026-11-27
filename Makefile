@@ -3,13 +3,15 @@
 # =============================================================================
 
 BACKEND_PORT  ?= 8003
+# Branch für make update: standardmäßig der aktuell ausgecheckte (make update BRANCH=main für main)
+BRANCH        ?= $(shell git branch --show-current)
 FRONTEND_PORT ?= 5175
 
 # Verzeichnisse, die find bei clean/clean-bak überspringt.
 # Hinweis: -prune nicht mit -delete kombinieren (-delete impliziert -depth und hebelt -prune aus).
 FIND_PRUNE := \( -path ./.venv -o -path ./frontend/node_modules -o -path ./node_modules -o -path ./.git -o -path ./.direnv \) -prune -o
 
-.PHONY: install update dev dev-frontend dev-all stop stop-backend stop-frontend status help test lint format migrate-create migrate-apply db-shell restart-all clean clean-bak check-branch
+.PHONY: install update check-db dev dev-frontend dev-all stop stop-backend stop-frontend status help test lint format migrate-create migrate-apply db-shell restart-all clean clean-bak check-branch
 
 # Beendet alle Prozesse auf einem TCP-Port: erst SIGTERM, nach max. 5 s SIGKILL.
 # Schlägt nicht fehl, wenn nichts läuft. $(1) = Port, $(2) = Name
@@ -48,12 +50,15 @@ install:
 	fi
 	@echo ">>> Installiere Abhängigkeiten..."
 	python3 -m pip install -r requirements.txt
+	@echo ">>> Installiere Frontend-Abhängigkeiten (npm ci)..."
+	cd frontend && npm ci
 	@echo ">>> Installation abgeschlossen."
 
 update:
-	@echo ">>> Hole neuesten Code von GitHub (main branch)..."
-	git checkout main
-	git pull origin main
+	@if [ -z "$(BRANCH)" ]; then echo "FEHLER: Kein Branch ausgecheckt (detached HEAD). Nutze 'make update BRANCH=main'."; exit 1; fi
+	@echo ">>> Hole neuesten Code von GitHub (Branch $(BRANCH))..."
+	@if [ "$$(git branch --show-current)" != "$(BRANCH)" ]; then git checkout $(BRANCH); fi
+	git pull --ff-only origin $(BRANCH)
 	@if [ -n "$$IN_NIX_SHELL" ] && [ -n "$$VIRTUAL_ENV" ]; then \
 		echo ">>> Installiere neue Abhängigkeiten..."; \
 		make install; \
@@ -65,8 +70,24 @@ update:
 		echo "    make install && make migrate-apply"; \
 	fi
 
+# Bricht ab, wenn die Datenbank nicht auf dem Migrationsstand des Codes ist.
+# Überspringen (z. B. frische DB): SKIP_DB_CHECK=1
+check-db:
+	@if [ -n "$(SKIP_DB_CHECK)" ]; then exit 0; fi; \
+	if [ ! -d ".venv" ]; then echo "FEHLER: .venv fehlt. nix-shell starten und 'make install' ausführen."; exit 1; fi; \
+	CURRENT=$$(. .venv/bin/activate && python3 -m alembic current 2>/dev/null | tail -n1); \
+	HEAD=$$(. .venv/bin/activate && python3 -m alembic heads 2>/dev/null | tail -n1); \
+	if ! echo "$$CURRENT" | grep -q "(head)"; then \
+		echo "FEHLER: Datenbank ist nicht auf dem aktuellen Migrationsstand."; \
+		echo "        DB-Stand:   $${CURRENT:-leer/unbekannt}"; \
+		echo "        Code-Stand: $$HEAD"; \
+		echo "        Migrationen prüfen, Backup von data/kaitix.db anlegen, dann 'make migrate-apply' (nix-shell + venv)."; \
+		echo "        Prüfung überspringen: SKIP_DB_CHECK=1 make ..."; \
+		exit 1; \
+	fi
+
 # === DEVELOPMENT =============================================================
-dev:
+dev: check-db
 	@if [ ! -d ".venv" ]; then echo "FEHLER: .venv fehlt. nix-shell starten und 'make install' ausführen."; exit 1; fi
 	@echo ">>> Starte Backend (Port $(BACKEND_PORT))..."
 	@echo ">>> Im Browser: http://localhost:$(BACKEND_PORT)/docs  (uvicorn zeigt 0.0.0.0 = Bind-Adresse, nicht im Browser öffnen)"
@@ -77,7 +98,7 @@ dev-frontend:
 	@echo ">>> Im Browser: http://localhost:$(FRONTEND_PORT)"
 	cd frontend && KAITIX_FRONTEND_PORT=$(FRONTEND_PORT) KAITIX_BACKEND_PORT=$(BACKEND_PORT) npm run dev
 
-dev-all:
+dev-all: check-db
 	@if [ ! -d ".venv" ]; then echo "FEHLER: .venv fehlt. nix-shell starten und 'make install' ausführen."; exit 1; fi
 	@echo ">>> Starte Backend + Frontend parallel (Ctrl+C stoppt beide, sonst 'make stop')..."
 	@echo ">>> UI im Browser:  http://localhost:$(FRONTEND_PORT)"
@@ -117,8 +138,9 @@ help:
 	@echo "  make stop-frontend    Nur Frontend beenden"
 	@echo "  make restart-all      stop + clean + dev-all"
 	@echo "  make status           Service-Status anzeigen"
-	@echo "  make install          Abhängigkeiten installieren (nix-shell!)"
-	@echo "  make update           main pullen, install + migrate-apply"
+	@echo "  make install          Python- + Frontend-Abhängigkeiten (nix-shell!)"
+	@echo "  make update           aktuellen Branch pullen, install + migrate-apply (BRANCH=main möglich)"
+	@echo "  make check-db         Prüft Migrationsstand der DB (läuft vor dev/dev-all)"
 	@echo "  make test             pytest"
 	@echo "  make lint             ruff + mypy"
 	@echo "  make format           ruff fix + format"

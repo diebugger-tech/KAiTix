@@ -337,8 +337,12 @@ make restart-all
 Ohne `alembic upgrade head` fehlen neue Tabellen und Spalten; betroffene Seiten melden dann
 einen Serverfehler (500).
 
-Kurzform für `main` in der nix-shell mit aktivem venv: `make update` (wechselt auf `main`,
-pullt, installiert und migriert). Danach `make restart-all`.
+Kurzform in der nix-shell mit aktivem venv: `make update` (pullt den aktuell ausgecheckten
+Branch, installiert Python- und Frontend-Abhängigkeiten und migriert; `make update BRANCH=main`
+wechselt vorher auf `main`). Danach `make restart-all`.
+
+`make dev` und `make dev-all` brechen mit einer Meldung ab, wenn die Datenbank nicht auf dem
+Migrationsstand des Codes ist (überspringen mit `SKIP_DB_CHECK=1`).
 
 ### Einen Feature-Branch vor dem Merge testen
 
@@ -379,8 +383,8 @@ PYTHONPATH=. python3 scripts/seed_testdata.py
 | `make stop-frontend` | Nur Frontend beenden |
 | `make restart-all` | Stoppen, aufräumen, `dev-all` neu starten |
 | `make status` | Service-Status (Ports, venv, nix-shell) anzeigen |
-| `make install` | Python-Abhängigkeiten installieren (in nix-shell) |
-| `make update` | `main` pullen, dann `install` + `migrate-apply` |
+| `make install` | Python- und Frontend-Abhängigkeiten installieren (in nix-shell) |
+| `make update` | Aktuellen Branch pullen (`BRANCH=main` möglich), dann `install` + `migrate-apply` |
 | `make test` | `pytest` ausführen |
 | `make lint` | Code mit `ruff` und `mypy` prüfen |
 | `make format` | Code mit `ruff` formatieren |

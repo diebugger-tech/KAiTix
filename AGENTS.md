@@ -198,7 +198,8 @@ Dieses Repository dokumentiert und verwaltet die Hardware- und Strominfrastruktu
 | `make dev-frontend` | Frontend starten (Port 5175) |
 | `make dev-all` | Backend + Frontend parallel — für KAiOSS cmd-runner |
 | `make dev-all BACKEND_PORT=… FRONTEND_PORT=…` | Wie oben, mit anderen Ports (zweite Instanz) |
-| `make update` | `main` pullen, `install` + `migrate-apply` (nix-shell + venv nötig) |
+| `make update` | Aktuellen Branch pullen (`BRANCH=main` möglich), `install` + `migrate-apply` (nix-shell + venv nötig) |
+| `make check-db` | Bricht ab, wenn DB nicht auf Migrations-Head ist (läuft vor `dev`/`dev-all`, `SKIP_DB_CHECK=1` überspringt) |
 | `make help` | Übersicht aller Targets |
 | `make test` | pytest |
 | `make format` | ruff fix + format |
