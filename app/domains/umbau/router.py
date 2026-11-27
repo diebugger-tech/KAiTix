@@ -6,10 +6,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_username
 from app.core.database import get_db
 from app.domains.umbau.buchung import EndenBuchung
+from app.domains.umbau.nachtrag import NachtragService
 from app.domains.umbau.schemas import (
     AnklemmenEingabe,
     EndeOut,
     GeraetErfassung,
+    NachtragEingabe,
     StatusWechsel,
     UmbauCreate,
     UmbauDetail,
@@ -73,6 +75,28 @@ async def wechsle_status(
     username: str | None = Depends(get_username),
 ):
     return await UmbauService(db).status_wechsel(umbau_id, wechsel.ziel, username)
+
+
+@router.post("/{umbau_id}/nachtraege", response_model=UmbauDetail)
+async def nachtragen(
+    umbau_id: int,
+    eingabe: NachtragEingabe,
+    db: AsyncSession = Depends(get_db),
+    username: str | None = Depends(get_username),
+):
+    """Ein unbekanntes Kabel im Rückbau aufnehmen. Schreibt nur in den Umbau."""
+    return await NachtragService(db).nachtragen(umbau_id, eingabe, username)
+
+
+@router.delete("/{umbau_id}/nachtraege/{nachtrag_nr}", response_model=UmbauDetail)
+async def nachtrag_entfernen(
+    umbau_id: int,
+    nachtrag_nr: int,
+    db: AsyncSession = Depends(get_db),
+    username: str | None = Depends(get_username),
+):
+    """Einen Nachtrag wieder entfernen, solange keines seiner Enden abgeklemmt ist."""
+    return await NachtragService(db).entfernen(umbau_id, nachtrag_nr, username)
 
 
 @router.put("/{umbau_id}/enden/{ende_id}/abklemmen", response_model=EndeOut)

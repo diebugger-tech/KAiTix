@@ -7,7 +7,7 @@ auf seinen eigenen Tabellen.
 
 from collections import Counter
 from dataclasses import dataclass
-from typing import Any, Sequence, cast
+from typing import Any, Collection, Sequence, cast
 
 from fastapi import HTTPException
 from sqlalchemy import CursorResult, func, select, update
@@ -26,6 +26,15 @@ from app.domains.umbau.models import (
     jetzt,
 )
 from app.domains.umbau.schemas import UmbauCreate
+
+
+@dataclass(frozen=True)
+class Ort:
+    """Wo ein Gerät steht, als Text für die Soll-Kopie."""
+
+    name: str
+    rack_name: str | None
+    position: str | None
 
 
 @dataclass(frozen=True)
@@ -50,6 +59,7 @@ def kabel_sicht(cable: Cable) -> regeln.KabelSicht:
         enden_a=kabeltyp.enden_a if kabeltyp else 1,
         enden_b=kabeltyp.enden_b if kabeltyp else 1,
         farbe=cable.farbe,
+        laenge_m=float(cable.laenge_m) if cable.laenge_m is not None else None,
         von=(cable.von_device_id, cable.von_port),
         nach=(cable.nach_device_id, cable.nach_port),
         straenge=tuple(
@@ -441,11 +451,10 @@ class UmbauService:
             return await self._nach_verlorenem_wechsel(umbau, regeln.RUECKBAU)
 
         # Soll-Stand als Textkopie festhalten: je physischem Ende eine Zeile.
-        geraete = await self._geraete_namen()
-        rack_namen = await self._rack_namen()
+        orte = await self.geraete_orte()
         for kabel in umfang.kabel:
             for ende in regeln.enden_fuer_kabel(kabel):
-                name, rack_id = geraete[ende.device_id]  # type: ignore[index]
+                ort = orte[ende.device_id]  # type: ignore[index]
                 self.db.add(
                     UmbauEnde(
                         umbau_id=umbau.id,
@@ -454,13 +463,15 @@ class UmbauService:
                         seite=ende.seite,
                         ende_nr=ende.ende_nr,
                         soll_device_id=ende.device_id,
-                        soll_device_name=name,
-                        soll_rack_name=rack_namen.get(rack_id) if rack_id else None,
+                        soll_device_name=ort.name,
+                        soll_rack_name=ort.rack_name,
+                        soll_position=ort.position,
                         soll_port=ende.port,
                         kabel_nr=kabel.kabel_nr,
                         kabeltyp_name=kabel.kabeltyp_name,
                         kategorie=kabel.kategorie,
                         farbe=ende.farbe,
+                        laenge_m=kabel.laenge_m,
                         status=regeln.GESTECKT,
                     )
                 )
@@ -475,11 +486,24 @@ class UmbauService:
         await self.db.commit()
         return await self.detail(umbau.id)
 
-    async def _geraete_namen(self) -> dict[int, tuple[str, int | None]]:
-        result = await self.db.execute(
-            select(Device.id, Device.hostname, Device.rack_id)
-        )
-        return {device_id: (name, rack_id) for device_id, name, rack_id in result.all()}
+    async def geraete_orte(self, ids: Collection[int] | None = None) -> dict[int, Ort]:
+        """Name, Rack und Einbauort je Gerät, wie sie ins Soll kopiert werden."""
+        rack_namen = await self._rack_namen()
+        query = select(
+            Device.id, Device.hostname, Device.rack_id, Device.u_position,
+            Device.u_hoehe, Device.side,
+        )  # fmt: skip
+        if ids is not None:
+            query = query.where(Device.id.in_(ids))
+        result = await self.db.execute(query)
+        return {
+            device_id: Ort(
+                name=name,
+                rack_name=rack_namen.get(rack_id) if rack_id else None,
+                position=regeln.position_text(u_position, u_hoehe, side),
+            )
+            for device_id, name, rack_id, u_position, u_hoehe, side in result.all()
+        }
 
     # --- Statuswechsel ------------------------------------------------------------
     async def status_wechsel(
@@ -542,4 +566,6 @@ class UmbauService:
 def _kabel_schluessel(ende: UmbauEnde) -> str:
     if ende.cable_id is not None:
         return f"id:{ende.cable_id}"
+    if ende.nachtrag_nr is not None:
+        return f"nachtrag:{ende.nachtrag_nr}"
     return f"nr:{ende.kabel_nr}" if ende.kabel_nr else f"ende:{ende.id}"

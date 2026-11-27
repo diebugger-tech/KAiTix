@@ -6,9 +6,11 @@ Umbau `cables`, `cable_strands` und `interfaces` nicht mehr schreibend.
 """
 
 from datetime import datetime, timezone
+from decimal import Decimal
 from typing import List, Optional
 
 from sqlalchemy import (
+    DECIMAL,
     DateTime,
     Enum,
     ForeignKey,
@@ -103,10 +105,13 @@ class UmbauGeraetepruefung(Base):
 
 
 class UmbauEnde(Base):
-    """Ein physisches Stecker-Ende. Entsteht nur beim Einfrieren.
+    """Ein physisches Stecker-Ende. Entsteht beim Einfrieren oder als Nachtrag.
 
-    Die soll_*-Felder sowie kabel_nr, kabeltyp_name, kategorie und farbe sind eine
-    Textkopie und nach dem Einfrieren unveränderlich.
+    Die soll_*-Felder sowie kabel_nr, kabeltyp_name, kategorie, farbe und laenge_m sind
+    eine Textkopie und danach unveränderlich.
+
+    Nachtrag: ein im Rückbau gefundenes Kabel, das nicht in `cables` steht. Seine Enden
+    haben cable_id NULL und eine nachtrag_nr (je Umbau fortlaufend), die sie verbindet.
     """
 
     __tablename__ = "umbau_enden"
@@ -117,6 +122,13 @@ class UmbauEnde(Base):
             "seite",
             "ende_nr",
             name="uq_umbau_enden_umbau_cable_seite_nr",
+        ),
+        UniqueConstraint(
+            "umbau_id",
+            "nachtrag_nr",
+            "seite",
+            "ende_nr",
+            name="uq_umbau_enden_umbau_nachtrag_seite_nr",
         ),
     )
 
@@ -133,6 +145,7 @@ class UmbauEnde(Base):
     strand_number: Mapped[Optional[int]] = mapped_column(Integer)
     seite: Mapped[str] = mapped_column(Enum(*ENDE_SEITEN), nullable=False)
     ende_nr: Mapped[int] = mapped_column(Integer, nullable=False)
+    nachtrag_nr: Mapped[Optional[int]] = mapped_column(Integer)
 
     # Soll (Textkopie)
     soll_device_id: Mapped[Optional[int]] = mapped_column(
@@ -140,11 +153,13 @@ class UmbauEnde(Base):
     )
     soll_device_name: Mapped[str] = mapped_column(String(100), nullable=False)
     soll_rack_name: Mapped[Optional[str]] = mapped_column(String(100))
+    soll_position: Mapped[Optional[str]] = mapped_column(String(20))
     soll_port: Mapped[str] = mapped_column(String(50), nullable=False)
     kabel_nr: Mapped[Optional[str]] = mapped_column(String(50))
     kabeltyp_name: Mapped[str] = mapped_column(String(100), nullable=False)
     kategorie: Mapped[str] = mapped_column(String(20), nullable=False)
     farbe: Mapped[Optional[str]] = mapped_column(String(30))
+    laenge_m: Mapped[Optional[Decimal]] = mapped_column(DECIMAL(6, 2))
 
     # Fortschritt
     status: Mapped[str] = mapped_column(

@@ -42,6 +42,40 @@ class AnklemmenEingabe(BaseModel):
         return wert.strip() or None
 
 
+def _leer_ist_none(wert: Optional[str]) -> Optional[str]:
+    if wert is None:
+        return None
+    return wert.strip() or None
+
+
+class EndpunktEingabe(BaseModel):
+    device_id: int
+    port: str = Field(..., min_length=1, max_length=50)
+
+    @field_validator("port")
+    @classmethod
+    def _port_nicht_leer(cls, wert: str) -> str:
+        wert = wert.strip()
+        if not wert:
+            raise ValueError("Der Port darf nicht leer sein")
+        return wert
+
+
+class NachtragEingabe(BaseModel):
+    """Ein im Rückbau gefundenes Kabel, das nicht in der Kabelliste steht."""
+
+    kabeltyp_id: int
+    # Leer: der Umbau vergibt „NT-<nachtrag_nr>“.
+    kabel_nr: Optional[str] = Field(None, max_length=50)
+    farbe: Optional[str] = Field(None, max_length=30)
+    laenge_m: Optional[float] = Field(None, gt=0, lt=10_000)
+    bemerkung: Optional[str] = Field(None, max_length=200)
+    a: EndpunktEingabe
+    b: List[EndpunktEingabe] = Field(..., min_length=1)
+
+    _leer = field_validator("kabel_nr", "farbe", "bemerkung")(_leer_ist_none)
+
+
 # === Ausgaben ================================================================
 class RackKurz(BaseModel):
     id: int
@@ -94,14 +128,17 @@ class EndeOut(BaseModel):
     strand_number: Optional[int] = None
     seite: str
     ende_nr: int
+    nachtrag_nr: Optional[int] = None
     soll_device_id: Optional[int] = None
     soll_device_name: str
     soll_rack_name: Optional[str] = None
+    soll_position: Optional[str] = None
     soll_port: str
     kabel_nr: Optional[str] = None
     kabeltyp_name: str
     kategorie: str
     farbe: Optional[str] = None
+    laenge_m: Optional[float] = None
     status: str
     abgeklemmt_am: Optional[datetime] = None
     abgeklemmt_von: Optional[str] = None

@@ -93,6 +93,7 @@ class KabelSicht:
     von: Endpunkt
     nach: Endpunkt
     straenge: tuple[StrangSicht, ...] = ()
+    laenge_m: float | None = None
 
     @property
     def bezeichnung(self) -> str:
@@ -177,6 +178,9 @@ def unvollstaendig(kabel: KabelSicht) -> list[str]:
     if ist_strom(kabel):
         return []
     gruende: list[str] = []
+    # Ohne Nummer ist ein Kabel nach dem Abklemmen beider Enden nicht mehr zuzuordnen.
+    if not (kabel.kabel_nr or "").strip():
+        gruende.append("Kabelnummer fehlt")
     if kabel.kategorie is None:
         gruende.append("Kabeltyp fehlt")
     if kabel.enden_a != 1:
@@ -323,13 +327,66 @@ def _falscher_ende_status(aktion: str, ende_status: str) -> str:
     )
 
 
+def port_schluessel(port: str | None) -> str:
+    """Port zum Vergleichen: ohne Rand-Leerzeichen, ohne Groß-/Kleinschreibung."""
+    return (port or "").strip().casefold()
+
+
 def ist_abweichung(
     soll: Endpunkt, ist_device_id: int | None, ist_port: str | None
 ) -> bool:
-    """Weicht der gemeldete Ist-Port vom Soll ab? Fehlende Angaben gelten als Soll."""
+    """Weicht der gemeldete Ist-Port vom Soll ab? Fehlende Angaben gelten als Soll.
+
+    „ETH0“ statt „eth0“ ist keine Abweichung: Ports werden ohne Groß-/Kleinschreibung
+    verglichen.
+    """
     device_id = ist_device_id if ist_device_id is not None else soll[0]
     port = ist_port if ist_port else soll[1]
-    return (device_id, port) != soll
+    return device_id != soll[0] or port_schluessel(port) != port_schluessel(soll[1])
+
+
+# --- Soll-Kopie: Position ---------------------------------------------------------
+def position_text(
+    u_position: int | None, u_hoehe: int | None, side: str | None
+) -> str | None:
+    """Einbauort eines Geräts als Text für die Soll-Kopie, z. B. „HE 12–13“."""
+    if side in ("left", "right"):
+        return "0U links" if side == "left" else "0U rechts"
+    if u_position is None:
+        return None
+    hoehe = u_hoehe or 1
+    if hoehe <= 1:
+        return f"HE {u_position}"
+    return f"HE {u_position}–{u_position + hoehe - 1}"
+
+
+# --- Nachgetragene Kabel ------------------------------------------------------------
+def nachtrag_sperrgrund(umbau_status: str) -> str | None:
+    """Ein unbekanntes Kabel lässt sich nur im Rückbau nachtragen. None = erlaubt."""
+    if umbau_status == RUECKBAU:
+        return None
+    return (
+        "Kabel nachtragen geht nur im Rückbau, der Umbau ist im Status "
+        f"„{UMBAU_STATUS_LABEL.get(umbau_status, umbau_status)}“."
+    )
+
+
+def nachtrag_entfernen_sperrgrund(
+    umbau_status: str, ende_status_liste: Iterable[str]
+) -> str | None:
+    """Ein Nachtrag lässt sich nur im Rückbau entfernen, solange alles gesteckt ist."""
+    if umbau_status != RUECKBAU:
+        return (
+            "Nachträge lassen sich nur im Rückbau entfernen, der Umbau ist im Status "
+            f"„{UMBAU_STATUS_LABEL.get(umbau_status, umbau_status)}“."
+        )
+    abgeklemmt = sum(1 for status in ende_status_liste if status != GESTECKT)
+    if abgeklemmt:
+        return (
+            f"{abgeklemmt} {'Ende ist' if abgeklemmt == 1 else 'Enden sind'} schon "
+            "abgeklemmt. Erst das Abklemmen zurücknehmen."
+        )
+    return None
 
 
 # --- Umbau: Statuswechsel -----------------------------------------------------
