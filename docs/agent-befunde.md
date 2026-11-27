@@ -26,3 +26,8 @@
 
 ## 2026-11-17 · Umbau B4 · Claude Fable 5.2
 - Das Frontend hat keinen Testlauf: in den Skripten stehen nur dev, build, preview und check, kein Test-Skript — frontend/package.json:6-13 — Aufgefallen, weil die Abläufe der Umbau-Oberfläche (Erfassung, Sammelbuchung, Korrigieren) nur mit einem Browser-Skript außerhalb des Repos geprüft werden konnten.
+
+## 2026-11-27 · Umbau Korrekturen (Analyse 3, 4, 1, 7, 9) · Claude Opus 5.5
+- Die globale Druckregel blendet jedes `header`-Element aus; der Kopf des Runbook-Laufzettels ist selbst ein `<header class="print-header">` und fällt damit laut CSS im Druck weg (nicht im Browser geprüft) — frontend/src/routes/layout.css:326, frontend/src/lib/components/RunbookPrint.svelte:70 — Aufgefallen beim Ausblenden von Seitenleiste und Kopfzeile für die Umbau-Druckliste.
+- Der Wechsel Rückbau → Umbau zählt die gesteckten Enden und schreibt den Status in zwei getrennten Schritten; ein Nachtrag, der genau dazwischen gespeichert wird, bliebe als gestecktes Ende im Status „Umbau“ stehen — app/domains/umbau/services.py:520 — Beim Bau des Nachtrags gesehen; im Einzelplatzbetrieb praktisch nicht erreichbar.
+- Backend und Oberfläche vergleichen Ports unterschiedlich: Python casefold() macht aus „ß“ „ss“, JavaScript toLocaleLowerCase() nicht — app/domains/umbau/regeln.py:330, frontend/src/lib/umbauApi.ts:158 — Beim Angleichen des Port-Vergleichs aufgefallen.

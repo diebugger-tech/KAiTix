@@ -180,14 +180,15 @@ Dieses Repository dokumentiert und verwaltet die Hardware- und Strominfrastruktu
 
 ### 7. Kabeltyp-Katalog & Serverraum-Umbau
 - **Vollständige Beschreibung:** `docs/umbau.md` (Ablauf, Tabellen, Regeln, API, Grenzen). Vor Änderungen am Umbau lesen.
-- **Code:** `app/domains/umbau/` (`regeln.py` reine Funktionen, `services.py`, `buchung.py`, `router.py`), Kabeltypen in `app/domains/cabling/kabeltyp_service.py` und `straenge.py`. Frontend: `(app)/umbau/`, `(app)/kabeltypen/`, `$lib/components/umbau/`, `$lib/umbauApi.ts`, `$lib/kabel.ts`.
+- **Code:** `app/domains/umbau/` (`regeln.py` reine Funktionen, `services.py`, `buchung.py`, `nachtrag.py`, `router.py`), Kabeltypen in `app/domains/cabling/kabeltyp_service.py` und `straenge.py`. Frontend: `(app)/umbau/`, `(app)/kabeltypen/`, `$lib/components/umbau/`, `$lib/umbauApi.ts`, `$lib/kabel.ts`.
 - **Port-Wahrheit:** `cables.von_*`/`nach_*` als Text. Kein Abgleich mit Interfaces.
 - **Breakout-Regel:** Bei `enden_b > 1` bleibt das Ziel am Kabel leer; genau `enden_b` Stränge tragen `nach_device_id` + `nach_port`.
 - **Strom gehört nicht zum Umbau** (Kategorie `strom`). Patchpanels sind normale Geräte.
 - **Eine Regel für Anzeige und Server:** `sperrgrund()` in `regeln.py`. Oberfläche zeigt Knöpfe nur nach dieser Regel, der Server bucht nur nach ihr.
 - **Gleichzeitigkeit ohne Zeilensperren (SQLite):** Buchungen als bedingtes `UPDATE … WHERE id AND status = erwartet`. rowcount 0 → neu lesen: Ziel erreicht = 200, sonst 409. Ereignis nur bei rowcount 1, in derselben Transaktion. Kein `with_for_update`.
 - **Soll ist Textkopie:** `umbau_enden` kopiert Gerät, Rack, Port, Kabelnummer beim Einfrieren. Ab dem Einfrieren schreibt der Umbau nicht in `cables`, `cable_strands` oder `interfaces`.
-- **Migrationen:** `52e1b97080a3` (Kabeltyp-Katalog), `27f768e65156` (Strang-B-Enden), `a6f7bab2f1b2` (Umbau-Tabellen).
+- **Migrationen:** `52e1b97080a3` (Kabeltyp-Katalog), `27f768e65156` (Strang-B-Enden), `a6f7bab2f1b2` (Umbau-Tabellen), `d4ed62bc8ae1` (Nachtrag, Position, Länge in `umbau_enden`).
+- **Nachtrag:** unbekannte Kabel im Rückbau über `nachtrag.py` (cable_id NULL, `nachtrag_nr`); schreibt nie in `cables`.
 - **Befunde** außerhalb des Auftrags: `docs/agent-befunde.md` (Fundstelle, kein Lösungsvorschlag).
 
 ## Makefile-Targets

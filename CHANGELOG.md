@@ -11,6 +11,13 @@ Alle wesentlichen Änderungen am Projekt werden in dieser Datei dokumentiert.
 - **Kabeltyp-Katalog** (`/kabeltypen`): Kabeltypen mit Kategorie, Steckern und Enden je Seite;
   Kabel verweisen über `kabeltyp_id` darauf. Migration `52e1b97080a3`.
 - **Breakout-Kabel:** Jeder Strang hat eigenes Ziel-Gerät und eigenen Port. Migration `27f768e65156`.
+- **Umbau: Kabel nachtragen.** Ein im Rückbau gefundenes Kabel, das nicht in der Kabelliste
+  steht, wird mit Typ und Enden im Umbau aufgenommen und muss abgeklemmt werden; die
+  Kabelliste bleibt unberührt. Entfernen möglich, solange nichts abgeklemmt ist.
+- **Umbau: Druckliste.** Alle Enden nach Rack und Gerät mit Position, Soll-Port, Gegenseite,
+  Länge und Abhakfeldern; nach dem Abschluss mit Ist-Port und Grund.
+- **Umbau: Soll mit Position und Länge.** Das Einfrieren kopiert HE-Position des Geräts und
+  Kabellänge. Migration `d4ed62bc8ae1` (auch für den Nachtrag).
 - **Ports überschreibbar:** `make dev-all BACKEND_PORT=… FRONTEND_PORT=…` für eine zweite Instanz.
 - README: Abschnitt „Update einer bestehenden Installation".
 - Runbook Orchestrator: PDF Print-Laufzettel mit Rack Elevations und Zero-U Highlighting
@@ -30,6 +37,12 @@ Alle wesentlichen Änderungen am Projekt werden in dieser Datei dokumentiert.
   kann den Container nicht mehr brechen); Healthcheck via `127.0.0.1`/`-uroot`; `service_healthy`-Gate.
 
 ### Behoben
+- Umbau: Kabel ohne Kabelnummer sperren das Einfrieren; ohne Nummer war ein Kabel nach dem
+  Abklemmen beider Enden nicht mehr zuzuordnen.
+- Umbau: Anklemmen mit anderer Groß-/Kleinschreibung des Soll-Ports („ETH0“) gilt nicht mehr
+  als Abweichung.
+- Druck: Seitenleiste und Kopfzeile der App wurden mitgedruckt (`.flex` schlug die
+  Ausblende-Regel).
 - CSV- und EPLAN-Import setzen den Kabeltyp aus dem Katalog; importierte Kabel sperren
   das Einfrieren eines Umbaus nicht mehr pauschal.
 - Frontend: Abgelehnte Anfragen (4xx, z. B. 409 Port belegt) schalten den Backend-Status

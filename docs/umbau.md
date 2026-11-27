@@ -39,13 +39,14 @@ unter „Infrastruktur → Kabeltypen“ (`/kabeltypen`).
 
 ## Einspielen
 
-Der Umbau bringt drei Migrationen mit, in dieser Reihenfolge:
+Der Umbau bringt vier Migrationen mit, in dieser Reihenfolge:
 
 | Revision | Inhalt |
 |---|---|
 | `52e1b97080a3` | Tabelle `kabeltypen` mit 17 Katalogzeilen, `cables.kabeltyp_id` |
 | `27f768e65156` | `cable_strands.nach_device_id` und `nach_port` (B-Enden der Breakouts) |
 | `a6f7bab2f1b2` | Tabellen des Umbaus |
+| `d4ed62bc8ae1` | `umbau_enden.nachtrag_nr`, `soll_position`, `laenge_m` (Nachtrag, Position und Länge im Soll) |
 
 Container: Die Migrationen laufen beim Start automatisch. Manuelle Installation: Datenbank
 sichern, dann `alembic upgrade head`. Die Schritte stehen in der README unter
@@ -57,23 +58,25 @@ bearbeiten, sperren aber das Einfrieren eines Umbaus, bis der Typ gesetzt ist.
 
 ## Tabellen des Umbaus
 
-Modelle in `app/domains/umbau/models.py`, Migration `a6f7bab2f1b2`.
+Modelle in `app/domains/umbau/models.py`, Migrationen `a6f7bab2f1b2` und `d4ed62bc8ae1`.
 
 | Tabelle | Inhalt |
 |---|---|
 | `umbauten` | Name, Beschreibung, Status, wer wann angelegt, eingefroren und abgeschlossen hat |
 | `umbau_racks` | Umfang: die gewählten Racks |
 | `umbau_geraetepruefungen` | „Gerät vollständig erfasst“ je Gerät, mit Gerätename als Textkopie; eindeutig je Umbau und Gerät |
-| `umbau_enden` | Eine Zeile je physischem Stecker-Ende. Entsteht nur beim Einfrieren |
+| `umbau_enden` | Eine Zeile je physischem Stecker-Ende. Entsteht beim Einfrieren oder als Nachtrag im Rückbau |
 | `umbau_ereignisse` | Protokoll. Wird nur angehängt |
 
 `umbau_enden` hält das Soll als **Textkopie** fest: `soll_device_name`, `soll_rack_name`,
-`soll_port`, `kabel_nr`, `kabeltyp_name`, `kategorie`, `farbe`. Die Verweise `cable_id` und
+`soll_position` (Einbauort, z. B. „HE 12–13“ oder „0U links“), `soll_port`, `kabel_nr`,
+`kabeltyp_name`, `kategorie`, `farbe`, `laenge_m`. Die Verweise `cable_id` und
 `soll_device_id` stehen auf `ON DELETE SET NULL`. Wird nach dem Einfrieren ein Kabel
-geändert oder ein Gerät gelöscht, bleibt das Soll unverändert lesbar.
+geändert oder ein Gerät umgesetzt oder gelöscht, bleibt das Soll unverändert lesbar.
 
-Ein Ende ist eindeutig über `(umbau_id, cable_id, seite, ende_nr)`. Seite A hat immer
-`ende_nr = 1`. Seite B hat `ende_nr = 1` oder bei Breakouts die Strangnummer.
+Ein Ende ist eindeutig über `(umbau_id, cable_id, seite, ende_nr)`, ein nachgetragenes
+Ende über `(umbau_id, nachtrag_nr, seite, ende_nr)`. Seite A hat immer `ende_nr = 1`.
+Seite B hat `ende_nr = 1` oder bei Breakouts die Strangnummer.
 
 ## Regeln
 
@@ -88,8 +91,8 @@ Alle fachlichen Regeln stehen als reine Funktionen ohne Datenbankzugriff in
 - **Enden je Kabel:** Seite A ein Ende an `von_*`. Seite B ein Ende an `nach_*` oder je
   Strang ein Ende. Ein Breakout QSFP+→4×SFP+ hat fünf Enden.
 - **Einfrieren ist gesperrt**, solange
-  - ein Kabel im Umfang unvollständig ist (Kabeltyp, A-Ende, Gegenstelle oder B-Enden
-    fehlen) oder
+  - ein Kabel im Umfang unvollständig ist (Kabelnummer, Kabeltyp, A-Ende, Gegenstelle
+    oder B-Enden fehlen) oder
   - ein Gerät in den gewählten Racks nicht bestätigt ist.
 
   Die Sperre nennt jedes betroffene Kabel und Gerät. Die Liste steht in
@@ -107,7 +110,35 @@ Alle fachlichen Regeln stehen als reine Funktionen ohne Datenbankzugriff in
 
 Eine Rücknahme geht genau eine Stufe zurück. Ein anderer Port als im Soll braucht einen
 nicht-leeren Grund; das Soll selbst ändert sich dadurch nicht, der Ist-Port steht in
-`ist_device_name`, `ist_port` und `abweichung_grund`.
+`ist_device_name`, `ist_port` und `abweichung_grund`. Ports werden ohne Rand-Leerzeichen
+und ohne Groß-/Kleinschreibung verglichen: „ETH0“ statt „eth0“ ist keine Abweichung.
+
+### Unbekannte Kabel nachtragen
+
+Taucht im Rückbau ein Kabel auf, das nicht in der Kabelliste steht, nimmt man es unter
+„Kabel nachtragen“ auf: Kabeltyp, A-Ende, B-Ende(n), optional Nummer, Farbe, Länge und
+Bemerkung. Code in `app/domains/umbau/nachtrag.py`.
+
+- Nur im Status `rueckbau`. Die neuen Enden sind `gesteckt` und müssen wie alle anderen
+  abgeklemmt werden, bevor der Umbau beginnt.
+- Die Enden haben `cable_id` NULL und eine je Umbau fortlaufende `nachtrag_nr`. Ohne
+  angegebene Nummer heißt das Kabel `NT-<nachtrag_nr>`.
+- Abgelehnt werden Stromkabel, eine falsche Zahl B-Enden, unbekannte Geräte, ein Port
+  doppelt im selben Kabel (422), ein Port, der schon Soll eines Endes ist, und eine
+  Kabelnummer, die es im Umbau schon gibt (409).
+- Geschrieben wird nur in `umbau_enden` und `umbau_ereignisse`, nie in `cables`. Je Ende
+  entsteht ein Ereignis „Kabel nachgetragen“ mit der Bemerkung.
+- Ein Nachtrag lässt sich im Rückbau wieder entfernen, solange keines seiner Enden
+  abgeklemmt ist (z. B. bei einem Tippfehler). Das Protokoll erhält dann einen Eintrag
+  „entfernt“.
+
+### Druckliste
+
+„Druckliste“ auf der Umbau-Seite druckt alle Enden nach Rack und Gerät, mit Position,
+Soll-Port, Gegenseite, Kabel, Typ, Farbe, Länge und Abhakfeldern für Abklemmen und
+Anklemmen. Abweichend angeklemmte Enden zeigen Ist-Port und Grund. Gedruckt wird der Stand
+zum Zeitpunkt des Drucks: vor dem Rückbau als Arbeitsliste, nach dem Abschluss als
+Nachweis Soll gegen Ist. Komponente `UmbauDruck.svelte`.
 
 ### Übergänge des Umbaus
 
@@ -140,6 +171,8 @@ Unter `/api/v1/umbau`, Benutzername aus dem Header `X-Username`.
 | `POST /umbau/{id}/status` mit `{ziel}` | Statuswechsel |
 | `PUT /umbau/{id}/enden/{ende_id}/abklemmen?abgeklemmt=true\|false` | Abklemmen oder zurücknehmen |
 | `PUT /umbau/{id}/enden/{ende_id}/anklemmen` mit `{angeklemmt, ist_device_id?, ist_port?, grund?}` | Anklemmen oder zurücknehmen |
+| `POST /umbau/{id}/nachtraege` mit `{kabeltyp_id, a, b[], kabel_nr?, farbe?, laenge_m?, bemerkung?}` | Unbekanntes Kabel nachtragen, nur im Rückbau |
+| `DELETE /umbau/{id}/nachtraege/{nachtrag_nr}` | Nachtrag entfernen, solange alle seine Enden gesteckt sind |
 
 Kabel werden in der Erfassung über die vorhandenen `/cables`-Endpunkte angelegt und
 geändert. Es gibt keinen eigenen Schreibweg und keinen Sammel-Endpunkt; die
@@ -156,15 +189,18 @@ Die Datenbank ist SQLite, Zeilensperren gibt es nicht. Jede Buchung ist ein bedi
   200 ohne Änderung und ohne Ereignis. Sonst 409 mit Sperrgrund.
 
 Das gilt für Enden und für den Status des Umbaus. Wiederholte Aufrufe sind dadurch
-gefahrlos.
+gefahrlos. Das Entfernen eines Nachtrags ist ein einziges bedingtes `DELETE`, das nur
+greift, wenn kein Ende des Nachtrags abgeklemmt ist; ein zweiter Aufruf antwortet 200.
 
 ## Bewusste Grenzen der Version 1
 
 - **Kein Strom.** Stromkabel werden nicht zu Enden und sperren das Einfrieren nicht.
 - **Kein Rückschreiben des Ist-Stands.** Ab dem Einfrieren schreibt der Umbau nicht in
   `cables`, `cable_strands` oder `interfaces`. Ein abweichend angeklemmtes Ende steht nur
-  im Umbau; die Kabelliste muss von Hand nachgezogen werden.
-- **Kein Offline-Betrieb.** Die Oberfläche braucht die Verbindung zum Backend.
+  im Umbau; die Kabelliste muss von Hand nachgezogen werden. Dasselbe gilt für
+  nachgetragene Kabel.
+- **Kein Offline-Betrieb.** Die Oberfläche braucht die Verbindung zum Backend. Läuft das
+  Backend im umgebauten Raum, vor dem Rückbau die Druckliste drucken.
 - **Keine Etiketten, kein QR-Code.**
 - **Breakouts nicht in Topologie und Trace.** Topologie, Kabelverfolgung, Simulation und
   Exporte kennen die Strang-Enden nicht.
@@ -186,7 +222,10 @@ Weitere Beobachtungen aus dem Bau stehen in `docs/agent-befunde.md`.
 - `tests/test_umbau.py`: Regeln ohne Datenbank und die API einschließlich der
   rowcount-0-Pfade und der Schreibsperre nach dem Einfrieren.
 - `tests/test_breakout.py`: Breakout-Stränge im Kabel-Schreibweg.
+- `tests/test_umbau_korrekturen.py`: Kabelnummer als Pflicht, Port-Vergleich, Position
+  und Länge im Soll, Nachtrag und Entfernen.
 - `tests/test_kabeltypen.py`: Kabeltyp-Katalog.
+- `tests/test_import_kabeltyp.py`: Kabeltyp-Zuordnung im CSV- und EPLAN-Import.
 - `tests/test_cabling_write.py`: Ports im Schreibweg, Belegungsprüfung, Kabelnummern.
 
 Aufruf im Worktree:

@@ -107,7 +107,7 @@ Danach im Browser öffnen: **http://localhost:8080**
 ### 11. Serverraum-Umbau & Kabeltyp-Katalog
 * **Kabeltyp-Katalog:** Kabeltypen mit Kategorie und Anzahl Enden je Seite, z. B. Breakout QSFP+ → 4× SFP+. Pflege unter *Infrastruktur → Kabeltypen*.
 * **Breakout-Kabel:** Jeder Strang eines Breakouts hat sein eigenes Ziel-Gerät und seinen eigenen Port.
-* **Umbau begleiten:** Unter *Betrieb → Umbau* Racks wählen, Kabel je Gerät erfassen, Soll-Stand einfrieren, jedes Stecker-Ende abklemmen und nach dem Umbau am Soll-Port wieder anklemmen. Ein anderer Port geht nur mit Grund. Jede Buchung steht mit Name und Zeit im Protokoll.
+* **Umbau begleiten:** Unter *Betrieb → Umbau* Racks wählen, Kabel je Gerät erfassen, Soll-Stand einfrieren, jedes Stecker-Ende abklemmen und nach dem Umbau am Soll-Port wieder anklemmen. Ein anderer Port geht nur mit Grund. Jede Buchung steht mit Name und Zeit im Protokoll. Im Rückbau gefundene, nicht dokumentierte Kabel lassen sich nachtragen; eine Druckliste dient als Arbeitsliste und Nachweis.
 * **Details:** Ablauf, Regeln und Grenzen in [docs/umbau.md](docs/umbau.md).
 
 
