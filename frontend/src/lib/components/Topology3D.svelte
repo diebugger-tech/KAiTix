@@ -5,6 +5,10 @@
   import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
   import { nodeColor, nodeStroke, baseEdgeColor } from '$lib/topologyColors';
   import { appState } from '$lib/state.svelte';
+  import type { api, RackAnomalyScore } from '$lib/api';
+
+  type TopologyData = Awaited<ReturnType<typeof api.getTopology>>;
+  type TopologyNode = TopologyData['nodes'][number];
 
   let {
     data,
@@ -20,6 +24,20 @@
     selectedRack = '__ALL__',
     showHeatmap = false,
     anomalyScores = []
+  }: {
+    data: TopologyData | null;
+    visibleNodeIds?: Set<number>;
+    selectedNode?: TopologyNode | null;
+    showCables?: boolean;
+    showPower?: boolean;
+    showCrossRack?: boolean;
+    showIntraRack?: boolean;
+    showDeviceTypes?: Set<string>;
+    selectedStandort?: string;
+    selectedRackreihe?: string;
+    selectedRack?: string | number | null;
+    showHeatmap?: boolean;
+    anomalyScores?: RackAnomalyScore[];
   } = $props();
 
   let containerEl: HTMLElement;
@@ -41,8 +59,8 @@
 
   // Stores for interactivity
   let deviceMeshes: THREE.Mesh[] = [];
-  let rackWireframes: { mesh: THREE.LineSegments, rack: any, aura: THREE.Mesh }[] = [];
-  let cableMeshes: { mesh: THREE.Mesh, edge: any }[] = [];
+  let rackWireframes: { mesh: THREE.LineSegments, rack: any, aura: THREE.Mesh<THREE.BufferGeometry, THREE.MeshBasicMaterial> }[] = [];
+  let cableMeshes: { mesh: THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>, edge: any }[] = [];
   let rackLabels: { label: CSS2DObject, rackId: number }[] = [];
   let standortLabels: { label: CSS2DObject, standort: string }[] = [];
   let deviceBoxes = new Map<number, { x: number, y: number, z: number, w: number }>();
@@ -471,7 +489,7 @@
     }
     
     // Optional center camera on filtered
-    if (visibleNodeIds.size > 0 && visibleNodeIds.size < data?.nodes.length) {
+    if (visibleNodeIds.size > 0 && visibleNodeIds.size < (data?.nodes.length ?? 0)) {
       let sumX = 0, sumY = 0, sumZ = 0;
       let count = 0;
       // Calculate center based on visible racks instead of just devices to be more stable

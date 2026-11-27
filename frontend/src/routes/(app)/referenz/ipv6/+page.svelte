@@ -5,7 +5,7 @@
   Keine IP-Validierung gegen echte Netze, keine externen Calls.
 -->
 <script lang="ts">
-  import { ipv6Categories, ipv6UlaExample, ipv6VlanExample } from '$lib/ipv6Schema.ts';
+  import { ipv6Categories, ipv6UlaExample, ipv6VlanExample } from '$lib/ipv6Schema';
 
   import { Info, BookOpen, AlertCircle, CheckCircle2 } from '@lucide/svelte';
 </script>

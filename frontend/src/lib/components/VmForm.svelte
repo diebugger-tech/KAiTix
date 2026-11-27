@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { VirtualMachine, Device } from '$lib/types';
+  import type { VirtualMachine, Device } from '$lib/api';
 
   let { 
     vm = $bindable(),

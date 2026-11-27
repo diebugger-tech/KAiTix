@@ -24,7 +24,7 @@ export interface Device {
   seriennummer?: string;
   inventarnummer?: string;
   rack_id?: number;
-  u_position?: number;
+  u_position?: number | null;
   u_hoehe: number;
   side?: 'left' | 'right';
   circuit_id?: number;
