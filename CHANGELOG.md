@@ -30,6 +30,11 @@ Alle wesentlichen Änderungen am Projekt werden in dieser Datei dokumentiert.
   kann den Container nicht mehr brechen); Healthcheck via `127.0.0.1`/`-uroot`; `service_healthy`-Gate.
 
 ### Behoben
+- CSV- und EPLAN-Import setzen den Kabeltyp aus dem Katalog; importierte Kabel sperren
+  das Einfrieren eines Umbaus nicht mehr pauschal.
+- Frontend: Abgelehnte Anfragen (4xx, z. B. 409 Port belegt) schalten den Backend-Status
+  nicht mehr auf offline und landen nicht mehr in der Konsole; 422-Validierungsfehler
+  zeigen Feld und Meldung statt „[object Object]“.
 - Kabel: Ports im Schreibweg, Belegungsprüfung und Kabelnummern-Generator.
 - Frontend-Build brach ab: `{@const}` in `(app)/+layout.svelte` war kein direktes Kind des `{#each}`.
 

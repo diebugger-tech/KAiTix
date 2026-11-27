@@ -1,4 +1,5 @@
 import { appState } from './state.svelte';
+import { istBackendStoerung, meldungAusAntwort } from './apiFehler';
 
 export interface Empfehlung {
   device_id: number;
@@ -501,37 +502,40 @@ export async function request(path: string, options: RequestInit = {}) {
   // Inject bearbeiter name in headers for audit-log
   headers.set('X-Username', appState.bearbeiter);
 
+  let response: Response;
   try {
-    const response = await fetch(url, { ...options, headers });
-    if (!response.ok) {
-      const errText = await response.text();
-      let msg = errText || response.statusText;
-      try {
-        const parsed = JSON.parse(errText);
-        if (parsed?.detail) {
-          if (typeof parsed.detail === 'object' && parsed.detail.message && parsed.detail.conflicts) {
-            const c = parsed.detail.conflicts;
-            const msgs = [];
-            if (c.db_duplicates?.length) msgs.push(`DB-Duplikate: ${c.db_duplicates.join('; ')}`);
-            if (c.csv_duplicates?.length) msgs.push(`CSV-Duplikate: ${c.csv_duplicates.join('; ')}`);
-            if (c.rack_collisions?.length) msgs.push(`Rack-Kollisionen: ${c.rack_collisions.join('; ')}`);
-            msg = `${parsed.detail.message} - ${msgs.join(' | ')}`;
-          } else {
-            msg = parsed.detail;
-          }
-        }
-      } catch { /* not JSON */ }
-      throw new Error(msg);
-    }
-    appState.setBackendStatus(true);
-    if (response.status === 204) {
-      return null;
-    }
-    return response.json();
+    response = await fetch(url, { ...options, headers });
   } catch (error) {
+    // Keine Antwort: Backend nicht erreichbar.
     console.error(`API request failed on ${url}:`, error);
     appState.setBackendStatus(false);
     throw error;
+  }
+
+  if (!response.ok) {
+    const meldung = meldungAusAntwort(await response.text(), response.statusText);
+    const stoerung = istBackendStoerung(response.status);
+    // 4xx ist eine fachliche Ablehnung (z. B. 409 Port belegt): Backend ist erreichbar.
+    appState.setBackendStatus(!stoerung);
+    if (stoerung) console.error(`API request failed on ${url}: ${response.status}`, meldung);
+    throw new ApiError(response.status, meldung);
+  }
+
+  appState.setBackendStatus(true);
+  if (response.status === 204) {
+    return null;
+  }
+  return response.json();
+}
+
+/** Fehlerantwort der API; message ist die für Nutzer lesbare Meldung. */
+export class ApiError extends Error {
+  constructor(
+    readonly status: number,
+    message: string
+  ) {
+    super(message);
+    this.name = 'ApiError';
   }
 }
 
