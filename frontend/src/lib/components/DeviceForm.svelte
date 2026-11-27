@@ -133,7 +133,7 @@
       </div>
       <div>
         <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Delay (Sekunden)</label>
-        <input type="number" bind:value={device.shutdown_delay_sec} min="0"
+        <input type="number" bind:value={device.shutdown_delay_seconds} min="0"
           class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]" />
       </div>
       <div>
