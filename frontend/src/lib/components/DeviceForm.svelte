@@ -1,6 +1,6 @@
 <script lang="ts">
   import { X } from '@lucide/svelte';
-  import type { Device } from '$lib/types';
+  import type { Device } from '$lib/api';
   import { validateDevicePosition } from '$lib/validation';
 
   let { 
