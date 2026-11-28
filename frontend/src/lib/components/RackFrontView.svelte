@@ -14,7 +14,7 @@
     readonly = false,
     maxSlots = undefined,
     highlightDeviceIds = []
-  } = $props<{
+  }: {
     rack: Rack,
     rackDevices?: Device[],
     devices?: Device[],
@@ -26,7 +26,7 @@
     readonly?: boolean,
     maxSlots?: number,
     highlightDeviceIds?: number[]
-  }>();
+  } = $props();
 
   const sideDevices = $derived(rackDevices.filter(d => (d.u_hoehe ?? 0) === 0));
   

@@ -1,7 +1,74 @@
 from datetime import date, datetime
-from typing import List, Optional
-from pydantic import BaseModel, ConfigDict, Field
+from typing import List, Literal, Optional
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from decimal import Decimal
+
+from app.domains.cabling.models import Cable as _CableModel
+
+# Erlaubte Werte für kabeltypen.alt_typ: genau die Werte des Enums cables.typ,
+# weil alt_typ beim Speichern eines Kabels nach cables.typ geschrieben wird.
+ALT_TYP_WERTE: tuple[str, ...] = tuple(_CableModel.__table__.c.typ.type.enums)
+MAX_ENDEN_JE_SEITE = 64
+
+KabeltypKategorie = Literal[
+    "kupfer", "lwl", "dac", "aoc", "breakout", "strom", "sonstige"
+]
+
+
+def _pruefe_alt_typ(wert: Optional[str]) -> Optional[str]:
+    if wert is not None and wert not in ALT_TYP_WERTE:
+        raise ValueError(
+            f"alt_typ '{wert}' ist kein gültiger Kabeltyp. "
+            f"Erlaubt: {', '.join(ALT_TYP_WERTE)}"
+        )
+    return wert
+
+
+# === KABELTYP SCHEMAS ===
+class KabeltypBase(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    kategorie: KabeltypKategorie
+    stecker_a: str = Field(..., min_length=1, max_length=50)
+    stecker_b: str = Field(..., min_length=1, max_length=50)
+    enden_a: int = Field(1, ge=1, le=MAX_ENDEN_JE_SEITE)
+    enden_b: int = Field(1, ge=1, le=MAX_ENDEN_JE_SEITE)
+    standard_farbe: Optional[str] = Field(None, max_length=30)
+    alt_typ: str = "sonstige"
+    aktiv: bool = True
+
+
+class KabeltypCreate(KabeltypBase):
+    _alt_typ_gueltig = field_validator("alt_typ")(_pruefe_alt_typ)
+
+
+class KabeltypUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    kategorie: Optional[KabeltypKategorie] = None
+    stecker_a: Optional[str] = Field(None, min_length=1, max_length=50)
+    stecker_b: Optional[str] = Field(None, min_length=1, max_length=50)
+    enden_a: Optional[int] = Field(None, ge=1, le=MAX_ENDEN_JE_SEITE)
+    enden_b: Optional[int] = Field(None, ge=1, le=MAX_ENDEN_JE_SEITE)
+    standard_farbe: Optional[str] = Field(None, max_length=30)
+    alt_typ: Optional[str] = None
+    aktiv: Optional[bool] = None
+
+    _alt_typ_gueltig = field_validator("alt_typ")(_pruefe_alt_typ)
+
+
+class Kabeltyp(KabeltypBase):
+    id: int
+    model_config = ConfigDict(from_attributes=True)
+
+
+class KabeltypKurz(BaseModel):
+    """Auszug des Kabeltyps, der an jedem Kabel mitgeliefert wird."""
+
+    id: int
+    name: str
+    kategorie: str
+    enden_a: int
+    enden_b: int
+    model_config = ConfigDict(from_attributes=True)
 
 
 # === CABLE STRAND SCHEMAS ===
@@ -11,6 +78,8 @@ class CableStrandBase(BaseModel):
     farbe: Optional[str] = None
     von_port_id: Optional[int] = None
     nach_port_id: Optional[int] = None
+    nach_device_id: Optional[int] = None
+    nach_port: Optional[str] = None
     bemerkung: Optional[str] = None
 
 
@@ -31,14 +100,32 @@ class CableStrand(CableStrandBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+class StrangEingabe(BaseModel):
+    """Ein B-Ende eines Breakout-Kabels im Schreibweg (CableCreate/CableUpdate)."""
+
+    strand_number: int = Field(..., ge=1)
+    nach_device_id: Optional[int] = None
+    nach_port: Optional[str] = Field(None, max_length=50)
+    farbe: Optional[str] = Field(None, max_length=30)
+
+    @field_validator("nach_port", "farbe")
+    @classmethod
+    def _leer_ist_none(cls, wert: Optional[str]) -> Optional[str]:
+        if wert is None:
+            return None
+        return wert.strip() or None
+
+
 # === CABLE SCHEMAS ===
 class CableBase(BaseModel):
     kabel_nr: Optional[str] = None
-    typ: str
+    kabeltyp_id: Optional[int] = None
     laenge_m: Decimal = Field(..., ge=0)
     farbe: Optional[str] = None
     von_device_id: Optional[int] = None
+    von_port: Optional[str] = Field(None, max_length=50)
     nach_device_id: Optional[int] = None
+    nach_port: Optional[str] = Field(None, max_length=50)
     verlegt_am: Optional[date] = None
     verlegt_von: Optional[str] = None
     bemerkung: Optional[str] = None
@@ -46,15 +133,30 @@ class CableBase(BaseModel):
 
 class CableCreate(CableBase):
     kabel_nr: Optional[str] = None
+    # Neue Clients schicken kabeltyp_id, alte nur typ. Eines von beiden ist Pflicht.
+    typ: Optional[str] = None
+    # B-Enden eines Breakout-Kabels (Kabeltyp mit enden_b > 1), sonst leer.
+    straenge: Optional[List[StrangEingabe]] = None
+
+    @model_validator(mode="after")
+    def _typ_oder_kabeltyp(self) -> "CableCreate":
+        if self.kabeltyp_id is None and not self.typ:
+            raise ValueError("Entweder kabeltyp_id oder typ muss angegeben werden")
+        return self
 
 
 class CableUpdate(BaseModel):
     kabel_nr: Optional[str] = None
     typ: Optional[str] = None
+    kabeltyp_id: Optional[int] = None
+    # Nicht gesendet = Stränge bleiben; gesendet = vollständige neue Strangliste.
+    straenge: Optional[List[StrangEingabe]] = None
     laenge_m: Optional[Decimal] = Field(None, ge=0)
     farbe: Optional[str] = None
     von_device_id: Optional[int] = None
+    von_port: Optional[str] = Field(None, max_length=50)
     nach_device_id: Optional[int] = None
+    nach_port: Optional[str] = Field(None, max_length=50)
     verlegt_am: Optional[date] = None
     verlegt_von: Optional[str] = None
     bemerkung: Optional[str] = None
@@ -62,6 +164,8 @@ class CableUpdate(BaseModel):
 
 class Cable(CableBase):
     id: int
+    typ: str
+    kabeltyp: Optional[KabeltypKurz] = None
     cable_strands: List[CableStrand] = []
     geaendert_von: Optional[str] = None
     geaendert_am: Optional[datetime] = None

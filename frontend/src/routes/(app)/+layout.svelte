@@ -8,6 +8,7 @@
     Zap,
     FileUp,
     Cable,
+    Tags,
     User,
     Activity,
     Server,
@@ -22,6 +23,7 @@
     Search,
     Monitor,
     BookOpen,
+    Construction,
     Sun,
     Moon,
     Info
@@ -73,19 +75,23 @@
     if (route === '/topology') return 'Topologie';
     if (route === '/eplan') return 'E-Plan';
     if (route === '/cables') return 'Kabelliste & Export';
+    if (route === '/kabeltypen') return 'Kabeltypen';
     if (route === '/hardware') return 'Hardware-Katalog';
     if (route === '/virtual-machines') return 'Virtuelle Maschinen';
     if (route.startsWith('/runbook-orchestrator')) return 'Runbook Orchestrator';
+    if (route.startsWith('/umbau')) return 'Serverraum-Umbau';
     return 'KAiTix';
   });
 
-  const navGroups = [
+  type NavLink = { href: string; icon: typeof Info; label: string; matchPrefix?: boolean };
+  const navGroups: { title: string; links: NavLink[] }[] = [
     {
       title: 'Infrastruktur',
       links: [
         { href: '/racks', icon: Layers, label: 'Racks' },
         { href: '/hardware', icon: Cpu, label: 'Hardware' },
         { href: '/cables', icon: Cable, label: 'Kabelliste' },
+        { href: '/kabeltypen', icon: Tags, label: 'Kabeltypen' },
         { href: '/topology', icon: Network, label: 'Topologie' }
       ]
     },
@@ -105,7 +111,8 @@
     {
       title: 'Betrieb',
       links: [
-        { href: '/runbook-orchestrator', icon: BookOpen, label: 'Runbook Orchestrator', matchPrefix: true }
+        { href: '/runbook-orchestrator', icon: BookOpen, label: 'Runbook Orchestrator', matchPrefix: true },
+        { href: '/umbau', icon: Construction, label: 'Umbau', matchPrefix: true }
       ]
     },
     {

@@ -324,6 +324,10 @@ tr:hover {
   aside,
   nav,
   header,
+  /* Seitenleiste und Kopfzeile der App tragen die Klasse flex; ohne höhere Spezifität
+     gewinnt `.flex { display: block !important }` unten und sie werden mitgedruckt. */
+  aside[class],
+  header.app-header,
   .screen-only,
   button:not(.print-show) {
     display: none !important;

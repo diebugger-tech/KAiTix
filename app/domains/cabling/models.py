@@ -1,11 +1,38 @@
 from app.core.database import Base
 from datetime import date, datetime
-from sqlalchemy import ForeignKey, Integer, String, DECIMAL, Enum, Date, DateTime
+from sqlalchemy import (
+    Boolean,
+    ForeignKey,
+    Integer,
+    String,
+    DECIMAL,
+    Enum,
+    Date,
+    DateTime,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.domains.hardware.models import Device
+
+
+class Kabeltyp(Base):
+    __tablename__ = "kabeltypen"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
+    kategorie: Mapped[str] = mapped_column(
+        Enum("kupfer", "lwl", "dac", "aoc", "breakout", "strom", "sonstige"),
+        nullable=False,
+    )
+    stecker_a: Mapped[str] = mapped_column(String(50), nullable=False)
+    stecker_b: Mapped[str] = mapped_column(String(50), nullable=False)
+    enden_a: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    enden_b: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    standard_farbe: Mapped[Optional[str]] = mapped_column(String(30))
+    alt_typ: Mapped[str] = mapped_column(String(50), nullable=False, default="sonstige")
+    aktiv: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
 
 class Cable(Base):
@@ -34,6 +61,9 @@ class Cable(Base):
         ),
         nullable=False,
     )
+    kabeltyp_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("kabeltypen.id", ondelete="RESTRICT"), nullable=True
+    )
     laenge_m: Mapped[float] = mapped_column(DECIMAL(6, 2), nullable=False)
     farbe: Mapped[Optional[str]] = mapped_column(String(30))
     von_device_id: Mapped[Optional[int]] = mapped_column(
@@ -51,6 +81,7 @@ class Cable(Base):
     geaendert_am: Mapped[Optional[datetime]] = mapped_column(DateTime)
 
     # Relationships
+    kabeltyp: Mapped[Optional["Kabeltyp"]] = relationship()
     von_device: Mapped[Optional["Device"]] = relationship(
         foreign_keys=[von_device_id], back_populates="cables_from"
     )
@@ -59,7 +90,10 @@ class Cable(Base):
     )
     interfaces: Mapped[List["Interface"]] = relationship(back_populates="cable")
     cable_strands: Mapped[List["CableStrand"]] = relationship(
-        back_populates="cable", cascade="all, delete-orphan", passive_deletes=True
+        back_populates="cable",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        order_by="CableStrand.strand_number",
     )
 
 
@@ -78,12 +112,23 @@ class CableStrand(Base):
     nach_port_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("interfaces.id", ondelete="SET NULL")
     )
+    # B-Ende eines Breakout-Strangs: Gerät + Port als Text (Port-Wahrheit wie am Kabel).
+    nach_device_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("devices.id", ondelete="SET NULL")
+    )
+    nach_port: Mapped[Optional[str]] = mapped_column(String(50))
     bemerkung: Mapped[Optional[str]] = mapped_column(String(255))
 
     # Relationships
     cable: Mapped["Cable"] = relationship(back_populates="cable_strands")
-    von_port: Mapped[Optional["Interface"]] = relationship(foreign_keys=[von_port_id])
-    nach_port: Mapped[Optional["Interface"]] = relationship(foreign_keys=[nach_port_id])
+    # Interface-Beziehungen zu von_port_id/nach_port_id (ungenutzt). Sie hießen bisher
+    # von_port/nach_port; der Name nach_port gehört jetzt der Textspalte.
+    von_interface: Mapped[Optional["Interface"]] = relationship(
+        foreign_keys=[von_port_id]
+    )
+    nach_interface: Mapped[Optional["Interface"]] = relationship(
+        foreign_keys=[nach_port_id]
+    )
 
 
 class Interface(Base):

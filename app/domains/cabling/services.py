@@ -1,19 +1,29 @@
 import json
 import os
+import re
 from datetime import datetime, timezone
 from typing import List, Dict, Any, Sequence
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, or_
+from sqlalchemy import select, or_
 from sqlalchemy.orm import selectinload
 from fastapi import HTTPException
 
 from app.models import (
     Cable as CableModel,
+    CableStrand as CableStrandModel,
+    Kabeltyp as KabeltypModel,
     Device as DeviceModel,
     Rack as RackModel,
     PduOutlet as PduOutletModel,
 )
 from app.domains.cabling.schemas import CableCreate, CableUpdate
+from app.domains.cabling.straenge import (
+    Endpunkt,
+    doppelter_endpunkt,
+    pruefe_kein_ziel_am_kabel,
+    pruefe_straenge,
+    strang_schluessel,
+)
 from dataclasses import dataclass
 
 _COLOR_RULES_PATH = os.path.join(
@@ -360,37 +370,165 @@ class CablingService:
         }
 
     # Cables operations
-    async def list_cables(self) -> List[CableModel]:
-        result = await self.db.execute(
-            select(CableModel).options(selectinload(CableModel.cable_strands))
+    @staticmethod
+    def _cable_query():
+        """Kabel samt allem, was das Response-Schema liest (Stränge, Kabeltyp)."""
+        return select(CableModel).options(
+            selectinload(CableModel.cable_strands),
+            selectinload(CableModel.kabeltyp),
         )
-        return result.scalars().all()  # type: ignore
 
-    async def create_cable(self, cable_in: CableCreate) -> CableModel:
-        if not cable_in.kabel_nr:
-            count_result = await self.db.execute(
-                select(func.count()).select_from(CableModel)
-            )
-            count = count_result.scalar() or 0
-            cable_in.kabel_nr = f"KAB-{count + 1:04d}"
-        data = cable_in.model_dump()
-        db_cable = CableModel(**data)
-        self.db.add(db_cable)
-        await self.db.commit()
-
-        # Reload with strands
+    async def _load_cable(self, cable_id: int) -> CableModel:
         result = await self.db.execute(
-            select(CableModel)
-            .where(CableModel.id == db_cable.id)
-            .options(selectinload(CableModel.cable_strands))
+            self._cable_query().where(CableModel.id == cable_id)
         )
         return result.scalar_one()
 
+    async def list_cables(self) -> List[CableModel]:
+        result = await self.db.execute(self._cable_query())
+        return result.scalars().all()  # type: ignore
+
+    async def _kabeltyp_oder_422(self, kabeltyp_id: int) -> KabeltypModel:
+        kabeltyp = await self.db.get(KabeltypModel, kabeltyp_id)
+        if kabeltyp is None:
+            raise HTTPException(
+                status_code=422, detail=f"Kabeltyp {kabeltyp_id} existiert nicht"
+            )
+        return kabeltyp
+
+    async def _kabeltyp_id_fuer_typ(self, typ: str) -> int | None:
+        """Alte Clients schicken nur typ: Katalogzeile mit gleichem Namen suchen."""
+        result = await self.db.execute(
+            select(KabeltypModel.id).where(KabeltypModel.name == typ)
+        )
+        return result.scalar_one_or_none()
+
+    async def _next_kabel_nr(self) -> str:
+        result = await self.db.execute(
+            select(CableModel.kabel_nr).where(CableModel.kabel_nr.is_not(None))
+        )
+        highest = 0
+        for kabel_nr in result.scalars():
+            match = re.fullmatch(r"KAB-(\d+)", kabel_nr)
+            if match:
+                highest = max(highest, int(match.group(1)))
+        return f"KAB-{highest + 1:04d}"
+
+    async def _check_port_conflicts(
+        self,
+        typ: str,
+        endpoints: Sequence[tuple[int | None, str | None]],
+        exclude_cable_id: int | None = None,
+    ) -> None:
+        if typ.startswith("Strom"):
+            return
+        candidates = {
+            (device_id, port) for device_id, port in endpoints if device_id and port
+        }
+        if not candidates:
+            return
+
+        query = (
+            select(CableModel)
+            .options(selectinload(CableModel.cable_strands))
+            .order_by(CableModel.id)
+        )
+        if exclude_cable_id is not None:
+            query = query.where(CableModel.id != exclude_cable_id)
+        result = await self.db.execute(query)
+        for cable in result.scalars():
+            if cable.typ.startswith("Strom"):
+                continue
+            occupied = {
+                (cable.von_device_id, cable.von_port),
+                (cable.nach_device_id, cable.nach_port),
+                *((s.nach_device_id, s.nach_port) for s in cable.cable_strands),
+            }
+            conflicts = candidates & occupied
+            if conflicts:
+                device_id, port = sorted(conflicts)[0]
+                device_name = await self._device_name(device_id)
+                kabel_nr = cable.kabel_nr or f"#{cable.id}"
+                raise HTTPException(
+                    status_code=409,
+                    detail=(
+                        f"Port '{port}' an Gerät '{device_name}' ist bereits durch "
+                        f"Kabel '{kabel_nr}' belegt"
+                    ),
+                )
+
+    async def _device_name(self, device_id: int | None) -> str:
+        result = await self.db.execute(
+            select(DeviceModel.hostname).where(DeviceModel.id == device_id)
+        )
+        return result.scalar_one_or_none() or f"#{device_id}"
+
+    async def _check_own_endpoints(
+        self, typ: str, endpoints: Sequence[Endpunkt]
+    ) -> None:
+        """409, wenn ein Breakout-Kabel denselben Port mit zwei eigenen Enden belegt."""
+        if typ.startswith("Strom"):
+            return
+        doppelt = doppelter_endpunkt(endpoints)
+        if doppelt is None:
+            return
+        device_id, port = doppelt
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"Port '{port}' an Gerät '{await self._device_name(device_id)}' ist "
+                "in diesem Kabel mehrfach belegt"
+            ),
+        )
+
+    async def _enden_b(self, kabeltyp_id: int | None) -> tuple[int, str]:
+        """(enden_b, Name) des Kabeltyps; ohne Kabeltyp gilt ein B-Ende."""
+        if kabeltyp_id is None:
+            return 1, "ohne Kabeltyp"
+        kabeltyp = await self.db.get(KabeltypModel, kabeltyp_id)
+        if kabeltyp is None:
+            return 1, "ohne Kabeltyp"
+        return kabeltyp.enden_b, kabeltyp.name
+
+    async def create_cable(self, cable_in: CableCreate) -> CableModel:
+        if not cable_in.kabel_nr:
+            cable_in.kabel_nr = await self._next_kabel_nr()
+        data = cable_in.model_dump()
+        straenge: list[Dict[str, Any]] = data.pop("straenge") or []
+        if data["kabeltyp_id"] is not None:
+            kabeltyp = await self._kabeltyp_oder_422(data["kabeltyp_id"])
+            data["typ"] = kabeltyp.alt_typ
+            if not data["farbe"]:
+                data["farbe"] = kabeltyp.standard_farbe
+        else:
+            data["kabeltyp_id"] = await self._kabeltyp_id_fuer_typ(data["typ"])
+
+        enden_b, typ_name = await self._enden_b(data["kabeltyp_id"])
+        pruefe_straenge(typ_name, enden_b, straenge)
+        if enden_b > 1:
+            pruefe_kein_ziel_am_kabel(
+                typ_name, data["nach_device_id"], data["nach_port"]
+            )
+        endpoints: list[Endpunkt] = [
+            (data["von_device_id"], data["von_port"]),
+            (data["nach_device_id"], data["nach_port"]),
+            *((s["nach_device_id"], s["nach_port"]) for s in straenge),
+        ]
+        if straenge:
+            await self._check_own_endpoints(data["typ"], endpoints)
+        await self._check_port_conflicts(data["typ"], endpoints)
+
+        # Kabel und Stränge gehen in derselben Transaktion in die Datenbank.
+        db_cable = CableModel(
+            **data, cable_strands=[CableStrandModel(**s) for s in straenge]
+        )
+        self.db.add(db_cable)
+        await self.db.commit()
+        return await self._load_cable(db_cable.id)
+
     async def get_cable(self, cable_id: int) -> CableModel:
         result = await self.db.execute(
-            select(CableModel)
-            .where(CableModel.id == cable_id)
-            .options(selectinload(CableModel.cable_strands))
+            self._cable_query().where(CableModel.id == cable_id)
         )
         cable = result.scalar_one_or_none()
         if not cable:
@@ -401,26 +539,157 @@ class CablingService:
         self, cable_id: int, cable_in: CableUpdate, username: str | None
     ) -> CableModel:
         result = await self.db.execute(
-            select(CableModel).where(CableModel.id == cable_id)
+            select(CableModel)
+            .where(CableModel.id == cable_id)
+            .options(selectinload(CableModel.cable_strands))
         )
         cable = result.scalar_one_or_none()
         if not cable:
             raise HTTPException(status_code=404, detail="Cable not found")
 
         update_data = cable_in.model_dump(exclude_unset=True)
+        # Stränge vollständig ausgeben: exclude_unset würde auch in den Strängen
+        # nicht gesendete Felder (z. B. farbe) weglassen.
+        update_data.pop("straenge", None)
+        straenge_in: list[Dict[str, Any]] | None = (
+            [strang.model_dump() for strang in cable_in.straenge]
+            if cable_in.straenge is not None
+            else None
+        )
+        await self._resolve_typ_on_update(cable, update_data)
+        neue_straenge = await self._resolve_straenge_on_update(
+            cable, update_data, straenge_in
+        )
+
+        bisherige_enden = {(s.nach_device_id, s.nach_port) for s in cable.cable_strands}
+        strang_enden: list[Endpunkt] = (
+            [(s["nach_device_id"], s["nach_port"]) for s in neue_straenge]
+            if neue_straenge is not None
+            else [(s.nach_device_id, s.nach_port) for s in cable.cable_strands]
+        )
+        connection_fields = (
+            "von_device_id",
+            "von_port",
+            "nach_device_id",
+            "nach_port",
+            "typ",
+        )
+        if (
+            any(
+                field in update_data and update_data[field] != getattr(cable, field)
+                for field in connection_fields
+            )
+            or set(strang_enden) != bisherige_enden
+        ):
+            typ = update_data.get("typ", cable.typ)
+            endpoints: list[Endpunkt] = [
+                (
+                    update_data.get("von_device_id", cable.von_device_id),
+                    update_data.get("von_port", cable.von_port),
+                ),
+                (
+                    update_data.get("nach_device_id", cable.nach_device_id),
+                    update_data.get("nach_port", cable.nach_port),
+                ),
+                *strang_enden,
+            ]
+            if strang_enden:
+                await self._check_own_endpoints(typ, endpoints)
+            await self._check_port_conflicts(typ, endpoints, exclude_cable_id=cable.id)
         for field, value in update_data.items():
             setattr(cable, field, value)
+        if neue_straenge is not None:
+            self._apply_straenge(cable, neue_straenge)
         cable.geaendert_von = username
         cable.geaendert_am = datetime.now(timezone.utc)
 
         await self.db.commit()
-        # Reload with strands
-        result = await self.db.execute(
-            select(CableModel)
-            .where(CableModel.id == cable.id)
-            .options(selectinload(CableModel.cable_strands))
+        return await self._load_cable(cable.id)
+
+    async def _resolve_straenge_on_update(
+        self,
+        cable: CableModel,
+        update_data: Dict[str, Any],
+        straenge_in: list[Dict[str, Any]] | None,
+    ) -> list[Dict[str, Any]] | None:
+        """Neue Strangliste des Kabels oder None, wenn die Stränge bleiben.
+
+        Wendet die Breakout-Regel auf den Kabeltyp NACH der Änderung an und leert
+        bei enden_b > 1 das Ziel am Kabel (ändert update_data).
+        """
+        enden_b, typ_name = await self._enden_b(
+            update_data.get("kabeltyp_id", cable.kabeltyp_id)
         )
-        return result.scalar_one()
+        if enden_b > 1:
+            pruefe_kein_ziel_am_kabel(
+                typ_name,
+                update_data.get("nach_device_id"),
+                update_data.get("nach_port"),
+            )
+            # Ein Wechsel von einem normalen Kabel lässt sonst das alte Ziel stehen.
+            update_data["nach_device_id"] = None
+            update_data["nach_port"] = None
+
+        if straenge_in is not None:
+            pruefe_straenge(typ_name, enden_b, straenge_in)
+            bestehend = strang_schluessel(
+                {
+                    "strand_number": s.strand_number,
+                    "nach_device_id": s.nach_device_id,
+                    "nach_port": s.nach_port,
+                    "farbe": s.farbe,
+                }
+                for s in cable.cable_strands
+            )
+            return None if strang_schluessel(straenge_in) == bestehend else straenge_in
+        if enden_b <= 1:
+            # Typwechsel weg vom Breakout entfernt die Stränge.
+            return [] if cable.cable_strands else None
+        if len(cable.cable_strands) != enden_b:
+            pruefe_straenge(typ_name, enden_b, [])
+        return None
+
+    @staticmethod
+    def _apply_straenge(cable: CableModel, straenge: list[Dict[str, Any]]) -> None:
+        """Setzt die Strangliste; vorhandene Stränge gleicher Nummer bleiben erhalten."""
+        vorhandene = {s.strand_number: s for s in cable.cable_strands}
+        ergebnis: list[CableStrandModel] = []
+        for eingabe in sorted(straenge, key=lambda s: s["strand_number"]):
+            strang = vorhandene.get(eingabe["strand_number"]) or CableStrandModel(
+                strand_number=eingabe["strand_number"]
+            )
+            strang.nach_device_id = eingabe["nach_device_id"]
+            strang.nach_port = eingabe["nach_port"]
+            strang.farbe = eingabe["farbe"]
+            ergebnis.append(strang)
+        cable.cable_strands = ergebnis
+
+    async def _resolve_typ_on_update(
+        self, cable: CableModel, update_data: Dict[str, Any]
+    ) -> None:
+        """Hält typ und kabeltyp_id beim Ändern zusammen (ändert update_data).
+
+        - kabeltyp_id gesendet: typ folgt aus alt_typ, leere Farbe aus standard_farbe.
+        - nur typ gesendet: kabeltyp_id folgt über den Namen, aber nur wenn sich typ
+          wirklich ändert oder noch kein Kabeltyp gesetzt ist. Sonst würde ein alter
+          Client, der das ganze Kabel zurückschickt, z. B. einen Breakout-Typ
+          (alt_typ "sonstige") auf die Katalogzeile "sonstige" umbiegen.
+        """
+        if update_data.get("kabeltyp_id") is not None:
+            kabeltyp = await self._kabeltyp_oder_422(update_data["kabeltyp_id"])
+            update_data["typ"] = kabeltyp.alt_typ
+            if not update_data.get("farbe", cable.farbe):
+                update_data["farbe"] = kabeltyp.standard_farbe
+            return
+
+        # Explizites null löst die Zuordnung nicht: wie "nicht gesendet" behandeln.
+        update_data.pop("kabeltyp_id", None)
+        neuer_typ = update_data.get("typ")
+        if neuer_typ is None:
+            update_data.pop("typ", None)
+            return
+        if neuer_typ != cable.typ or cable.kabeltyp_id is None:
+            update_data["kabeltyp_id"] = await self._kabeltyp_id_fuer_typ(neuer_typ)
 
     async def delete_cable(self, cable_id: int) -> None:
         result = await self.db.execute(

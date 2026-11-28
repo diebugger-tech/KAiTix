@@ -1,6 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { api, type Cable, type Device } from '$lib/api';
+  import { api, type Cable, type Device, type Kabeltyp } from '$lib/api';
+  import BreakoutEnden from '$lib/components/BreakoutEnden.svelte';
+  import { bEndenFuerTyp, straengeAusEnden, type BEnde } from '$lib/kabel';
   import {
     Cable as CableIcon,
     Plus,
@@ -21,6 +23,8 @@
 
   let cables = $state<Cable[]>([]);
   let devices = $state<Device[]>([]);
+  // Aktive Kabeltypen aus dem Katalog (GET /kabeltypen?aktiv=true)
+  let kabeltypen = $state<Kabeltyp[]>([]);
   let selectedCable = $state<Cable | null>(null);
   let loading = $state(true);
   let errorMsg = $state('');
@@ -68,7 +72,9 @@
 
   // Form fields
   let kabel_nr = $state('');
-  let typ = $state('Cat6A');
+  let kabeltyp_id = $state<number | null>(null);
+  // B-Enden, wenn der gewählte Kabeltyp ein Breakout ist (enden_b > 1)
+  let bEnden = $state<BEnde[]>([]);
   let laenge_m = $state(1.0);
   let farbe = $state('');
   let von_device_id = $state<number | null>(null);
@@ -154,13 +160,15 @@
     loading = true;
     errorMsg = '';
     try {
-      const [cablesData, devicesData, rulesData] = await Promise.all([
+      const [cablesData, devicesData, rulesData, kabeltypenData] = await Promise.all([
         api.getCables(),
         api.getDevices(),
-        api.getColorRules().catch(() => ({ rules: [] }))
+        api.getColorRules().catch(() => ({ rules: [] })),
+        api.getKabeltypen(true)
       ]);
       cables = cablesData;
       devices = devicesData;
+      kabeltypen = kabeltypenData;
       colorRules = rulesData.rules || [];
 
       if (cablesData.length > 0 && !selectedCable) {
@@ -178,22 +186,50 @@
 
   onMount(loadData);
 
-  async function suggestColorForTyp(newTyp: string) {
-    try {
-      const res = await api.suggestCableColor(newTyp);
-      if (res.suggested_color) {
-        farbe = res.suggested_color;
-      }
-    } catch {
-      // ignore
+  // Auswahl im Formular: aktive Typen. Trägt das bearbeitete Kabel einen
+  // deaktivierten Typ, bleibt dieser zusätzlich wählbar, damit er nicht verloren geht.
+  const formKabeltypen = $derived.by(() => {
+    const options = kabeltypen.map(k => ({ id: k.id, label: k.name }));
+    const current = showEditCable ? selectedCable?.kabeltyp : null;
+    if (current && !options.some(o => o.id === current.id)) {
+      options.push({ id: current.id, label: `${current.name} (deaktiviert)` });
     }
+    return options;
+  });
+
+  function defaultKabeltypId(): number | null {
+    return (kabeltypen.find(k => k.name === 'Cat6A') ?? kabeltypen[0])?.id ?? null;
+  }
+
+  // Farbe aus der Standardfarbe des gewählten Kabeltyps vorbelegen
+  function applyStandardFarbe() {
+    const standard = kabeltypen.find(k => k.id === kabeltyp_id)?.standard_farbe;
+    if (standard) farbe = standard;
+  }
+
+  // Anzahl B-Enden des gewählten Kabeltyps. Ein deaktivierter Typ steht nicht mehr
+  // in kabeltypen, dann gilt die Angabe am bearbeiteten Kabel.
+  const formEndenB = $derived.by(() => {
+    const kt = kabeltypen.find(k => k.id === kabeltyp_id);
+    if (kt) return kt.enden_b;
+    const current = showEditCable ? selectedCable?.kabeltyp : null;
+    return current && current.id === kabeltyp_id ? current.enden_b : 1;
+  });
+
+  function onKabeltypChange() {
+    applyStandardFarbe();
+    // Schon ausgefüllte Zeilen behalten; sonst die Stränge des bearbeiteten Kabels übernehmen
+    const cable = showEditCable && bEnden.length === 0 ? selectedCable : null;
+    bEnden = bEndenFuerTyp(formEndenB, cable, bEnden);
   }
 
   function resetForm() {
     kabel_nr = '';
-    typ = 'Cat6A';
+    kabeltyp_id = defaultKabeltypId();
     laenge_m = 1.0;
     farbe = '';
+    applyStandardFarbe();
+    bEnden = bEndenFuerTyp(formEndenB);
     von_device_id = null;
     von_port = '';
     nach_device_id = null;
@@ -204,7 +240,7 @@
   function openEditModal() {
     if (!selectedCable) return;
     kabel_nr = selectedCable.kabel_nr;
-    typ = selectedCable.typ;
+    kabeltyp_id = selectedCable.kabeltyp_id ?? null;
     laenge_m = selectedCable.laenge_m;
     farbe = selectedCable.farbe || '';
     von_device_id = selectedCable.von_device_id || null;
@@ -213,21 +249,28 @@
     nach_port = selectedCable.nach_port || '';
     bemerkung = selectedCable.bemerkung || '';
     showEditCable = true;
+    bEnden = bEndenFuerTyp(formEndenB, selectedCable);
   }
 
   async function handleAddCable(e: SubmitEvent) {
     e.preventDefault();
     if (!kabel_nr.trim()) return;
+    if (kabeltyp_id === null) {
+      alert('Bitte einen Kabeltyp wählen.');
+      return;
+    }
     try {
       await api.createCable({
         kabel_nr: kabel_nr.trim(),
-        typ,
+        kabeltyp_id: kabeltyp_id ?? undefined,
         laenge_m,
         farbe: farbe || undefined,
         von_device_id: von_device_id || undefined,
         von_port: von_port || undefined,
-        nach_device_id: nach_device_id || undefined,
-        nach_port: nach_port || undefined,
+        // Breakout: die B-Enden stehen an den Strängen, das Ziel am Kabel bleibt leer
+        nach_device_id: formEndenB > 1 ? undefined : nach_device_id || undefined,
+        nach_port: formEndenB > 1 ? undefined : nach_port || undefined,
+        ...(formEndenB > 1 ? { straenge: straengeAusEnden(bEnden) } : {}),
         bemerkung: bemerkung || undefined
       });
       showAddCable = false;
@@ -244,13 +287,15 @@
     try {
       await api.updateCable(selectedCable.id, {
         kabel_nr: kabel_nr.trim(),
-        typ,
+        kabeltyp_id: kabeltyp_id ?? undefined,
         laenge_m,
         farbe: farbe || undefined,
         von_device_id: von_device_id || undefined,
         von_port: von_port || undefined,
-        nach_device_id: nach_device_id || undefined,
-        nach_port: nach_port || undefined,
+        // Breakout: die B-Enden stehen an den Strängen, das Ziel am Kabel bleibt leer
+        nach_device_id: formEndenB > 1 ? undefined : nach_device_id || undefined,
+        nach_port: formEndenB > 1 ? undefined : nach_port || undefined,
+        ...(formEndenB > 1 ? { straenge: straengeAusEnden(bEnden) } : {}),
         bemerkung: bemerkung || undefined
       });
       showEditCable = false;
@@ -473,6 +518,18 @@
               <div class="bg-[var(--color-bg2)] border border-[var(--color-border)] rounded-xl p-4 space-y-3">
                 <div class="text-[10px] text-[var(--color-text3)] uppercase font-bold tracking-wider font-mono">Nach</div>
                 <div class="space-y-1">
+                {#if selectedCable.cable_strands?.length}
+                  <!-- Breakout: je Strang ein B-Ende -->
+                  <ul class="space-y-1">
+                    {#each selectedCable.cable_strands as strang (strang.id)}
+                      <li class="flex items-center gap-2 text-xs text-[var(--color-text2)]">
+                        <span class="font-mono text-[var(--color-text3)]">B{strang.strand_number}</span>
+                        <span class="font-bold text-[var(--color-text)]">{getDeviceName(strang.nach_device_id)}</span>
+                        <span class="font-mono">{strang.nach_port || '—'}</span>
+                      </li>
+                    {/each}
+                  </ul>
+                {:else}
                   <div class="text-sm font-bold text-[var(--color-text)]">{getDeviceName(selectedCable.nach_device_id)}</div>
                   {#if selectedCable.nach_port}
                     <div class="flex items-center gap-1.5 text-xs text-[var(--color-text2)]">
@@ -480,6 +537,7 @@
                       <span class="font-mono">{selectedCable.nach_port}</span>
                     </div>
                   {/if}
+                {/if}
                 </div>
               </div>
             </div>
@@ -565,8 +623,9 @@
       <div class="grid grid-cols-3 gap-4">
         <div>
           <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Typ *</label>
-          <select bind:value={typ} onchange={() => suggestColorForTyp(typ)} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]">
-            {#each cableTypes as t}<option value={t}>{t}</option>{/each}
+          <select bind:value={kabeltyp_id} onchange={onKabeltypChange} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]">
+            <option value={null} disabled>— Typ wählen —</option>
+            {#each formKabeltypen as k (k.id)}<option value={k.id}>{k.label}</option>{/each}
           </select>
         </div>
         <div>
@@ -579,6 +638,7 @@
           <select bind:value={farbe} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]">
             <option value="">—</option>
             {#each farben as f}<option value={f}>{f}</option>{/each}
+            {#if farbe && !farben.includes(farbe)}<option value={farbe}>{farbe}</option>{/if}
           </select>
         </div>
       </div>
@@ -596,6 +656,9 @@
             class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]" />
         </div>
       </div>
+      {#if formEndenB > 1}
+        <BreakoutEnden bind:enden={bEnden} {devices} idPrefix="add-b-ende" />
+      {:else}
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Nach Gerät</label>
@@ -610,6 +673,7 @@
             class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]" />
         </div>
       </div>
+      {/if}
       <div>
         <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Bemerkung</label>
         <input type="text" bind:value={bemerkung} placeholder="Optional"
@@ -641,8 +705,9 @@
       <div class="grid grid-cols-3 gap-4">
         <div>
           <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Typ *</label>
-          <select bind:value={typ} onchange={() => suggestColorForTyp(typ)} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]">
-            {#each cableTypes as t}<option value={t}>{t}</option>{/each}
+          <select bind:value={kabeltyp_id} onchange={onKabeltypChange} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]">
+            <option value={null} disabled>— Typ wählen —</option>
+            {#each formKabeltypen as k (k.id)}<option value={k.id}>{k.label}</option>{/each}
           </select>
         </div>
         <div>
@@ -655,6 +720,7 @@
           <select bind:value={farbe} class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]">
             <option value="">—</option>
             {#each farben as f}<option value={f}>{f}</option>{/each}
+            {#if farbe && !farben.includes(farbe)}<option value={farbe}>{farbe}</option>{/if}
           </select>
         </div>
       </div>
@@ -672,6 +738,9 @@
             class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]" />
         </div>
       </div>
+      {#if formEndenB > 1}
+        <BreakoutEnden bind:enden={bEnden} {devices} idPrefix="edit-b-ende" />
+      {:else}
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Nach Gerät</label>
@@ -686,6 +755,7 @@
             class="w-full bg-[var(--color-bg3)] border border-[var(--color-border2)] rounded-lg px-4 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[#1D9E75]" />
         </div>
       </div>
+      {/if}
       <div>
         <label class="block text-xs font-semibold text-[var(--color-text2)] mb-1">Bemerkung</label>
         <input type="text" bind:value={bemerkung}

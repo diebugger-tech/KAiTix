@@ -7,6 +7,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.core.database import get_db
 from app.models import Rack, Device, Interface, Cable
+from app.domains.cabling.kabeltyp_service import (
+    kabeltyp_id_nach_typ,
+    kabeltyp_ids_nach_name,
+)
 from app.domains.import_export.services.eplan_parser import EplanParser
 
 router = APIRouter()
@@ -83,6 +87,7 @@ async def commit_eplan(
     racks_cache = {}
     devices_cache = {}
     device_ports_cache = {}
+    kabeltyp_ids = await kabeltyp_ids_nach_name(db)
 
     # Pre-fetch existing racks
     r_result = await db.execute(select(Rack))
@@ -308,6 +313,7 @@ async def commit_eplan(
                 cable = Cable(
                     kabel_nr=cable_num,
                     typ=db_typ,
+                    kabeltyp_id=kabeltyp_id_nach_typ(db_typ, kabeltyp_ids),
                     laenge_m=length_val,
                     farbe=conn.farbe,
                     von_device_id=s_dev.id if s_dev else None,
@@ -320,6 +326,12 @@ async def commit_eplan(
                 imported_cables_count += 1
             else:
                 # Update existing cable attributes
+                cable.kabeltyp_id = kabeltyp_id_nach_typ(
+                    db_typ,
+                    kabeltyp_ids,
+                    alter_typ=cable.typ,
+                    alte_kabeltyp_id=cable.kabeltyp_id,
+                )
                 cable.typ = db_typ
                 if conn.length is not None:
                     cable.laenge_m = length_val

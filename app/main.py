@@ -27,6 +27,7 @@ async def lifespan(app: FastAPI):
     await engine.dispose()
     logger.info("DB engine disposed.")
 
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
@@ -69,10 +70,12 @@ async def custom_http_exception_handler(request: Request, exc: StarletteHTTPExce
         content={"detail": exc.detail},
     )
 
+
 # Mount the static files from the SvelteKit build output
 if os.path.exists("frontend/build"):
     app.mount("/", StaticFiles(directory="frontend/build", html=True), name="frontend")
 else:
+
     @app.get("/")
     def root():
         return {

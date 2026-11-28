@@ -1,4 +1,5 @@
 import { appState } from './state.svelte';
+import { istBackendStoerung, meldungAusAntwort } from './apiFehler';
 
 export interface Empfehlung {
   device_id: number;
@@ -24,7 +25,7 @@ export interface Device {
   seriennummer?: string;
   inventarnummer?: string;
   rack_id?: number;
-  u_position?: number;
+  u_position?: number | null;
   u_hoehe: number;
   side?: 'left' | 'right';
   circuit_id?: number;
@@ -79,10 +80,56 @@ export interface RackAnomalyScore {
   issues: string[];
 }
 
+export const KABELTYP_KATEGORIEN = ['kupfer', 'lwl', 'dac', 'aoc', 'breakout', 'strom', 'sonstige'] as const;
+export type KabeltypKategorie = (typeof KABELTYP_KATEGORIEN)[number];
+
+export interface Kabeltyp {
+  id: number;
+  name: string;
+  kategorie: KabeltypKategorie;
+  stecker_a: string;
+  stecker_b: string;
+  enden_a: number;
+  enden_b: number;
+  standard_farbe?: string | null;
+  alt_typ: string;
+  aktiv: boolean;
+}
+
+/** Auszug des Kabeltyps, den die API an jedem Kabel mitliefert. */
+export interface KabeltypKurz {
+  id: number;
+  name: string;
+  kategorie: KabeltypKategorie;
+  enden_a: number;
+  enden_b: number;
+}
+
+/** Strang eines Breakout-Kabels: ein B-Ende mit Gerät und Port. */
+export interface CableStrand {
+  id: number;
+  cable_id: number;
+  strand_number: number;
+  farbe?: string | null;
+  nach_device_id?: number | null;
+  nach_port?: string | null;
+}
+
+/** B-Ende im Schreibweg (POST/PUT /cables, Feld straenge). */
+export interface StrangEingabe {
+  strand_number: number;
+  nach_device_id: number | null;
+  nach_port: string | null;
+  farbe?: string | null;
+}
+
 export interface Cable {
   id: number;
   kabel_nr: string;
   typ: string;
+  kabeltyp_id?: number | null;
+  kabeltyp?: KabeltypKurz | null;
+  cable_strands?: CableStrand[];
   laenge_m: number;
   farbe?: string;
   von_device_id?: number;
@@ -95,6 +142,9 @@ export interface Cable {
   von_device?: { hostname: string };
   nach_device?: { hostname: string };
 }
+
+/** Kabel im Schreibweg: bei Kabeltypen mit enden_b > 1 kommen die B-Enden als straenge mit. */
+export type CableWrite = Partial<Cable> & { straenge?: StrangEingabe[] };
 
 export interface DeviceDependency {
   device_id: number;
@@ -439,7 +489,8 @@ export interface RunbookExecutionStep {
   note?: string | null;
 }
 
-async function request(path: string, options: RequestInit = {}) {
+// Exportiert für weitere API-Module (z. B. $lib/umbauApi), damit Header und Fehlerbehandlung gleich bleiben.
+export async function request(path: string, options: RequestInit = {}) {
   // Vite proxy routes /api to http://localhost:8003
   const url = path.startsWith('/') ? path : `/api/v1/${path}`;
   
@@ -451,37 +502,40 @@ async function request(path: string, options: RequestInit = {}) {
   // Inject bearbeiter name in headers for audit-log
   headers.set('X-Username', appState.bearbeiter);
 
+  let response: Response;
   try {
-    const response = await fetch(url, { ...options, headers });
-    if (!response.ok) {
-      const errText = await response.text();
-      let msg = errText || response.statusText;
-      try {
-        const parsed = JSON.parse(errText);
-        if (parsed?.detail) {
-          if (typeof parsed.detail === 'object' && parsed.detail.message && parsed.detail.conflicts) {
-            const c = parsed.detail.conflicts;
-            const msgs = [];
-            if (c.db_duplicates?.length) msgs.push(`DB-Duplikate: ${c.db_duplicates.join('; ')}`);
-            if (c.csv_duplicates?.length) msgs.push(`CSV-Duplikate: ${c.csv_duplicates.join('; ')}`);
-            if (c.rack_collisions?.length) msgs.push(`Rack-Kollisionen: ${c.rack_collisions.join('; ')}`);
-            msg = `${parsed.detail.message} - ${msgs.join(' | ')}`;
-          } else {
-            msg = parsed.detail;
-          }
-        }
-      } catch { /* not JSON */ }
-      throw new Error(msg);
-    }
-    appState.setBackendStatus(true);
-    if (response.status === 204) {
-      return null;
-    }
-    return response.json();
+    response = await fetch(url, { ...options, headers });
   } catch (error) {
+    // Keine Antwort: Backend nicht erreichbar.
     console.error(`API request failed on ${url}:`, error);
     appState.setBackendStatus(false);
     throw error;
+  }
+
+  if (!response.ok) {
+    const meldung = meldungAusAntwort(await response.text(), response.statusText);
+    const stoerung = istBackendStoerung(response.status);
+    // 4xx ist eine fachliche Ablehnung (z. B. 409 Port belegt): Backend ist erreichbar.
+    appState.setBackendStatus(!stoerung);
+    if (stoerung) console.error(`API request failed on ${url}: ${response.status}`, meldung);
+    throw new ApiError(response.status, meldung);
+  }
+
+  appState.setBackendStatus(true);
+  if (response.status === 204) {
+    return null;
+  }
+  return response.json();
+}
+
+/** Fehlerantwort der API; message ist die für Nutzer lesbare Meldung. */
+export class ApiError extends Error {
+  constructor(
+    readonly status: number,
+    message: string
+  ) {
+    super(message);
+    this.name = 'ApiError';
   }
 }
 
@@ -510,9 +564,18 @@ export const api = {
   // Cables
   getCables: (): Promise<Cable[]> => request('cables/'),
   getCable: (id: number): Promise<Cable> => request(`cables/${id}`),
-  createCable: (cable: Partial<Cable>): Promise<Cable> => request('cables/', { method: 'POST', body: JSON.stringify(cable) }),
-  updateCable: (id: number, cable: Partial<Cable>): Promise<Cable> => request(`cables/${id}`, { method: 'PUT', body: JSON.stringify(cable) }),
+  createCable: (cable: CableWrite): Promise<Cable> => request('cables/', { method: 'POST', body: JSON.stringify(cable) }),
+  updateCable: (id: number, cable: CableWrite): Promise<Cable> => request(`cables/${id}`, { method: 'PUT', body: JSON.stringify(cable) }),
   deleteCable: (id: number): Promise<null> => request(`cables/${id}`, { method: 'DELETE' }),
+
+  // Kabeltyp-Katalog
+  getKabeltypen: (aktiv?: boolean): Promise<Kabeltyp[]> =>
+    request(aktiv === undefined ? 'kabeltypen/' : `kabeltypen/?aktiv=${aktiv}`),
+  createKabeltyp: (kabeltyp: Omit<Kabeltyp, 'id'>): Promise<Kabeltyp> =>
+    request('kabeltypen/', { method: 'POST', body: JSON.stringify(kabeltyp) }),
+  updateKabeltyp: (id: number, kabeltyp: Partial<Omit<Kabeltyp, 'id'>>): Promise<Kabeltyp> =>
+    request(`kabeltypen/${id}`, { method: 'PUT', body: JSON.stringify(kabeltyp) }),
+  deleteKabeltyp: (id: number): Promise<null> => request(`kabeltypen/${id}`, { method: 'DELETE' }),
   suggestCableColor: (typ: string): Promise<{ typ: string; suggested_color: string; note: string }> => request(`cables/suggest-color?typ=${encodeURIComponent(typ)}`),
   getColorRules: (): Promise<{ version: string; last_updated: string; rules: Array<{ id: string; typ: string; standard_farbe: string; kategorie: string; verwendungszweck: string; standard: string; hex: string }> }> => request('cables/color-rules'),
   updateColorRules: (rules: any[]): Promise<any> => request('cables/color-rules', { method: 'PUT', body: JSON.stringify({ rules }) }),

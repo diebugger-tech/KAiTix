@@ -163,7 +163,9 @@ Dieses Repository dokumentiert und verwaltet die Hardware- und Strominfrastruktu
 - `Device`: Physische Geräte (`hostname`, `typ` [server, switch, pdu, kentix_raconode, kentix_doormaster, kentix_multisensor, sonstige], `hoehe_u_start`, `u_hoehe`, `side` [left, right, nullable — für 0U PDUs], `phase` [L1, L2, L3], `tdp_watt`, `rack_id`).
 - `PduOutlet`: PDU-Steckdosen (`outlet_name`, `phase` [L1, L2, L3], `steckdosentyp` [C13, C19, C14, C20, Schuko, CEE-16A], `max_watt`, `schaltbar`, `connected_device_id`, `connected_port`).
 - `DevicePort`: Ports an Geräten (`port_name`, `typ` [RJ45, LC, SC, sonstige], `kabel_id`, `device_id`).
-- `Cable`: Physische Kabelverbindungen (`kabel_nr`, `typ` [Cat6, Cat6A, Cat7, DAC, LC-LC, SC-SC, SFP+, Strom-C13, Strom-C19, Strom-Schuko, Strom-CEE-16A-3P, Strom-CEE-32A-3P, Strom-CEE-63A-3P, sonstige], `laenge_m`, `farbe`, `von_device_id`, `von_port`, `nach_device_id`, `nach_port`).
+- `Cable`: Physische Kabelverbindungen (`kabel_nr`, `kabeltyp_id` → `kabeltypen`, `typ` [Cat6, Cat6A, Cat7, DAC, LC-LC, SC-SC, SFP+, Strom-C13, Strom-C19, Strom-Schuko, Strom-CEE-16A-3P, Strom-CEE-32A-3P, Strom-CEE-63A-3P, sonstige], `laenge_m`, `farbe`, `von_device_id`, `von_port`, `nach_device_id`, `nach_port`). `typ` wird beim Speichern aus `kabeltypen.alt_typ` gesetzt und bleibt für Exporte, Farbregeln und Simulation bestehen.
+- `CableStrand`: Stränge eines Kabels (`strand_number`, `farbe`, `nach_device_id`, `nach_port`). Bei Breakouts sind das die B-Enden.
+- `Kabeltyp`: Katalog (`name`, `kategorie`, `stecker_a`, `stecker_b`, `enden_a`, `enden_b`, `standard_farbe`, `alt_typ`, `aktiv`).
 
 ### 5. PDU-Regeln & Validierung
 - **1 PDU pro Seite pro Rack**: Pro 0U-Seite (left/right) maximal eine vertikale PDU. Backend: `_check_side_conflict()` in `devices.py` + `pdus.py`. Frontend: Side-Buttons deaktiviert wenn belegt (`occupiedSides`).
@@ -174,6 +176,20 @@ Dieses Repository dokumentiert und verwaltet die Hardware- und Strominfrastruktu
 ### 6. Port-Konfiguration & Standard-Ports
 - **FastAPI Backend**: Standardmäßig auf Port `8003` (`make dev`).
 - **SvelteKit Frontend**: Standardmäßig auf Port `5175`. CORS im Backend ist konfiguriert, um Zugriffe von `http://localhost:5175` zu erlauben.
+- **Andere Ports** (z. B. zweiter Worktree parallel): `make dev-all BACKEND_PORT=8013 FRONTEND_PORT=5185`. Das Makefile reicht die Werte als `KAITIX_FRONTEND_PORT`/`KAITIX_BACKEND_PORT` an `frontend/vite.config.ts` weiter; der `/api`-Proxy zeigt dann auf `BACKEND_PORT`.
+
+### 7. Kabeltyp-Katalog & Serverraum-Umbau
+- **Vollständige Beschreibung:** `docs/umbau.md` (Ablauf, Tabellen, Regeln, API, Grenzen). Vor Änderungen am Umbau lesen.
+- **Code:** `app/domains/umbau/` (`regeln.py` reine Funktionen, `services.py`, `buchung.py`, `nachtrag.py`, `router.py`), Kabeltypen in `app/domains/cabling/kabeltyp_service.py` und `straenge.py`. Frontend: `(app)/umbau/`, `(app)/kabeltypen/`, `$lib/components/umbau/`, `$lib/umbauApi.ts`, `$lib/kabel.ts`.
+- **Port-Wahrheit:** `cables.von_*`/`nach_*` als Text. Kein Abgleich mit Interfaces.
+- **Breakout-Regel:** Bei `enden_b > 1` bleibt das Ziel am Kabel leer; genau `enden_b` Stränge tragen `nach_device_id` + `nach_port`.
+- **Strom gehört nicht zum Umbau** (Kategorie `strom`). Patchpanels sind normale Geräte.
+- **Eine Regel für Anzeige und Server:** `sperrgrund()` in `regeln.py`. Oberfläche zeigt Knöpfe nur nach dieser Regel, der Server bucht nur nach ihr.
+- **Gleichzeitigkeit ohne Zeilensperren (SQLite):** Buchungen als bedingtes `UPDATE … WHERE id AND status = erwartet`. rowcount 0 → neu lesen: Ziel erreicht = 200, sonst 409. Ereignis nur bei rowcount 1, in derselben Transaktion. Kein `with_for_update`.
+- **Soll ist Textkopie:** `umbau_enden` kopiert Gerät, Rack, Port, Kabelnummer beim Einfrieren. Ab dem Einfrieren schreibt der Umbau nicht in `cables`, `cable_strands` oder `interfaces`.
+- **Migrationen:** `52e1b97080a3` (Kabeltyp-Katalog), `27f768e65156` (Strang-B-Enden), `a6f7bab2f1b2` (Umbau-Tabellen), `d4ed62bc8ae1` (Nachtrag, Position, Länge in `umbau_enden`).
+- **Nachtrag:** unbekannte Kabel im Rückbau über `nachtrag.py` (cable_id NULL, `nachtrag_nr`); schreibt nie in `cables`.
+- **Befunde** außerhalb des Auftrags: `docs/agent-befunde.md` (Fundstelle, kein Lösungsvorschlag).
 
 ## Makefile-Targets
 
@@ -182,6 +198,9 @@ Dieses Repository dokumentiert und verwaltet die Hardware- und Strominfrastruktu
 | `make dev` | Backend starten (Port 8003) — aktiviert .venv automatisch |
 | `make dev-frontend` | Frontend starten (Port 5175) |
 | `make dev-all` | Backend + Frontend parallel — für KAiOSS cmd-runner |
+| `make dev-all BACKEND_PORT=… FRONTEND_PORT=…` | Wie oben, mit anderen Ports (zweite Instanz) |
+| `make update` | Aktuellen Branch pullen (`BRANCH=main` möglich), `install` + `migrate-apply` (nix-shell + venv nötig) |
+| `make check-db` | Bricht ab, wenn DB nicht auf Migrations-Head ist (läuft vor `dev`/`dev-all`, `SKIP_DB_CHECK=1` überspringt) |
 | `make help` | Übersicht aller Targets |
 | `make test` | pytest |
 | `make format` | ruff fix + format |
@@ -228,6 +247,12 @@ Vollständig implementiert:
 - [x] Asset-Export: Rack-Export (XLSX/ODS/CSV) enthält jetzt Seriennummer + Inventarnummer
 - [x] Patch-Panel: `patchpanel` als Device-Typ im ORM-Enum, constants.py, import_csv, api.ts — Alembic-Migration ausstehend
 - [ ] Patch-Panel Trace: Kabelverfolgung Switch → Patch → Server als explizite UI-Funktion
+
+### Phase 4b — Serverraum-Umbau (Version 1) ✅
+- [x] Kabeltyp-Katalog mit Enden je Seite, Pflege unter `/kabeltypen`
+- [x] Breakout-Stränge als B-Enden im Kabel-Schreibweg
+- [x] Umbau: Erfassen, Einfrieren, Abklemmen, Wiederanklemmen mit Protokoll (`/umbau`)
+- [ ] Bewusst nicht in Version 1: Rückschreiben des Ist-Stands, Offline-Modus, Etiketten/QR, Strom, Breakouts in Topologie/Trace/Exporten (siehe `docs/umbau.md`)
 
 ### Phase 5 — Daten & Integration
 - [ ] Seed-Script: Die hartcodierten USV-Vorlagen (Wöhrle 40kW, Eaton 93PM etc.) aus dem N+1 Simulator als echte `usv_units`-Einträge in die DB überführen, damit sie im E-Plan-Dropdown global wählbar sind.

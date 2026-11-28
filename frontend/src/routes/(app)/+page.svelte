@@ -67,7 +67,7 @@
   // Reactive Derived Values
   const totalRacks = $derived(racks.length);
   const totalDevices = $derived(devices.length);
-  const existingReihen = $derived([...new Set(racks.map(r => r.rackreihe).filter(r => Boolean(r) && r !== 'Alle'))].sort());
+  const existingReihen = $derived([...new Set(racks.map(r => r.rackreihe).filter((r): r is string => Boolean(r) && r !== 'Alle'))].sort());
   const totalPowerWatt = $derived(devices.reduce((sum, d) => sum + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0));
   const totalCables = $derived(cables.length);
   const totalL1Kw = $derived(devices.filter(d => d.phase === 'L1').reduce((s, d) => s + (Number(d.anschlussleistung_watt ?? d.tdp_watt) || 0), 0) / 1000);

@@ -14,9 +14,7 @@ def _parse_origins(raw: str) -> list[str]:
 class Settings(BaseModel):
     PROJECT_NAME: str = "KAiTix"
     API_V1_STR: str = "/api/v1"
-    DATABASE_URL: str = os.getenv(
-        "DATABASE_URL", "sqlite+aiosqlite:///data/kaitix.db"
-    )
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///data/kaitix.db")
     ALLOWED_ORIGINS: list[str] = _parse_origins(
         os.getenv("ALLOWED_ORIGINS", "http://localhost:5175,http://127.0.0.1:5175")
     )

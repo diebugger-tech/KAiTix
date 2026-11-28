@@ -1,3 +1,5 @@
+import type { Device } from '$lib/api';
+
 export interface RackMetrics {
   occupiedU: number;
   percent: number;
@@ -7,7 +9,7 @@ export interface RackMetrics {
   L3kw: number;
   imbalancePct: number;
   hasPhasedDevices: boolean;
-  pdus: any[];
+  pdus: Device[];
 }
 
 export function calculateRackMetrics(rack: any, allDevices: any[]): RackMetrics {

@@ -1,5 +1,5 @@
 # KAiTix — AGENT.md
-*Letztes Update: 2026-06-23*
+*Letztes Update: 2026-11-23*
 
 ## Projektübersicht
 
@@ -28,7 +28,7 @@ ServerFlow-Dateien dienen als Referenz für Domänenwissen (USV-Berechnung, Kent
 
 **Projektpfad:** `~/Projekte/aktiv/KAiTix`
 **Verwandtes Projekt:** nixubuntu @ `github.com/diebugger-tech/nixubuntu`
-**Branch:** `feature/agent-runbook-print-export`
+**Branch:** `feature/umbau` (Worktree `~/Projekte/aktiv/KAiTix-umbau`, Review offen)
 
 ---
 
@@ -42,11 +42,21 @@ ServerFlow-Dateien dienen als Referenz für Domänenwissen (USV-Berechnung, Kent
 
 ---
 
-## Aktueller Stand (2026-06-10)
+## Aktueller Stand (2026-11-23)
 
 ### Zuletzt abgeschlossen (diese Session)
 
-**Phase 5 — Performance & Backend Härtung (abgeschlossen):**
+**Serverraum-Umbau, Version 1 (Branch `feature/umbau`, noch nicht gemergt):**
+- Kabeltyp-Katalog (`kabeltypen`) mit Enden je Seite; `cables.kabeltyp_id`; Pflege unter `/kabeltypen`.
+- Breakout-Stränge als B-Enden (`cable_strands.nach_device_id`/`nach_port`).
+- Umbau unter `/umbau`: Erfassen je Gerät → Soll einfrieren → Abklemmen → Wiederanklemmen nach Soll (Abweichung nur mit Grund), Protokoll je Buchung.
+- Migrationen `52e1b97080a3`, `27f768e65156`, `a6f7bab2f1b2` — auf jeder DB `alembic upgrade head` nötig (Container: automatisch beim Start).
+- Tests: 123 grün (`test_umbau.py`, `test_breakout.py`, `test_kabeltypen.py`, `test_cabling_write.py`).
+- Doku: `docs/umbau.md`; Befunde: `docs/agent-befunde.md`; Update-Anleitung in der README.
+
+**Phase 5 (Juni 2026):**
+
+Phase 5 — Performance & Backend Härtung (abgeschlossen):
 - **N+1 / Kaltstart Latenz Fix (BUG-01):**
   - Massive Latenz (bis zu 40s) beim ersten Laden des Dashboards behoben.
   - Ursache: Kaskadierende `lazy="selectin"` Queries für `Device.dependencies` und `Device.depended_by` entfernt (jetzt `lazy="raise"`).
@@ -197,6 +207,18 @@ alembic current
 nix-shell
 make install   # einmalig
 make dev-all   # Backend + Frontend starten
+make dev-all BACKEND_PORT=8013 FRONTEND_PORT=5185   # zweite Instanz, z. B. Worktree
+```
+
+### Update auf einem anderen Rechner
+Ausführlich in der README unter „Update einer bestehenden Installation".
+```bash
+cp data/kaitix.db data/kaitix.db.bak
+git pull
+source .venv/bin/activate && pip install -r requirements.txt
+alembic upgrade head
+cd frontend && npm install && cd ..
+make restart-all
 ```
 
 ### Podman / Docker (Single-Image Architektur)
