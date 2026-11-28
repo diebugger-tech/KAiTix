@@ -83,7 +83,12 @@ def neustart_anfordern() -> bool:
 @router.get("/info")
 async def info() -> dict[str, Any]:
     """Version der Desktop-Installation (Branch, Commit, Datum)."""
-    return {"desktop": True, **await asyncio.to_thread(Updater(_repo()).version)}
+    repo = _repo()
+    try:
+        version = await asyncio.to_thread(Updater(repo).version)
+    except UpdateFehler:
+        version = {"branch": None, "commit": None, "datum": None}
+    return {"desktop": True, **version}
 
 
 @router.post("/update/pruefen", response_model=UpdateStandOut)

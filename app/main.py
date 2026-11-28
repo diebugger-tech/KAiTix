@@ -3,6 +3,7 @@ import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
@@ -44,6 +45,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Desktop-App (desktop/kaitix_desktop.py setzt KAITIX_DESKTOP_REPO): nur Anfragen an
+# 127.0.0.1/localhost annehmen. Schützt gegen DNS-Rebinding, bei dem eine fremde
+# Webseite ihren Namen auf 127.0.0.1 zeigen lässt und dann die lokale API anspricht.
+if os.environ.get("KAITIX_DESKTOP_REPO"):
+    app.add_middleware(
+        TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "[::1]"]
+    )
 
 # Register main API router
 app.include_router(api_router, prefix=settings.API_V1_STR)

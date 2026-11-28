@@ -31,6 +31,33 @@ server_running() {
   curl -sf "$BASE_URL/api/v1/desktop/info" > /dev/null 2>&1
 }
 
+# Gehört der Prozess auf dem Port diesem Nutzer? ss zeigt Prozessinfos (users:)
+# nur für eigene Prozesse. Ein fremder Prozess auf dem Port wird nicht geöffnet.
+port_gehoert_mir() {
+  if command -v ss > /dev/null 2>&1; then
+    ss -ltnpH "( sport = :$PORT )" 2> /dev/null | grep -q "users:"
+  else
+    return 0
+  fi
+}
+port_belegt() {
+  if command -v ss > /dev/null 2>&1; then
+    [ -n "$(ss -ltnH "( sport = :$PORT )" 2> /dev/null)" ]
+  else
+    return 1
+  fi
+}
+
+if port_belegt; then
+  if port_gehoert_mir; then
+    :
+  else
+    echo "Port $PORT ist von einem fremden Prozess belegt. KAiTix startet nicht."
+    echo "Anderen Port wählen: KAITIX_DESKTOP_PORT=8795 launch-kaitix"
+    exit 1
+  fi
+fi
+
 if [ "${1:-}" = "stop" ]; then
   if [ -r "$DATA_DIR/kaitix.pid" ]; then
     kill "$(cat "$DATA_DIR/kaitix.pid")" 2> /dev/null && echo "KAiTix beendet."

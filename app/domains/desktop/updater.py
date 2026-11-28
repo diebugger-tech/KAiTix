@@ -90,6 +90,8 @@ class Updater:
     def _run(
         self, befehl: Sequence[str], timeout: float
     ) -> subprocess.CompletedProcess[str]:
+        if not self.repo.is_dir():
+            raise UpdateFehler(f"Checkout nicht gefunden: {self.repo}")
         try:
             return subprocess.run(
                 list(befehl),

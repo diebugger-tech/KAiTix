@@ -186,3 +186,25 @@ async def test_info_und_update_ueber_die_api(client: AsyncClient, monkeypatch, r
     assert ergebnis.json()["neustart"] is True
     assert nochmal.status_code == 409
     assert nochmal.json()["detail"] == "KAiTix ist aktuell."
+
+
+def test_desktop_app_nimmt_nur_lokale_hosts_an(monkeypatch, tmp_path):
+    """DNS-Rebinding: Host evil.example wird abgelehnt, 127.0.0.1 angenommen."""
+    import importlib
+
+    from fastapi.testclient import TestClient
+
+    import app.main
+
+    monkeypatch.setenv(desktop_router.REPO_ENV, str(tmp_path))
+    try:
+        desktop_app = importlib.reload(app.main).app
+        client = TestClient(desktop_app)
+        fremd = client.get("/api/v1/kabeltypen/", headers={"Host": "evil.example:8790"})
+        lokal = client.get("/api/v1/desktop/info", headers={"Host": "127.0.0.1:8790"})
+        assert fremd.status_code == 400
+        assert lokal.status_code == 200
+        assert lokal.json()["commit"] is None  # kein Git-Checkout
+    finally:
+        monkeypatch.delenv(desktop_router.REPO_ENV)
+        importlib.reload(app.main)
