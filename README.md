@@ -292,6 +292,21 @@ Danach im Browser: **http://localhost:5175**
 
 ---
 
+### VARIANTE C — Desktop-App (Linux, Prototyp)
+
+KAiTix als eigenes Fenster auf dem eigenen Rechner, ohne Container, mit Knopf
+**Nach Updates suchen** (git fetch/pull aus dem Checkout). Daten in
+`~/.local/share/kaitix/`.
+
+```bash
+sh desktop/install.sh
+```
+
+Danach im App-Menü **KAiTix** starten. Details, Updates und Grenzen:
+[desktop/README.md](desktop/README.md).
+
+---
+
 ## Update einer bestehenden Installation
 
 Die Datenbank `data/kaitix.db` liegt **nicht** im Repository. Jeder Rechner hat seine eigene

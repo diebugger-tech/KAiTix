@@ -5,6 +5,10 @@ Alle wesentlichen Änderungen am Projekt werden in dieser Datei dokumentiert.
 ## [Unreleased]
 
 ### Hinzugefügt
+- **Desktop-App (Linux, Prototyp):** `sh desktop/install.sh` legt Starter und Menüeintrag an;
+  KAiTix läuft als eigenes Fenster auf 127.0.0.1 mit Daten in `~/.local/share/kaitix`.
+  „Nach Updates suchen“ holt neue Commits per git und baut neu, mit Sicherung der
+  Datenbank vor Migrationen. Beschreibung: `desktop/README.md`.
 - **Serverraum-Umbau** (`/umbau`): Kabel je Gerät erfassen, Soll-Stand einfrieren, jedes
   Stecker-Ende abklemmen und nach dem Umbau am Soll-Port wieder anklemmen; Abweichung nur mit
   Grund, Protokoll je Buchung. Beschreibung in `docs/umbau.md`. Migration `a6f7bab2f1b2`.

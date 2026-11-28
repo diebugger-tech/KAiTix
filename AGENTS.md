@@ -191,6 +191,13 @@ Dieses Repository dokumentiert und verwaltet die Hardware- und Strominfrastruktu
 - **Nachtrag:** unbekannte Kabel im Rückbau über `nachtrag.py` (cable_id NULL, `nachtrag_nr`); schreibt nie in `cables`.
 - **Befunde** außerhalb des Auftrags: `docs/agent-befunde.md` (Fundstelle, kein Lösungsvorschlag).
 
+### 8. Desktop-App (Linux, Prototyp)
+- **Beschreibung:** `desktop/README.md`. Muster: GoTV-Installation aus dem Git-Checkout.
+- **Launcher:** `desktop/kaitix_desktop.py` (DB in `~/.local/share/kaitix`, Sicherung vor Migrationen, `db_init`, uvicorn auf 127.0.0.1:8790, Neustart nach Update); `desktop/launch-kaitix` öffnet ein Chromium-App-Fenster.
+- **Update:** `app/domains/desktop/` (`/desktop/info`, `/desktop/update/pruefen`, `/desktop/update/ausfuehren`). Nur aktiv mit `KAITIX_DESKTOP_REPO`; nur 127.0.0.1, Header `X-KAiTix-Update`, lokale Origin. Feste Befehle (git fetch, pull --ff-only, `install.sh --update`), nichts aus der Anfrage.
+- **Desktop-Modus:** `TrustedHostMiddleware` (nur 127.0.0.1/localhost) gegen DNS-Rebinding.
+- **Netz nur auf Knopfdruck** (git gegen das eigene Repo); keine automatische Prüfung im Hintergrund.
+
 ## Makefile-Targets
 
 | Target | Funktion |
