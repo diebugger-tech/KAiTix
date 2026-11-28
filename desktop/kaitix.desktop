@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=KAiTix
+GenericName=Serverraum-Dokumentation
+Comment=Plan. Simulate. Document.
+Exec=@INSTALL_HOME@/.local/bin/launch-kaitix
+Icon=kaitix
+Terminal=false
+Categories=Office;Utility;
+StartupWMClass=kaitix
+Keywords=Rack;Kabel;Serverraum;Umbau;

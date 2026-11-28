@@ -1,0 +1,110 @@
+# launch-kaitix - Startet die KAiTix Desktop-App (Muster: GoTV launch-gotv).
+# Kein Shebang und kein Ausrufezeichen im Skript (Regel: zsh History Expansion).
+#
+#   sh desktop/launch-kaitix         Server starten (falls nötig) und Fenster öffnen
+#   sh desktop/launch-kaitix stop    Server beenden (Daten bleiben)
+#
+# Umgebung: KAITIX_DESKTOP_PORT (8790), KAITIX_DATA_DIR, KAITIX_BROWSER, KAITIX_PYTHON
+
+set -u
+
+PORT="${KAITIX_DESKTOP_PORT:-8790}"
+BASE_URL="http://127.0.0.1:${PORT}"
+DATA_DIR="${KAITIX_DATA_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/kaitix}"
+
+# Checkout: env KAITIX_ROOT > Marker der Installation > relativ zum Skript.
+ROOT_DIR="${KAITIX_ROOT:-}"
+if [ -z "$ROOT_DIR" ]; then
+  if [ -r "$HOME/.config/kaitix/root-path" ]; then
+    ROOT_DIR=$(cat "$HOME/.config/kaitix/root-path")
+  else
+    ROOT_DIR=$(cd "$(dirname "$0")/.." && pwd)
+  fi
+fi
+PYTHON="${KAITIX_PYTHON:-$ROOT_DIR/.venv/bin/python}"
+
+mkdir -p "$DATA_DIR"
+export KAITIX_DATA_DIR="$DATA_DIR"
+export KAITIX_DESKTOP_PORT="$PORT"
+
+server_running() {
+  curl -sf "$BASE_URL/api/v1/desktop/info" > /dev/null 2>&1
+}
+
+if [ "${1:-}" = "stop" ]; then
+  if [ -r "$DATA_DIR/kaitix.pid" ]; then
+    kill "$(cat "$DATA_DIR/kaitix.pid")" 2> /dev/null && echo "KAiTix beendet."
+  else
+    echo "KAiTix läuft nicht."
+  fi
+  exit 0
+fi
+
+detect_browser() {
+  for bin in chromium chromium-browser google-chrome google-chrome-stable microsoft-edge microsoft-edge-stable brave brave-browser; do
+    if command -v "$bin" > /dev/null 2>&1; then
+      echo "$bin"
+      return 0
+    fi
+  done
+  for app in org.chromium.Chromium com.google.Chrome com.microsoft.Edge com.brave.Browser; do
+    if flatpak list --app 2> /dev/null | grep -q "$app"; then
+      echo "flatpak run $app"
+      return 0
+    fi
+  done
+  for app in chromium brave; do
+    if snap list "$app" 2> /dev/null | grep -q "^$app "; then
+      echo "snap run $app"
+      return 0
+    fi
+  done
+  echo ""
+  return 1
+}
+
+if server_running; then
+  :
+else
+  if [ -x "$PYTHON" ]; then
+    :
+  else
+    echo "Python der Installation fehlt: $PYTHON"
+    echo "Erst installieren: sh $ROOT_DIR/desktop/install.sh"
+    exit 1
+  fi
+  nohup "$PYTHON" "$ROOT_DIR/desktop/kaitix_desktop.py" --port "$PORT" --daten "$DATA_DIR" \
+    >> "$DATA_DIR/server.log" 2>&1 &
+  # Erster Start mit Demo-Daten dauert länger: bis zu 90 s warten.
+  i=0
+  while [ "$i" -lt 180 ]; do
+    if server_running; then
+      break
+    fi
+    sleep 0.5
+    i=$((i + 1))
+  done
+  if server_running; then
+    :
+  else
+    echo "KAiTix-Server startet nicht. Log: $DATA_DIR/server.log"
+    exit 1
+  fi
+fi
+
+BROWSER_CMD="${KAITIX_BROWSER:-}"
+if [ -z "$BROWSER_CMD" ]; then
+  BROWSER_CMD=$(detect_browser)
+fi
+if [ -z "$BROWSER_CMD" ]; then
+  echo "Kein Chromium-Browser gefunden (chromium, google-chrome, edge, brave;"
+  echo "nativ, Flatpak oder Snap). KAiTix läuft trotzdem: $BASE_URL"
+  echo "Oder KAITIX_BROWSER='BEFEHL' setzen und erneut starten."
+  exit 1
+fi
+
+# Eigenes Profil: eigenes Fenster und eigene Taskleisten-Gruppe.
+$BROWSER_CMD --app="$BASE_URL" --user-data-dir="$DATA_DIR/profile" --class=kaitix \
+  --no-first-run --no-default-browser-check > /dev/null 2>&1 &
+
+exit 0

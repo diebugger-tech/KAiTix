@@ -18,6 +18,7 @@ from app.domains.import_export.routers import (
 )
 from app.domains.simulation.router import router as simulation_router
 from app.domains.umbau.router import router as umbau_router
+from app.domains.desktop.router import router as desktop_router
 
 api_router = APIRouter()
 api_router.include_router(racks.router, prefix="/racks", tags=["racks"])
@@ -44,3 +45,4 @@ api_router.include_router(topology_pdf.router, prefix="/topology", tags=["topolo
 api_router.include_router(search.router, prefix="/search", tags=["search"])
 api_router.include_router(simulation_router, prefix="/simulation", tags=["simulation"])
 api_router.include_router(umbau_router, prefix="/umbau", tags=["umbau"])
+api_router.include_router(desktop_router, prefix="/desktop", tags=["desktop"])

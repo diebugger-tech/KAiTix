@@ -3,6 +3,7 @@
   import { appState } from '$lib/state.svelte';
   import { api } from '$lib/api';
   import { page } from '$app/state';
+  import DesktopUpdate from '$lib/components/DesktopUpdate.svelte';
   import {
     LayoutDashboard,
     Zap,
@@ -227,6 +228,8 @@
 
     <!-- Sidebar Footer -->
     <div class="p-4 border-t border-[var(--color-border)] space-y-4">
+      <!-- Desktop-App: Version und Updates (nur in der Desktop-App sichtbar) -->
+      <DesktopUpdate />
       <!-- Bearbeiter Info -->
       <div class="bg-[var(--color-bg3)] border border-[var(--color-border)] rounded-lg p-3 relative group">
         <div class="flex items-center justify-between">

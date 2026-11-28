@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <title>KAiTix</title>
+  <rect x="8" y="8" width="240" height="240" rx="52" fill="#0f172a"/>
+  <rect x="64" y="44" width="128" height="168" rx="14" fill="none" stroke="#1D9E75" stroke-width="12"/>
+  <rect x="84" y="70" width="88" height="26" rx="6" fill="#1D9E75"/>
+  <rect x="84" y="115" width="88" height="26" rx="6" fill="#1D9E75" opacity="0.75"/>
+  <rect x="84" y="160" width="88" height="26" rx="6" fill="#1D9E75" opacity="0.5"/>
+  <circle cx="160" cy="83" r="5" fill="#86EFCB"/>
+  <circle cx="160" cy="128" r="5" fill="#86EFCB"/>
+  <circle cx="160" cy="173" r="5" fill="#86EFCB"/>
+</svg>
